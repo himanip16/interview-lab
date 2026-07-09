@@ -1,5 +1,5 @@
 import { Interview } from "@/types/interview";
-
+import Link from "next/link";
 type Props = {
   interview: Interview;
 };
@@ -25,7 +25,13 @@ export default function InterviewCard({
         </span>
 
         <button className="rounded-lg bg-blue-600 px-4 py-2 text-sm hover:bg-blue-500">
-          Start →
+            <Link
+    href={`/interview/new?type=${interview.id}`}
+    className="rounded-lg bg-blue-600 px-4 py-2 text-sm hover:bg-blue-500"
+>
+    Start →
+</Link>
+        
         </button>
 
       </div>
