@@ -1,5 +1,5 @@
 import InterviewCard from "./InterviewCard";
-import { interviews } from "@/data/interview";
+import { interviews } from "@/data/interviews";
 
 export default function InterviewCatalog() {
   return (
