@@ -1,9 +1,15 @@
+import ChatWindow from "@/components/ChatWindow";
+import InterviewHeader from "@/components/InterviewHeader";
+import MessageInput from "@/components/MessageInput";
+
 export default function Home() {
   return (
-    <main className="flex min-h-screen items-center justify-center">
-      <h1 className="text-4xl font-bold">
-        AI System Design Interviewer
-      </h1>
+    <main className="flex h-screen flex-col bg-gray-50">
+      <InterviewHeader />
+
+      <ChatWindow />
+
+      <MessageInput />
     </main>
   );
 }
