@@ -16,12 +16,38 @@ export default function Home() {
     },
   ]);
 
-  function handleSend(content: string) {
-  setMessages((previous) => [
-    ...previous,
+async function handleSend(content: string) {
+  // Create the updated conversation
+  const updatedMessages: Message[] = [
+    ...messages,
     {
       role: "user",
       content,
+    },
+  ];
+
+  // Update the UI immediately
+  setMessages(updatedMessages);
+
+  // Send the entire conversation to the backend
+  const response = await fetch("/api/chat", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      messages: updatedMessages,
+    }),
+  });
+
+  const data = await response.json();
+
+  // Add the AI's response
+  setMessages([
+    ...updatedMessages,
+    {
+      role: "assistant",
+      content: data.reply,
     },
   ]);
 }
