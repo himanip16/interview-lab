@@ -4,52 +4,49 @@ import { useEffect, useState } from "react";
 
 interface Props {
   phase: string;
-  phaseStart: number;
+  phaseStartedAt: number;
   duration: number;
 }
 
 export default function InterviewHeader({
   phase,
-  phaseStart,
+  phaseStartedAt,
   duration,
 }: Props) {
-
-  const [remaining, setRemaining] = useState(
-    phaseStart + duration * 1000 - Date.now()
-  );
-
+  const [phaseStart, setPhaseStart] = useState<number | null>(null);
 
   useEffect(() => {
+    setPhaseStart(Date.now());
+  }, []);
 
-    const timer = setInterval(() => {
+  const [remaining, setRemaining] = useState(duration * 1000);
 
+  useEffect(() => {
+    if (phaseStart === null) return;
+
+    const updateRemaining = () => {
       setRemaining(
-        phaseStart + duration * 1000 - Date.now()
+        Math.max(
+          0,
+          phaseStart + duration * 1000 - Date.now()
+        )
       );
+    };
 
-    }, 1000);
+    updateRemaining();
 
+    const timer = setInterval(updateRemaining, 1000);
 
     return () => clearInterval(timer);
-
   }, [phaseStart, duration]);
 
+  const minutes = Math.floor(remaining / 1000 / 60);
 
-  const minutes = Math.max(
-    0,
-    Math.floor(remaining / 1000 / 60)
-  );
-
-  const seconds = Math.max(
-    0,
-    Math.floor((remaining / 1000) % 60)
-  );
-
+  const seconds = Math.floor((remaining / 1000) % 60);
 
   return (
-    <header className="border-b bg-white px-6 py-4">
-
-      <h1 className="text-2xl font-bold text-black">
+    <header className="border-b p-4">
+      <h1 className="text-2xl font-bold">
         AI System Design Interviewer
       </h1>
 
@@ -58,19 +55,13 @@ export default function InterviewHeader({
       </p>
 
       <div className="mt-3 text-sm">
+        <p>Phase: {phase}</p>
 
         <p>
-          Phase: {phase}
+          Time Remaining: {minutes}:
+          {seconds.toString().padStart(2, "0")}
         </p>
-
-        <p>
-          Time Remaining:
-          {" "}
-          {minutes}:{seconds.toString().padStart(2,"0")}
-        </p>
-
       </div>
-
     </header>
   );
 }
