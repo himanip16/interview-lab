@@ -1,14 +1,13 @@
 import ChatMessage from "./ChatMessage";
+import { Message } from "@/types/message";
 
-const messages = [
-  {
-    role: "assistant" as const,
-    content:
-      "Welcome! Today we'll design YouTube. Start by asking clarifying questions.",
-  },
-];
+type Props = {
+  messages: Message[];
+};
 
-export default function ChatWindow() {
+export default function ChatWindow({
+  messages,
+}: Props) {
   return (
     <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-6">
       {messages.map((message, index) => (
