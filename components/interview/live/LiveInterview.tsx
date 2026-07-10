@@ -41,7 +41,7 @@ export default function LiveInterview({ interviewId, initialMessages = [] }: Liv
     <div className="flex flex-col h-[calc(100vh-64px)]">
       <MessageList messages={messages} />
       {isLoading && <div className="p-4 text-sm text-gray-500 animate-pulse">Interviewer is thinking...</div>}
-      <ChatInput onSend={handleSendMessage} disabled={isLoading} />
+      <ChatInput onSend={handleSendMessage} isLoading={isLoading} />
     </div>
   );
 }

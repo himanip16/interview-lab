@@ -3,29 +3,32 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-
-export default function ChatInput({ onSend, disabled }: { onSend: (val: string) => void, disabled: boolean }) {
+export default function ChatInput({ onSend, isLoading }: { onSend: (v: string) => void, isLoading: boolean }) {
   const [text, setText] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (text.trim() && !disabled) {
+    if (text.trim() && !isLoading) { // Use isLoading to prevent double-submit
       onSend(text);
-      setText(""); // This clears the box after sending
+      setText("");
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="flex gap-2 p-4 bg-white border-t">
       <Input
-        value={text} // This connects the state to the box
-        onChange={(e) => setText(e.target.value)} // This updates state as you type
-        placeholder="Type your architectural thoughts..."
-        disabled={disabled}
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        placeholder="Type your response..."
+        // REMOVE disabled={isLoading} from here
+        className="text-black"
       />
-      <Button type="submit" disabled={disabled || !text.trim()}>
-        Send
+      <Button type="submit" disabled={isLoading || !text.trim()}>
+        {isLoading ? "..." : "Send"}
       </Button>
     </form>
   );
 }
+
+
+
