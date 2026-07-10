@@ -8,35 +8,47 @@ datasource db {
 }
 
 model Interview {
-  id           String          @id @default(cuid())
-  type         String
-  difficulty   String
-  duration     Int
-  company      String
-  status       InterviewStatus
-  currentPhase String          @default("introduction")
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
+  id String @id @default(cuid())
+
+  type       String
+  difficulty String
+  duration   Int
+  company    String
+
+  status InterviewStatus
+
+  currentPhase String @default("introduction")
+  summary      String @default("Interview has not started yet.")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   transcript Message[]
   evaluation Evaluation?
 }
 
 model Message {
-  id          String      @id @default(cuid())
+  id String @id @default(cuid())
+
   interviewId String
   role        MessageRole
   content     String
-  createdAt   DateTime    @default(now())
-  interview   Interview   @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  interview Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+
+  @@index([interviewId])
 }
 
 model Evaluation {
-  id          String @id @default(cuid())
+  id String @id @default(cuid())
+
   interviewId String @unique
-  score       Int
-  feedback    String
-  metadata    Json?
+
+  score    Int
+  feedback String
+  metadata Json?
 
   interview Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
 }
