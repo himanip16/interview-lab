@@ -1,13 +1,11 @@
-import type { AIProvider } from "./AIProvider";
+// modules/ai/AIService.ts
+import { OllamaProvider } from "./providers/ollama";
 
 export class AIService {
-  private readonly provider: AIProvider;
+  private provider = new OllamaProvider();
 
-  constructor(provider: AIProvider) {
-    this.provider = provider;
-  }
-
-  async generate(prompt: string): Promise<string> {
-    return this.provider.generate(prompt);
+  async chat(messages: { role: string; content: string }[]) {
+    // Ensure this calls the method we defined in OllamaProvider
+    return await this.provider.generateResponse(messages);
   }
 }

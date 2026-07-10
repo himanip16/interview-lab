@@ -24,16 +24,12 @@ export default function InterviewCard({
           {interview.duration} min • {interview.difficulty}
         </span>
 
-        <button className="rounded-lg bg-blue-600 px-4 py-2 text-sm hover:bg-blue-500">
-            <Link
-    href={`/interview/new?type=${interview.id}`}
-    className="rounded-lg bg-blue-600 px-4 py-2 text-sm hover:bg-blue-500"
+        <Link
+  href={`/interview/setup?type=${interview.id}`}
+  className="rounded-lg bg-blue-600 px-4 py-2 text-sm hover:bg-blue-500"
 >
-    Start →
+  Start →
 </Link>
-        
-        </button>
-
       </div>
 
     </div>

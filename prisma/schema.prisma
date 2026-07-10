@@ -1,0 +1,41 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Interview {
+  id         String          @id @default(cuid()) // added default
+  type       String
+  difficulty String
+  duration   Int
+  company    String
+  status     InterviewStatus
+  currentPhase String        @default("introduction") // <--- ADD THIS LINE
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  transcript Message[]
+}
+
+model Message {
+  id          String      @id @default(cuid())
+  interviewId String
+  role        MessageRole
+  content     String
+  createdAt   DateTime    @default(now())
+  interview   Interview   @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+}
+
+enum InterviewStatus {
+  SETUP
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum MessageRole {
+  assistant
+  user
+}

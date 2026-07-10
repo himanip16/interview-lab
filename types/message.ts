@@ -1,4 +1,7 @@
-export type Message = {
-  role: "assistant" | "user";
+// types/message.ts
+export interface Message {
+  id?: string;
+  role: 'user' | 'assistant' | 'system';
   content: string;
-};
+  createdAt?: Date;
+}

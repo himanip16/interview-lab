@@ -25,11 +25,11 @@ export default function Hero() {
         <div className="mt-10 flex gap-4">
 
           <Link
-            href="/interview/new"
-            className="rounded-lg bg-blue-600 px-6 py-3 font-medium hover:bg-blue-500"
-          >
-            Start Interview
-          </Link>
+  href="/interview/setup"
+  className="rounded-lg bg-blue-600 px-6 py-3 font-medium hover:bg-blue-500"
+>
+  Start Interview
+</Link>
 
           <button className="rounded-lg border border-zinc-700 px-6 py-3">
             Browse Interviews

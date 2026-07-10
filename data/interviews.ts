@@ -44,3 +44,5 @@ export const interviews: Interview[] = [
     difficulty: "Hard",
   },
 ];
+
+console.log("Interview type:", interviews[0].id);

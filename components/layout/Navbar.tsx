@@ -1,29 +1,29 @@
+import Link from "next/link";
+
 export default function Navbar() {
   return (
-    <header className="flex h-20 items-center justify-between border-b border-zinc-800">
+    <nav className="flex items-center justify-between py-6">
 
-      <div>
-        <h1 className="text-xl font-semibold">
-          AI Interview
-        </h1>
+      <Link
+        href="/"
+        className="text-xl font-bold"
+      >
+        AI Interviewer
+      </Link>
+
+
+      <div className="flex gap-6 text-sm text-zinc-400">
+
+        <Link href="/interview/setup">
+          Interviews
+        </Link>
+
+        <Link href="/analytics">
+          Analytics
+        </Link>
+
       </div>
 
-      <nav className="flex items-center gap-8 text-sm text-zinc-400">
-
-        <button className="transition hover:text-white">
-          Interviews
-        </button>
-
-        <button className="transition hover:text-white">
-          History
-        </button>
-
-        <button className="transition hover:text-white">
-          Login
-        </button>
-
-      </nav>
-
-    </header>
+    </nav>
   );
 }
