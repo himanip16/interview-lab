@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { SummaryService } from "@/modules/interview/services/SummaryService";
 
 import { prisma } from "@/lib/prisma";
 import { AIService } from "@/modules/ai/AIService";
@@ -92,13 +93,59 @@ export async function POST(req: Request) {
       });
     }
 
+    const summaryService = new SummaryService();
     const savedMessage = await prisma.message.create({
-      data: {
-        interviewId,
-        role: "assistant",
-        content: parsed.cleanMessage,
-      },
-    });
+  data: {
+    interviewId,
+    role: "assistant",
+    content: parsed.cleanMessage,
+  },
+});
+
+/*
+ * Fetch the latest transcript including the
+ * candidate message and AI reply.
+ */
+
+const transcript = await prisma.message.findMany({
+  where: {
+    interviewId,
+  },
+  orderBy: {
+    createdAt: "asc",
+  },
+});
+
+/*
+ * Generate running interview summary.
+ */
+
+const summary =
+  await summaryService.generateSummary(
+    transcript.map((m) => ({
+      role: m.role,
+      content: m.content,
+    }))
+  );
+
+/*
+ * Persist summary.
+ */
+
+await prisma.interview.update({
+  where: {
+    id: interviewId,
+  },
+  data: {
+    summary,
+  },
+});
+
+return NextResponse.json({
+  aiMessage: savedMessage,
+  transition: parsed.shouldTransition,
+  newSummary: summary,
+});
 
     return NextResponse.json({
       aiMessage: savedMessage,

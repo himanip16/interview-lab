@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { SummaryService } from "@/modules/interview/services/SummaryService";
 
 import { InterviewRepository } from "@/modules/interview/repository/InterviewRepository";
 
