@@ -1,11 +1,11 @@
 // modules/ai/providers/ollama.ts
 export class OllamaProvider {
-  // Use 127.0.0.1 instead of localhost
-  private baseUrl = "http://127.0.0.1:11434/api/chat"; 
-  private model = "llama3"; // Make sure this matches what you 'ollama run'
+  private baseUrl = "http://127.0.0.1:11434/api/chat";
+  private model = "qwen2.5:7b"; // MATCHES YOUR OLLAMA LIST
 
   async generateResponse(messages: { role: string; content: string }[]) {
     try {
+      console.log("🤖 Requesting Qwen...");
       const response = await fetch(this.baseUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -16,13 +16,11 @@ export class OllamaProvider {
         }),
       });
 
-      if (!response.ok) throw new Error(`Ollama HTTP Error: ${response.status}`);
-
       const data = await response.json();
       return data.message.content;
-    } catch (error) {
-      console.error("Ollama Error:", error);
-      return "I'm having trouble connecting to my brain (Ollama). Is it running?";
+    } catch (e) {
+      console.error("Ollama connection failed. Is the app open?");
+      return "I'm having trouble connecting to my brain (Ollama).";
     }
   }
 }
