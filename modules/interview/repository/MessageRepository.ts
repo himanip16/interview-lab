@@ -1,9 +1,10 @@
+import { MessageRole } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 export class MessageRepository {
   async create(
     interviewId: string,
-    role: string,
+    role: MessageRole,
     content: string
   ) {
     return prisma.message.create({

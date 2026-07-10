@@ -1,69 +1,119 @@
 import { NextResponse } from "next/server";
+
 import { prisma } from "@/lib/prisma";
-import { InterviewEngine } from "@/modules/interview/engine/InterviewEngine";
-import type { Message } from "@prisma/client"; 
+import { AIService } from "@/modules/ai/AIService";
+import { PromptBuilder } from "@/modules/interview/engine/PromptBuilder";
+import { ResponseParser } from "@/modules/interview/engine/ResponseParser";
+import {
+  InterviewPhase,
+  PhaseManager,
+} from "@/modules/interview/engine/PhaseManager";
 
-const engine = new InterviewEngine();
+const aiService = new AIService();
+const promptBuilder = new PromptBuilder();
+const responseParser = new ResponseParser();
+const phaseManager = new PhaseManager();
 
-export async function POST(request: Request) {
+export async function POST(req: Request) {
   try {
-    const { interviewId, message } = await request.json();
+    const { interviewId, message } = await req.json();
 
-    // 1. Fetch interview
+    if (!interviewId || !message?.trim()) {
+      return NextResponse.json(
+        { error: "Invalid request." },
+        { status: 400 }
+      );
+    }
+
     const interview = await prisma.interview.findUnique({
       where: { id: interviewId },
-      include: { transcript: { orderBy: { createdAt: 'asc' } } }
+      include: {
+        transcript: {
+          orderBy: {
+            createdAt: "asc",
+          },
+        },
+      },
     });
 
-    if (!interview) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (!interview) {
+      return NextResponse.json(
+        { error: "Interview not found." },
+        { status: 404 }
+      );
+    }
 
-    // 2. Save the NEW User Message first
-    const newUserMessage = await prisma.message.create({
+    // Save candidate message
+    await prisma.message.create({
       data: {
+        interviewId,
+        role: "user",
         content: message,
-        role: 'user', 
-        interviewId: interviewId
-      }
+      },
     });
 
-    // 3. Prepare the history including the message just typed
-    const history = [
-      ...interview.transcript.map((m: Message) => ({ 
-        role: m.role, 
-        content: m.content 
-      })),
-      { role: 'user', content: message } // Add the current message manually
-    ];
-
-    // 4. Run Engine
-    console.log("🚀 Sending to Engine with History Length:", history.length);
-    
-    const result = await engine.processUserMessage(
-      interview.currentPhase as any, 
-      history,
-      interview.type,
-      "Candidate"
+    const systemPrompt = promptBuilder.buildSystemPrompt(
+      interview.currentPhase as InterviewPhase,
+      "Candidate",
+      interview.company
     );
 
-    // 5. Save AI Response
-    const aiMessage = await prisma.message.create({
+    const conversation = interview.transcript.map((m) => ({
+      role: m.role,
+      content: m.content,
+    }));
+
+    const aiResponse = await aiService.chat([
+      {
+        role: "system",
+        content: systemPrompt,
+      },
+      ...conversation,
+      {
+        role: "user",
+        content: message,
+      },
+    ]);
+
+    const parsed = responseParser.parse(aiResponse);
+
+    if (parsed.shouldTransition) {
+      const nextPhase = phaseManager.getNextPhase(
+        interview.currentPhase as InterviewPhase
+      );
+
+      await prisma.interview.update({
+        where: {
+          id: interviewId,
+        },
+        data: {
+          currentPhase: nextPhase,
+        },
+      });
+    }
+
+    const savedMessage = await prisma.message.create({
       data: {
-        content: result.answer,
-        role: 'assistant',
-        interviewId: interviewId
-      }
+        interviewId,
+        role: "assistant",
+        content: parsed.cleanMessage,
+      },
     });
 
-    // 6. Update the phase in DB
-    await prisma.interview.update({
-      where: { id: interviewId },
-      data: { currentPhase: result.nextPhase }
+    return NextResponse.json({
+      aiMessage: savedMessage,
+      transition: parsed.shouldTransition,
     });
-
-    return NextResponse.json(aiMessage);
-
   } catch (error) {
-    console.error("API Error:", error);
-    return NextResponse.json({ error: "Check terminal logs" }, { status: 500 });
+    console.error(error);
+
+    return NextResponse.json(
+      {
+        error: "Internal server error.",
+      },
+      {
+        status: 500,
+      }
+    );
   }
 }

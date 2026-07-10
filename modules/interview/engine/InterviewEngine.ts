@@ -21,24 +21,24 @@ export class InterviewEngine {
     // 1. Build the prompt
     const systemPrompt = this.promptBuilder.buildSystemPrompt(currentPhase, candidateName, problem);
     
-    // 2. Call AI
     const aiResponse = await this.aiService.chat([
-      { role: 'system', content: systemPrompt },
-      ...history
-    ]);
+  { role: "system", content: systemPrompt },
+  ...history,
+]);
 
-    // 3. Parse the response
-    const parsed = this.responseParser.parse(aiResponse);
+const parsed = this.responseParser.parse(aiResponse);
 
-    // 4. Determine next state
-    let nextPhase = currentPhase;
-    if (parsed.shouldTransition) {
-      nextPhase = this.phaseManager.getNextPhase(currentPhase);
-    }
+let nextPhase = currentPhase;
 
-    return {
-      answer: parsed.content,
-      nextPhase: nextPhase,
-    };
+if (parsed.shouldTransition) {
+  nextPhase = this.phaseManager.getNextPhase(currentPhase);
+}
+
+return {
+  answer: parsed.cleanMessage,
+  nextPhase,
+};
+
+
   }
 }

@@ -26,9 +26,9 @@ export default async function Page({ params }: Props) {
 
   return (
     <LiveInterview
-      interviewId={id}
-      // 2. Pass interview.transcript instead of interview.messages
-      initialMessages={interview.transcript} 
-    />
+  interviewId={interview.id}
+  duration={interview.duration}
+  initialMessages={interview.transcript}  
+/>
   );
 }

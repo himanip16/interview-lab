@@ -8,16 +8,18 @@ datasource db {
 }
 
 model Interview {
-  id         String          @id @default(cuid()) // added default
-  type       String
-  difficulty String
-  duration   Int
-  company    String
-  status     InterviewStatus
-  currentPhase String        @default("introduction") // <--- ADD THIS LINE
-  createdAt  DateTime        @default(now())
-  updatedAt  DateTime        @updatedAt
+  id           String          @id @default(cuid())
+  type         String
+  difficulty   String
+  duration     Int
+  company      String
+  status       InterviewStatus
+  currentPhase String          @default("introduction")
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
   transcript Message[]
+  evaluation Evaluation?
 }
 
 model Message {
@@ -27,6 +29,16 @@ model Message {
   content     String
   createdAt   DateTime    @default(now())
   interview   Interview   @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+}
+
+model Evaluation {
+  id          String @id @default(cuid())
+  interviewId String @unique
+  score       Int
+  feedback    String
+  metadata    Json?
+
+  interview Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
 }
 
 enum InterviewStatus {

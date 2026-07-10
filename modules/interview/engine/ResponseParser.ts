@@ -1,22 +1,23 @@
-// modules/interview/engine/ResponseParser.ts
-export interface ParsedResponse {
-  content: string;
-  shouldTransition: boolean;
-  feedbackSignals: string[];
-}
+import { InterviewPhase } from "./PhaseManager";
 
 export class ResponseParser {
-  parse(rawText: string): ParsedResponse {
-    const transitionSignal = "[[TRANSITION]]";
-    const shouldTransition = rawText.includes(transitionSignal);
-    
-    // Clean the text by removing the internal signals
-    const cleanContent = rawText.replace(transitionSignal, "").trim();
+  parse(aiResponse: string) {
+    const hasTransition = aiResponse.includes("[[TRANSITION]]");
+
+    const cleanMessage = aiResponse
+      .replace("[[TRANSITION]]", "")
+      .trim();
 
     return {
-      content: cleanContent,
-      shouldTransition,
-      feedbackSignals: [] // You can expand this to extract JSON scores etc.
+      cleanMessage,
+      shouldTransition: hasTransition,
     };
+  }
+
+  getNextPhase(currentPhase: InterviewPhase): InterviewPhase {
+    const phases = Object.values(InterviewPhase);
+    const currentIndex = phases.indexOf(currentPhase);
+
+    return phases[currentIndex + 1] ?? currentPhase;
   }
 }

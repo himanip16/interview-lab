@@ -80,7 +80,7 @@ async updateStatus(
       id,
     },
     include: {
-      messages: {
+      transcript: {
         orderBy: {
           createdAt: "asc",
         },

@@ -1,9 +1,9 @@
+// modules/interview/engine/PromptBuilder.ts
 import { InterviewPhase } from './PhaseManager';
 
 export class PromptBuilder {
   buildSystemPrompt(phase: InterviewPhase, candidateName: string, problem: string): string {
-    
-    const phaseInstructions = {
+    const phaseInstructions: Record<InterviewPhase, string> = {
       [InterviewPhase.INTRODUCTION]: "Briefly introduce yourself as a senior architect and present the problem statement.",
       [InterviewPhase.REQUIREMENTS]: "Guide the candidate to define functional and non-functional requirements. Don't give answers.",
       [InterviewPhase.HIGH_LEVEL_DESIGN]: "Ask for a high-level architecture: APIs, Database schema, and core components.",
@@ -11,8 +11,7 @@ export class PromptBuilder {
       [InterviewPhase.BOTTLE_NECKS]: "Ask about single points of failure and trade-offs made.",
       [InterviewPhase.CLOSING]: "Wrap up the interview and thank the candidate."
     };
-    
-    
+
     return `
       You are a Senior Staff Engineer at a Tier-1 Tech Company conducting a System Design Interview.
       Candidate: ${candidateName}
@@ -29,8 +28,7 @@ export class PromptBuilder {
       7. Ask only ONE follow-up question at a time to drill deeper into their design.
       8. If the candidate gives a vague answer, ask for specifics (e.g., "What specific database would you use here and why?").
       9. If the candidate asks for the answer, say: "I'd like to see how you would approach this first."
-      10. Be professional, slightly cold, and rigorous 
-      export class PromptBuilder 
+      10. Be professional, slightly cold, and rigorous.
 
       INSTRUCTIONS:
       - Stay in character. 
@@ -38,8 +36,6 @@ export class PromptBuilder {
       - ${phaseInstructions[phase]}
       
       CRITICAL: If you feel the current phase is complete, end your response with the token [[TRANSITION]].
-    `;
-        
+    `.trim();
   }
 }
-      

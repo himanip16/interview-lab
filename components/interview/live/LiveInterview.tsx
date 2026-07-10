@@ -1,47 +1,80 @@
-"use client"; // Mandatory for useState
+'use client';
 
 import { useState } from 'react';
-import MessageList from './MessageList';
-import ChatInput from './ChatInput';
+import Chat from './Chat';
+import Sidebar from './Sidebar';
+import InterviewHeader from './InterviewHeader';
 
 interface LiveInterviewProps {
   interviewId: string;
-  initialMessages?: any[];
+  duration: number;
+  initialMessages: any[];
 }
 
-export default function LiveInterview({ interviewId, initialMessages = [] }: LiveInterviewProps) {
+export default function LiveInterview({
+  interviewId,
+  duration,
+  initialMessages,
+}: LiveInterviewProps) {
   const [messages, setMessages] = useState(initialMessages);
   const [isLoading, setIsLoading] = useState(false);
+  const [summary, setSummary] = useState("Establishing connection...");
 
-  const handleSendMessage = async (text: string) => {
-    if (!text.trim()) return;
-
-    // Optimistic update
-    const userMsg = { id: Date.now().toString(), role: 'user', content: text };
-    setMessages((prev) => [...prev, userMsg]);
+  const handleSendMessage = async (content: string) => {
     setIsLoading(true);
 
+    const userMsg = {
+      id: `temp-${Date.now()}`,
+      role: "user",
+      content,
+    };
+
+    setMessages((prev) => [...prev, userMsg]);
+
     try {
-      const response = await fetch('/api/interview/message', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ interviewId, message: text }),
+      const response = await fetch("/api/interview/message", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          interviewId,
+          message: content,
+        }),
       });
 
-      const aiMsg = await response.json();
-      setMessages((prev) => [...prev, aiMsg]);
+      const data = await response.json();
+
+      if (data.aiMessage) {
+        setMessages((prev) => [...prev, data.aiMessage]);
+      }
+
+      if (data.newSummary) {
+        setSummary(data.newSummary);
+      }
     } catch (error) {
-      console.error("Failed to send message", error);
+      console.error(error);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-64px)]">
-      <MessageList messages={messages} />
-      {isLoading && <div className="p-4 text-sm text-gray-500 animate-pulse">Interviewer is thinking...</div>}
-      <ChatInput onSend={handleSendMessage} isLoading={isLoading} />
+    <div className="flex h-screen overflow-hidden">
+      <div className="flex flex-1 flex-col">
+        <InterviewHeader
+          duration={duration}
+          interviewId={interviewId}
+        />
+
+        <Chat
+          messages={messages}
+          onSendMessage={handleSendMessage}
+          isLoading={isLoading}
+        />
+      </div>
+
+      <Sidebar summary={summary} />
     </div>
   );
 }
