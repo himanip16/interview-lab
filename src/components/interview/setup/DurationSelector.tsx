@@ -1,38 +1,35 @@
+import { Button } from "@/src/components/ui/Button";
+
 type Props = {
-    value: number;
-    onChange: (value: number) => void;
+  value: number;
+  onChange: (value: number) => void;
 };
 
-const durations = [15, 30, 45, 60, 90];
+const DURATIONS = [15, 30, 45, 60, 90] as const;
 
 export default function DurationSelector({
-    value,
-    onChange,
+  value,
+  onChange,
 }: Props) {
-    return (
-        <div className="mt-8">
+  return (
+    <div className="mt-8">
+      <h3 className="mb-3 font-semibold">
+        Duration
+      </h3>
 
-            <h3 className="mb-3 font-semibold">
-                Duration
-            </h3>
-
-            <div className="flex gap-3">
-
-                {durations.map((duration) => (
-                    <button
-                        key={duration}
-                        onClick={() => onChange(duration)}
-                        className={`rounded-lg border px-5 py-2 ${
-                            value === duration
-                                ? "border-blue-500 bg-blue-600"
-                                : "border-zinc-700"
-                        }`}
-                    >
-                        {duration} min
-                    </button>
-                ))}
-
-            </div>
-        </div>
-    );
+      <div className="flex flex-wrap gap-3">
+        {DURATIONS.map((duration) => (
+          <Button
+            key={duration}
+            type="button"
+            variant={value === duration ? "primary" : "outline"}
+            aria-pressed={value === duration}
+            onClick={() => onChange(duration)}
+          >
+            {duration} min
+          </Button>
+        ))}
+      </div>
+    </div>
+  );
 }

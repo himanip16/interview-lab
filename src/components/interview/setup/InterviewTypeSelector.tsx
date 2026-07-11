@@ -1,24 +1,56 @@
-// components/interview/setup/InterviewTypeSelector.tsx
-const TYPES = [
-  { id: 'system-design', title: 'Standard System Design', desc: 'General architecture, APIs, and DB design.' },
-  { id: 'high-scale', title: 'High Scale / Distributed', desc: 'Focus on sharding, caching, and throughput.' },
-  { id: 'api-design', title: 'API & Integration', desc: 'Focus on contract design and developer UX.' }
-];
+import { Button } from "@/src/components/ui/Button";
 
-export default function InterviewTypeSelector({ value, onChange }: any) {
+type Props = {
+  value: string;
+  onChange: (value: string) => void;
+};
+
+const INTERVIEW_TYPES = [
+  {
+    id: "system-design",
+    title: "Standard System Design",
+    description:
+      "General architecture, APIs, and database design.",
+  },
+  {
+    id: "high-scale",
+    title: "High Scale / Distributed",
+    description:
+      "Focus on sharding, caching, scalability, and throughput.",
+  },
+  {
+    id: "api-design",
+    title: "API & Integration",
+    description:
+      "Focus on API contracts, integrations, and developer experience.",
+  },
+] as const;
+
+export default function InterviewTypeSelector({
+  value,
+  onChange,
+}: Props) {
   return (
     <div className="grid grid-cols-1 gap-4">
-      {TYPES.map((t) => (
-        <button
-          key={t.id}
-          onClick={() => onChange(t.id)}
-          className={`text-left p-4 rounded-xl border-2 transition-all ${
-            value === t.id ? 'border-blue-600 bg-blue-50' : 'border-slate-100 hover:border-slate-300'
-          }`}
+      {INTERVIEW_TYPES.map((type) => (
+        <Button
+          key={type.id}
+          type="button"
+          variant={value === type.id ? "primary" : "outline"}
+          aria-pressed={value === type.id}
+          onClick={() => onChange(type.id)}
+          className="h-auto w-full justify-start p-5 text-left"
         >
-          <h3 className="font-bold text-slate-800">{t.title}</h3>
-          <p className="text-sm text-slate-500">{t.desc}</p>
-        </button>
+          <div>
+            <h3 className="font-semibold">
+              {type.title}
+            </h3>
+
+            <p className="mt-1 text-sm opacity-80">
+              {type.description}
+            </p>
+          </div>
+        </Button>
       ))}
     </div>
   );

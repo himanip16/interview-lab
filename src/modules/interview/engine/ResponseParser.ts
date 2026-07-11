@@ -2,14 +2,17 @@ import { z } from "zod";
 import { InterviewPhase } from "./InterviewStateMachine";
 import { ValidatedJSONParser } from "@/src/modules/ai/utils/ValidatedJSONParser";
 
-const ResponseSchema = z.object({
+const AIResponseSchema = z.object({
   reply: z.string(),
+
   transition: z.boolean(),
+
   nextPhase: z.nativeEnum(InterviewPhase).optional(),
+
   confidence: z.number().min(0).max(1).optional(),
 });
 
-export type ParsedResponse = z.infer<typeof ResponseSchema>;
+export type ParsedResponse = z.infer<typeof AIResponseSchema>;
 
 export class ResponseParser {
   async parse(
@@ -18,7 +21,7 @@ export class ResponseParser {
   ): Promise<ParsedResponse> {
     return ValidatedJSONParser.parse(
       response,
-      ResponseSchema,
+      AIResponseSchema,
       retry
     );
   }

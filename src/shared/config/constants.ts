@@ -1,4 +1,12 @@
-export const MODEL_NAME = "your_model_name";
-export const TEMPERATURE = 0.5;
-export const MAX_TOKENS = 100;
-export const TIMEOUT = 5000; // in milliseconds
+import { env } from "./env";
+
+export const MODEL_NAME = env.OPENAI_MODEL;
+
+export const TEMPERATURE =
+  env.MODEL_TEMPERATURE;
+
+export const MAX_OUTPUT_TOKENS =
+  env.MAX_OUTPUT_TOKENS;
+
+export const REQUEST_TIMEOUT_MS =
+  env.REQUEST_TIMEOUT_MS;
