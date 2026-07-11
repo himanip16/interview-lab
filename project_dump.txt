@@ -1,0 +1,3609 @@
+PROJECT STRUCTURE
+=================
+.
+├── AGENTS.md
+├── CLAUDE.md
+├── README.md
+├── automate
+│   ├── dump_project.sh
+│   ├── find_and_move.sh
+│   └── project_dump.txt
+├── data
+│   ├── features.ts
+│   ├── rubrics
+│   │   ├── communication.md
+│   │   ├── missing-components.md
+│   │   ├── scalability.md
+│   │   └── tradeoffs.md
+│   └── transcript.txt
+├── eslint.config.mjs
+├── lib
+├── next-env.d.ts
+├── next.config.ts
+├── package-lock.json
+├── package.json
+├── postcss.config.mjs
+├── prisma.config.ts
+├── project_dump.txt
+├── public
+│   ├── file.svg
+│   ├── globe.svg
+│   ├── next.svg
+│   ├── vercel.svg
+│   └── window.svg
+├── repositories
+├── shared
+│   ├── config
+│   ├── errors
+│   ├── logger
+│   ├── prisma
+│   │   ├── migrations
+│   │   │   ├── 20260710054606_init
+│   │   │   │   └── migration.sql
+│   │   │   ├── 20260710093705_add_phase_and_defaults
+│   │   │   │   └── migration.sql
+│   │   │   ├── 20260710132539_add_summary
+│   │   │   │   └── migration.sql
+│   │   │   ├── 20260710141828_production_schema_update
+│   │   │   │   └── migration.sql
+│   │   │   └── migration_lock.toml
+│   │   └── schema.prisma
+│   ├── tests
+│   └── utils
+├── src
+│   ├── app
+│   │   ├── api
+│   │   │   ├── interviews
+│   │   │   │   ├── [id]
+│   │   │   │   │   ├── finish
+│   │   │   │   │   │   └── route.ts
+│   │   │   │   │   ├── message
+│   │   │   │   │   │   └── route.ts
+│   │   │   │   │   ├── report
+│   │   │   │   │   │   └── route.ts
+│   │   │   │   │   └── route.ts
+│   │   │   │   ├── route.ts
+│   │   │   │   ├── start
+│   │   │   │   │   └── route.ts
+│   │   │   │   └── status
+│   │   │   │       └── route.ts
+│   │   │   └── judge
+│   │   │       └── route.ts
+│   │   ├── favicon.ico
+│   │   ├── globals.css
+│   │   ├── interview
+│   │   │   ├── live
+│   │   │   │   └── [id]
+│   │   │   │       └── page.tsx
+│   │   │   ├── report
+│   │   │   │   └── [id]
+│   │   │   │       └── page.tsx
+│   │   │   └── setup
+│   │   │       ├── InterviewSetup.tsx
+│   │   │       └── page.tsx
+│   │   ├── layout.tsx
+│   │   └── marketing
+│   │       ├── features
+│   │       └── page.tsx
+│   ├── components
+│   │   ├── catalog
+│   │   │   ├── InterviewCard.tsx
+│   │   │   └── InterviewCatalog.tsx
+│   │   ├── conversation
+│   │   ├── interview
+│   │   │   ├── live
+│   │   │   │   ├── Chat.tsx
+│   │   │   │   ├── ChatInput.tsx
+│   │   │   │   ├── Conversation.tsx
+│   │   │   │   ├── InterviewHeader.tsx
+│   │   │   │   ├── LiveInterview.tsx
+│   │   │   │   ├── Message.tsx
+│   │   │   │   ├── MessageList.tsx
+│   │   │   │   ├── Sidebar.tsx
+│   │   │   │   └── Timer.tsx
+│   │   │   ├── report
+│   │   │   │   ├── FeedbackCard.tsx
+│   │   │   │   ├── ScoreCard.tsx
+│   │   │   │   └── Timeline.tsx
+│   │   │   └── setup
+│   │   │       ├── CompanySelector.tsx
+│   │   │       ├── DifficultySelector.tsx
+│   │   │       ├── DurationSelector.tsx
+│   │   │       ├── InterviewTypeSelector.tsx
+│   │   │       └── SetupCard.tsx
+│   │   ├── landing
+│   │   │   ├── FeatureCard.tsx
+│   │   │   ├── Features.tsx
+│   │   │   └── Hero.tsx
+│   │   ├── layout
+│   │   │   ├── Navbar.tsx
+│   │   │   └── PageContainer.tsx
+│   │   ├── report
+│   │   └── ui
+│   │       ├── Button.tsx
+│   │       ├── Dialog.tsx
+│   │       └── Input.tsx
+│   ├── features
+│   │   └── interview
+│   │       ├── api
+│   │       ├── components
+│   │       ├── hooks
+│   │       ├── store
+│   │       └── types
+│   ├── modules
+│   │   ├── ai
+│   │   │   ├── AIProvider.ts
+│   │   │   ├── AIService.ts
+│   │   │   └── providers
+│   │   │       ├── ClaudeProvider.ts
+│   │   │       ├── OllamaProvider.ts
+│   │   │       └── OpenAIProvider.ts
+│   │   ├── analytics
+│   │   ├── auth
+│   │   ├── evaluation
+│   │   ├── interview
+│   │   │   ├── application
+│   │   │   ├── domain
+│   │   │   │   └── interviews.ts
+│   │   │   ├── dto
+│   │   │   ├── engine
+│   │   │   │   ├── InterviewContext.ts
+│   │   │   │   ├── InterviewEngine.ts
+│   │   │   │   ├── PhaseManager.ts
+│   │   │   │   ├── PromptBuilder.ts
+│   │   │   │   ├── ResponseParser.ts
+│   │   │   │   └── StateUpdater.ts
+│   │   │   ├── evaluators
+│   │   │   │   ├── ArchitectureEvaluator.ts
+│   │   │   │   ├── CommunicationEvaluator.ts
+│   │   │   │   ├── RequirementEvaluator.ts
+│   │   │   │   └── TechnicalEvaluator.ts
+│   │   │   ├── infrastructure
+│   │   │   ├── interfaces
+│   │   │   ├── models
+│   │   │   │   ├── Evaluation.ts
+│   │   │   │   ├── Interview.ts
+│   │   │   │   ├── InterviewContext.ts
+│   │   │   │   ├── Message.ts
+│   │   │   │   ├── PhaseResult.ts
+│   │   │   │   └── Prompt.ts
+│   │   │   ├── phases
+│   │   │   ├── prompt
+│   │   │   │   ├── PromptLoader.ts
+│   │   │   │   ├── PromptRenderer.ts
+│   │   │   │   ├── requirements.ts
+│   │   │   │   └── templates
+│   │   │   │       ├── clarification.md
+│   │   │   │       ├── evaluation.md
+│   │   │   │       ├── intro.md
+│   │   │   │       ├── judge.md
+│   │   │   │       ├── judge.ts
+│   │   │   │       └── scaling.md
+│   │   │   ├── repositories
+│   │   │   │   ├── InterviewRepository.ts
+│   │   │   │   └── MessageRepository.ts
+│   │   │   ├── services
+│   │   │   │   ├── EvaluationService.ts
+│   │   │   │   ├── InterviewFactory.ts
+│   │   │   │   ├── InterviewMessageService
+│   │   │   │   ├── SummaryService.ts
+│   │   │   │   └── TranscriptService.ts
+│   │   │   ├── state
+│   │   │   ├── templates
+│   │   │   ├── types
+│   │   │   │   ├── CreateInterviewInput.ts
+│   │   │   │   ├── InterviewState.ts
+│   │   │   │   ├── TranscriptMessage.ts
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── interview.ts
+│   │   │   │   └── message.ts
+│   │   │   └── types.ts
+│   │   └── workspace
+│   └── shared
+│       ├── config
+│       │   ├── constants.ts
+│       │   └── env.ts
+│       ├── logger
+│       │   └── logger.ts
+│       └── prisma
+│           └── client.ts
+├── tests
+├── tsconfig.json
+└── tsconfig.tsbuildinfo
+
+85 directories, 125 files
+
+FILE CONTENTS
+
+================================================
+FILE: ./postcss.config.mjs
+================================================
+const config = {
+  plugins: {
+    "@tailwindcss/postcss": {},
+  },
+};
+
+export default config;
+
+================================================
+FILE: ./shared/prisma/schema.prisma
+================================================
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model User {
+  id String @id @default(cuid())
+
+  email String @unique
+
+  interviews Interview[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+model Interview {
+  id String @id @default(cuid())
+
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type InterviewType
+
+  difficulty Difficulty
+
+  duration Int
+
+  company String
+
+  status InterviewStatus
+
+  currentPhase String @default("introduction")
+
+  summary String @default("Interview has not started yet.")
+
+  promptVersion String @default("v1")
+
+  transcript Message[]
+
+  evaluation Evaluation?
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([status])
+}
+
+
+model Message {
+  id String @id @default(cuid())
+
+  interviewId String
+
+  role MessageRole
+
+  content String
+
+  metadata Json?
+
+  createdAt DateTime @default(now())
+
+  interview Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+
+  @@index([interviewId])
+}
+
+
+model Evaluation {
+  id String @id @default(cuid())
+
+  interviewId String @unique
+
+  overallScore Int
+
+  communicationScore Int
+
+  architectureScore Int
+
+  scalabilityScore Int
+
+  tradeoffScore Int
+
+  feedback String
+
+  metadata Json?
+
+  createdAt DateTime @default(now())
+
+  interview Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+}
+
+
+enum InterviewStatus {
+  SETUP
+  IN_PROGRESS
+  COMPLETED
+}
+
+
+enum InterviewType {
+  HLD
+  LLD
+}
+
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+
+enum MessageRole {
+  assistant
+  user
+}
+================================================
+FILE: ./prisma.config.ts
+================================================
+// This file was generated by Prisma, and assumes you have installed the following:
+// npm install --save-dev prisma dotenv
+import "dotenv/config";
+import { defineConfig } from "prisma/config";
+
+const databaseUrl = process.env.DATABASE_URL;
+
+if (!databaseUrl) {
+  throw new Error("DATABASE_URL is not set.");
+}
+
+export default defineConfig({
+  schema: "prisma/schema.prisma",
+  migrations: {
+    path: "prisma/migrations",
+  },
+  datasource: {
+    url: databaseUrl,
+  },
+});
+
+================================================
+FILE: ./next-env.d.ts
+================================================
+/// <reference types="next" />
+/// <reference types="next/image-types/global" />
+import "./.next/dev/types/routes.d.ts";
+
+// NOTE: This file should not be edited
+// see https://nextjs.org/docs/app/api-reference/config/typescript for more information.
+
+================================================
+FILE: ./README.md
+================================================
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+
+## Getting Started
+
+First, run the development server:
+
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+
+## Learn More
+
+To learn more about Next.js, take a look at the following resources:
+
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+================================================
+FILE: ./package.json
+================================================
+{
+  "name": "ai-system-design-interviewer",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.3",
+    "lucide-react": "^1.24.0",
+    "next": "16.2.10",
+    "ollama": "^0.6.3",
+    "pino": "^10.3.1",
+    "prisma": "^6.19.3",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.10",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
+
+================================================
+FILE: ./tsconfig.json
+================================================
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "incremental": true,
+    "baseUrl": ".",
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts",
+    "**/*.mts"
+  ],
+  "exclude": ["node_modules"]
+}
+
+================================================
+FILE: ./AGENTS.md
+================================================
+<!-- BEGIN:nextjs-agent-rules -->
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
+<!-- END:nextjs-agent-rules -->
+
+================================================
+FILE: ./data/features.ts
+================================================
+export const features = [
+  {
+    title: "Structured Interview Flow",
+    description:
+      "Every interview follows clear phases like requirements gathering, architecture, deep dive and evaluation.",
+  },
+  {
+    title: "AI Senior Interviewer",
+    description:
+      "Practice realistic follow-up questions inspired by interviews at top technology companies.",
+  },
+  {
+    title: "Detailed Feedback",
+    description:
+      "Receive actionable feedback with strengths, weaknesses and improvement areas after every interview.",
+  },
+  {
+    title: "Configurable Templates",
+    description:
+      "Choose different interview types, durations and difficulty levels without changing the interview engine.",
+  },
+  {
+    title: "Real-Time Progress",
+    description:
+      "Track interview phases, remaining time and overall interview progress.",
+  },
+  {
+    title: "Company Interview Packs",
+    description:
+      "Practice interview formats inspired by companies like Google, Meta, Uber and Amazon.",
+  },
+];
+================================================
+FILE: ./data/rubrics/communication.md
+================================================
+
+================================================
+FILE: ./data/rubrics/scalability.md
+================================================
+# Scalability
+
+Score from 1-10.
+
+Give points for:
+
+- Horizontal Scaling
+- Load Balancer
+- Partitioning
+- Sharding
+- Replication
+- Caching
+- CDN
+- Queue
+
+Deduct points if the candidate ignores scaling completely.
+
+Return reasoning.
+================================================
+FILE: ./data/rubrics/missing-components.md
+================================================
+
+================================================
+FILE: ./data/rubrics/tradeoffs.md
+================================================
+
+================================================
+FILE: ./eslint.config.mjs
+================================================
+import { defineConfig, globalIgnores } from "eslint/config";
+import nextVitals from "eslint-config-next/core-web-vitals";
+import nextTs from "eslint-config-next/typescript";
+
+const eslintConfig = defineConfig([
+  ...nextVitals,
+  ...nextTs,
+  // Override default ignores of eslint-config-next.
+  globalIgnores([
+    // Default ignores of eslint-config-next:
+    ".next/**",
+    "out/**",
+    "build/**",
+    "next-env.d.ts",
+  ]),
+]);
+
+export default eslintConfig;
+
+================================================
+FILE: ./CLAUDE.md
+================================================
+@AGENTS.md
+
+================================================
+FILE: ./next.config.ts
+================================================
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  /* config options here */
+};
+
+export default nextConfig;
+
+================================================
+FILE: ./src/app/interview/setup/InterviewSetup.tsx
+================================================
+"use client";
+
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
+================================================
+FILE: ./src/app/interview/setup/page.tsx
+================================================
+"use client";
+
+import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+
+import CompanySelector from "@/src/components/interview/setup/CompanySelector";
+import DifficultySelector from "@/src/components/interview/setup/DifficultySelector";
+import DurationSelector from "@/src/components/interview/setup/DurationSelector";
+import SetupCard from "@/src/components/interview/setup/SetupCard";
+
+export default function InterviewSetupPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const interviewType = searchParams.get("type") ?? "hld";
+
+  const [difficulty, setDifficulty] = useState("Medium");
+  const [duration, setDuration] = useState(45);
+  const [company, setCompany] = useState("Google");
+
+  async function handleStartInterview() {
+    console.log("Sending request to /api/interview/start"); // Add this line
+  
+    const response = await fetch("/api/interview/start", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        type: interviewType,
+        difficulty,
+        duration,
+        company,
+      }),
+    });
+
+if (!response.ok) {
+  throw new Error(await response.text());
+}
+console.log(response.status);
+
+    const interview = await response.json();
+
+    router.push(`/interview/live/${interview.id}`);
+  }
+
+  return (
+    <main className="min-h-screen bg-zinc-950 px-6 py-12 text-white">
+      <SetupCard>
+        <h1 className="text-4xl font-bold">Interview Setup</h1>
+
+        <p className="mt-3 text-zinc-400">
+          Configure your interview before starting.
+        </p>
+
+        <div className="mt-10">
+          <p className="text-sm uppercase tracking-wide text-zinc-500">
+            Interview Type
+          </p>
+
+          <h2 className="mt-2 text-2xl font-semibold capitalize">
+            {interviewType}
+          </h2>
+        </div>
+
+        <DifficultySelector
+          value={difficulty}
+          onChange={setDifficulty}
+        />
+
+        <DurationSelector
+          value={duration}
+          onChange={setDuration}
+        />
+
+        <CompanySelector
+          value={company}
+          onChange={setCompany}
+        />
+
+        <button
+          onClick={handleStartInterview}
+          className="mt-10 w-full rounded-lg bg-blue-600 py-4 text-lg font-semibold hover:bg-blue-500"
+        >
+          Start Interview
+        </button>
+      </SetupCard>
+    </main>
+  );
+}
+================================================
+FILE: ./src/app/interview/live/[id]/page.tsx
+================================================
+// app/interview/live/[id]/page.tsx
+import { prisma } from "@/lib/prisma";
+import LiveInterview from "@/src/components/interview/live/LiveInterview";
+import { notFound } from "next/navigation";
+
+type Props = {
+  params: Promise<{ id: string }>;
+};
+
+export default async function Page({ params }: Props) {
+  const { id } = await params;
+
+  // 1. Change 'messages' to 'transcript'
+  const interview = await prisma.interview.findUnique({
+    where: { id },
+    include: { 
+      transcript: { 
+        orderBy: { createdAt: 'asc' } 
+      } 
+    }
+  });
+
+  if (!interview) {
+    return notFound();
+  }
+
+  return (
+    <LiveInterview
+  interviewId={interview.id}
+  duration={interview.duration}
+  initialMessages={interview.transcript}  
+/>
+  );
+}
+================================================
+FILE: ./src/app/interview/report/[id]/page.tsx
+================================================
+import { prisma } from "@/lib/prisma";
+import ScoreCard from "@/src/components/interview/report/ScoreCard";
+import FeedbackCard from "@/src/components/interview/report/FeedbackCard";
+
+type Props = {
+  params: Promise<{
+    id: string;
+  }>;
+};
+
+type EvaluationMetadata = {
+  strengths?: string[];
+  weaknesses?: string[];
+};
+
+export default async function ReportPage({ params }: Props) {
+  const { id } = await params;
+
+  const evaluation = await prisma.evaluation.findUnique({
+    where: {
+      interviewId: id,
+    },
+  });
+
+  if (!evaluation) {
+    return (
+      <div className="p-20 text-center">
+        Generating your detailed feedback... Please refresh in a moment.
+      </div>
+    );
+  }
+
+  const metadata =
+    (evaluation.metadata as EvaluationMetadata | null) ?? {};
+
+  return (
+    <div className="mx-auto max-w-5xl px-4 py-12">
+      <h1 className="mb-8 text-4xl font-bold">
+        Interview Performance Report
+      </h1>
+
+      <div className="mb-12 grid gap-8 md:grid-cols-2">
+        <ScoreCard score={evaluation.score} />
+
+        <div className="rounded-xl border bg-white p-6 shadow-sm">
+          <h3 className="mb-2 font-bold">Expert Feedback</h3>
+
+          <p className="leading-relaxed text-slate-600">
+            {evaluation.feedback}
+          </p>
+        </div>
+      </div>
+
+      <FeedbackCard
+        strengths={metadata.strengths ?? []}
+        weaknesses={metadata.weaknesses ?? []}
+      />
+    </div>
+  );
+}
+================================================
+FILE: ./src/app/layout.tsx
+================================================
+import type { Metadata } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
+import "./globals.css";
+
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+export const metadata: Metadata = {
+  title: "Create Next App",
+  description: "Generated by create next app",
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html
+      lang="en"
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+    >
+      <body className="min-h-full flex flex-col">{children}</body>
+    </html>
+  );
+}
+
+================================================
+FILE: ./src/app/api/judge/route.ts
+================================================
+import { NextResponse } from "next/server";
+
+export async function POST() {
+  return NextResponse.json({
+    ok: true,
+  });
+}
+================================================
+FILE: ./src/app/api/interviews/start/route.ts
+================================================
+import { NextResponse } from "next/server";
+
+import { createInterview } from "@/src/modules/interview/services/InterviewFactory";
+import { InterviewRepository } from "@/src/modules/interview/repositories/InterviewRepository";
+import { TranscriptService } from "@/src/modules/interview/services/TranscriptService";
+import logger from "@/lib/logger";
+
+
+export async function POST(
+  request: Request
+) {
+  try {
+
+    const body = await request.json();
+
+    const {
+      userId,
+      type,
+      difficulty,
+      duration,
+      company,
+    } = body;
+
+
+    if (
+      !userId ||
+      !type ||
+      !difficulty ||
+      !duration ||
+      !company
+    ) {
+      return NextResponse.json(
+        {
+          error: "Missing required fields.",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+
+    const interview =
+      createInterview({
+        userId,
+        type,
+        difficulty,
+        duration,
+        company,
+      });
+
+
+    const repository =
+      new InterviewRepository();
+
+
+    const savedInterview =
+      await repository.create(interview);
+
+
+    const transcriptService =
+      new TranscriptService();
+
+
+    await transcriptService.addAssistantMessage(
+      savedInterview.id,
+      "Welcome! Today we'll design a URL Shortener. Start by asking clarifying questions."
+    );
+
+
+    return NextResponse.json(
+      {
+        id: savedInterview.id,
+      },
+      {
+        status: 201,
+      }
+    );
+
+
+  } catch(error) {
+
+    logger.error(
+      {
+        error,
+      },
+      "Failed to start interview"
+    );
+
+
+    return NextResponse.json(
+      {
+        error: "Failed to start interview.",
+      },
+      {
+        status:500,
+      }
+    );
+  }
+}
+================================================
+FILE: ./src/app/api/interviews/status/route.ts
+================================================
+import { NextResponse } from "next/server";
+
+import { InterviewRepository } from "@/src/modules/interview/repositories/InterviewRepository";
+
+export async function GET(request: Request) {
+  try {
+    const id = new URL(request.url).searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "Missing interview id." },
+        { status: 400 }
+      );
+    }
+
+    const repository = new InterviewRepository();
+
+    const interview = await repository.getById(id);
+
+    if (!interview) {
+      return NextResponse.json(
+        { error: "Interview not found." },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(interview);
+  } catch (error) {
+    console.error("Failed to fetch interview:", error);
+
+    return NextResponse.json(
+      { error: "Internal server error." },
+      { status: 500 }
+    );
+  }
+}
+================================================
+FILE: ./src/app/api/interviews/route.ts
+================================================
+
+================================================
+FILE: ./src/app/api/interviews/[id]/message/route.ts
+================================================
+import { NextResponse } from "next/server";
+
+import { InterviewMessageService } from "@/modules/interview/services/InterviewMessageService";
+import logger from "@/lib/logger";
+
+
+export async function POST(
+  req: Request
+) {
+
+  try {
+
+    const body = await req.json();
+
+    const {
+      interviewId,
+      message,
+    } = body;
+
+
+    if (!interviewId || !message?.trim()) {
+
+      return NextResponse.json(
+        {
+          error: "Invalid request",
+        },
+        {
+          status:400,
+        }
+      );
+    }
+
+
+    const service =
+      new InterviewMessageService();
+
+
+    const result =
+      await service.processMessage(
+        interviewId,
+        message
+      );
+
+
+    return NextResponse.json(
+      result,
+      {
+        status:200,
+      }
+    );
+
+
+  } catch(error) {
+
+
+    logger.error(
+      {
+        error,
+      },
+      "Failed to process interview message"
+    );
+
+
+    return NextResponse.json(
+      {
+        error:"Internal server error",
+      },
+      {
+        status:500,
+      }
+    );
+
+  }
+}
+================================================
+FILE: ./src/app/api/interviews/[id]/route.ts
+================================================
+import { NextResponse } from "next/server";
+
+import { InterviewRepository } from "@/src/modules/interview/repositories/InterviewRepository";
+import logger from "@/lib/logger";
+
+type Props = {
+  params: Promise<{
+    id: string;
+  }>;
+};
+
+export async function GET({ params }: Props) {
+  const { id } = await params;
+
+  try {
+    if (!id) {
+      return NextResponse.json(
+        {
+          error: "Missing interview id",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    const repository = new InterviewRepository();
+
+    const interview =
+      await repository.getById(id);
+
+    if (!interview) {
+      return NextResponse.json(
+        {
+          error: "Interview not found",
+        },
+        {
+          status: 404,
+        }
+      );
+    }
+
+    return NextResponse.json(
+      {
+        id: interview.id,
+        status: interview.status,
+        type: interview.type,
+        difficulty: interview.difficulty,
+        duration: interview.duration,
+        company: interview.company,
+        transcript: interview.transcript,
+        evaluation: interview.evaluation,
+        summary: interview.summary,
+      },
+      {
+        status: 200,
+      }
+    );
+
+  } catch (error) {
+    logger.error(
+      {
+        error,
+        interviewId: id,
+      },
+      "Failed to fetch interview"
+    );
+
+    return NextResponse.json(
+      {
+        error: "Internal server error",
+      },
+      {
+        status: 500,
+      }
+    );
+  }
+}
+================================================
+FILE: ./src/app/api/interviews/[id]/finish/route.ts
+================================================
+import { NextResponse } from "next/server";
+
+import { InterviewRepository } from "@/src/modules/interview/repositories/InterviewRepository";
+import { EvaluationService } from "@/src/modules/interview/services/EvaluationService";
+import logger from "@/lib/logger";
+import { InterviewStatus } from "@prisma/client";
+
+
+export async function POST(
+  req: Request
+) {
+  try {
+    const body = await req.json();
+
+    const { interviewId } = body;
+
+
+    if (!interviewId) {
+      return NextResponse.json(
+        {
+          error: "Missing interview id",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+
+    const repository =
+      new InterviewRepository();
+
+
+    const exists =
+      await repository.exists(interviewId);
+
+
+    if (!exists) {
+      return NextResponse.json(
+        {
+          error: "Interview not found",
+        },
+        {
+          status: 404,
+        }
+      );
+    }
+
+
+    await repository.updateProgress(
+      interviewId,
+      {
+        status: InterviewStatus.COMPLETED,
+      }
+    );
+
+
+    const evaluationService =
+      new EvaluationService();
+
+
+    const evaluation =
+      await evaluationService.evaluateInterview(
+        interviewId
+      );
+
+
+    return NextResponse.json(
+      {
+        success: true,
+        evaluationId: evaluation.id,
+      },
+      {
+        status: 200,
+      }
+    );
+
+
+  } catch(error) {
+
+    logger.error(
+      {
+        error,
+      },
+      "Failed to finish interview"
+    );
+
+
+    return NextResponse.json(
+      {
+        error: "Internal server error",
+      },
+      {
+        status: 500,
+      }
+    );
+  }
+}
+================================================
+FILE: ./src/app/api/interviews/[id]/report/route.ts
+================================================
+
+================================================
+FILE: ./src/app/marketing/page.tsx
+================================================
+import Hero from "@/src/components/landing/Hero";
+import Features from "@/src/components/landing/Features";
+import InterviewCatalog from "@/src/components/catalog/InterviewCatalog";
+import Navbar from "@/src/components/layout/Navbar";
+import PageContainer from "@/src/components/layout/PageContainer";
+
+export default function Home() {
+  return (
+    <PageContainer>
+      <Navbar />
+
+      <Hero />
+
+      <InterviewCatalog />
+
+      <Features />
+    </PageContainer>
+  );
+}
+================================================
+FILE: ./src/app/globals.css
+================================================
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: #09090b;
+  color: white;
+}
+
+button {
+  cursor: pointer;
+}
+
+================================================
+FILE: ./src/shared/logger/logger.ts
+================================================
+import pino from "pino";
+
+const logger = pino({
+  level: process.env.LOG_LEVEL || "info",
+
+  base: {
+    service: "ai-system-design-interviewer",
+  },
+
+  ...(process.env.NODE_ENV !== "production" && {
+    transport: {
+      target: "pino-pretty",
+      options: {
+        colorize: true,
+      },
+    },
+  }),
+});
+
+export default logger;
+================================================
+FILE: ./src/shared/config/constants.ts
+================================================
+export const MODEL_NAME = "your_model_name";
+export const TEMPERATURE = 0.5;
+export const MAX_TOKENS = 100;
+export const TIMEOUT = 5000; // in milliseconds
+================================================
+FILE: ./src/shared/config/env.ts
+================================================
+import * as z from "zod";
+
+const envSchema = z.object({
+  ENV_VAR_1: z.string(),
+  ENV_VAR_2: z.string(),
+  // Add more environment variables here
+});
+
+export const env = envSchema.parse(process.env);
+================================================
+FILE: ./src/shared/prisma/client.ts
+================================================
+import { PrismaClient } from "@prisma/client";
+
+const globalForPrisma =
+  globalThis as unknown as {
+    prisma: PrismaClient | undefined;
+  };
+
+export const prisma =
+  globalForPrisma.prisma ??
+  new PrismaClient();
+
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.prisma = prisma;
+}
+================================================
+FILE: ./src/components/ui/Dialog.tsx
+================================================
+
+================================================
+FILE: ./src/components/ui/Button.tsx
+================================================
+// components/ui/Button.tsx
+import React from "react";
+
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: "primary" | "secondary" | "outline";
+}
+
+export const Button = ({ 
+  children, 
+  variant = "primary", 
+  className = "", 
+  ...props 
+}: ButtonProps) => {
+  const baseStyles = "px-4 py-2 rounded-md font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
+  
+  const variants = {
+    primary: "bg-blue-600 text-white hover:bg-blue-700",
+    secondary: "bg-gray-200 text-gray-800 hover:bg-gray-300",
+    outline: "border border-gray-300 bg-transparent hover:bg-gray-50"
+  };
+
+  return (
+    <button 
+      className={`${baseStyles} ${variants[variant]} ${className}`} 
+      {...props}
+    >
+      {children}
+    </button>
+  );
+};
+================================================
+FILE: ./src/components/ui/Input.tsx
+================================================
+
+
+// components/ui/Input.tsx
+import React from "react";
+
+export const Input = ({ className = "", ...props }: React.InputHTMLAttributes<HTMLInputElement>) => {
+  return (
+    <input
+      className={`
+        flex h-10 w-full rounded-md border border-gray-300 
+        bg-white px-3 py-2 text-sm text-black 
+        placeholder:text-gray-500 focus:outline-none 
+        focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed 
+        disabled:opacity-50 ${className}
+      `}
+      {...props}
+    />
+  );
+};
+================================================
+FILE: ./src/components/landing/Hero.tsx
+================================================
+"use client";
+
+import Link from "next/link";
+
+export default function Hero() {
+  return (
+    <section className="flex min-h-[80vh] items-center">
+      <div className="max-w-3xl">
+        <p className="mb-4 text-blue-400">
+          Practice Like Top Tech Companies
+        </p>
+
+        <h2 className="text-6xl font-bold leading-tight">
+          AI Technical
+          <br />
+          Interview Platform
+        </h2>
+
+        <p className="mt-8 max-w-xl text-lg leading-8 text-zinc-400">
+          Practice realistic technical interviews for
+          System Design, Backend Engineering,
+          Java, Databases and Distributed Systems.
+        </p>
+
+        <div className="mt-10 flex gap-4">
+
+          <Link
+  href="/interview/setup"
+  className="rounded-lg bg-blue-600 px-6 py-3 font-medium hover:bg-blue-500"
+>
+  Start Interview
+</Link>
+
+          <button className="rounded-lg border border-zinc-700 px-6 py-3">
+            Browse Interviews
+          </button>
+
+        </div>
+      </div>
+    </section>
+  );
+}
+================================================
+FILE: ./src/components/landing/Features.tsx
+================================================
+import FeatureCard from "./FeatureCard";
+import { features } from "@/data/features";
+
+export default function Features() {
+  return (
+    <section className="py-20">
+
+      <h2 className="text-4xl font-bold">
+        Why AI Interview?
+      </h2>
+
+      <p className="mt-3 text-zinc-400">
+        Practice interviews designed to feel like real technical interviews.
+      </p>
+
+      <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {features.map((feature) => (
+          <FeatureCard
+            key={feature.title}
+            title={feature.title}
+            description={feature.description}
+          />
+        ))}
+      </div>
+
+    </section>
+  );
+}
+================================================
+FILE: ./src/components/landing/FeatureCard.tsx
+================================================
+import type { FC } from "react";
+
+type Props = {
+  title: string;
+  description: string;
+};
+
+const FeatureCard: FC<Props> = ({
+  title,
+  description,
+}) => {
+  return (
+    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-6">
+      <h3 className="text-lg font-semibold">{title}</h3>
+
+      <p className="mt-3 text-sm leading-6 text-zinc-400">
+        {description}
+      </p>
+    </div>
+  );
+};
+
+export default FeatureCard;
+================================================
+FILE: ./src/components/layout/Navbar.tsx
+================================================
+import Link from "next/link";
+
+export default function Navbar() {
+  return (
+    <nav className="flex items-center justify-between py-6">
+
+      <Link
+        href="/"
+        className="text-xl font-bold"
+      >
+        AI Interviewer
+      </Link>
+
+
+      <div className="flex gap-6 text-sm text-zinc-400">
+
+        <Link href="/interview/setup">
+          Interviews
+        </Link>
+
+        <Link href="/analytics">
+          Analytics
+        </Link>
+
+      </div>
+
+    </nav>
+  );
+}
+================================================
+FILE: ./src/components/layout/PageContainer.tsx
+================================================
+type Props = {
+  children: React.ReactNode;
+};
+
+export default function PageContainer({
+  children,
+}: Props) {
+  return (
+    <main className="min-h-screen bg-zinc-950 px-6 text-white">
+      {children}
+    </main>
+  );
+}
+================================================
+FILE: ./src/components/catalog/InterviewCard.tsx
+================================================
+import { Interview } from "@/src/modules/interview/types/interview";
+import Link from "next/link";
+type Props = {
+  interview: Interview;
+};
+
+export default function InterviewCard({
+  interview,
+}: Props) {
+  return (
+    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-6 transition hover:border-blue-500">
+
+      <h3 className="text-xl font-semibold">
+        {interview.title}
+      </h3>
+
+      <p className="mt-2 text-sm text-zinc-400">
+        {interview.description}
+      </p>
+
+      <div className="mt-6 flex items-center justify-between">
+
+        <span className="text-sm text-zinc-500">
+          {interview.duration} min • {interview.difficulty}
+        </span>
+
+        <Link
+  href={`/interview/setup?type=${interview.id}`}
+  className="rounded-lg bg-blue-600 px-4 py-2 text-sm hover:bg-blue-500"
+>
+  Start →
+</Link>
+      </div>
+
+    </div>
+  );
+}
+================================================
+FILE: ./src/components/catalog/InterviewCatalog.tsx
+================================================
+import InterviewCard from "./InterviewCard";
+import { interviews } from "@/data/interviews";
+
+export default function InterviewCatalog() {
+  return (
+    <section className="py-20">
+
+      <h2 className="text-4xl font-bold">
+        Practice Interviews
+      </h2>
+
+      <p className="mt-3 text-zinc-400">
+        Choose an interview and start practicing.
+      </p>
+
+      <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+
+        {interviews.map((interview) => (
+          <InterviewCard
+            key={interview.id}
+            interview={interview}
+          />
+        ))}
+
+      </div>
+
+    </section>
+  );
+}
+================================================
+FILE: ./src/components/interview/setup/DurationSelector.tsx
+================================================
+type Props = {
+    value: number;
+    onChange: (value: number) => void;
+};
+
+const durations = [15, 30, 45, 60, 90];
+
+export default function DurationSelector({
+    value,
+    onChange,
+}: Props) {
+    return (
+        <div className="mt-8">
+
+            <h3 className="mb-3 font-semibold">
+                Duration
+            </h3>
+
+            <div className="flex gap-3">
+
+                {durations.map((duration) => (
+                    <button
+                        key={duration}
+                        onClick={() => onChange(duration)}
+                        className={`rounded-lg border px-5 py-2 ${
+                            value === duration
+                                ? "border-blue-500 bg-blue-600"
+                                : "border-zinc-700"
+                        }`}
+                    >
+                        {duration} min
+                    </button>
+                ))}
+
+            </div>
+        </div>
+    );
+}
+================================================
+FILE: ./src/components/interview/setup/SetupCard.tsx
+================================================
+type Props = {
+    children: React.ReactNode;
+};
+
+export default function SetupCard({
+    children,
+}: Props) {
+    return (
+        <div className="mx-auto mt-16 max-w-3xl rounded-xl border border-zinc-800 bg-zinc-900 p-10">
+            {children}
+        </div>
+    );
+}
+================================================
+FILE: ./src/components/interview/setup/CompanySelector.tsx
+================================================
+type Props = {
+    value: string;
+    onChange: (value: string) => void;
+};
+
+const companies = [
+    "Google",
+    "Meta",
+    "Uber",
+    "Stripe",
+    "Amazon",
+];
+
+export default function CompanySelector({
+    value,
+    onChange,
+}: Props) {
+    return (
+        <div className="mt-8">
+
+            <h3 className="mb-3 font-semibold">
+                Interview Style
+            </h3>
+
+            <select
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                className="rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-3"
+            >
+                {companies.map((company) => (
+                    <option key={company}>
+                        {company}
+                    </option>
+                ))}
+            </select>
+
+        </div>
+    );
+}
+================================================
+FILE: ./src/components/interview/setup/InterviewTypeSelector.tsx
+================================================
+// components/interview/setup/InterviewTypeSelector.tsx
+const TYPES = [
+  { id: 'system-design', title: 'Standard System Design', desc: 'General architecture, APIs, and DB design.' },
+  { id: 'high-scale', title: 'High Scale / Distributed', desc: 'Focus on sharding, caching, and throughput.' },
+  { id: 'api-design', title: 'API & Integration', desc: 'Focus on contract design and developer UX.' }
+];
+
+export default function InterviewTypeSelector({ value, onChange }: any) {
+  return (
+    <div className="grid grid-cols-1 gap-4">
+      {TYPES.map((t) => (
+        <button
+          key={t.id}
+          onClick={() => onChange(t.id)}
+          className={`text-left p-4 rounded-xl border-2 transition-all ${
+            value === t.id ? 'border-blue-600 bg-blue-50' : 'border-slate-100 hover:border-slate-300'
+          }`}
+        >
+          <h3 className="font-bold text-slate-800">{t.title}</h3>
+          <p className="text-sm text-slate-500">{t.desc}</p>
+        </button>
+      ))}
+    </div>
+  );
+}
+================================================
+FILE: ./src/components/interview/setup/DifficultySelector.tsx
+================================================
+type Props = {
+    value: string;
+    onChange: (value: string) => void;
+};
+
+const options = [
+    "Easy",
+    "Medium",
+    "Hard",
+    "Staff",
+];
+
+export default function DifficultySelector({
+    value,
+    onChange,
+}: Props) {
+    return (
+        <div className="mt-8">
+
+            <h3 className="mb-3 font-semibold">
+                Difficulty
+            </h3>
+
+            <div className="flex gap-3">
+
+                {options.map((option) => (
+                    <button
+                        key={option}
+                        onClick={() => onChange(option)}
+                        className={`rounded-lg border px-5 py-2 ${
+                            value === option
+                                ? "border-blue-500 bg-blue-600"
+                                : "border-zinc-700"
+                        }`}
+                    >
+                        {option}
+                    </button>
+                ))}
+
+            </div>
+        </div>
+    );
+}
+================================================
+FILE: ./src/components/interview/live/LiveInterview.tsx
+================================================
+'use client';
+
+import { useState } from 'react';
+import Chat from './Chat';
+import Sidebar from './Sidebar';
+import InterviewHeader from './InterviewHeader';
+
+interface LiveInterviewProps {
+  interviewId: string;
+  duration: number;
+  initialMessages: any[];
+}
+
+export default function LiveInterview({
+  interviewId,
+  duration,
+  initialMessages,
+}: LiveInterviewProps) {
+  const [messages, setMessages] = useState(initialMessages);
+  const [isLoading, setIsLoading] = useState(false);
+  const [summary, setSummary] = useState("Establishing connection...");
+
+  const handleSendMessage = async (content: string) => {
+    setIsLoading(true);
+
+    const userMsg = {
+      id: `temp-${Date.now()}`,
+      role: "user",
+      content,
+    };
+
+    setMessages((prev) => [...prev, userMsg]);
+
+    try {
+      const response = await fetch("/api/interview/message", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          interviewId,
+          message: content,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.aiMessage) {
+        setMessages((prev) => [...prev, data.aiMessage]);
+      }
+
+      if (data.newSummary) {
+        setSummary(data.newSummary);
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex h-screen overflow-hidden">
+      <div className="flex flex-1 flex-col">
+        <InterviewHeader
+          duration={duration}
+          interviewId={interviewId}
+        />
+
+        <Chat
+          messages={messages}
+          onSendMessage={handleSendMessage}
+          isLoading={isLoading}
+        />
+      </div>
+
+      <Sidebar summary={summary} />
+    </div>
+  );
+}
+================================================
+FILE: ./src/components/interview/live/MessageList.tsx
+================================================
+// components/interview/live/MessageList.tsx
+import React, { useEffect, useRef } from 'react';
+import { Message as MessageType } from '@/src/modules/interview/types/message';
+import Message from './Message';
+
+interface MessageListProps {
+  messages: MessageType[];
+}
+
+const MessageList: React.FC<MessageListProps> = ({ messages }) => {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  return (
+    <div 
+      ref={scrollRef}
+      className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50"
+    >
+      {messages.map((msg, index) => (
+        <Message key={msg.id || index} message={msg} />
+      ))}
+      
+      {messages.length === 0 && (
+        <div className="flex items-center justify-center h-full text-gray-400">
+          <p>No messages yet. The interviewer will start shortly.</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default MessageList; // This "export" makes it a module
+================================================
+FILE: ./src/components/interview/live/Conversation.tsx
+================================================
+
+================================================
+FILE: ./src/components/interview/live/Timer.tsx
+================================================
+// components/interview/live/Timer.tsx
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+
+interface TimerProps {
+  durationInMinutes: number;
+  interviewId: string;
+}
+
+export default function Timer({ durationInMinutes, interviewId }: TimerProps) {
+  const [timeLeft, setTimeLeft] = useState(durationInMinutes * 60);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (timeLeft <= 0) {
+      handleFinish();
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeLeft]);
+
+  const handleFinish = async () => {
+    await fetch('/api/interview/finish', {
+      method: 'POST',
+      body: JSON.stringify({ interviewId }),
+    });
+    router.push(`/interview/report/${interviewId}`);
+  };
+
+  const minutes = Math.floor(timeLeft / 60);
+  const seconds = timeLeft % 60;
+
+  return (
+    <div className={`p-2 rounded-lg font-mono text-xl ${timeLeft < 300 ? 'text-red-500 animate-pulse' : 'text-slate-700'}`}>
+      {minutes}:{seconds.toString().padStart(2, '0')}
+    </div>
+  );
+}
+================================================
+FILE: ./src/components/interview/live/Sidebar.tsx
+================================================
+// components/interview/live/Sidebar.tsx
+interface SidebarProps {
+  summary: string;
+  phase?: string;
+}
+
+export default function Sidebar({ summary, phase }: SidebarProps) {
+  return (
+    <aside className="w-80 border-l bg-slate-50 flex flex-col h-full">
+      <div className="p-6 border-b bg-white">
+        <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Current Phase</h2>
+        <div className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium inline-block capitalize">
+          {phase?.replace('_', ' ') || 'Intro'}
+        </div>
+      </div>
+
+      <div className="p-6 flex-1 overflow-y-auto">
+        <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Design Summary</h2>
+        {summary ? (
+          <div className="space-y-4">
+            {summary.split('\n').map((line, i) => (
+              <p key={i} className="text-sm text-slate-600 leading-relaxed">
+                {line.startsWith('-') ? line : `• ${line}`}
+              </p>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-40 text-center">
+            <div className="w-8 h-8 border-2 border-slate-200 border-t-slate-400 rounded-full animate-spin mb-2" />
+            <p className="text-xs text-slate-400 italic">Analyzing design requirements...</p>
+          </div>
+        )}
+      </div>
+    </aside>
+  );
+}
+================================================
+FILE: ./src/components/interview/live/Message.tsx
+================================================
+// components/interview/live/Message.tsx
+import React from 'react';
+import { Message as MessageType } from '@/src/modules/interview/types/message';
+
+interface MessageProps {
+  message: MessageType;
+}
+
+const Message: React.FC<MessageProps> = ({ message }) => {
+  const isAI = message.role === 'assistant' || message.role === 'system';
+
+  return (
+    <div className={`flex ${isAI ? 'justify-start' : 'justify-end'} mb-4`}>
+      <div
+        className={`max-w-[80%] rounded-lg p-4 ${
+          isAI
+            ? 'bg-white text-gray-800 border border-gray-200 shadow-sm'
+            : 'bg-blue-600 text-white shadow-md'
+        }`}
+      >
+        <div className="text-xs mb-1 opacity-70 font-semibold uppercase">
+          {isAI ? 'Interviewer' : 'You'}
+        </div>
+        <div className="whitespace-pre-wrap leading-relaxed text-sm">
+          {message.content}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Message;
+================================================
+FILE: ./src/components/interview/live/Chat.tsx
+================================================
+// components/interview/live/Chat.tsx
+'use client';
+import { useRef, useEffect } from 'react';
+import MessageList from './MessageList';
+import ChatInput from './ChatInput';
+
+interface ChatProps {
+  messages: any[];
+  onSendMessage: (msg: string) => void;
+  isLoading: boolean;
+}
+
+export default function Chat({ messages, onSendMessage, isLoading }: ChatProps) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, isLoading]);
+
+  return (
+    <div className="flex flex-col h-full bg-white">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-6">
+        <MessageList messages={messages} />
+        {isLoading && (
+          <div className="flex gap-3 animate-pulse">
+            <div className="w-8 h-8 bg-slate-200 rounded-full" />
+            <div className="flex-1 space-y-2">
+              <div className="h-4 bg-slate-100 rounded w-1/4" />
+              <div className="h-10 bg-slate-50 rounded w-3/4" />
+            </div>
+          </div>
+        )}
+      </div>
+      <div className="p-4 border-t bg-slate-50">
+        <ChatInput onSendMessage={onSendMessage} disabled={isLoading} />
+      </div>
+    </div>
+  );
+}
+================================================
+FILE: ./src/components/interview/live/InterviewHeader.tsx
+================================================
+import Timer from "./Timer";
+
+interface InterviewHeaderProps {
+  duration: number;
+  interviewId: string;
+}
+
+export default function InterviewHeader({
+  duration,
+  interviewId,
+}: InterviewHeaderProps) {
+  return (
+    <header className="h-16 border-b flex items-center justify-between px-6 bg-slate-50">
+      <div className="flex items-center gap-2">
+        <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
+        <span className="font-semibold text-slate-700">
+          Live Interview Session
+        </span>
+      </div>
+
+      <div className="flex items-center gap-6">
+        <div className="flex flex-col items-end">
+          <span className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">
+            Time Remaining
+          </span>
+
+          <Timer
+            durationInMinutes={duration}
+            interviewId={interviewId}
+          />
+        </div>
+      </div>
+    </header>
+  );
+}
+================================================
+FILE: ./src/components/interview/live/ChatInput.tsx
+================================================
+'use client';
+
+import { useEffect, useRef, useState } from "react";
+import {
+  Mic,
+  MicOff,
+  SendHorizontal,
+  Loader2,
+  CheckCircle2,
+} from "lucide-react";
+
+interface ChatInputProps {
+  onSendMessage: (message: string) => void;
+  disabled?: boolean;
+}
+
+type RecordingStatus =
+  | "idle"
+  | "recording"
+  | "transcribing"
+  | "success";
+
+declare global {
+  interface Window {
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
+  }
+}
+
+export default function ChatInput({
+  onSendMessage,
+  disabled = false,
+}: ChatInputProps) {
+  const [message, setMessage] = useState("");
+  const [status, setStatus] =
+    useState<RecordingStatus>("idle");
+
+  const recognitionRef = useRef<any>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const isEmpty = message.trim().length === 0;
+
+  useEffect(() => {
+    if (status !== "success") return;
+
+    const timer = setTimeout(() => {
+      setStatus("idle");
+    }, 2500);
+
+    return () => clearTimeout(timer);
+  }, [status]);
+
+  useEffect(() => {
+    return () => {
+      recognitionRef.current?.stop?.();
+    };
+  }, []);
+
+  useEffect(() => {
+    const textarea = textareaRef.current;
+
+    if (!textarea) return;
+
+    textarea.style.height = "0px";
+    textarea.style.height = `${textarea.scrollHeight}px`;
+  }, [message]);
+
+  const handleSend = () => {
+    const text = message.trim();
+
+    if (!text || disabled) return;
+
+    onSendMessage(text);
+
+    setMessage("");
+    setStatus("idle");
+  };
+
+  const toggleListening = () => {
+    if (disabled || status === "transcribing") return;
+
+    if (status === "recording") {
+      recognitionRef.current?.stop();
+      return;
+    }
+
+    const SpeechRecognition =
+      window.SpeechRecognition ||
+      window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      console.error(
+        "Speech Recognition is not supported in this browser."
+      );
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+
+    recognitionRef.current = recognition;
+
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = "en-US";
+
+    recognition.onstart = () => {
+      setStatus("recording");
+    };
+
+    recognition.onresult = (event: any) => {
+      setStatus("transcribing");
+
+      const transcript =
+        event.results[0][0].transcript ?? "";
+
+      setMessage(transcript);
+
+      setStatus("success");
+    };
+
+    recognition.onerror = (event: any) => {
+  console.log("SpeechRecognition:", event.error);
+
+  switch (event.error) {
+    case "no-speech":
+      // User clicked record but didn't say anything.
+      break;
+
+    case "audio-capture":
+      console.error("No microphone detected.");
+      break;
+
+    case "not-allowed":
+      console.error("Microphone permission denied.");
+      break;
+
+    case "network":
+      console.error("Speech recognition network error.");
+      break;
+
+    default:
+      console.error(event.error);
+  }
+
+  setStatus("idle");
+};
+
+    recognition.onend = () => {
+      setStatus((current) =>
+        current === "recording" ? "idle" : current
+      );
+    };
+
+    recognition.start();
+  };
+
+  return (
+    <div className="border-t bg-white p-4">
+      <div className="mb-2 flex h-6 items-center px-2">
+        {status === "recording" && (
+          <div className="flex items-center gap-2 text-sm font-medium text-red-600">
+            <div className="h-2 w-2 animate-pulse rounded-full bg-red-600" />
+            Recording... Click again to stop.
+          </div>
+        )}
+
+        {status === "transcribing" && (
+          <div className="flex items-center gap-2 text-sm text-blue-600">
+            <Loader2
+              size={14}
+              className="animate-spin"
+            />
+            Transcribing...
+          </div>
+        )}
+
+        {status === "success" && (
+          <div className="flex items-center gap-2 text-sm text-green-600">
+            <CheckCircle2 size={14} />
+            Transcript ready. Review and press Send.
+          </div>
+        )}
+      </div>
+
+      <div className="flex items-end gap-3">
+        <button
+          type="button"
+          onClick={toggleListening}
+          disabled={
+            disabled || status === "transcribing"
+          }
+          className={`flex items-center gap-2 rounded-full border px-4 py-2 transition ${
+            status === "recording"
+              ? "border-red-300 bg-red-50 text-red-600"
+              : "border-slate-300 bg-white hover:bg-slate-50"
+          } disabled:cursor-not-allowed disabled:opacity-50`}
+        >
+          {status === "recording" ? (
+            <>
+              <MicOff size={18} />
+              Stop
+            </>
+          ) : (
+            <>
+              <Mic size={18} />
+              Record
+            </>
+          )}
+        </button>
+
+        <textarea
+          ref={textareaRef}
+          rows={1}
+          value={message}
+          disabled={disabled}
+          placeholder={
+            disabled
+              ? "AI is thinking..."
+              : "Explain your design..."
+          }
+          onChange={(e) => setMessage(e.target.value)}
+          onKeyDown={(e) => {
+            if (
+              e.key === "Enter" &&
+              !e.shiftKey
+            ) {
+              e.preventDefault();
+              handleSend();
+            }
+          }}
+          className="max-h-40 min-h-[44px] flex-1 resize-none rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500 disabled:bg-slate-100"
+        />
+
+        <button
+          type="button"
+          onClick={handleSend}
+          disabled={disabled || isEmpty}
+          className="flex items-center gap-2 rounded-full bg-blue-600 px-5 py-3 font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+        >
+          Send
+          <SendHorizontal size={18} />
+        </button>
+      </div>
+    </div>
+  );
+}
+================================================
+FILE: ./src/components/interview/report/ScoreCard.tsx
+================================================
+// components/interview/report/ScoreCard.tsx
+export default function ScoreCard({ score, label = "Overall Score" }: { score: number, label?: string }) {
+  const getColor = (s: number) => {
+    if (s >= 80) return 'text-green-600 border-green-200 bg-green-50';
+    if (s >= 60) return 'text-yellow-600 border-yellow-200 bg-yellow-50';
+    return 'text-red-600 border-red-200 bg-red-50';
+  };
+
+  return (
+    <div className={`p-8 rounded-2xl border-2 flex flex-col items-center justify-center ${getColor(score)}`}>
+      <span className="text-sm font-bold uppercase tracking-wider opacity-70">{label}</span>
+      <div className="text-6xl font-black mt-2">{score}</div>
+      <div className="w-full bg-black/10 h-2 rounded-full mt-6 overflow-hidden">
+        <div 
+          className="h-full bg-current transition-all duration-1000" 
+          style={{ width: `${score}%` }} 
+        />
+      </div>
+    </div>
+  );
+}
+================================================
+FILE: ./src/components/interview/report/Timeline.tsx
+================================================
+
+================================================
+FILE: ./src/components/interview/report/FeedbackCard.tsx
+================================================
+interface FeedbackCardProps {
+  strengths: string[];
+  weaknesses: string[];
+}
+
+export default function FeedbackCard({
+  strengths,
+  weaknesses,
+}: FeedbackCardProps) {
+  return (
+    <div className="grid gap-8 md:grid-cols-2">
+      <div className="rounded-xl border bg-white p-6 shadow-sm">
+        <h2 className="mb-4 text-xl font-semibold text-green-600">
+          Strengths
+        </h2>
+
+        {strengths.length > 0 ? (
+          <ul className="list-disc space-y-2 pl-5 text-slate-700">
+            {strengths.map((strength, index) => (
+              <li key={index}>{strength}</li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-slate-500">
+            No strengths were identified.
+          </p>
+        )}
+      </div>
+
+      <div className="rounded-xl border bg-white p-6 shadow-sm">
+        <h2 className="mb-4 text-xl font-semibold text-red-600">
+          Areas for Improvement
+        </h2>
+
+        {weaknesses.length > 0 ? (
+          <ul className="list-disc space-y-2 pl-5 text-slate-700">
+            {weaknesses.map((weakness, index) => (
+              <li key={index}>{weakness}</li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-slate-500">
+            No improvement areas were identified.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+================================================
+FILE: ./src/modules/interview/types/CreateInterviewInput.ts
+================================================
+import {
+  InterviewType,
+  Difficulty,
+} from "@prisma/client";
+
+export interface CreateInterviewInput {
+  userId: string;
+
+  type: InterviewType;
+
+  difficulty: Difficulty;
+
+  duration: number;
+
+  company: string;
+}
+================================================
+FILE: ./src/modules/interview/types/TranscriptMessage.ts
+================================================
+export interface TranscriptMessage {
+  role: "assistant" | "user";
+  content: string;
+}
+================================================
+FILE: ./src/modules/interview/types/InterviewState.ts
+================================================
+import { InterviewStatus } from "@prisma/client";
+import { TranscriptMessage } from "./TranscriptMessage";
+
+export interface InterviewState {
+  id: string;
+
+  userId: string;
+
+  type: string;
+  difficulty: string;
+  duration: number;
+  company: string;
+
+  status: InterviewStatus;
+
+  currentPhase: string;
+
+  summary: string;
+
+  createdAt: Date;
+  updatedAt: Date;
+
+  transcript: TranscriptMessage[];
+}
+================================================
+FILE: ./src/modules/interview/types/message.ts
+================================================
+// types/message.ts
+export interface Message {
+  id?: string;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  createdAt?: Date;
+}
+================================================
+FILE: ./src/modules/interview/types/index.ts
+================================================
+export * from "./CreateInterviewInput";
+export * from "./InterviewState";
+export * from "./TranscriptMessage";
+================================================
+FILE: ./src/modules/interview/types/interview.ts
+================================================
+export type Interview = {
+  id: string;
+  title: string;
+  description: string;
+  duration: number;
+  difficulty: "Easy" | "Medium" | "Hard";
+};
+================================================
+FILE: ./src/modules/interview/repositories/InterviewRepository.ts
+================================================
+import { prisma } from "@/lib/prisma";
+import {
+  InterviewStatus,
+  MessageRole,
+  Prisma,
+} from "@prisma/client";
+
+import { CreateInterviewInput } from "../types/CreateInterviewInput";
+
+export class InterviewRepository {
+
+  async create(data: CreateInterviewInput) {
+  const {
+    userId,
+    ...interviewData
+  } = data;
+
+  return prisma.interview.create({
+    data: {
+      ...interviewData,
+
+      status: InterviewStatus.SETUP,
+
+      user: {
+        connect: {
+          id: userId,
+        },
+      },
+    },
+  });
+}
+
+
+  async getById(id: string) {
+    return prisma.interview.findUnique({
+      where: {
+        id,
+      },
+      include: {
+        transcript: {
+          orderBy: {
+            createdAt: "asc",
+          },
+        },
+        evaluation: true,
+      },
+    });
+  }
+
+
+  async exists(id: string): Promise<boolean> {
+    const interview =
+      await prisma.interview.findUnique({
+        where: {
+          id,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+    return interview !== null;
+  }
+
+
+  async updateProgress(
+    id: string,
+    updates: {
+      status?: InterviewStatus;
+      currentPhase?: string;
+    }
+  ) {
+    return prisma.interview.update({
+      where: {
+        id,
+      },
+      data: updates,
+    });
+  }
+
+
+  async addMessage(
+    interviewId: string,
+    role: MessageRole,
+    content: string,
+    metadata?: Prisma.InputJsonValue
+  ) {
+    return prisma.message.create({
+      data: {
+        interviewId,
+        role,
+        content,
+        metadata,
+      },
+    });
+  }
+
+
+  async updateSummary(
+    interviewId: string,
+    summary: string
+  ) {
+    return prisma.interview.update({
+      where: {
+        id: interviewId,
+      },
+      data: {
+        summary,
+      },
+    });
+  }
+
+
+  async saveEvaluation(
+    interviewId: string,
+    data: {
+      overallScore: number;
+      communicationScore: number;
+      architectureScore: number;
+      scalabilityScore: number;
+      tradeoffScore: number;
+      feedback: string;
+      metadata?: Prisma.InputJsonValue;
+    }
+  ) {
+    return prisma.evaluation.upsert({
+      where: {
+        interviewId,
+      },
+      update: data,
+      create: {
+        interviewId,
+        ...data,
+      },
+    });
+  }
+
+
+  async listAll(
+    limit = 10,
+    offset = 0
+  ) {
+    const safeLimit = Math.min(
+      Math.max(limit, 1),
+      100
+    );
+
+    const safeOffset = Math.max(offset, 0);
+
+    return prisma.interview.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: safeLimit,
+      skip: safeOffset,
+    });
+  }
+
+
+  async delete(id: string) {
+    return prisma.interview.delete({
+      where: {
+        id,
+      },
+    });
+  }
+
+
+  async transaction<T>(
+    callback: (
+      tx: Prisma.TransactionClient
+    ) => Promise<T>
+  ): Promise<T> {
+    return prisma.$transaction(callback);
+  }
+}
+================================================
+FILE: ./src/modules/interview/repositories/MessageRepository.ts
+================================================
+import { MessageRole } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
+
+export class MessageRepository {
+  async create(
+    interviewId: string,
+    role: MessageRole,
+    content: string
+  ) {
+    return prisma.message.create({
+      data: {
+        interviewId,
+        role,
+        content,
+      },
+    });
+  }
+
+  async list(interviewId: string) {
+    return prisma.message.findMany({
+      where: {
+        interviewId,
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+    });
+  }
+
+  async deleteAll(interviewId: string) {
+    return prisma.message.deleteMany({
+      where: {
+        interviewId,
+      },
+    });
+  }
+}
+================================================
+FILE: ./src/modules/interview/models/InterviewContext.ts
+================================================
+
+================================================
+FILE: ./src/modules/interview/models/Prompt.ts
+================================================
+
+================================================
+FILE: ./src/modules/interview/models/Message.ts
+================================================
+import { MessageRole } from "@prisma/client";
+
+export interface Message {
+  id: string;
+
+  interviewId: string;
+
+  role: MessageRole;
+
+  content: string;
+
+  metadata?: Record<string, unknown>;
+
+  createdAt: Date;
+}
+================================================
+FILE: ./src/modules/interview/models/Evaluation.ts
+================================================
+export interface Evaluation {
+  id: string;
+
+  interviewId: string;
+
+  overallScore: number;
+
+  communicationScore: number;
+
+  architectureScore: number;
+
+  scalabilityScore: number;
+
+  tradeoffScore: number;
+
+  feedback: string;
+
+  metadata?: Record<string, unknown>;
+
+  createdAt: Date;
+}
+================================================
+FILE: ./src/modules/interview/models/Interview.ts
+================================================
+import {
+  InterviewStatus,
+  InterviewType,
+  Difficulty,
+} from "@prisma/client";
+
+export interface Interview {
+  id: string;
+
+  type: InterviewType;
+
+  difficulty: Difficulty;
+
+  duration: number;
+
+  company: string;
+
+  status: InterviewStatus;
+
+  currentPhase: string;
+
+  summary: string;
+
+  promptVersion: string;
+
+  createdAt: Date;
+
+  updatedAt: Date;
+}
+================================================
+FILE: ./src/modules/interview/models/PhaseResult.ts
+================================================
+
+================================================
+FILE: ./src/modules/interview/evaluators/ArchitectureEvaluator.ts
+================================================
+
+================================================
+FILE: ./src/modules/interview/evaluators/TechnicalEvaluator.ts
+================================================
+
+================================================
+FILE: ./src/modules/interview/evaluators/CommunicationEvaluator.ts
+================================================
+
+================================================
+FILE: ./src/modules/interview/evaluators/RequirementEvaluator.ts
+================================================
+
+================================================
+FILE: ./src/modules/interview/types.ts
+================================================
+export enum InterviewStatus {
+  SETUP = "SETUP",
+  IN_PROGRESS = "IN_PROGRESS",
+  COMPLETED = "COMPLETED",
+}
+
+export interface TranscriptMessage {
+  role: "assistant" | "user";
+  content: string;
+}
+
+export interface InterviewState {
+  id: string;
+
+  type: string;
+  difficulty: string;
+  duration: number;
+  company: string;
+
+  status: InterviewStatus;
+
+  currentPhase: string;
+
+  createdAt: Date;
+  updatedAt?: Date;
+
+  summary: string;
+
+  transcript: TranscriptMessage[];
+}
+================================================
+FILE: ./src/modules/interview/prompt/PromptRenderer.ts
+================================================
+export interface PromptVariables {
+  [key: string]: string | number | boolean;
+}
+
+export class PromptRenderer {
+  render(
+    template: string,
+    variables: PromptVariables
+  ): string {
+    let rendered = template;
+
+    for (const [key, value] of Object.entries(variables)) {
+      const placeholder = `{{${key}}}`;
+
+      rendered = rendered.replaceAll(
+        placeholder,
+        String(value)
+      );
+    }
+
+    return rendered;
+  }
+}
+================================================
+FILE: ./src/modules/interview/prompt/PromptLoader.ts
+================================================
+import { promises as fs } from "fs";
+import path from "path";
+
+export class PromptLoader {
+  private readonly templatesDirectory: string;
+
+  constructor() {
+    this.templatesDirectory = path.join(
+      process.cwd(),
+      "modules",
+      "prompt",
+      "templates"
+    );
+  }
+
+  async load(templateName: string): Promise<string> {
+    const templatePath = path.join(
+      this.templatesDirectory,
+      templateName
+    );
+
+    return fs.readFile(templatePath, "utf-8");
+  }
+}
+================================================
+FILE: ./src/modules/interview/prompt/requirements.ts
+================================================
+export const REQUIREMENTS_PROMPT = `
+
+You are a senior Google interviewer.
+
+Phase:
+Requirements Gathering
+
+Rules:
+
+- Ask candidate to clarify requirements.
+- Answer questions about scale.
+- Do not propose architecture.
+- If candidate starts designing,
+ask them to clarify requirements first.
+
+`;
+
+================================================
+FILE: ./src/modules/interview/prompt/templates/judge.md
+================================================
+You are an expert system design interviewer.
+
+Candidate:
+{{candidate}}
+
+Interview Question:
+{{question}}
+
+Latest Candidate Response:
+{{answer}}
+
+Continue the interview naturally.
+
+Ask one follow-up question at a time.
+
+Do not reveal the solution.
+
+Keep the conversation realistic.
+================================================
+FILE: ./src/modules/interview/prompt/templates/judge.ts
+================================================
+export const interviewerPrompt = `
+You are a Senior Staff Engineer conducting a System Design interview.
+
+Rules:
+
+- Never solve the problem.
+- Never list all requirements.
+- Reveal requirements only when asked.
+- Ask one follow-up question at a time.
+- Keep replies under 60 words.
+- judge the responses and ask follow up questions to drive them to the right direction by making them think about the trade-offs and implications of their design choices.
+`;
+================================================
+FILE: ./src/modules/interview/prompt/templates/intro.md
+================================================
+
+================================================
+FILE: ./src/modules/interview/prompt/templates/scaling.md
+================================================
+
+================================================
+FILE: ./src/modules/interview/prompt/templates/clarification.md
+================================================
+
+================================================
+FILE: ./src/modules/interview/prompt/templates/evaluation.md
+================================================
+
+================================================
+FILE: ./src/modules/interview/engine/InterviewContext.ts
+================================================
+
+================================================
+FILE: ./src/modules/interview/engine/ResponseParser.ts
+================================================
+import { InterviewPhase } from "./PhaseManager";
+
+export class ResponseParser {
+  parse(aiResponse: string) {
+    const hasTransition = aiResponse.includes("[[TRANSITION]]");
+
+    const cleanMessage = aiResponse
+      .replace("[[TRANSITION]]", "")
+      .trim();
+
+    return {
+      cleanMessage,
+      shouldTransition: hasTransition,
+    };
+  }
+
+  getNextPhase(currentPhase: InterviewPhase): InterviewPhase {
+    const phases = Object.values(InterviewPhase);
+    const currentIndex = phases.indexOf(currentPhase);
+
+    return phases[currentIndex + 1] ?? currentPhase;
+  }
+}
+================================================
+FILE: ./src/modules/interview/engine/InterviewEngine.ts
+================================================
+"use strict";
+
+import { PhaseManager, InterviewPhase } from './PhaseManager';
+import { PromptBuilder } from './PromptBuilder';
+import { ResponseParser } from './ResponseParser';
+// This @ refers to your root directory defined in tsconfig.json
+import { AIService } from '@/src/modules/ai/AIService'; 
+
+export class InterviewEngine {
+  private phaseManager = new PhaseManager();
+  private promptBuilder = new PromptBuilder();
+  private responseParser = new ResponseParser();
+  private aiService = new AIService();
+
+  async processUserMessage(
+    currentPhase: InterviewPhase,
+    history: { role: string, content: string }[],
+    problem: string,
+    candidateName: string
+  ) {
+    // 1. Build the prompt
+    const systemPrompt = this.promptBuilder.buildSystemPrompt(currentPhase, candidateName, problem);
+    
+    const aiResponse = await this.aiService.chat([
+  { role: "system", content: systemPrompt },
+  ...history,
+]);
+
+const parsed = this.responseParser.parse(aiResponse);
+
+let nextPhase = currentPhase;
+
+if (parsed.shouldTransition) {
+  nextPhase = this.phaseManager.getNextPhase(currentPhase);
+}
+
+return {
+  answer: parsed.cleanMessage,
+  nextPhase,
+};
+
+
+  }
+}
+================================================
+FILE: ./src/modules/interview/engine/PromptBuilder.ts
+================================================
+// modules/interview/engine/PromptBuilder.ts
+import { InterviewPhase } from './PhaseManager';
+
+export class PromptBuilder {
+  buildSystemPrompt(phase: InterviewPhase, candidateName: string, problem: string): string {
+    const phaseInstructions: Record<InterviewPhase, string> = {
+      [InterviewPhase.INTRODUCTION]: "Briefly introduce yourself as a senior architect and present the problem statement.",
+      [InterviewPhase.REQUIREMENTS]: "Guide the candidate to define functional and non-functional requirements. Don't give answers.",
+      [InterviewPhase.HIGH_LEVEL_DESIGN]: "Ask for a high-level architecture: APIs, Database schema, and core components.",
+      [InterviewPhase.DEEP_DIVE]: "Pick one component (e.g., scaling the DB or Load Balancing) and go deep.",
+      [InterviewPhase.BOTTLE_NECKS]: "Ask about single points of failure and trade-offs made.",
+      [InterviewPhase.CLOSING]: "Wrap up the interview and thank the candidate."
+    };
+
+    return `
+      You are a Senior Staff Engineer at a Tier-1 Tech Company conducting a System Design Interview.
+      Candidate: ${candidateName}
+      Problem: ${problem}
+      Current Phase: ${phase}
+
+      STRICT RULES:
+      1. NEVER provide the solution. 
+      2. If the candidate asks "How should I do this?", flip it back: "What are your initial thoughts on the trade-offs?"
+      3. Ask only ONE question at a time.
+      4. Be concise. Don't yap. 
+      5. If the candidate is stuck, provide a tiny hint, not the answer.
+      6. If you are satisfied with the current phase, end your response with [[TRANSITION]].
+      7. Ask only ONE follow-up question at a time to drill deeper into their design.
+      8. If the candidate gives a vague answer, ask for specifics (e.g., "What specific database would you use here and why?").
+      9. If the candidate asks for the answer, say: "I'd like to see how you would approach this first."
+      10. Be professional, slightly cold, and rigorous.
+
+      INSTRUCTIONS:
+      - Stay in character. 
+      - Be helpful but rigorous.
+      - ${phaseInstructions[phase]}
+      
+      CRITICAL: If you feel the current phase is complete, end your response with the token [[TRANSITION]].
+    `.trim();
+  }
+}
+================================================
+FILE: ./src/modules/interview/engine/PhaseManager.ts
+================================================
+// modules/interview/engine/PhaseManager.ts
+export enum InterviewPhase {
+  INTRODUCTION = 'introduction',
+  REQUIREMENTS = 'requirements',
+  HIGH_LEVEL_DESIGN = 'high_level_design',
+  DEEP_DIVE = 'deep_dive',
+  BOTTLE_NECKS = 'bottlenecks',
+  CLOSING = 'closing'
+}
+
+export class PhaseManager {
+  private phases: InterviewPhase[] = [
+    InterviewPhase.INTRODUCTION,
+    InterviewPhase.REQUIREMENTS,
+    InterviewPhase.HIGH_LEVEL_DESIGN,
+    InterviewPhase.DEEP_DIVE,
+    InterviewPhase.BOTTLE_NECKS,
+    InterviewPhase.CLOSING
+  ];
+
+  getCurrentPhase(currentPhase: InterviewPhase): InterviewPhase {
+    return currentPhase;
+  }
+
+  getNextPhase(currentPhase: InterviewPhase): InterviewPhase {
+    const currentIndex = this.phases.indexOf(currentPhase);
+    if (currentIndex < this.phases.length - 1) {
+      return this.phases[currentIndex + 1];
+    }
+    return currentPhase;
+  }
+
+  // Logic to determine if we should transition
+  // This can be based on message count, or a hidden "ready" signal from the LLM
+  shouldTransition(messageCount: number, aiSignal?: string): boolean {
+    if (aiSignal?.includes('[[TRANSITION]]')) return true;
+    if (messageCount > 10) return true; // Safety fallback
+    return false;
+  }
+}
+================================================
+FILE: ./src/modules/interview/engine/StateUpdater.ts
+================================================
+
+================================================
+FILE: ./src/modules/interview/domain/interviews.ts
+================================================
+import { Interview } from "@/src/modules/interview/types/interview";
+
+export const interviews: Interview[] = [
+  {
+    id: "hld",
+    title: "High Level Design",
+    description: "Design scalable distributed systems.",
+    duration: 45,
+    difficulty: "Medium",
+  },
+  {
+    id: "lld",
+    title: "Low Level Design",
+    description: "Object-oriented design and patterns.",
+    duration: 60,
+    difficulty: "Medium",
+  },
+  {
+    id: "backend",
+    title: "Backend Fundamentals",
+    description: "REST APIs, caching, databases and scaling.",
+    duration: 45,
+    difficulty: "Medium",
+  },
+  {
+    id: "java",
+    title: "Java Core",
+    description: "Collections, JVM, concurrency and streams.",
+    duration: 30,
+    difficulty: "Medium",
+  },
+  {
+    id: "sql",
+    title: "SQL & Databases",
+    description: "Queries, indexing, normalization and transactions.",
+    duration: 30,
+    difficulty: "Easy",
+  },
+  {
+    id: "distributed",
+    title: "Distributed Systems",
+    description: "Kafka, Redis, CAP theorem and replication.",
+    duration: 60,
+    difficulty: "Hard",
+  },
+];
+
+console.log("Interview type:", interviews[0].id);
+================================================
+FILE: ./src/modules/interview/services/EvaluationService.ts
+================================================
+import { prisma } from "@/lib/prisma";
+import { AIService } from "../../ai/AIService";
+import { PromptLoader } from "../../prompt/PromptLoader";
+
+export class EvaluationService {
+  private ai = new AIService();
+  private promptLoader = new PromptLoader();
+
+  async evaluateInterview(interviewId: string) {
+    const interview = await prisma.interview.findUnique({
+      where: { id: interviewId },
+      include: {
+        transcript: true,
+      },
+    });
+
+    if (!interview) {
+      throw new Error(`Interview ${interviewId} not found`);
+    }
+
+    const transcript = interview.transcript
+      .sort(
+        (a, b) => a.createdAt.getTime() - b.createdAt.getTime()
+      )
+      .map((message) => `${message.role}: ${message.content}`)
+      .join("\n");
+
+    const rubric = await this.promptLoader.load(
+      "rubrics/scalability.md"
+    );
+
+    const evaluationTemplate = await this.promptLoader.load(
+      "evaluation.md"
+    );
+
+    const prompt = evaluationTemplate
+      .replace("{{rubric}}", rubric)
+      .replace("{{transcript}}", transcript);
+
+    const response = await this.ai.chat([
+      {
+        role: "user",
+        content: prompt,
+      },
+    ]);
+
+    let result: {
+      score: number;
+      feedback: string;
+      strengths: string[];
+      weaknesses: string[];
+    };
+
+    try {
+      result = JSON.parse(response);
+    } catch {
+      throw new Error("AI did not return valid JSON.");
+    }
+
+    return prisma.evaluation.create({
+      data: {
+        interviewId,
+        score: result.score,
+        feedback: result.feedback,
+        metadata: {
+          strengths: result.strengths,
+          weaknesses: result.weaknesses,
+        },
+      },
+    });
+  }
+}
+================================================
+FILE: ./src/modules/interview/services/TranscriptService.ts
+================================================
+import { MessageRepository } from "../repositories/MessageRepository";
+
+export class TranscriptService {
+  private repository =
+    new MessageRepository();
+
+  async addUserMessage(
+    interviewId: string,
+    message: string
+  ) {
+    return this.repository.create(
+      interviewId,
+      "user",
+      message
+    );
+  }
+
+  async addAssistantMessage(
+    interviewId: string,
+    message: string
+  ) {
+    return this.repository.create(
+      interviewId,
+      "assistant",
+      message
+    );
+  }
+
+  async getTranscript(
+    interviewId: string
+  ) {
+    return this.repository.list(
+      interviewId
+    );
+  }
+}
+================================================
+FILE: ./src/modules/interview/services/InterviewFactory.ts
+================================================
+import {
+  Difficulty,
+  InterviewStatus,
+  InterviewType,
+} from "@prisma/client";
+
+import { InterviewState } from "../types/InterviewState";
+
+
+export function createInterview(
+  input: {
+    userId: string;
+    type: InterviewType;
+    difficulty: Difficulty;
+    duration: number;
+    company: string;
+  }
+): InterviewState {
+
+  return {
+    id: crypto.randomUUID(),
+
+    userId: input.userId,
+
+    type: input.type,
+
+    difficulty: input.difficulty,
+
+    duration: input.duration,
+
+    company: input.company,
+
+    status: InterviewStatus.SETUP,
+
+    currentPhase: "introduction",
+
+    summary: "Interview has not started yet.",
+
+    createdAt: new Date(),
+
+    updatedAt: new Date(),
+  };
+}
+================================================
+FILE: ./src/modules/interview/services/SummaryService.ts
+================================================
+import { AIService } from "@/src/modules/ai/AIService";
+
+type TranscriptMessage = {
+  role: string;
+  content: string;
+};
+
+export class SummaryService {
+  private readonly aiService: AIService;
+
+  constructor() {
+    this.aiService = new AIService();
+  }
+
+  async generateSummary(
+    messages: TranscriptMessage[]
+  ): Promise<string> {
+    if (messages.length === 0) {
+      return "Interview has not started yet.";
+    }
+
+    const transcript = messages
+      .map(
+        (message) =>
+          `${message.role.toUpperCase()}: ${message.content}`
+      )
+      .join("\n\n");
+
+    const prompt = `
+You are an expert engineering interviewer.
+
+Analyze the interview transcript and generate a concise running summary.
+
+Return plain text only.
+
+Include:
+
+1. Current interview phase.
+2. Candidate's approach so far.
+3. Major components discussed.
+4. Important decisions made.
+5. Missing areas.
+6. Current strengths.
+7. Current weaknesses.
+
+Keep the summary under 250 words.
+
+Transcript:
+
+${transcript}
+`;
+
+    try {
+      const summary = await this.aiService.chat([
+        {
+          role: "system",
+          content:
+            "You are an expert technical interviewer.",
+        },
+        {
+          role: "user",
+          content: prompt,
+        },
+      ]);
+
+      return summary.trim();
+    } catch (error) {
+      console.error(
+        "Summary generation failed:",
+        error
+      );
+
+      return "Summary generation unavailable.";
+    }
+  }
+}
+================================================
+FILE: ./src/modules/ai/providers/OpenAIProvider.ts
+================================================
+
+================================================
+FILE: ./src/modules/ai/providers/ClaudeProvider.ts
+================================================
+
+================================================
+FILE: ./src/modules/ai/providers/OllamaProvider.ts
+================================================
+// modules/ai/providers/ollama.ts
+export class OllamaProvider {
+  private baseUrl = "http://127.0.0.1:11434/api/chat";
+  private model = "qwen2.5:7b"; // MATCHES YOUR OLLAMA LIST
+
+  async generateResponse(messages: { role: string; content: string }[]) {
+    try {
+      console.log("🤖 Requesting Qwen...");
+      const response = await fetch(this.baseUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: this.model,
+          messages: messages,
+          stream: false,
+        }),
+      });
+
+      const data = await response.json();
+      return data.message.content;
+    } catch (e) {
+      console.error("Ollama connection failed. Is the app open?");
+      return "I'm having trouble connecting to my brain (Ollama).";
+    }
+  }
+}
+================================================
+FILE: ./src/modules/ai/AIService.ts
+================================================
+import { OllamaProvider } from "./providers/ollama";
+
+export interface ChatMessage {
+  role: "system" | "user" | "assistant";
+  content: string;
+}
+
+export class AIService {
+  private readonly provider: OllamaProvider;
+
+  constructor(provider?: OllamaProvider) {
+    this.provider = provider ?? new OllamaProvider();
+  }
+
+  async chat(messages: ChatMessage[]): Promise<string> {
+    return this.provider.generateResponse(messages);
+  }
+
+  async chatJSON<T>(messages: ChatMessage[]): Promise<T> {
+    const response = await this.chat(messages);
+
+    try {
+      return JSON.parse(response) as T;
+    } catch (error) {
+      throw new Error(
+        `AI returned invalid JSON.\n\nResponse:\n${response}`
+      );
+    }
+  }
+}
+================================================
+FILE: ./src/modules/ai/AIProvider.ts
+================================================
+export interface AIProvider {
+  generate(prompt: string): Promise<string>;
+}

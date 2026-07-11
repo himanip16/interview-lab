@@ -7,46 +7,119 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Interview {
-  id           String          @id @default(cuid())
-  type         String
-  difficulty   String
-  duration     Int
-  company      String
-  status       InterviewStatus
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
-  currentPhase String          @default("introduction")
-  summary      String          @default("Interview has not started yet.")
-  evaluation   Evaluation?
-  transcript   Message[]
+
+model User {
+  id String @id @default(cuid())
+
+  email String @unique
+
+  interviews Interview[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
+
+model Interview {
+  id String @id @default(cuid())
+
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type InterviewType
+
+  difficulty Difficulty
+
+  duration Int
+
+  company String
+
+  status InterviewStatus
+
+  currentPhase String @default("introduction")
+
+  summary String @default("Interview has not started yet.")
+
+  promptVersion String @default("v1")
+
+  transcript Message[]
+
+  evaluation Evaluation?
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([status])
+}
+
+
 model Message {
-  id          String      @id @default(cuid())
+  id String @id @default(cuid())
+
   interviewId String
-  role        MessageRole
-  content     String
-  createdAt   DateTime    @default(now())
-  interview   Interview   @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+
+  role MessageRole
+
+  content String
+
+  metadata Json?
+
+  createdAt DateTime @default(now())
+
+  interview Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
 
   @@index([interviewId])
 }
 
+
 model Evaluation {
-  id          String    @id @default(cuid())
-  interviewId String    @unique
-  score       Int
-  feedback    String
-  metadata    Json?
-  interview   Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  id String @id @default(cuid())
+
+  interviewId String @unique
+
+  overallScore Int
+
+  communicationScore Int
+
+  architectureScore Int
+
+  scalabilityScore Int
+
+  tradeoffScore Int
+
+  feedback String
+
+  metadata Json?
+
+  createdAt DateTime @default(now())
+
+  interview Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
 }
+
 
 enum InterviewStatus {
   SETUP
   IN_PROGRESS
   COMPLETED
 }
+
+
+enum InterviewType {
+  HLD
+  LLD
+}
+
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
 
 enum MessageRole {
   assistant
