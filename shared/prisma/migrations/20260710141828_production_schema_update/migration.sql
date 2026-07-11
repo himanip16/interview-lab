@@ -29,7 +29,6 @@ ADD COLUMN     "tradeoffScore" INTEGER NOT NULL;
 
 -- AlterTable
 ALTER TABLE "Interview" ADD COLUMN     "promptVersion" TEXT NOT NULL DEFAULT 'v1',
-ADD COLUMN     "userId" TEXT NOT NULL,
 DROP COLUMN "type",
 ADD COLUMN     "type" "InterviewType" NOT NULL,
 DROP COLUMN "difficulty",
@@ -51,14 +50,9 @@ CREATE TABLE "User" (
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
--- CreateIndex
-CREATE INDEX "Interview_userId_idx" ON "Interview"("userId");
 
 -- CreateIndex
 CREATE INDEX "Interview_createdAt_idx" ON "Interview"("createdAt");
 
 -- CreateIndex
 CREATE INDEX "Interview_status_idx" ON "Interview"("status");
-
--- AddForeignKey
-ALTER TABLE "Interview" ADD CONSTRAINT "Interview_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;

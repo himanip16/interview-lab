@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { prisma } from "src/shared/prisma/client";
 import ScoreCard from "@/src/components/interview/report/ScoreCard";
 import FeedbackCard from "@/src/components/interview/report/FeedbackCard";
 

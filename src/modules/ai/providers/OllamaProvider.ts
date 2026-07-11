@@ -23,8 +23,23 @@ export class OllamaProvider {
         }),
       });
 
-      const data = await response.json();
-      return data.message.content;
+//       const response = await fetch(`${this.baseUrl}/api/chat`, {
+//   method: "POST",
+//   headers: {
+//     "Content-Type": "application/json",
+//   },
+//   body: JSON.stringify({
+//     model: this.model,
+//     messages,
+//     stream: false,
+//   }),
+// });
+
+const data = await response.json();
+
+return data.message.content;
+
+      
     } catch (e) {
       console.error("Ollama connection failed. Is the app open?");
       return "I'm having trouble connecting to my brain (Ollama).";

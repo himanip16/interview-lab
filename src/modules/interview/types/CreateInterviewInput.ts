@@ -1,10 +1,6 @@
-import {
-  InterviewType,
-  Difficulty,
-} from "@prisma/client";
+import { Difficulty, InterviewType } from "@prisma/client";
 
 export interface CreateInterviewInput {
-  userId: string;
 
   type: InterviewType;
 

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { InterviewRepository } from "@/src/modules/interview/repositories/InterviewRepository";
 import { EvaluationService } from "@/src/modules/interview/services/EvaluationService";
-import logger from "@/lib/logger";
+import logger from "@/src/shared/logger/logger";
 import { InterviewStatus } from "@prisma/client";
 
 
@@ -78,12 +78,21 @@ export async function POST(
 
   } catch(error) {
 
-    logger.error(
-      {
-        error,
-      },
-      "Failed to finish interview"
-    );
+    if (error instanceof Error) {
+  logger.error(
+    {
+      err: error,
+      message: error.message,
+      stack: error.stack,
+    },
+    "Failed to process interview message"
+  );
+} else {
+  logger.error(
+    { error },
+    "Failed to process interview message"
+  );
+}
 
 
     return NextResponse.json(

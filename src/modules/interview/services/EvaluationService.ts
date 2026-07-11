@@ -1,7 +1,7 @@
-import { prisma } from "@/lib/prisma";
+import { prisma } from "src/shared/prisma/client";
 import { AIService } from "../../ai/AIService";
 import { PromptLoader } from "../../prompt/PromptLoader";
-import { Logger } from "../../logging/Logger";
+import { Logger } from "src/shared/logger"
 
 export class EvaluationService {
   constructor(

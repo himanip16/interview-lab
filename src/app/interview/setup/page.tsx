@@ -17,37 +17,73 @@ export default function InterviewSetupPage() {
   const [difficulty, setDifficulty] = useState("Medium");
   const [duration, setDuration] = useState(45);
   const [company, setCompany] = useState("Google");
+  const [loading, setLoading] = useState(false);
 
   async function handleStartInterview() {
-    console.log("Sending request to /api/interview/start"); // Add this line
-  
-    const response = await fetch("/api/interview/start", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    try {
+      setLoading(true);
+
+      const payload = {
         type: interviewType,
         difficulty,
         duration,
         company,
-      }),
-    });
+      };
 
-if (!response.ok) {
-  throw new Error(await response.text());
+      console.log("Request payload:", payload);
+
+      const response = await fetch("/api/interviews/start", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    type: interviewType,
+    difficulty,
+    duration,
+    company,
+  }),
+});
+
+      const text = await response.text();
+
+      console.log("Status:", response.status);
+      console.log("Response:", text);
+
+      if (!response.ok) {
+  alert(text);
+  console.error(text);
+  return;
 }
-console.log(response.status);
 
-    const interview = await response.json();
+      if (text.startsWith("<!DOCTYPE") || text.startsWith("<html")) {
+  console.error("Server returned HTML instead of JSON");
+  console.error(text);
+  return;
+}
 
-    router.push(`/interview/live/${interview.id}`);
+const interview = JSON.parse(text);
+
+router.push(`/interview/live/${interview.id}`);
+    } catch (error) {
+      console.error(error);
+
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Unknown error"
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
     <main className="min-h-screen bg-zinc-950 px-6 py-12 text-white">
       <SetupCard>
-        <h1 className="text-4xl font-bold">Interview Setup</h1>
+        <h1 className="text-4xl font-bold">
+          Interview Setup
+        </h1>
 
         <p className="mt-3 text-zinc-400">
           Configure your interview before starting.
@@ -79,10 +115,12 @@ console.log(response.status);
         />
 
         <button
+          type="button"
+          disabled={loading}
           onClick={handleStartInterview}
-          className="mt-10 w-full rounded-lg bg-blue-600 py-4 text-lg font-semibold hover:bg-blue-500"
+          className="mt-10 w-full rounded-lg bg-blue-600 py-4 text-lg font-semibold hover:bg-blue-500 disabled:opacity-50"
         >
-          Start Interview
+          {loading ? "Starting..." : "Start Interview"}
         </button>
       </SetupCard>
     </main>

@@ -1,24 +1,34 @@
 import { NextResponse } from "next/server";
+import logger from "@/src/shared/logger/logger";
 
-import { InterviewMessageService } from "@/modules/interview/services/InterviewMessageService";
-import logger from "@/lib/logger";
+import { InterviewMessageService } from "@/src/modules/interview/services/InterviewMessageService";
 
 
 export async function POST(
-  req: Request
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  
 
   try {
+    const { id } = await params;
 
     const body = await req.json();
+    const { message } = body;
+    console.log({
+  params: await params,
+  body,
+});
 
-    const {
-      interviewId,
-      message,
-    } = body;
+    if (!message?.trim()) {
+    return NextResponse.json(
+      { error: "Invalid request" },
+      { status: 400 }
+    );
+  }
 
 
-    if (!interviewId || !message?.trim()) {
+    if (!id || !message?.trim()) {
 
       return NextResponse.json(
         {
@@ -37,7 +47,7 @@ export async function POST(
 
     const result =
       await service.processMessage(
-        interviewId,
+        id,
         message
       );
 
@@ -53,12 +63,21 @@ export async function POST(
   } catch(error) {
 
 
-    logger.error(
-      {
-        error,
-      },
-      "Failed to process interview message"
-    );
+    if (error instanceof Error) {
+  logger.error(
+    {
+      err: error,
+      message: error.message,
+      stack: error.stack,
+    },
+    "Failed to process interview message"
+  );
+} else {
+  logger.error(
+    { error },
+    "Failed to process interview message"
+  );
+}
 
 
     return NextResponse.json(

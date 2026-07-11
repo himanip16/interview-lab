@@ -13,8 +13,6 @@ model User {
 
   email String @unique
 
-  interviews Interview[]
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -23,9 +21,7 @@ model User {
 model Interview {
   id String @id @default(cuid())
 
-  userId String
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
+   
   type InterviewType
 
   difficulty Difficulty
@@ -50,8 +46,6 @@ model Interview {
 
   updatedAt DateTime @updatedAt
 
-
-  @@index([userId])
   @@index([createdAt])
   @@index([status])
 }

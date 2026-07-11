@@ -1,5 +1,5 @@
 import { Input } from "@/src/components/ui/Input";
-
+import { Select } from "@/src/components/ui/Select";
 type Props = {
   value: string;
   onChange: (value: string) => void;
@@ -23,20 +23,19 @@ export default function CompanySelector({
         Interview Style
       </h3>
 
-      <Input
-        as="select"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-      >
-        {COMPANIES.map((company) => (
-          <option
-            key={company}
-            value={company}
-          >
-            {company}
-          </option>
-        ))}
-      </Input>
+      <Select
+  value={value}
+  onChange={(e) => onChange(e.target.value)}
+>
+  {COMPANIES.map((company) => (
+    <option
+      key={company}
+      value={company}
+    >
+      {company}
+    </option>
+  ))}
+</Select>
     </div>
   );
 }

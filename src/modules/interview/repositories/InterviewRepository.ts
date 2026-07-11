@@ -1,34 +1,22 @@
-import { prisma } from "@/lib/prisma";
-import {
-  InterviewStatus,
-  MessageRole,
-  Prisma,
-} from "@prisma/client";
+
+
+import {InterviewStatus, MessageRole, Prisma} from "@prisma/client";
 
 import { CreateInterviewInput } from "../types/CreateInterviewInput";
-
+import { prisma } from "@/src/shared/prisma/client";
 export class InterviewRepository {
 
-  async create(data: CreateInterviewInput) {
-  const {
-    userId,
-    ...interviewData
-  } = data;
+  async create(data: CreateInterviewInput & {  }) {
+    const {  ...rest } = data;
 
-  return prisma.interview.create({
-    data: {
-      ...interviewData,
-
-      status: InterviewStatus.SETUP,
-
-      user: {
-        connect: {
-          id: userId,
-        },
+    return prisma.interview.create({
+      data: {
+        ...rest,
+        status: InterviewStatus.SETUP,
+        
       },
-    },
-  });
-}
+    });
+  }
 
 
   async getById(id: string) {

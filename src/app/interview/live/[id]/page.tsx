@@ -1,5 +1,5 @@
 // app/interview/live/[id]/page.tsx
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/src/shared/prisma/client";
 import LiveInterview from "@/src/components/interview/live/LiveInterview";
 import { notFound } from "next/navigation";
 

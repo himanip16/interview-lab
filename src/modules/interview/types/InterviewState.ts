@@ -4,8 +4,6 @@ import { TranscriptMessage } from "./TranscriptMessage";
 export interface InterviewState {
   id: string;
 
-  userId: string;
-
   type: string;
   difficulty: string;
   duration: number;

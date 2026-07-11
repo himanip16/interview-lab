@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { InterviewRepository } from "@/src/modules/interview/repositories/InterviewRepository";
-import logger from "@/lib/logger";
+import logger from "@/src/shared/logger/logger";
 
 type Props = {
   params: Promise<{
@@ -58,13 +58,21 @@ export async function GET({ params }: Props) {
     );
 
   } catch (error) {
-    logger.error(
-      {
-        error,
-        interviewId: id,
-      },
-      "Failed to fetch interview"
-    );
+    if (error instanceof Error) {
+  logger.error(
+    {
+      err: error,
+      message: error.message,
+      stack: error.stack,
+    },
+    "Failed to process interview message"
+  );
+} else {
+  logger.error(
+    { error },
+    "Failed to process interview message"
+  );
+}
 
     return NextResponse.json(
       {

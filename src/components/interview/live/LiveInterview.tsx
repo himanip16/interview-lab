@@ -32,18 +32,30 @@ export default function LiveInterview({
     setMessages((prev) => [...prev, userMsg]);
 
     try {
-      const response = await fetch("/api/interview/message", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          interviewId,
-          message: content,
-        }),
-      });
+      const response = await fetch(
+  `/api/interviews/${interviewId}/message`,
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      message: content,
+    }),
+  }
+);
 
-      const data = await response.json();
+      const text = await response.text();
+
+console.log("Status:", response.status);
+console.log("Response:", text);
+
+if (!response.ok) {
+  alert(text);
+  return;
+}
+
+const data = JSON.parse(text);
 
       if (data.aiMessage) {
         setMessages((prev) => [...prev, data.aiMessage]);
