@@ -1,5 +1,7 @@
-import { Interview } from "@/src/features/interview/types/interview";
 import Link from "next/link";
+
+import { Interview } from "@/src/features/interview/types/interview";
+
 type Props = {
   interview: Interview;
 };
@@ -9,7 +11,6 @@ export default function InterviewCard({
 }: Props) {
   return (
     <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-6 transition hover:border-blue-500">
-
       <h3 className="text-xl font-semibold">
         {interview.title}
       </h3>
@@ -19,19 +20,18 @@ export default function InterviewCard({
       </p>
 
       <div className="mt-6 flex items-center justify-between">
-
         <span className="text-sm text-zinc-500">
-          {interview.duration} min • {interview.difficulty}
+          {interview.duration} min •{" "}
+          {interview.difficulty}
         </span>
 
         <Link
-  href={`/interview/setup?type=${interview.id}`}
-  className="rounded-lg bg-blue-600 px-4 py-2 text-sm hover:bg-blue-500"
->
-  Start →
-</Link>
+          href={`/interview/setup?problemId=${interview.id}&type=hld`}
+          className="rounded-lg bg-blue-600 px-4 py-2 text-sm hover:bg-blue-500"
+        >
+          Start →
+        </Link>
       </div>
-
     </div>
   );
 }

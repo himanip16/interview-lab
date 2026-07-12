@@ -1,22 +1,21 @@
-
-
-import {InterviewStatus, MessageRole, Prisma} from "@prisma/client";
-
-import { CreateInterviewInput } from "../../../features/interview/types/CreateInterviewInput";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/shared/prisma/client";
+import { InterviewStatus } from "@prisma/client";
+import { MessageRole } from "@prisma/client";
+import { TranscriptService } from "@/src/modules/interview/services/TranscriptService";
+
 export class InterviewRepository {
 
-  async create(data: CreateInterviewInput & {  }) {
-    const {  ...rest } = data;
-
+  async create(data: Prisma.InterviewCreateInput) {
     return prisma.interview.create({
       data: {
-        ...rest,
+        ...data,
         status: InterviewStatus.SETUP,
-        
       },
     });
   }
+
+
 
 
   async getById(id: string) {

@@ -3,6 +3,7 @@ import { TranscriptMessage } from "./TranscriptMessage";
 
 export interface InterviewState {
   id: string;
+  topic: string;
 
   type: string;
   difficulty: string;

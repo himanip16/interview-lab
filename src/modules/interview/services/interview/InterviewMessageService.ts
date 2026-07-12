@@ -41,7 +41,7 @@ export class InterviewMessageService {
       interview.currentPhase as any,
       history,
       interview.summary,
-      "URL Shortener",
+      interview.topic,
       "Candidate"
     );
 

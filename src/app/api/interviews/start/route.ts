@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
-import {
-  Difficulty,
-  InterviewType,
-} from "@prisma/client";
+
+import { InterviewType, Difficulty } from "@prisma/client";
+import { MessageRole } from "@prisma/client";
+
+
+import { prisma } from "@/shared/prisma/client";
 
 import { createInterview } from "@/src/modules/interview/services/interview/InterviewFactory";
 import { InterviewRepository } from "@/src/modules/interview/repositories/InterviewRepository";
@@ -28,9 +30,16 @@ export async function POST(request: Request) {
       difficulty,
       duration,
       company,
+      problemId,
     } = body;
 
-    if (!type || !difficulty || !duration || !company) {
+    if (
+      !type ||
+      !difficulty ||
+      !duration ||
+      !company ||
+      !problemId
+    ) {
       return NextResponse.json(
         {
           error: "Missing required fields.",
@@ -66,12 +75,29 @@ export async function POST(request: Request) {
       );
     }
 
+    const problem = await prisma.problem.findUnique({
+      where: {
+        id: problemId,
+      },
+    });
+
+    if (!problem) {
+      return NextResponse.json(
+        {
+          error: "Problem not found.",
+        },
+        {
+          status: 404,
+        }
+      );
+    }
+
     const interview = createInterview({
-  
       type: interviewType,
       difficulty: interviewDifficulty,
       duration,
       company,
+      problemId: problem.id,
     });
 
     const repository = new InterviewRepository();
@@ -79,12 +105,23 @@ export async function POST(request: Request) {
     const savedInterview =
       await repository.create(interview);
 
+    await prisma.problem.update({
+      where: {
+        id: problem.id,
+      },
+      data: {
+        interviewCount: {
+          increment: 1,
+        },
+      },
+    });
+
     const transcriptService =
       new TranscriptService();
 
     await transcriptService.addAssistantMessage(
       savedInterview.id,
-      "Welcome! Today we'll design a URL Shortener. Start by asking clarifying questions."
+      `Welcome! Today we'll design "${problem.title}". Start by asking clarifying questions before proposing your design.`
     );
 
     return NextResponse.json(
@@ -103,7 +140,7 @@ export async function POST(request: Request) {
         error:
           error instanceof Error
             ? error.message
-            : String(error),
+            : "Internal server error",
       },
       {
         status: 500,

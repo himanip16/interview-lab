@@ -28,6 +28,10 @@ PROJECT STRUCTURE
 │   ├── migrations
 │   │   ├── 20260711145437_init
 │   │   │   └── migration.sql
+│   │   ├── 20260712060333_add_topic
+│   │   │   └── migration.sql
+│   │   ├── 20260712062454_add_problem_catalog
+│   │   │   └── migration.sql
 │   │   └── migration_lock.toml
 │   └── schema.prisma
 ├── prisma.config.ts
@@ -137,7 +141,8 @@ PROJECT STRUCTURE
 │   │   │   │   │   ├── DifficultySelector.tsx
 │   │   │   │   │   ├── DurationSelector.tsx
 │   │   │   │   │   ├── InterviewTypeSelector.tsx
-│   │   │   │   │   └── SetupCard.tsx
+│   │   │   │   │   ├── SetupCard.tsx
+│   │   │   │   │   └── TopicSelector.tsx
 │   │   │   │   ├── hooks
 │   │   │   │   │   └── useInterviewSetup.ts
 │   │   │   │   └── index.ts
@@ -219,15 +224,16 @@ PROJECT STRUCTURE
 │   │       │   ├── InterviewRepository.ts
 │   │       │   └── MessageRepository.ts
 │   │       ├── services
-│   │       │   ├── EvaluationService.ts
-│   │       │   ├── IncrementalSummaryService.ts
-│   │       │   ├── InterviewFactory.ts
-│   │       │   ├── InterviewMessageService.ts
-│   │       │   ├── SummaryService.ts
+│   │       │   ├── ProblemPickerService.ts
 │   │       │   ├── TranscriptService.ts
 │   │       │   ├── evaluation
+│   │       │   │   └── EvaluationService.ts
 │   │       │   ├── interview
+│   │       │   │   ├── InterviewFactory.ts
+│   │       │   │   └── InterviewMessageService.ts
 │   │       │   └── summary
+│   │       │       ├── IncrementalSummaryService.ts
+│   │       │       └── SummaryService.ts
 │   │       └── types.ts
 │   └── shared
 │       ├── config
@@ -239,7 +245,7 @@ PROJECT STRUCTURE
 ├── tsconfig.json
 └── tsconfig.tsbuildinfo
 
-94 directories, 144 files
+96 directories, 148 files
 
 FILE CONTENTS
 
@@ -266,93 +272,140 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 model User {
-  id String @id @default(cuid())
-
-  email String @unique
-
+  id        String   @id @default(cuid())
+  email     String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
-
 
 model Interview {
-  id String @id @default(cuid())
-
-   
-  type InterviewType
-
-  difficulty Difficulty
-
-  duration Int
-
-  company String
-
-  status InterviewStatus
-
-  currentPhase String @default("introduction")
-
-  summary String @default("Interview has not started yet.")
-
-  promptVersion String @default("v1")
-
-  transcript Message[]
-
-  evaluation Evaluation?
-
-  createdAt DateTime @default(now())
-
-  updatedAt DateTime @updatedAt
-
-  @@index([createdAt])
-  @@index([status])
+  id            String          @id @default(cuid())
+  type          InterviewType
+  difficulty    Difficulty
+  duration      Int
+  company       String
+  status        InterviewStatus
+  currentPhase  String          @default("introduction")
+  summary       String          @default("Interview has not started yet.")
+  promptVersion String          @default("v1")
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  problemId     String
+  evaluation    Evaluation?
+  problem       Problem         @relation(fields: [problemId], references: [id])
+  transcript    Message[]
 }
 
-
 model Message {
-  id String @id @default(cuid())
-
+  id          String      @id @default(cuid())
   interviewId String
-
-  role MessageRole
-
-  content String
-
-  metadata Json?
-
-  createdAt DateTime @default(now())
-
-  interview Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  role        MessageRole
+  content     String
+  metadata    Json?
+  createdAt   DateTime    @default(now())
+  interview   Interview   @relation(fields: [interviewId], references: [id], onDelete: Cascade)
 
   @@index([interviewId])
 }
 
-
-model Evaluation {
-  id String @id @default(cuid())
-
-  interviewId String @unique
-
-  overallScore Int
-
-  communicationScore Int
-
-  architectureScore Int
-
-  scalabilityScore Int
-
-  tradeoffScore Int
-
-  feedback String
-
-  metadata Json?
-
-  createdAt DateTime @default(now())
-
-  interview Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+model Problem {
+  id             String                @id @default(cuid())
+  slug           String                @unique
+  title          String
+  description    String?
+  category       ProblemCategory
+  difficulty     Difficulty
+  interviewCount Int                   @default(0)
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+  interviews     Interview[]
+  experiences    InterviewExperience[]
+  companies      ProblemCompany[]
+  tags           ProblemTag[]
 }
 
+model Company {
+  id                   String                @id @default(cuid())
+  name                 String                @unique
+  interviewExperiences InterviewExperience[]
+  problems             ProblemCompany[]
+}
+
+model ProblemCompany {
+  problemId String
+  companyId String
+  frequency Int?
+  lastSeen  DateTime?
+  company   Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  problem   Problem   @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@id([problemId, companyId])
+}
+
+model Tag {
+  id       String       @id @default(cuid())
+  name     String       @unique
+  problems ProblemTag[]
+}
+
+model ProblemTag {
+  problemId String
+  tagId     String
+  problem   Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([problemId, tagId])
+}
+
+model InterviewExperience {
+  id        String           @id @default(cuid())
+  problemId String
+  companyId String
+  role      String?
+  level     String?
+  year      Int?
+  source    ExperienceSource
+  url       String
+  notes     String?
+  createdAt DateTime         @default(now())
+  company   Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  problem   Problem          @relation(fields: [problemId], references: [id], onDelete: Cascade)
+}
+
+model Evaluation {
+  id                 String    @id @default(cuid())
+  interviewId        String    @unique
+  overallScore       Int
+  communicationScore Int
+  architectureScore  Int
+  scalabilityScore   Int
+  tradeoffScore      Int
+  feedback           String
+  metadata           Json?
+  createdAt          DateTime  @default(now())
+  interview          Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+}
+
+enum ProblemCategory {
+  SYSTEM_DESIGN
+  LOW_LEVEL_DESIGN
+  DATABASES
+  BACKEND
+  DISTRIBUTED_SYSTEMS
+  JAVA
+  KAFKA
+  REDIS
+  OPERATING_SYSTEMS
+  NETWORKING
+}
+
+enum ExperienceSource {
+  LEETCODE
+  ENGINEERBOOGIE
+  GLASSDOOR
+  USER_SUBMISSION
+}
 
 enum InterviewStatus {
   SETUP
@@ -360,12 +413,10 @@ enum InterviewStatus {
   COMPLETED
 }
 
-
 enum InterviewType {
   HLD
   LLD
 }
-
 
 enum Difficulty {
   EASY
@@ -373,11 +424,11 @@ enum Difficulty {
   HARD
 }
 
-
 enum MessageRole {
   assistant
   user
 }
+
 ================================================
 FILE: ./shared/prisma/client.ts
 ================================================
@@ -670,8 +721,6 @@ FILE: ./src/app/(marketing)/layout.tsx
 ================================================
 FILE: ./src/app/(marketing)/page.tsx
 ================================================
-import Hero from "@/src/components/landing/Hero";
-import Features from "@/src/components/landing/Features";
 import InterviewCatalog from "@/src/components/catalog/InterviewCatalog";
 import Navbar from "@/src/components/layout/Navbar";
 import PageContainer from "@/src/components/layout/PageContainer";
@@ -697,10 +746,10 @@ FILE: ./src/app/interview/setup/page.tsx
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-import CompanySelector from "@/src/components/interview/setup/CompanySelector";
-import DifficultySelector from "@/src/components/interview/setup/DifficultySelector";
-import DurationSelector from "@/src/components/interview/setup/DurationSelector";
-import SetupCard from "@/src/components/interview/setup/SetupCard";
+import CompanySelector from "@/src/features/interview/setup/components/CompanySelector";
+import DifficultySelector from "@/src/features/interview/setup/components/DifficultySelector";
+import DurationSelector from "@/src/features/interview/setup/components/DurationSelector";
+import SetupCard from "@/src/features/interview/setup/components/SetupCard";
 
 export default function InterviewSetupPage() {
   const router = useRouter();
@@ -807,6 +856,10 @@ router.push(`/interview/live/${interview.id}`);
           value={company}
           onChange={setCompany}
         />
+        <TopicSelector
+    value={topic}
+    onChange={setTopic}
+/>
 
         <button
           type="button"
@@ -861,8 +914,8 @@ export default async function Page({ params }: Props) {
 FILE: ./src/app/interview/report/[id]/page.tsx
 ================================================
 import { prisma } from "@/shared/prisma/client";
-import ScoreCard from "@/src/components/interview/report/ScoreCard";
-import FeedbackCard from "@/src/components/interview/report/FeedbackCard";
+import ScoreCard from "@/src/features/interview/report/components/ScoreCard";
+import FeedbackCard from "@/src/features/interview/report/components/FeedbackCard";
 
 type Props = {
   params: Promise<{
@@ -971,12 +1024,14 @@ export async function POST() {
 FILE: ./src/app/api/interviews/start/route.ts
 ================================================
 import { NextResponse } from "next/server";
-import {
-  Difficulty,
-  InterviewType,
-} from "@prisma/client";
 
-import { createInterview } from "@/src/modules/interview/services/InterviewFactory";
+import { InterviewType, Difficulty } from "@prisma/client";
+import { MessageRole } from "@prisma/client";
+
+
+import { prisma } from "@/shared/prisma/client";
+
+import { createInterview } from "@/src/modules/interview/services/interview/InterviewFactory";
 import { InterviewRepository } from "@/src/modules/interview/repositories/InterviewRepository";
 import { TranscriptService } from "@/src/modules/interview/services/TranscriptService";
 
@@ -1000,9 +1055,16 @@ export async function POST(request: Request) {
       difficulty,
       duration,
       company,
+      problemId,
     } = body;
 
-    if (!type || !difficulty || !duration || !company) {
+    if (
+      !type ||
+      !difficulty ||
+      !duration ||
+      !company ||
+      !problemId
+    ) {
       return NextResponse.json(
         {
           error: "Missing required fields.",
@@ -1038,12 +1100,29 @@ export async function POST(request: Request) {
       );
     }
 
+    const problem = await prisma.problem.findUnique({
+      where: {
+        id: problemId,
+      },
+    });
+
+    if (!problem) {
+      return NextResponse.json(
+        {
+          error: "Problem not found.",
+        },
+        {
+          status: 404,
+        }
+      );
+    }
+
     const interview = createInterview({
-  
       type: interviewType,
       difficulty: interviewDifficulty,
       duration,
       company,
+      problemId: problem.id,
     });
 
     const repository = new InterviewRepository();
@@ -1051,12 +1130,23 @@ export async function POST(request: Request) {
     const savedInterview =
       await repository.create(interview);
 
+    await prisma.problem.update({
+      where: {
+        id: problem.id,
+      },
+      data: {
+        interviewCount: {
+          increment: 1,
+        },
+      },
+    });
+
     const transcriptService =
       new TranscriptService();
 
     await transcriptService.addAssistantMessage(
       savedInterview.id,
-      "Welcome! Today we'll design a URL Shortener. Start by asking clarifying questions."
+      `Welcome! Today we'll design "${problem.title}". Start by asking clarifying questions before proposing your design.`
     );
 
     return NextResponse.json(
@@ -1075,7 +1165,7 @@ export async function POST(request: Request) {
         error:
           error instanceof Error
             ? error.message
-            : String(error),
+            : "Internal server error",
       },
       {
         status: 500,
@@ -1132,7 +1222,7 @@ FILE: ./src/app/api/interviews/[id]/message/route.ts
 import { NextResponse } from "next/server";
 import logger from "@/src/shared/logger/logger";
 
-import { InterviewMessageService } from "@/src/modules/interview/services/InterviewMessageService";
+import { InterviewMessageService } from "@/src/modules/interview/services/interview/InterviewMessageService";
 
 
 export async function POST(
@@ -1317,7 +1407,7 @@ FILE: ./src/app/api/interviews/[id]/finish/route.ts
 import { NextResponse } from "next/server";
 
 import { InterviewRepository } from "@/src/modules/interview/repositories/InterviewRepository";
-import { EvaluationService } from "@/src/modules/interview/services/EvaluationService";
+import { EvaluationService } from "@/src/modules/interview/services/evaluation/EvaluationService";
 import logger from "@/src/shared/logger/logger";
 import { InterviewStatus } from "@prisma/client";
 
@@ -1586,17 +1676,17 @@ export * from "../interview/types/TranscriptMessage";
 ================================================
 FILE: ./src/features/interview/types/CreateInterviewInput.ts
 ================================================
-import { Difficulty, InterviewType } from "@prisma/client";
+import {
+  Difficulty,
+  InterviewType,
+} from "@prisma/client";
 
 export interface CreateInterviewInput {
-
   type: InterviewType;
-
   difficulty: Difficulty;
-
   duration: number;
-
   company: string;
+  problemId: string;
 }
 ================================================
 FILE: ./src/features/interview/types/TranscriptMessage.ts
@@ -1613,6 +1703,7 @@ import { TranscriptMessage } from "./TranscriptMessage";
 
 export interface InterviewState {
   id: string;
+  topic: string;
 
   type: string;
   difficulty: string;
@@ -1748,6 +1839,18 @@ export default function CompanySelector({
     </div>
   );
 }
+================================================
+FILE: ./src/features/interview/setup/components/TopicSelector.tsx
+================================================
+const TOPICS = [
+    "URL Shortener",
+    "Rate Limiter",
+    "News Feed",
+    "Chat System",
+    "File Storage",
+    "Design Uber",
+    "Design YouTube",
+];
 ================================================
 FILE: ./src/features/interview/setup/components/InterviewTypeSelector.tsx
 ================================================
@@ -2031,7 +2134,7 @@ export default function Timer({ durationInMinutes, interviewId }: TimerProps) {
   }, [timeLeft]);
 
   const handleFinish = async () => {
-    await fetch('/api/interview/finish', {
+    await fetch(`/api/interviews/${interviewId}/finish`, {
       method: 'POST',
       body: JSON.stringify({ interviewId }),
     });
@@ -3031,7 +3134,7 @@ FILE: ./src/modules/container.ts
 import { AIService } from "./ai/services/AIService";
 import { PromptLoader } from "@/src/modules/interview/prompt/PromptLoader";
 import logger  from "@/src/shared/logger/logger";
-import { EvaluationService } from "./interview/services/EvaluationService";
+import { EvaluationService } from "./interview/services/evaluation/EvaluationService";
 
 export function createEvaluationService() {
   return new EvaluationService(
@@ -3114,25 +3217,24 @@ Continue the interview normally and redirect the candidate back to the technical
 ================================================
 FILE: ./src/modules/interview/repositories/InterviewRepository.ts
 ================================================
-
-
-import {InterviewStatus, MessageRole, Prisma} from "@prisma/client";
-
-import { CreateInterviewInput } from "../../../features/interview/types/CreateInterviewInput";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/shared/prisma/client";
+import { InterviewStatus } from "@prisma/client";
+import { MessageRole } from "@prisma/client";
+import { TranscriptService } from "@/src/modules/interview/services/TranscriptService";
+
 export class InterviewRepository {
 
-  async create(data: CreateInterviewInput & {  }) {
-    const {  ...rest } = data;
-
+  async create(data: Prisma.InterviewCreateInput) {
     return prisma.interview.create({
       data: {
-        ...rest,
+        ...data,
         status: InterviewStatus.SETUP,
-        
       },
     });
   }
+
+
 
 
   async getById(id: string) {
@@ -3987,10 +4089,135 @@ export const interviews: Interview[] = [
 
 console.log("Interview type:", interviews[0].id);
 ================================================
-FILE: ./src/modules/interview/services/EvaluationService.ts
+FILE: ./src/modules/interview/services/TranscriptService.ts
+================================================
+import { MessageRepository } from "../repositories/MessageRepository";
+
+export class TranscriptService {
+  private repository =
+    new MessageRepository();
+
+  async addUserMessage(
+    interviewId: string,
+    message: string
+  ) {
+    return this.repository.create(
+      interviewId,
+      "user",
+      message
+    );
+  }
+
+  async addAssistantMessage(
+    interviewId: string,
+    message: string
+  ) {
+    return this.repository.create(
+      interviewId,
+      "assistant",
+      message
+    );
+  }
+
+  async getTranscript(
+    interviewId: string
+  ) {
+    return this.repository.list(
+      interviewId
+    );
+  }
+}
+================================================
+FILE: ./src/modules/interview/services/ProblemPickerService.ts
+================================================
+
+================================================
+FILE: ./src/modules/interview/services/interview/InterviewFactory.ts
+================================================
+import { InterviewStatus } from "@/src/modules/interview/types";
+import { CreateInterviewInput } from "@/src/features/interview/types/CreateInterviewInput";
+
+export function createInterview(input: CreateInterviewInput) {
+  return {
+    ...input,
+    status: InterviewStatus.SETUP,
+    currentPhase: "introduction",
+    summary: "Interview has not started yet.",
+    promptVersion: "v1",
+  };
+}
+================================================
+FILE: ./src/modules/interview/services/interview/InterviewMessageService.ts
+================================================
+
+
+import { InterviewRepository } from "../../repositories/InterviewRepository";
+import { InterviewEngine } from "../../engine/InterviewEngine";
+import { Message, MessageRole } from "@prisma/client";
+import { ChatMessage } from "@/src/modules/ai/services/AIService";
+
+export class InterviewMessageService {
+  private repository = new InterviewRepository();
+  private engine = new InterviewEngine();
+
+  async processMessage(
+    interviewId: string,
+    message: string
+  ) {
+    const interview = await this.repository.getById(interviewId);
+
+    if (!interview) {
+      throw new Error("Interview not found");
+    }
+
+    await this.repository.addMessage(
+      interviewId,
+      MessageRole.user,
+      message
+    );
+
+    const history: ChatMessage[] = interview.transcript.map(
+  (m: Message): ChatMessage => ({
+    role:
+      m.role === MessageRole.user
+        ? "user"
+        : m.role === MessageRole.assistant
+        ? "assistant"
+        : "system",
+    content: m.content,
+  })
+);
+
+    const result = await this.engine.processUserMessage(
+      interview.currentPhase as any,
+      history,
+      interview.summary,
+      interview.topic,
+      "Candidate"
+    );
+
+    const aiMessage = await this.repository.addMessage(
+      interviewId,
+      MessageRole.assistant,
+      result.reply
+    );
+
+    await this.repository.updateSummary(
+      interviewId,
+      interview.summary
+    );
+
+    return {
+      aiMessage,
+      newSummary: interview.summary,
+    };
+  }
+}
+================================================
+FILE: ./src/modules/interview/services/evaluation/EvaluationService.ts
 ================================================
 import { prisma } from "@/shared/prisma/client";
-import { AIService } from "../../ai/services/AIService";
+import { AIService } from "../../../ai/services/AIService";
 import { PromptLoader } from "../../prompt/PromptLoader";
 import { Logger } from "src/shared/logger"
 
@@ -4052,61 +4279,7 @@ export class EvaluationService {
   }
 }
 ================================================
-FILE: ./src/modules/interview/services/TranscriptService.ts
-================================================
-import { MessageRepository } from "../repositories/MessageRepository";
-
-export class TranscriptService {
-  private repository =
-    new MessageRepository();
-
-  async addUserMessage(
-    interviewId: string,
-    message: string
-  ) {
-    return this.repository.create(
-      interviewId,
-      "user",
-      message
-    );
-  }
-
-  async addAssistantMessage(
-    interviewId: string,
-    message: string
-  ) {
-    return this.repository.create(
-      interviewId,
-      "assistant",
-      message
-    );
-  }
-
-  async getTranscript(
-    interviewId: string
-  ) {
-    return this.repository.list(
-      interviewId
-    );
-  }
-}
-================================================
-FILE: ./src/modules/interview/services/InterviewFactory.ts
-================================================
-import {
-  Difficulty,
-  InterviewType,
-} from "@prisma/client";
-
-import { CreateInterviewInput } from "../../../features/interview/types/CreateInterviewInput";
-
-export function createInterview(
-  input: CreateInterviewInput
-): CreateInterviewInput {
-  return input;
-}
-================================================
-FILE: ./src/modules/interview/services/SummaryService.ts
+FILE: ./src/modules/interview/services/summary/SummaryService.ts
 ================================================
 import { AIService } from "@/src/modules/ai/services/AIService";
 
@@ -4185,74 +4358,7 @@ ${transcript}
   }
 }
 ================================================
-FILE: ./src/modules/interview/services/InterviewMessageService.ts
-================================================
-
-
-import { InterviewRepository } from "../repositories/InterviewRepository";
-import { InterviewEngine } from "../engine/InterviewEngine";
-import { Message, MessageRole } from "@prisma/client";
-import { ChatMessage } from "@/src/modules/ai/services/AIService";
-
-export class InterviewMessageService {
-  private repository = new InterviewRepository();
-  private engine = new InterviewEngine();
-
-  async processMessage(
-    interviewId: string,
-    message: string
-  ) {
-    const interview = await this.repository.getById(interviewId);
-
-    if (!interview) {
-      throw new Error("Interview not found");
-    }
-
-    await this.repository.addMessage(
-      interviewId,
-      MessageRole.user,
-      message
-    );
-
-    const history: ChatMessage[] = interview.transcript.map(
-  (m: Message): ChatMessage => ({
-    role:
-      m.role === MessageRole.user
-        ? "user"
-        : m.role === MessageRole.assistant
-        ? "assistant"
-        : "system",
-    content: m.content,
-  })
-);
-
-    const result = await this.engine.processUserMessage(
-      interview.currentPhase as any,
-      history,
-      interview.summary,
-      "URL Shortener",
-      "Candidate"
-    );
-
-    const aiMessage = await this.repository.addMessage(
-      interviewId,
-      MessageRole.assistant,
-      result.reply
-    );
-
-    await this.repository.updateSummary(
-      interviewId,
-      interview.summary
-    );
-
-    return {
-      aiMessage,
-      newSummary: interview.summary,
-    };
-  }
-}
-================================================
-FILE: ./src/modules/interview/services/IncrementalSummaryService.ts
+FILE: ./src/modules/interview/services/summary/IncrementalSummaryService.ts
 ================================================
 // src/modules/interview/services/IncrementalSummaryService.ts
 

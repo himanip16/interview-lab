@@ -18,23 +18,24 @@ export default function Hero() {
 
         <p className="mt-8 max-w-xl text-lg leading-8 text-zinc-400">
           Practice realistic technical interviews for
-          System Design, Backend Engineering,
-          Java, Databases and Distributed Systems.
+          System Design, Backend Engineering, Java,
+          Databases and Distributed Systems.
         </p>
 
         <div className="mt-10 flex gap-4">
+          <Link
+            href="/#interviews"
+            className="rounded-lg bg-blue-600 px-6 py-3 font-medium hover:bg-blue-500"
+          >
+            Start Interview
+          </Link>
 
           <Link
-  href="/interview/setup"
-  className="rounded-lg bg-blue-600 px-6 py-3 font-medium hover:bg-blue-500"
->
-  Start Interview
-</Link>
-
-          <button className="rounded-lg border border-zinc-700 px-6 py-3">
+            href="/#interviews"
+            className="rounded-lg border border-zinc-700 px-6 py-3"
+          >
             Browse Interviews
-          </button>
-
+          </Link>
         </div>
       </div>
     </section>

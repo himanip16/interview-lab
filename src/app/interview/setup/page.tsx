@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import {
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
 
 import CompanySelector from "@/src/features/interview/setup/components/CompanySelector";
 import DifficultySelector from "@/src/features/interview/setup/components/DifficultySelector";
@@ -12,14 +15,26 @@ export default function InterviewSetupPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const interviewType = searchParams.get("type") ?? "hld";
+  const problemId = searchParams.get("problemId");
+  const interviewType =
+    searchParams.get("type") ?? "hld";
 
-  const [difficulty, setDifficulty] = useState("Medium");
+  const [difficulty, setDifficulty] =
+    useState("Medium");
+
   const [duration, setDuration] = useState(45);
-  const [company, setCompany] = useState("Google");
+
+  const [company, setCompany] =
+    useState("Google");
+
   const [loading, setLoading] = useState(false);
 
   async function handleStartInterview() {
+    if (!problemId) {
+      alert("No interview problem selected.");
+      return;
+    }
+
     try {
       setLoading(true);
 
@@ -28,43 +43,34 @@ export default function InterviewSetupPage() {
         difficulty,
         duration,
         company,
+        problemId,
       };
 
       console.log("Request payload:", payload);
 
-      const response = await fetch("/api/interviews/start", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({
-    type: interviewType,
-    difficulty,
-    duration,
-    company,
-  }),
-});
+      const response = await fetch(
+        "/api/interviews/start",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
 
-      const text = await response.text();
+      const data = await response.json();
 
       console.log("Status:", response.status);
-      console.log("Response:", text);
+      console.log("Response:", data);
 
       if (!response.ok) {
-  alert(text);
-  console.error(text);
-  return;
-}
+        throw new Error(
+          data.error ?? "Failed to start interview"
+        );
+      }
 
-      if (text.startsWith("<!DOCTYPE") || text.startsWith("<html")) {
-  console.error("Server returned HTML instead of JSON");
-  console.error(text);
-  return;
-}
-
-const interview = JSON.parse(text);
-
-router.push(`/interview/live/${interview.id}`);
+      router.push(`/interview/live/${data.id}`);
     } catch (error) {
       console.error(error);
 
@@ -116,11 +122,13 @@ router.push(`/interview/live/${interview.id}`);
 
         <button
           type="button"
-          disabled={loading}
+          disabled={loading || !problemId}
           onClick={handleStartInterview}
           className="mt-10 w-full rounded-lg bg-blue-600 py-4 text-lg font-semibold hover:bg-blue-500 disabled:opacity-50"
         >
-          {loading ? "Starting..." : "Start Interview"}
+          {loading
+            ? "Starting..."
+            : "Start Interview"}
         </button>
       </SetupCard>
     </main>

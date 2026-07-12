@@ -7,90 +7,140 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 model User {
-  id String @id @default(cuid())
-
-  email String @unique
-
+  id        String   @id @default(cuid())
+  email     String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
-
 
 model Interview {
-  id String @id @default(cuid())
-  type InterviewType
-  difficulty Difficulty
-
-  duration Int
-
-  company String
-
-  status InterviewStatus
-
-  currentPhase String @default("introduction")
-
-  summary String @default("Interview has not started yet.")
-
-  promptVersion String @default("v1")
-
-  transcript Message[]
-
-  evaluation Evaluation?
-
-  createdAt DateTime @default(now())
-
-  updatedAt DateTime @updatedAt
-
-  @@index([createdAt])
-  @@index([status])
+  id            String          @id @default(cuid())
+  type          InterviewType
+  difficulty    Difficulty
+  duration      Int
+  company       String
+  status        InterviewStatus
+  currentPhase  String          @default("introduction")
+  summary       String          @default("Interview has not started yet.")
+  promptVersion String          @default("v1")
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  problemId     String
+  evaluation    Evaluation?
+  problem       Problem         @relation(fields: [problemId], references: [id])
+  transcript    Message[]
 }
 
-
 model Message {
-  id String @id @default(cuid())
-
+  id          String      @id @default(cuid())
   interviewId String
-
-  role MessageRole
-
-  content String
-
-  metadata Json?
-
-  createdAt DateTime @default(now())
-
-  interview Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  role        MessageRole
+  content     String
+  metadata    Json?
+  createdAt   DateTime    @default(now())
+  interview   Interview   @relation(fields: [interviewId], references: [id], onDelete: Cascade)
 
   @@index([interviewId])
 }
 
-
-model Evaluation {
-  id String @id @default(cuid())
-
-  interviewId String @unique
-
-  overallScore Int
-
-  communicationScore Int
-
-  architectureScore Int
-
-  scalabilityScore Int
-
-  tradeoffScore Int
-
-  feedback String
-
-  metadata Json?
-
-  createdAt DateTime @default(now())
-
-  interview Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+model Problem {
+  id             String                @id @default(cuid())
+  slug           String                @unique
+  title          String
+  description    String?
+  category       ProblemCategory
+  difficulty     Difficulty
+  interviewCount Int                   @default(0)
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+  interviews     Interview[]
+  experiences    InterviewExperience[]
+  companies      ProblemCompany[]
+  tags           ProblemTag[]
 }
 
+model Company {
+  id                   String                @id @default(cuid())
+  name                 String                @unique
+  interviewExperiences InterviewExperience[]
+  problems             ProblemCompany[]
+}
+
+model ProblemCompany {
+  problemId String
+  companyId String
+  frequency Int?
+  lastSeen  DateTime?
+  company   Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  problem   Problem   @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@id([problemId, companyId])
+}
+
+model Tag {
+  id       String       @id @default(cuid())
+  name     String       @unique
+  problems ProblemTag[]
+}
+
+model ProblemTag {
+  problemId String
+  tagId     String
+  problem   Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([problemId, tagId])
+}
+
+model InterviewExperience {
+  id        String           @id @default(cuid())
+  problemId String
+  companyId String
+  role      String?
+  level     String?
+  year      Int?
+  source    ExperienceSource
+  url       String
+  notes     String?
+  createdAt DateTime         @default(now())
+  company   Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  problem   Problem          @relation(fields: [problemId], references: [id], onDelete: Cascade)
+}
+
+model Evaluation {
+  id                 String    @id @default(cuid())
+  interviewId        String    @unique
+  overallScore       Int
+  communicationScore Int
+  architectureScore  Int
+  scalabilityScore   Int
+  tradeoffScore      Int
+  feedback           String
+  metadata           Json?
+  createdAt          DateTime  @default(now())
+  interview          Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+}
+
+enum ProblemCategory {
+  SYSTEM_DESIGN
+  LOW_LEVEL_DESIGN
+  DATABASES
+  BACKEND
+  DISTRIBUTED_SYSTEMS
+  JAVA
+  KAFKA
+  REDIS
+  OPERATING_SYSTEMS
+  NETWORKING
+}
+
+enum ExperienceSource {
+  LEETCODE
+  ENGINEERBOOGIE
+  GLASSDOOR
+  USER_SUBMISSION
+}
 
 enum InterviewStatus {
   SETUP
@@ -98,19 +148,16 @@ enum InterviewStatus {
   COMPLETED
 }
 
-
 enum InterviewType {
   HLD
   LLD
 }
-
 
 enum Difficulty {
   EASY
   MEDIUM
   HARD
 }
-
 
 enum MessageRole {
   assistant
