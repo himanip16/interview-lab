@@ -63,6 +63,7 @@ export class InterviewProfileService {
           transitionThreshold:
             phase.transitionThreshold,
           instructions: phase.instructions,
+          showWhiteboard: phase.showWhiteboard,
         })
       ),
     };

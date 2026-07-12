@@ -9,6 +9,7 @@ import { ChatMessage } from "@/src/modules/ai/services/AIService";
 import { InterviewEngine } from "../../engine/InterviewEngine";
 import { InterviewRepository } from "../../repositories/InterviewRepository";
 import { InterviewProfileService } from "../../profiles/InterviewProfileService";
+import { WhiteboardSerializer } from "../whiteboard/WhiteboardSerializer";
 
 export interface ProcessInterviewMessageResult {
   reply: string;
@@ -28,6 +29,9 @@ export class InterviewMessageService {
 
   private readonly profileService =
     new InterviewProfileService();
+
+  private readonly whiteboardSerializer =
+    new WhiteboardSerializer();
 
   async processMessage(
     interviewId: string,
@@ -67,6 +71,16 @@ export class InterviewMessageService {
         interview.templateId
       );
 
+    const currentPhaseDef = profile.phases.find(
+      (p) => p.id === interview.currentPhase
+    );
+
+    const whiteboardDescription = currentPhaseDef?.showWhiteboard
+      ? this.whiteboardSerializer.describe(
+          interview.whiteboardState as any
+        )
+      : undefined;
+
     const history =
       this.buildConversationHistory(
         interview.transcript,
@@ -104,6 +118,7 @@ export class InterviewMessageService {
           interview.duration,
         interviewStartedAt,
         phaseStartedAt,
+        whiteboardDescription,
       });
 
     const previousPhase =

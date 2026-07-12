@@ -31,6 +31,8 @@ export interface InterviewEngineInput {
   interviewStartedAt: Date;
 
   phaseStartedAt: Date;
+
+  whiteboardDescription?: string;
 }
 
 export class InterviewEngine {
@@ -82,7 +84,8 @@ export class InterviewEngine {
         input.problem,
         input.runningSummary,
         latestQuestion,
-        latestAnswer
+        latestAnswer,
+        input.whiteboardDescription
       );
 
     const guardedInput =

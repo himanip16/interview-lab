@@ -241,12 +241,14 @@ type PhaseSeed = {
   targetDurationRatio: number;
   transitionThreshold: number;
   instructions: string;
+  showWhiteboard?: boolean;
 };
 
 type TemplateSeed = {
   slug: string;
   name: string;
   description: string;
+  whiteboardPreset?: string;
   phases: PhaseSeed[];
 };
 
@@ -255,6 +257,7 @@ const templates: TemplateSeed[] = [
     slug: "hld",
     name: "High Level Design",
     description: "Design scalable distributed systems.",
+    whiteboardPreset: "hld",
     phases: [
       {
         phaseKey: "introduction",
@@ -299,6 +302,7 @@ const templates: TemplateSeed[] = [
         transitionThreshold: 0.75,
         instructions:
           "Ask the candidate to propose a high-level architecture. Evaluate major components, service boundaries, data flow, and storage decisions. Challenge unclear architectural choices. Do not design the system for the candidate.",
+        showWhiteboard: true,
       },
       {
         phaseKey: "deep_dive",
@@ -314,6 +318,7 @@ const templates: TemplateSeed[] = [
         transitionThreshold: 0.7,
         instructions:
           "Choose important areas from the candidate's design for deeper discussion. Probe implementation details, data modeling, consistency, and tradeoffs. Prefer areas where the candidate's reasoning is incomplete or weak.",
+        showWhiteboard: true,
       },
       {
         phaseKey: "scalability",
@@ -329,6 +334,7 @@ const templates: TemplateSeed[] = [
         transitionThreshold: 0.7,
         instructions:
           "Probe scalability and reliability. Ask about bottlenecks, failure scenarios, capacity pressure, and scaling strategies. Challenge assumptions using realistic production scenarios.",
+        showWhiteboard: true,
       },
       {
         phaseKey: "closing",
@@ -346,6 +352,7 @@ const templates: TemplateSeed[] = [
     slug: "lld",
     name: "Low Level Design",
     description: "Object-oriented design and patterns.",
+    whiteboardPreset: "lld",
     phases: [
       {
         phaseKey: "introduction",
@@ -376,6 +383,7 @@ const templates: TemplateSeed[] = [
         transitionThreshold: 0.75,
         instructions:
           "Ask the candidate to identify the core entities. Evaluate responsibilities and relationships. Challenge god objects, unclear ownership, and weak abstractions.",
+        showWhiteboard: true,
       },
       {
         phaseKey: "class_design",
@@ -391,6 +399,7 @@ const templates: TemplateSeed[] = [
         transitionThreshold: 0.75,
         instructions:
           "Probe concrete class and interface design. Evaluate method boundaries, encapsulation, and separation of concerns. Ask focused questions about design decisions.",
+        showWhiteboard: true,
       },
       {
         phaseKey: "extensibility",
@@ -410,6 +419,7 @@ const templates: TemplateSeed[] = [
         transitionThreshold: 0.7,
         instructions:
           "Introduce realistic requirement changes. Evaluate whether the design is extensible and testable. Probe design patterns only when relevant. Do not force pattern usage.",
+        showWhiteboard: true,
       },
       {
         phaseKey: "closing",
@@ -644,11 +654,13 @@ async function seedTemplates() {
         name: template.name,
         description: template.description,
         isActive: true,
+        whiteboardPreset: template.whiteboardPreset,
       },
       create: {
         slug: template.slug,
         name: template.name,
         description: template.description,
+        whiteboardPreset: template.whiteboardPreset,
       },
     });
 
@@ -668,6 +680,7 @@ async function seedTemplates() {
           targetDurationRatio: phase.targetDurationRatio,
           transitionThreshold: phase.transitionThreshold,
           instructions: phase.instructions,
+          showWhiteboard: phase.showWhiteboard,
         },
         create: {
           templateId: saved.id,
@@ -679,6 +692,7 @@ async function seedTemplates() {
           targetDurationRatio: phase.targetDurationRatio,
           transitionThreshold: phase.transitionThreshold,
           instructions: phase.instructions,
+          showWhiteboard: phase.showWhiteboard,
         },
       });
     }

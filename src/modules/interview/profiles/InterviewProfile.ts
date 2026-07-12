@@ -12,6 +12,8 @@ export interface InterviewPhaseDefinition {
   transitionThreshold: number;
 
   instructions: string;
+
+  showWhiteboard: boolean;
 }
 
 export interface InterviewProfile {

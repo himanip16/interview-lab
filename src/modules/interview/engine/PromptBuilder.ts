@@ -17,7 +17,8 @@ export class PromptBuilder {
     problem: string,
     runningSummary = "",
     latestQuestion?: string,
-    latestAnswer?: string
+    latestAnswer?: string,
+    whiteboardDescription?: string
   ): Promise<string> {
     const basePrompt =
       await this.promptLoader.load(
@@ -58,6 +59,8 @@ ${phase.id}
 
 Running Summary:
 ${runningSummary}
+
+${whiteboardDescription ? `CANDIDATE'S WHITEBOARD:\n${whiteboardDescription}\n` : ""}
 
 PHASE INSTRUCTIONS:
 

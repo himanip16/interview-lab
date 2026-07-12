@@ -68,6 +68,7 @@ export class InterviewRepository {
     currentPhase: string;
     status?: InterviewStatus;
     assistantMetadata?: Prisma.InputJsonValue;
+    elapsedSeconds: number;
   }) {
     const {
       interviewId,
@@ -76,6 +77,7 @@ export class InterviewRepository {
       currentPhase,
       status = InterviewStatus.IN_PROGRESS,
       assistantMetadata,
+      elapsedSeconds,
     } = params;
 
     return prisma.$transaction(async (tx) => {
@@ -84,6 +86,8 @@ export class InterviewRepository {
           interviewId,
           role: MessageRole.user,
           content: userMessage,
+          elapsedSeconds,
+          phase: currentPhase,
         },
       });
 
@@ -93,6 +97,8 @@ export class InterviewRepository {
           role: MessageRole.assistant,
           content: assistantMessage,
           metadata: assistantMetadata,
+          elapsedSeconds,
+          phase: currentPhase,
         },
       });
 

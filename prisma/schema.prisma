@@ -26,34 +26,39 @@ model User {
 // rows. No enum change, no migration, no new resolver branch, no new profile
 // file.
 // ---------------------------------------------------------------------------
-
 model InterviewTemplate {
   id          String   @id @default(cuid())
-  slug        String   @unique // e.g. "hld", "lld", "dsa", "behavioral"
+  slug        String   @unique
   name        String
   description String?
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  // NEW — tells frontend which node/preset set to load ("hld" | "lld" | null = no whiteboard)
+  whiteboardPreset String?
+
   phases     InterviewPhaseTemplate[]
   rubrics    RubricTemplate[]
   interviews Interview[]
 }
-
 model InterviewPhaseTemplate {
   id         String            @id @default(cuid())
   templateId String
   template   InterviewTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
 
-  phaseKey String // e.g. "introduction", "requirements", "deep_dive"
-  order    Int // execution order within the template
+  phaseKey String
+  order    Int
 
-  goals                Json // string[]
-  evaluationDimensions Json // string[]
+  goals                Json
+  evaluationDimensions Json
   targetDurationRatio  Float
   transitionThreshold  Float
   instructions         String
+
+  // NEW — per-phase gate, not per-template. HLD's "requirements" phase should
+  // NOT show whiteboard even though the template supports it.
+  showWhiteboard Boolean @default(false)
 
   @@unique([templateId, phaseKey])
   @@index([templateId])
@@ -94,7 +99,7 @@ model Interview {
   evaluation Evaluation?
   problem    Problem           @relation(fields: [problemId], references: [id])
   transcript Message[]
-
+  whiteboardState Json?
   @@index([templateId])
   @@index([userId])
 }
@@ -105,6 +110,11 @@ model Message {
   role        MessageRole
   content     String
   metadata    Json?
+
+  // NEW — written at persist time, not reconstructed later
+  elapsedSeconds Int     @default(0)
+  phase          String?
+
   createdAt   DateTime    @default(now())
   interview   Interview   @relation(fields: [interviewId], references: [id], onDelete: Cascade)
 
