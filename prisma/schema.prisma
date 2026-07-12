@@ -12,11 +12,67 @@ model User {
   email     String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  interviews Interview[]
+  masteries  ConceptMastery[]
+}
+
+// ---------------------------------------------------------------------------
+// Dynamic interview templates. Adding a new interview type (DSA, Behavioral,
+// Concurrency, ...) is now a data-seed operation: insert one InterviewTemplate
+// row, its InterviewPhaseTemplate rows (in order), and its RubricTemplate
+// rows. No enum change, no migration, no new resolver branch, no new profile
+// file.
+// ---------------------------------------------------------------------------
+
+model InterviewTemplate {
+  id          String   @id @default(cuid())
+  slug        String   @unique // e.g. "hld", "lld", "dsa", "behavioral"
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  phases     InterviewPhaseTemplate[]
+  rubrics    RubricTemplate[]
+  interviews Interview[]
+}
+
+model InterviewPhaseTemplate {
+  id         String            @id @default(cuid())
+  templateId String
+  template   InterviewTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  phaseKey String // e.g. "introduction", "requirements", "deep_dive"
+  order    Int // execution order within the template
+
+  goals                Json // string[]
+  evaluationDimensions Json // string[]
+  targetDurationRatio  Float
+  transitionThreshold  Float
+  instructions         String
+
+  @@unique([templateId, phaseKey])
+  @@index([templateId])
+}
+
+model RubricTemplate {
+  id         String            @id @default(cuid())
+  templateId String
+  template   InterviewTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  dimension String // must match a value used in some phase's evaluationDimensions
+  content   String
+  weight    Float  @default(1.0)
+
+  @@unique([templateId, dimension])
 }
 
 model Interview {
   id            String          @id @default(cuid())
-  type          InterviewType
+  userId        String
+  templateId    String
   difficulty    Difficulty
   duration      Int
   company       String
@@ -29,11 +85,16 @@ model Interview {
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 
-  problemId     String
+  problemId String
 
-  evaluation    Evaluation?
-  problem       Problem         @relation(fields: [problemId], references: [id])
-  transcript    Message[]
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  template   InterviewTemplate @relation(fields: [templateId], references: [id])
+  evaluation Evaluation?
+  problem    Problem           @relation(fields: [problemId], references: [id])
+  transcript Message[]
+
+  @@index([templateId])
+  @@index([userId])
 }
 
 model Message {
@@ -44,6 +105,8 @@ model Message {
   metadata    Json?
   createdAt   DateTime    @default(now())
   interview   Interview   @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+
+  evidenceItems EvidenceItem[]
 
   @@index([interviewId])
 }
@@ -62,6 +125,7 @@ model Problem {
   experiences    InterviewExperience[]
   companies      ProblemCompany[]
   tags           ProblemTag[]
+  concepts       ProblemConcept[]
 }
 
 model Company {
@@ -112,18 +176,114 @@ model InterviewExperience {
   problem   Problem          @relation(fields: [problemId], references: [id], onDelete: Cascade)
 }
 
+// ---------------------------------------------------------------------------
+// Evidence-based evaluation. dimensionScores/evidence stay as denormalized
+// Json — they're a read-optimized cache for the report page. EvidenceItem
+// below is the normalized, queryable source of truth that Mastery reads from.
+// ---------------------------------------------------------------------------
+
 model Evaluation {
-  id                 String    @id @default(cuid())
-  interviewId        String    @unique
-  overallScore       Int
-  communicationScore Int
-  architectureScore  Int
-  scalabilityScore   Int
-  tradeoffScore      Int
-  feedback           String
-  metadata           Json?
-  createdAt          DateTime  @default(now())
-  interview          Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  id          String @id @default(cuid())
+  interviewId String @unique
+
+  overallScore Int
+
+  // DimensionScore[]: { dimension, score, summary, evidence: EvidenceItem[] }
+  dimensionScores Json
+
+  // Flattened EvidenceItem[]: { dimension, messageId, timestampSeconds, quote, comment }
+  evidence Json
+
+  feedback  String
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  interview     Interview      @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  evidenceItems EvidenceItem[]
+}
+
+// ---------------------------------------------------------------------------
+// Skill Intelligence Layer: Interview -> Evidence -> Concepts -> Mastery ->
+// Recommendations. EvidenceItem/EvidenceConcept are written alongside the
+// Evaluation.evidence Json blob (see EvaluationService); ConceptMastery is
+// recomputed from them after every evaluation (see MasteryService).
+// ---------------------------------------------------------------------------
+
+model Concept {
+  id          String  @id @default(cuid())
+  slug        String  @unique
+  name        String
+  description String?
+  category    String // free text, e.g. "scalability", "data_modeling" — seeded like rubric dimensions
+
+  parentId String?
+  parent   Concept?  @relation("ConceptHierarchy", fields: [parentId], references: [id])
+  children Concept[] @relation("ConceptHierarchy")
+
+  createdAt DateTime @default(now())
+
+  evidenceLinks EvidenceConcept[]
+  masteries     ConceptMastery[]
+  problems      ProblemConcept[]
+}
+
+model EvidenceItem {
+  id               String     @id @default(cuid())
+  evaluationId     String
+  evaluation       Evaluation @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  messageId        String
+  message          Message    @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  dimension        String
+  timestampSeconds Int
+  quote            String
+  comment          String
+  createdAt        DateTime   @default(now())
+
+  concepts EvidenceConcept[]
+
+  @@index([evaluationId])
+  @@index([messageId])
+}
+
+model EvidenceConcept {
+  evidenceItemId String
+  conceptId      String
+  weight         Float @default(1.0) // how strongly this item demonstrates the concept, 0-1
+
+  evidenceItem EvidenceItem @relation(fields: [evidenceItemId], references: [id], onDelete: Cascade)
+  concept      Concept      @relation(fields: [conceptId], references: [id], onDelete: Cascade)
+
+  @@id([evidenceItemId, conceptId])
+  @@index([conceptId])
+}
+
+model ConceptMastery {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  conceptId String
+  concept   Concept @relation(fields: [conceptId], references: [id], onDelete: Cascade)
+
+  score              Float     @default(0) // 0-1 rolling estimate
+  confidence         Float     @default(0) // 0-1, low until enough evidence accumulates
+  sampleCount        Int       @default(0)
+  lastDemonstratedAt DateTime?
+  updatedAt          DateTime  @updatedAt
+
+  @@unique([userId, conceptId])
+  @@index([userId])
+}
+
+model ProblemConcept {
+  problemId String
+  conceptId String
+  weight    Float @default(1.0) // how heavily this problem exercises the concept
+
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  concept Concept @relation(fields: [conceptId], references: [id], onDelete: Cascade)
+
+  @@id([problemId, conceptId])
 }
 
 enum ProblemCategory {
@@ -150,11 +310,6 @@ enum InterviewStatus {
   SETUP
   IN_PROGRESS
   COMPLETED
-}
-
-enum InterviewType {
-  HLD
-  LLD
 }
 
 enum Difficulty {

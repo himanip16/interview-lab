@@ -1,6 +1,15 @@
 import { promises as fs } from "fs";
 import path from "path";
 
+import { prisma } from "@/shared/prisma/client";
+
+const FALLBACK_RUBRIC = (dimension: string) => `
+Score from 0-10 based on how clearly the candidate demonstrated "${dimension}".
+
+No specific rubric has been configured for this dimension yet — score
+conservatively and note in the summary that a dedicated rubric is missing.
+`.trim();
+
 export class PromptLoader {
   private readonly templatesDirectory = path.join(
     process.cwd(),
@@ -11,17 +20,11 @@ export class PromptLoader {
     "templates"
   );
 
-  private readonly rubricsDirectory = path.join(
-    process.cwd(),
-    "data",
-    "rubrics"
-  );
-
   private readonly cache = new Map<string, string>();
 
-  async load(
-    templateName: string
-  ): Promise<string> {
+  private readonly rubricCache = new Map<string, string>();
+
+  async load(templateName: string): Promise<string> {
     const cached = this.cache.get(templateName);
 
     if (cached) {
@@ -41,62 +44,61 @@ export class PromptLoader {
         "utf-8"
       );
 
-      this.cache.set(
-        templateName,
-        template
-      );
+      this.cache.set(templateName, template);
 
       return template;
     } catch (error) {
       throw new Error(
         `Prompt template "${templateName}" was not found or could not be loaded at "${templatePath}".`,
-        {
-          cause: error,
-        }
+        { cause: error }
       );
     }
   }
 
-  async loadRubric(
-    rubricName: string
+  /**
+   * Loads a scoring rubric for a single evaluation dimension, scoped to an
+   * interview template (RubricTemplate row). This is what makes rubrics
+   * extensible along with interview types: a new template brings its own
+   * rubric rows instead of a new static .md file + code path.
+   *
+   * Falls back to a generic rubric (rather than throwing) so a template that
+   * hasn't had every dimension's rubric authored yet still produces a scored,
+   * evidence-backed evaluation instead of a hard failure.
+   */
+  async loadRubricForDimension(
+    templateId: string,
+    dimension: string
   ): Promise<string> {
-    const cacheKey = `rubric:${rubricName}`;
-    const cached = this.cache.get(cacheKey);
+    const cacheKey = `${templateId}:${dimension}`;
+
+    const cached = this.rubricCache.get(cacheKey);
 
     if (cached) {
       return cached;
     }
 
-    const rubricPath = path.join(
-      this.rubricsDirectory,
-      rubricName
+    const rubric = await prisma.rubricTemplate.findUnique(
+      {
+        where: {
+          templateId_dimension: {
+            templateId,
+            dimension,
+          },
+        },
+      }
     );
 
-    try {
-      await fs.access(rubricPath);
+    const content = rubric?.content?.trim()
+      ? rubric.content
+      : FALLBACK_RUBRIC(dimension);
 
-      const rubric = await fs.readFile(
-        rubricPath,
-        "utf-8"
-      );
+    this.rubricCache.set(cacheKey, content);
 
-      this.cache.set(
-        cacheKey,
-        rubric
-      );
-
-      return rubric;
-    } catch (error) {
-      throw new Error(
-        `Rubric "${rubricName}" was not found or could not be loaded at "${rubricPath}".`,
-        {
-          cause: error,
-        }
-      );
-    }
+    return content;
   }
 
   clearCache(): void {
     this.cache.clear();
+    this.rubricCache.clear();
   }
 }

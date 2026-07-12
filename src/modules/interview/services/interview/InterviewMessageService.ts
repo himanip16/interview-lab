@@ -6,7 +6,7 @@ import {
 
 import { InterviewRepository } from "../../repositories/InterviewRepository";
 import { InterviewEngine } from "../../engine/InterviewEngine";
-import { InterviewProfileResolver } from "../../profiles/InterviewProfileResolver";
+import { InterviewProfileService } from "../../profiles/InterviewProfileService";
 import { ChatMessage } from "@/src/modules/ai/services/AIService";
 
 export class InterviewMessageService {
@@ -16,8 +16,8 @@ export class InterviewMessageService {
   private readonly engine =
     new InterviewEngine();
 
-  private readonly profileResolver =
-    new InterviewProfileResolver();
+  private readonly profileService =
+    new InterviewProfileService();
 
   async processMessage(
     interviewId: string,
@@ -43,15 +43,6 @@ export class InterviewMessageService {
       );
     }
 
-    /*
-     * Build history INCLUDING the latest
-     * user message.
-     *
-     * Do not persist yet.
-     *
-     * If AI generation fails we do not want
-     * a half-written interview turn.
-     */
     const conversation = [
       ...interview.transcript.map(
         (message) => ({
@@ -71,9 +62,10 @@ export class InterviewMessageService {
       },
     ];
 
-    const profile = this.profileResolver.resolve(
-      interview.type
-    );
+    const profile =
+      await this.profileService.resolveByTemplateId(
+        interview.templateId
+      );
 
     const history: ChatMessage[] = conversation.map(
       (msg) => ({

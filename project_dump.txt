@@ -34,6 +34,8 @@ PROJECT STRUCTURE
 │   │   │   └── migration.sql
 │   │   ├── 20260712074509_dynamic_interview_lifecycle
 │   │   │   └── migration.sql
+│   │   ├── 20260712100000_dynamic_interview_templates
+│   │   │   └── migration.sql
 │   │   └── migration_lock.toml
 │   ├── schema.prisma
 │   └── seed.ts
@@ -132,6 +134,7 @@ PROJECT STRUCTURE
 │   │   │   │       └── interviewStore.ts
 │   │   │   ├── report
 │   │   │   │   ├── components
+│   │   │   │   │   ├── EvidenceTimeline.tsx
 │   │   │   │   │   ├── FeedbackCard.tsx
 │   │   │   │   │   ├── ScoreCard.tsx
 │   │   │   │   │   └── Timeline.tsx
@@ -202,8 +205,10 @@ PROJECT STRUCTURE
 │   │       ├── evaluators
 │   │       │   ├── ArchitectureEvaluator.ts
 │   │       │   ├── CommunicationEvaluator.ts
+│   │       │   ├── EvidenceEvaluator.ts
 │   │       │   ├── RequirementEvaluator.ts
-│   │       │   └── TechnicalEvaluator.ts
+│   │       │   ├── TechnicalEvaluator.ts
+│   │       │   └── types.ts
 │   │       ├── guardrails
 │   │       │   └── PromptGuard.ts
 │   │       ├── models
@@ -254,7 +259,7 @@ PROJECT STRUCTURE
 ├── tsconfig.json
 └── tsconfig.tsbuildinfo
 
-98 directories, 155 files
+99 directories, 159 files
 
 FILE CONTENTS
 
@@ -288,9 +293,61 @@ model User {
   updatedAt DateTime @updatedAt
 }
 
+// ---------------------------------------------------------------------------
+// Dynamic interview templates. Adding a new interview type (DSA, Behavioral,
+// Concurrency, ...) is now a data-seed operation: insert one InterviewTemplate
+// row, its InterviewPhaseTemplate rows (in order), and its RubricTemplate
+// rows. No enum change, no migration, no new resolver branch, no new profile
+// file.
+// ---------------------------------------------------------------------------
+
+model InterviewTemplate {
+  id          String   @id @default(cuid())
+  slug        String   @unique // e.g. "hld", "lld", "dsa", "behavioral"
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  phases     InterviewPhaseTemplate[]
+  rubrics    RubricTemplate[]
+  interviews Interview[]
+}
+
+model InterviewPhaseTemplate {
+  id         String            @id @default(cuid())
+  templateId String
+  template   InterviewTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  phaseKey String // e.g. "introduction", "requirements", "deep_dive"
+  order    Int // execution order within the template
+
+  goals                Json // string[]
+  evaluationDimensions Json // string[]
+  targetDurationRatio  Float
+  transitionThreshold  Float
+  instructions         String
+
+  @@unique([templateId, phaseKey])
+  @@index([templateId])
+}
+
+model RubricTemplate {
+  id         String            @id @default(cuid())
+  templateId String
+  template   InterviewTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  dimension String // must match a value used in some phase's evaluationDimensions
+  content   String
+  weight    Float  @default(1.0)
+
+  @@unique([templateId, dimension])
+}
+
 model Interview {
   id            String          @id @default(cuid())
-  type          InterviewType
+  templateId    String
   difficulty    Difficulty
   duration      Int
   company       String
@@ -303,11 +360,14 @@ model Interview {
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 
-  problemId     String
+  problemId String
 
-  evaluation    Evaluation?
-  problem       Problem         @relation(fields: [problemId], references: [id])
-  transcript    Message[]
+  template   InterviewTemplate @relation(fields: [templateId], references: [id])
+  evaluation Evaluation?
+  problem    Problem           @relation(fields: [problemId], references: [id])
+  transcript Message[]
+
+  @@index([templateId])
 }
 
 model Message {
@@ -386,18 +446,31 @@ model InterviewExperience {
   problem   Problem          @relation(fields: [problemId], references: [id], onDelete: Cascade)
 }
 
+// ---------------------------------------------------------------------------
+// Evidence-based evaluation. dimensionScores/evidence are dynamic (Json)
+// because the set of dimensions is now defined per-template, not hardcoded
+// columns. Each evidence item points back at a real Message.id so a score can
+// always be traced to an actual transcript line instead of being trusted
+// blindly.
+// ---------------------------------------------------------------------------
+
 model Evaluation {
-  id                 String    @id @default(cuid())
-  interviewId        String    @unique
-  overallScore       Int
-  communicationScore Int
-  architectureScore  Int
-  scalabilityScore   Int
-  tradeoffScore      Int
-  feedback           String
-  metadata           Json?
-  createdAt          DateTime  @default(now())
-  interview          Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  id          String @id @default(cuid())
+  interviewId String @unique
+
+  overallScore Int
+
+  // DimensionScore[]: { dimension, score, summary, evidence: EvidenceItem[] }
+  dimensionScores Json
+
+  // Flattened EvidenceItem[]: { dimension, messageId, timestampSeconds, quote, comment }
+  evidence Json
+
+  feedback  String
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  interview Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
 }
 
 enum ProblemCategory {
@@ -426,11 +499,6 @@ enum InterviewStatus {
   COMPLETED
 }
 
-enum InterviewType {
-  HLD
-  LLD
-}
-
 enum Difficulty {
   EASY
   MEDIUM
@@ -441,89 +509,594 @@ enum MessageRole {
   assistant
   user
 }
-
 ================================================
 FILE: ./prisma/seed.ts
 ================================================
 import {
   Difficulty,
+  Prisma,
   PrismaClient,
   ProblemCategory,
 } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
+// ---------------------------------------------------------------------------
+// Problems (unchanged)
+// ---------------------------------------------------------------------------
+
 const problems = [
   {
     slug: "url-shortener",
     title: "Design a URL Shortener",
-    description:
-      "Design a scalable URL shortening service like TinyURL.",
+    description: "Design a scalable URL shortening service like TinyURL.",
     category: ProblemCategory.SYSTEM_DESIGN,
     difficulty: Difficulty.MEDIUM,
   },
   {
     slug: "rate-limiter",
     title: "Design a Rate Limiter",
-    description:
-      "Design a distributed rate limiting system.",
+    description: "Design a distributed rate limiting system.",
     category: ProblemCategory.SYSTEM_DESIGN,
     difficulty: Difficulty.MEDIUM,
   },
   {
     slug: "news-feed",
     title: "Design a News Feed",
-    description:
-      "Design a scalable social media news feed.",
+    description: "Design a scalable social media news feed.",
     category: ProblemCategory.SYSTEM_DESIGN,
     difficulty: Difficulty.HARD,
   },
   {
     slug: "chat-system",
     title: "Design a Chat System",
-    description:
-      "Design a real-time messaging platform.",
+    description: "Design a real-time messaging platform.",
     category: ProblemCategory.SYSTEM_DESIGN,
     difficulty: Difficulty.HARD,
   },
   {
     slug: "file-storage",
     title: "Design File Storage",
-    description:
-      "Design a distributed cloud file storage system.",
+    description: "Design a distributed cloud file storage system.",
     category: ProblemCategory.DISTRIBUTED_SYSTEMS,
     difficulty: Difficulty.HARD,
   },
   {
     slug: "design-uber",
     title: "Design Uber",
-    description:
-      "Design a large-scale ride sharing platform.",
+    description: "Design a large-scale ride sharing platform.",
     category: ProblemCategory.SYSTEM_DESIGN,
     difficulty: Difficulty.HARD,
   },
   {
     slug: "design-youtube",
     title: "Design YouTube",
-    description:
-      "Design a global video streaming platform.",
+    description: "Design a global video streaming platform.",
     category: ProblemCategory.SYSTEM_DESIGN,
     difficulty: Difficulty.HARD,
   },
 ];
 
+// ---------------------------------------------------------------------------
+// Rubric helper — mirrors the format of the original data/rubrics/*.md files
+// ---------------------------------------------------------------------------
+
+function rubric(criteria: string[], deductFor: string): string {
+  return `
+Score from 0-10.
+
+Give points for:
+
+${criteria.map((c) => `- ${c}`).join("\n")}
+
+Deduct points if the candidate ${deductFor}.
+
+Return reasoning.
+`.trim();
+}
+
+const RUBRICS: Record<string, string> = {
+  communication: rubric(
+    [
+      "Explains reasoning out loud before committing to decisions",
+      "Structures the conversation (states assumptions, checks in, summarizes)",
+      "Responds directly to interviewer questions instead of deflecting",
+      "Uses precise technical vocabulary",
+    ],
+    "is silent for long stretches or jumps to conclusions without narrating why"
+  ),
+  requirement_clarity: rubric(
+    [
+      "Distinguishes functional vs non-functional requirements",
+      "Asks about scale, latency, and consistency expectations",
+      "Confirms scope before designing",
+    ],
+    "starts designing before requirements are clarified"
+  ),
+  scope_management: rubric(
+    [
+      "Keeps requirement gathering time-boxed and focused",
+      "Avoids over-scoping into unrelated features",
+    ],
+    "spends excessive time on requirements or scope-creeps the problem"
+  ),
+  architecture: rubric(
+    [
+      "Identifies the right core components and service boundaries",
+      "Justifies storage/database choices",
+      "Describes data flow between components clearly",
+    ],
+    "proposes an architecture without justifying key decisions"
+  ),
+  technical_reasoning: rubric(
+    [
+      "Backs design choices with concrete reasoning, not buzzwords",
+      "Considers more than one option before choosing",
+    ],
+    "name-drops technologies without explaining why they fit"
+  ),
+  technical_depth: rubric(
+    [
+      "Goes beyond the surface level when probed on a component",
+      "Handles follow-up questions about internals confidently",
+    ],
+    "gives shallow answers when pushed for detail"
+  ),
+  tradeoffs: rubric(
+    [
+      "Explicitly names tradeoffs (e.g. consistency vs availability, latency vs cost)",
+      "Justifies a choice given the stated requirements",
+    ],
+    "presents a design as if it has no downsides"
+  ),
+  scalability: rubric(
+    [
+      "Horizontal Scaling",
+      "Load Balancer",
+      "Partitioning",
+      "Sharding",
+      "Replication",
+      "Caching",
+      "CDN",
+      "Queue",
+    ],
+    "ignores scaling completely"
+  ),
+  reliability: rubric(
+    [
+      "Identifies single points of failure",
+      "Discusses retries, timeouts, and graceful degradation",
+      "Considers monitoring/alerting",
+    ],
+    "assumes components never fail"
+  ),
+  object_modeling: rubric(
+    [
+      "Identifies the right core entities and their responsibilities",
+      "Models relationships (composition vs association vs inheritance) correctly",
+    ],
+    "produces a single god object or unclear ownership"
+  ),
+  abstraction: rubric(
+    [
+      "Hides implementation details behind clean interfaces",
+      "Avoids leaking internal state",
+    ],
+    "exposes internal implementation details unnecessarily"
+  ),
+  class_design: rubric(
+    [
+      "Defines clear method boundaries",
+      "Applies encapsulation appropriately",
+      "Separates concerns between classes",
+    ],
+    "produces classes with unclear or overlapping responsibilities"
+  ),
+  code_quality: rubric(
+    ["Names things clearly", "Keeps methods small and focused"],
+    "writes code that is hard to follow or overly clever"
+  ),
+  design_patterns: rubric(
+    [
+      "Applies a design pattern where it genuinely fits",
+      "Explains why the pattern was chosen",
+    ],
+    "forces a pattern where it doesn't fit, or can't explain the choice"
+  ),
+  maintainability: rubric(
+    [
+      "Design accommodates realistic future requirement changes",
+      "Includes consideration for testability",
+    ],
+    "produces a design that would require a rewrite for small changes"
+  ),
+  problem_solving: rubric(
+    [
+      "Breaks the problem into a clear approach before coding",
+      "Considers brute force then optimizes",
+    ],
+    "jumps straight to code without a stated approach"
+  ),
+  code_correctness: rubric(
+    [
+      "Produces working code for the stated approach",
+      "Handles edge cases (empty input, single element, duplicates)",
+    ],
+    "leaves obvious bugs or off-by-one errors unaddressed"
+  ),
+  complexity_analysis: rubric(
+    [
+      "States time and space complexity accurately",
+      "Recognizes when a better complexity is possible",
+    ],
+    "cannot state or justify the complexity of their own solution"
+  ),
+  edge_case_handling: rubric(
+    [
+      "Proactively identifies edge cases before being prompted",
+      "Adjusts the solution to handle them",
+    ],
+    "only handles edge cases after being explicitly told to"
+  ),
+};
+
+// ---------------------------------------------------------------------------
+// Interview templates — this is the part that used to be hardcoded across
+// the InterviewType enum, InterviewProfileResolver, HLDInterviewProfile.ts and
+// LLDInterviewProfile.ts. Adding "DSA" below is the entire cost of adding a
+// new interview type now.
+// ---------------------------------------------------------------------------
+
+type PhaseSeed = {
+  phaseKey: string;
+  order: number;
+  goals: string[];
+  evaluationDimensions: string[];
+  targetDurationRatio: number;
+  transitionThreshold: number;
+  instructions: string;
+};
+
+type TemplateSeed = {
+  slug: string;
+  name: string;
+  description: string;
+  phases: PhaseSeed[];
+};
+
+const templates: TemplateSeed[] = [
+  {
+    slug: "hld",
+    name: "High Level Design",
+    description: "Design scalable distributed systems.",
+    phases: [
+      {
+        phaseKey: "introduction",
+        order: 0,
+        goals: ["candidate_understands_problem"],
+        evaluationDimensions: ["communication"],
+        targetDurationRatio: 0.05,
+        transitionThreshold: 0.7,
+        instructions:
+          "Introduce the problem briefly. Do not reveal requirements. Ask the candidate to begin by clarifying the problem. Move forward once the candidate demonstrates that they understand the problem and begins requirement discovery.",
+      },
+      {
+        phaseKey: "requirements",
+        order: 1,
+        goals: [
+          "functional_requirements",
+          "non_functional_requirements",
+          "scale",
+          "constraints",
+        ],
+        evaluationDimensions: [
+          "requirement_clarity",
+          "scope_management",
+          "communication",
+        ],
+        targetDurationRatio: 0.15,
+        transitionThreshold: 0.75,
+        instructions:
+          "Evaluate requirement gathering. Answer requirement questions when directly asked. Do not volunteer every requirement. Probe missing functional requirements, non-functional requirements, scale, and constraints. Do not discuss architecture yet.",
+      },
+      {
+        phaseKey: "high_level_design",
+        order: 2,
+        goals: [
+          "core_components",
+          "service_boundaries",
+          "data_flow",
+          "storage_choice",
+        ],
+        evaluationDimensions: ["architecture", "technical_reasoning"],
+        targetDurationRatio: 0.25,
+        transitionThreshold: 0.75,
+        instructions:
+          "Ask the candidate to propose a high-level architecture. Evaluate major components, service boundaries, data flow, and storage decisions. Challenge unclear architectural choices. Do not design the system for the candidate.",
+      },
+      {
+        phaseKey: "deep_dive",
+        order: 3,
+        goals: [
+          "critical_component",
+          "data_model",
+          "consistency",
+          "technical_tradeoffs",
+        ],
+        evaluationDimensions: ["technical_depth", "tradeoffs"],
+        targetDurationRatio: 0.3,
+        transitionThreshold: 0.7,
+        instructions:
+          "Choose important areas from the candidate's design for deeper discussion. Probe implementation details, data modeling, consistency, and tradeoffs. Prefer areas where the candidate's reasoning is incomplete or weak.",
+      },
+      {
+        phaseKey: "scalability",
+        order: 4,
+        goals: [
+          "bottlenecks",
+          "failure_modes",
+          "scaling_strategy",
+          "reliability",
+        ],
+        evaluationDimensions: ["scalability", "reliability"],
+        targetDurationRatio: 0.2,
+        transitionThreshold: 0.7,
+        instructions:
+          "Probe scalability and reliability. Ask about bottlenecks, failure scenarios, capacity pressure, and scaling strategies. Challenge assumptions using realistic production scenarios.",
+      },
+      {
+        phaseKey: "closing",
+        order: 5,
+        goals: ["final_tradeoff_summary"],
+        evaluationDimensions: ["communication", "tradeoffs"],
+        targetDurationRatio: 0.05,
+        transitionThreshold: 1,
+        instructions:
+          "Conclude the interview naturally. Ask the candidate to summarize their design and the most important tradeoffs. Do not begin another technical phase.",
+      },
+    ],
+  },
+  {
+    slug: "lld",
+    name: "Low Level Design",
+    description: "Object-oriented design and patterns.",
+    phases: [
+      {
+        phaseKey: "introduction",
+        order: 0,
+        goals: ["candidate_understands_problem"],
+        evaluationDimensions: ["communication"],
+        targetDurationRatio: 0.05,
+        transitionThreshold: 0.7,
+        instructions:
+          "Introduce the object-oriented design problem. Ask the candidate to clarify the expected behaviour and scope.",
+      },
+      {
+        phaseKey: "requirements",
+        order: 1,
+        goals: ["use_cases", "actors", "constraints", "edge_cases"],
+        evaluationDimensions: ["requirement_clarity", "scope_management"],
+        targetDurationRatio: 0.15,
+        transitionThreshold: 0.75,
+        instructions:
+          "Evaluate whether the candidate identifies important use cases, actors, constraints, and edge cases. Answer clarification questions. Do not propose classes or interfaces.",
+      },
+      {
+        phaseKey: "domain_modeling",
+        order: 2,
+        goals: ["core_entities", "responsibilities", "relationships"],
+        evaluationDimensions: ["object_modeling", "abstraction"],
+        targetDurationRatio: 0.2,
+        transitionThreshold: 0.75,
+        instructions:
+          "Ask the candidate to identify the core entities. Evaluate responsibilities and relationships. Challenge god objects, unclear ownership, and weak abstractions.",
+      },
+      {
+        phaseKey: "class_design",
+        order: 3,
+        goals: [
+          "classes",
+          "interfaces",
+          "method_boundaries",
+          "encapsulation",
+        ],
+        evaluationDimensions: ["class_design", "code_quality"],
+        targetDurationRatio: 0.3,
+        transitionThreshold: 0.75,
+        instructions:
+          "Probe concrete class and interface design. Evaluate method boundaries, encapsulation, and separation of concerns. Ask focused questions about design decisions.",
+      },
+      {
+        phaseKey: "extensibility",
+        order: 4,
+        goals: [
+          "change_scenarios",
+          "design_tradeoffs",
+          "extensibility",
+          "testability",
+        ],
+        evaluationDimensions: [
+          "design_patterns",
+          "tradeoffs",
+          "maintainability",
+        ],
+        targetDurationRatio: 0.25,
+        transitionThreshold: 0.7,
+        instructions:
+          "Introduce realistic requirement changes. Evaluate whether the design is extensible and testable. Probe design patterns only when relevant. Do not force pattern usage.",
+      },
+      {
+        phaseKey: "closing",
+        order: 5,
+        goals: ["final_design_summary"],
+        evaluationDimensions: ["communication"],
+        targetDurationRatio: 0.05,
+        transitionThreshold: 1,
+        instructions:
+          "Ask the candidate to summarize their final design and major tradeoffs. Conclude the interview naturally.",
+      },
+    ],
+  },
+  {
+    // Proof of extensibility: this entire interview type is new data, zero
+    // new code paths, zero new enum values, zero new resolver branches.
+    slug: "dsa",
+    name: "Data Structures & Algorithms",
+    description: "Coding interview focused on problem solving and complexity analysis.",
+    phases: [
+      {
+        phaseKey: "clarification",
+        order: 0,
+        goals: ["input_constraints", "edge_cases_identified"],
+        evaluationDimensions: ["communication", "edge_case_handling"],
+        targetDurationRatio: 0.15,
+        transitionThreshold: 0.7,
+        instructions:
+          "Present the problem statement. Ask the candidate to restate the problem and clarify input size, constraints, and edge cases before coding.",
+      },
+      {
+        phaseKey: "approach",
+        order: 1,
+        goals: ["brute_force_stated", "optimization_direction"],
+        evaluationDimensions: ["problem_solving", "complexity_analysis"],
+        targetDurationRatio: 0.2,
+        transitionThreshold: 0.7,
+        instructions:
+          "Ask the candidate to describe their approach and its complexity before writing code. Push for a brute-force baseline if skipped, then an optimization direction.",
+      },
+      {
+        phaseKey: "implementation",
+        order: 2,
+        goals: ["working_code", "clean_structure"],
+        evaluationDimensions: ["code_correctness", "communication"],
+        targetDurationRatio: 0.45,
+        transitionThreshold: 0.75,
+        instructions:
+          "Let the candidate implement their approach. Ask clarifying questions about their code as they write it. Do not write code for them.",
+      },
+      {
+        phaseKey: "testing",
+        order: 3,
+        goals: ["dry_run", "edge_case_verification"],
+        evaluationDimensions: ["edge_case_handling", "code_correctness"],
+        targetDurationRatio: 0.15,
+        transitionThreshold: 0.7,
+        instructions:
+          "Ask the candidate to dry-run their solution against a normal case and at least one edge case.",
+      },
+      {
+        phaseKey: "closing",
+        order: 4,
+        goals: ["final_complexity_summary"],
+        evaluationDimensions: ["complexity_analysis"],
+        targetDurationRatio: 0.05,
+        transitionThreshold: 1,
+        instructions:
+          "Ask the candidate to state the final time and space complexity of their solution. Conclude the interview naturally.",
+      },
+    ],
+  },
+];
+
+async function seedTemplates() {
+  for (const template of templates) {
+    const dimensions = new Set<string>();
+
+    for (const phase of template.phases) {
+      for (const dim of phase.evaluationDimensions) {
+        dimensions.add(dim);
+      }
+    }
+
+    const saved = await prisma.interviewTemplate.upsert({
+      where: { slug: template.slug },
+      update: {
+        name: template.name,
+        description: template.description,
+        isActive: true,
+      },
+      create: {
+        slug: template.slug,
+        name: template.name,
+        description: template.description,
+      },
+    });
+
+    for (const phase of template.phases) {
+      await prisma.interviewPhaseTemplate.upsert({
+        where: {
+          templateId_phaseKey: {
+            templateId: saved.id,
+            phaseKey: phase.phaseKey,
+          },
+        },
+        update: {
+          order: phase.order,
+          goals: phase.goals as Prisma.InputJsonValue,
+          evaluationDimensions:
+            phase.evaluationDimensions as Prisma.InputJsonValue,
+          targetDurationRatio: phase.targetDurationRatio,
+          transitionThreshold: phase.transitionThreshold,
+          instructions: phase.instructions,
+        },
+        create: {
+          templateId: saved.id,
+          phaseKey: phase.phaseKey,
+          order: phase.order,
+          goals: phase.goals as Prisma.InputJsonValue,
+          evaluationDimensions:
+            phase.evaluationDimensions as Prisma.InputJsonValue,
+          targetDurationRatio: phase.targetDurationRatio,
+          transitionThreshold: phase.transitionThreshold,
+          instructions: phase.instructions,
+        },
+      });
+    }
+
+    for (const dimension of dimensions) {
+      const content = RUBRICS[dimension];
+
+      if (!content) {
+        console.warn(
+          `No rubric authored for dimension "${dimension}" (template "${template.slug}") — evaluation will fall back to a generic rubric.`
+        );
+        continue;
+      }
+
+      await prisma.rubricTemplate.upsert({
+        where: {
+          templateId_dimension: {
+            templateId: saved.id,
+            dimension,
+          },
+        },
+        update: { content },
+        create: {
+          templateId: saved.id,
+          dimension,
+          content,
+        },
+      });
+    }
+
+    console.log(
+      `Seeded template "${template.slug}" (${template.phases.length} phases, ${dimensions.size} dimensions).`
+    );
+  }
+}
+
 async function main() {
   for (const problem of problems) {
     await prisma.problem.upsert({
-      where: {
-        slug: problem.slug,
-      },
+      where: { slug: problem.slug },
       update: problem,
       create: problem,
     });
   }
 
   console.log(`Seeded ${problems.length} problems.`);
+
+  await seedTemplates();
 }
 
 main()
@@ -1039,6 +1612,7 @@ FILE: ./src/app/interview/report/[id]/page.tsx
 import { prisma } from "@/shared/prisma/client";
 import ScoreCard from "@/src/features/interview/report/components/ScoreCard";
 import FeedbackCard from "@/src/features/interview/report/components/FeedbackCard";
+import EvidenceTimeline from "@/src/features/interview/report/components/EvidenceTimeline";
 
 type Props = {
   params: Promise<{
@@ -1049,6 +1623,19 @@ type Props = {
 type EvaluationMetadata = {
   strengths?: string[];
   weaknesses?: string[];
+};
+
+type DimensionScore = {
+  dimension: string;
+  score: number;
+  summary: string;
+};
+
+type EvidenceItem = {
+  dimension: string;
+  timestampSeconds: number;
+  quote: string;
+  comment: string;
 };
 
 export default async function ReportPage({ params }: Props) {
@@ -1068,8 +1655,14 @@ export default async function ReportPage({ params }: Props) {
     );
   }
 
-  const metadata =
+  const metadata: EvaluationMetadata =
     (evaluation.metadata as EvaluationMetadata | null) ?? {};
+
+  const dimensionScores =
+    (evaluation.dimensionScores as unknown as DimensionScore[]) ?? [];
+
+  const evidence =
+    (evaluation.evidence as unknown as EvidenceItem[]) ?? [];
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-12">
@@ -1078,7 +1671,7 @@ export default async function ReportPage({ params }: Props) {
       </h1>
 
       <div className="mb-12 grid gap-8 md:grid-cols-2">
-        <ScoreCard score={evaluation.score} />
+        <ScoreCard score={evaluation.overallScore} />
 
         <div className="rounded-xl border bg-white p-6 shadow-sm">
           <h3 className="mb-2 font-bold">Expert Feedback</h3>
@@ -1087,6 +1680,20 @@ export default async function ReportPage({ params }: Props) {
             {evaluation.feedback}
           </p>
         </div>
+      </div>
+
+      <div className="mb-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {dimensionScores.map((dimension) => (
+          <ScoreCard
+            key={dimension.dimension}
+            score={Math.round(dimension.score * 10)}
+            label={dimension.dimension.replace(/_/g, " ")}
+          />
+        ))}
+      </div>
+
+      <div className="mb-12">
+        <EvidenceTimeline evidence={evidence} />
       </div>
 
       <FeedbackCard
@@ -1338,6 +1945,94 @@ export async function GET(request: Request) {
 ================================================
 FILE: ./src/app/api/interviews/route.ts
 ================================================
+import { NextResponse } from "next/server";
+
+import { InterviewRepository } from "@/src/modules/interview/repositories/InterviewRepository";
+import { createInterview } from "@/src/modules/interview/services/interview/InterviewFactory";
+import { CreateInterviewInput } from "@/src/features/interview/types/CreateInterviewInput";
+import logger from "@/src/shared/logger/logger";
+
+export async function POST(request: Request) {
+  try {
+    const body: CreateInterviewInput = await request.json();
+
+    if (!body.type || !body.difficulty || !body.duration || !body.company || !body.problemId) {
+      return NextResponse.json(
+        {
+          error: "Missing required fields: type, difficulty, duration, company, problemId",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    const repository = new InterviewRepository();
+
+    const interviewData = createInterview(body);
+
+    const interview = await repository.create({
+      type: interviewData.type,
+      difficulty: interviewData.difficulty,
+      duration: interviewData.duration,
+      company: interviewData.company,
+      status: interviewData.status,
+      problem: {
+        connect: {
+          id: interviewData.problemId,
+        },
+      },
+      currentPhase: interviewData.currentPhase,
+      summary: interviewData.summary,
+      promptVersion: interviewData.promptVersion,
+    });
+
+    return NextResponse.json(
+      {
+        id: interview.id,
+        status: interview.status,
+        type: interview.type,
+        difficulty: interview.difficulty,
+        duration: interview.duration,
+        company: interview.company,
+        problemId: interview.problemId,
+        currentPhase: interview.currentPhase,
+        summary: interview.summary,
+        createdAt: interview.createdAt,
+        updatedAt: interview.updatedAt,
+      },
+      {
+        status: 201,
+      }
+    );
+
+  } catch (error) {
+    if (error instanceof Error) {
+      logger.error(
+        {
+          err: error,
+          message: error.message,
+          stack: error.stack,
+        },
+        "Failed to create interview"
+      );
+    } else {
+      logger.error(
+        { error },
+        "Failed to create interview"
+      );
+    }
+
+    return NextResponse.json(
+      {
+        error: "Internal server error",
+      },
+      {
+        status: 500,
+      }
+    );
+  }
+}
 
 ================================================
 FILE: ./src/app/api/interviews/[id]/message/route.ts
@@ -1464,7 +2159,7 @@ type Props = {
   }>;
 };
 
-export async function GET({ params }: Props) {
+export async function GET(request: Request, { params }: Props) {
   const { id } = await params;
 
   try {
@@ -1506,6 +2201,9 @@ export async function GET({ params }: Props) {
         transcript: interview.transcript,
         evaluation: interview.evaluation,
         summary: interview.summary,
+        currentPhase: interview.currentPhase,
+        createdAt: interview.createdAt,
+        updatedAt: interview.updatedAt,
       },
       {
         status: 200,
@@ -1545,7 +2243,7 @@ FILE: ./src/app/api/interviews/[id]/finish/route.ts
 import { NextResponse } from "next/server";
 
 import { InterviewRepository } from "@/src/modules/interview/repositories/InterviewRepository";
-import { EvaluationService } from "@/src/modules/interview/services/evaluation/EvaluationService";
+import { createEvaluationService } from "@/src/modules/container";
 import logger from "@/src/shared/logger/logger";
 import { InterviewStatus } from "@prisma/client";
 
@@ -1600,7 +2298,7 @@ export async function POST(
 
 
     const evaluationService =
-      new EvaluationService();
+      createEvaluationService();
 
 
     const evaluation =
@@ -1652,6 +2350,103 @@ export async function POST(
 ================================================
 FILE: ./src/app/api/interviews/[id]/report/route.ts
 ================================================
+import { NextResponse } from "next/server";
+
+import { InterviewRepository } from "@/src/modules/interview/repositories/InterviewRepository";
+import logger from "@/src/shared/logger/logger";
+
+type Props = {
+  params: Promise<{
+    id: string;
+  }>;
+};
+
+export async function GET(request: Request, { params }: Props) {
+  const { id } = await params;
+
+  try {
+    if (!id) {
+      return NextResponse.json(
+        {
+          error: "Missing interview id",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    const repository = new InterviewRepository();
+
+    const interview = await repository.getById(id);
+
+    if (!interview) {
+      return NextResponse.json(
+        {
+          error: "Interview not found",
+        },
+        {
+          status: 404,
+        }
+      );
+    }
+
+    if (!interview.evaluation) {
+      return NextResponse.json(
+        {
+          error: "Evaluation not found",
+        },
+        {
+          status: 404,
+        }
+      );
+    }
+
+    return NextResponse.json(
+      {
+        id: interview.evaluation.id,
+        interviewId: interview.evaluation.interviewId,
+        overallScore: interview.evaluation.overallScore,
+        communicationScore: interview.evaluation.communicationScore,
+        architectureScore: interview.evaluation.architectureScore,
+        scalabilityScore: interview.evaluation.scalabilityScore,
+        tradeoffScore: interview.evaluation.tradeoffScore,
+        feedback: interview.evaluation.feedback,
+        metadata: interview.evaluation.metadata,
+        createdAt: interview.evaluation.createdAt,
+      },
+      {
+        status: 200,
+      }
+    );
+
+  } catch (error) {
+    if (error instanceof Error) {
+      logger.error(
+        {
+          err: error,
+          message: error.message,
+          stack: error.stack,
+        },
+        "Failed to get interview report"
+      );
+    } else {
+      logger.error(
+        { error },
+        "Failed to get interview report"
+      );
+    }
+
+    return NextResponse.json(
+      {
+        error: "Internal server error",
+      },
+      {
+        status: 500,
+      }
+    );
+  }
+}
 
 ================================================
 FILE: ./src/app/globals.css
@@ -1686,11 +2481,7 @@ html {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family:
-    "Nunito",
-    "Quicksand",
-    "Geist",
-    sans-serif;
+  font-family: var(--font-sans), sans-serif;
   transition:
     background-color 200ms ease,
     color 200ms ease;
@@ -1809,19 +2600,16 @@ export default FeatureCard;
 ================================================
 FILE: ./src/features/landing/index.ts
 ================================================
-export * from "../interview/types/CreateInterviewInput";
-export * from "../interview/types/InterviewState";
-export * from "../interview/types/TranscriptMessage";
+export * from "@/src/features/interview/types/CreateInterviewInput";
+export * from "@/src/features/interview/types/InterviewState";
+export * from "@/src/features/interview/types/TranscriptMessage";
 ================================================
 FILE: ./src/features/interview/types/CreateInterviewInput.ts
 ================================================
-import {
-  Difficulty,
-  InterviewType,
-} from "@prisma/client";
+import { Difficulty } from "@prisma/client";
 
 export interface CreateInterviewInput {
-  type: InterviewType;
+  templateId: string;
   difficulty: Difficulty;
   duration: number;
   company: string;
@@ -1842,7 +2630,6 @@ import { TranscriptMessage } from "./TranscriptMessage";
 
 export interface InterviewState {
   id: string;
-  topic: string;
 
   type: string;
   difficulty: string;
@@ -2064,7 +2851,6 @@ const DIFFICULTY_OPTIONS = [
   "Easy",
   "Medium",
   "Hard",
-  "Staff",
 ] as const;
 
 export default function DifficultySelector({
@@ -2221,7 +3007,7 @@ const MessageList: React.FC<MessageListProps> = ({ messages }) => {
   return (
     <div 
       ref={scrollRef}
-      className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50"
+      className="p-4 space-y-4 bg-gray-50"
     >
       {messages.map((msg, index) => (
         <Message key={msg.id || index} message={msg} />
@@ -2795,6 +3581,77 @@ export default function FeedbackCard({
           </p>
         )}
       </div>
+    </div>
+  );
+}
+================================================
+FILE: ./src/features/interview/report/components/EvidenceTimeline.tsx
+================================================
+interface EvidenceItem {
+  dimension: string;
+  timestampSeconds: number;
+  quote: string;
+  comment: string;
+}
+
+function formatTimestamp(seconds: number): string {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = Math.floor(seconds % 60);
+
+  return `${minutes.toString().padStart(2, "0")}:${remainingSeconds
+    .toString()
+    .padStart(2, "0")}`;
+}
+
+type Props = {
+  evidence: EvidenceItem[];
+};
+
+export default function EvidenceTimeline({ evidence }: Props) {
+  const sorted = [...evidence].sort(
+    (a, b) => a.timestampSeconds - b.timestampSeconds
+  );
+
+  if (sorted.length === 0) {
+    return (
+      <div className="rounded-xl border bg-white p-6 shadow-sm">
+        <h2 className="mb-2 text-xl font-semibold">
+          Evidence Timeline
+        </h2>
+        <p className="text-slate-500">
+          No evidence was captured for this interview.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-xl border bg-white p-6 shadow-sm">
+      <h2 className="mb-4 text-xl font-semibold">
+        Evidence Timeline
+      </h2>
+
+      <ol className="space-y-5 border-l-2 border-slate-200 pl-5">
+        {sorted.map((item, index) => (
+          <li key={index} className="relative">
+            <span className="absolute -left-[25px] top-1 h-2.5 w-2.5 rounded-full bg-blue-500" />
+
+            <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wide text-slate-400">
+              <span>{formatTimestamp(item.timestampSeconds)}</span>
+              <span>·</span>
+              <span>{item.dimension.replace(/_/g, " ")}</span>
+            </div>
+
+            <p className="mt-1 text-sm italic leading-relaxed text-slate-700">
+              &ldquo;{item.quote}&rdquo;
+            </p>
+
+            <p className="mt-1 text-sm leading-relaxed text-slate-600">
+              {item.comment}
+            </p>
+          </li>
+        ))}
+      </ol>
     </div>
   );
 }
@@ -3705,6 +4562,291 @@ FILE: ./src/modules/interview/evaluators/ArchitectureEvaluator.ts
 ================================================
 
 ================================================
+FILE: ./src/modules/interview/evaluators/EvidenceEvaluator.ts
+================================================
+import { z } from "zod";
+
+import { AIService } from "@/src/modules/ai/services/AIService";
+import { ValidatedJSONParser } from "@/src/modules/ai/utils/ValidatedJSONParser";
+
+import { PromptLoader } from "../prompt/PromptLoader";
+import {
+  EvaluatableInterview,
+  EvaluationResult,
+} from "./types";
+
+const EvidenceItemSchema = z.object({
+  messageId: z.string(),
+  quote: z.string().min(1),
+  comment: z.string().min(1),
+});
+
+const DimensionScoreSchema = z.object({
+  dimension: z.string(),
+  score: z.number().min(0).max(10),
+  summary: z.string(),
+  evidence: z.array(EvidenceItemSchema).max(4).default([]),
+});
+
+const EvaluationResponseSchema = z.object({
+  dimensionScores: z.array(DimensionScoreSchema).min(1),
+  strengths: z.array(z.string()).default([]),
+  weaknesses: z.array(z.string()).default([]),
+  feedback: z.string(),
+});
+
+const MAX_QUOTE_WORDS = 20;
+
+export class EvidenceEvaluator {
+  constructor(
+    private readonly ai = new AIService(),
+    private readonly promptLoader = new PromptLoader()
+  ) {}
+
+  async evaluate(
+    interview: EvaluatableInterview
+  ): Promise<EvaluationResult> {
+    const startedAt =
+      interview.startedAt ?? interview.createdAt;
+
+    const dimensions = this.collectDimensions(interview);
+
+    const rubricSection = await this.buildRubricSection(
+      interview.template.id,
+      dimensions
+    );
+
+    const transcriptById = new Map(
+      interview.transcript.map((message) => [
+        message.id,
+        message,
+      ])
+    );
+
+    const transcriptSection = interview.transcript
+      .map((message) => {
+        const elapsed = Math.max(
+          Math.floor(
+            (message.createdAt.getTime() -
+              startedAt.getTime()) /
+              1000
+          ),
+          0
+        );
+
+        return `[id=${message.id}] [t=${elapsed}s] ${message.role.toUpperCase()}: ${message.content}`;
+      })
+      .join("\n\n");
+
+    const prompt = this.buildPrompt(
+      interview.template.name,
+      dimensions,
+      rubricSection,
+      transcriptSection
+    );
+
+    const raw = await this.ai.chat([
+      {
+        role: "system",
+        content:
+          "You are a rigorous, evidence-driven technical interview evaluator.",
+      },
+      { role: "user", content: prompt },
+    ]);
+
+    const parsed = await ValidatedJSONParser.parse(
+      raw,
+      EvaluationResponseSchema,
+      () =>
+        this.ai.chat([
+          {
+            role: "system",
+            content:
+              "Repair the response into valid JSON matching the requested schema. Return ONLY JSON.",
+          },
+          { role: "user", content: raw },
+        ])
+    );
+
+    const dimensionScores = parsed.dimensionScores.map(
+      (dimension) => ({
+        dimension: dimension.dimension,
+        score: dimension.score,
+        summary: dimension.summary,
+        evidence: dimension.evidence
+          // Drop any evidence pointing at a message that doesn't exist and
+          // any quote that isn't actually substantiated by that message's
+          // content — this is what stops "evidence-shaped hallucination".
+          .filter((item) => {
+            const message = transcriptById.get(
+              item.messageId
+            );
+
+            if (!message) return false;
+
+            return this.isQuoteGroundedInMessage(
+              item.quote,
+              message.content
+            );
+          })
+          .map((item) => {
+            const message = transcriptById.get(
+              item.messageId
+            )!;
+
+            const timestampSeconds = Math.max(
+              Math.floor(
+                (message.createdAt.getTime() -
+                  startedAt.getTime()) /
+                  1000
+              ),
+              0
+            );
+
+            return {
+              messageId: item.messageId,
+              timestampSeconds,
+              quote: this.capWords(
+                item.quote,
+                MAX_QUOTE_WORDS
+              ),
+              comment: item.comment,
+            };
+          }),
+      })
+    );
+
+    const overallScore = Math.round(
+      (dimensionScores.reduce(
+        (sum, d) => sum + d.score,
+        0
+      ) /
+        Math.max(dimensionScores.length, 1)) *
+        10
+    );
+
+    return {
+      overallScore,
+      dimensionScores,
+      strengths: parsed.strengths,
+      weaknesses: parsed.weaknesses,
+      feedback: parsed.feedback,
+    };
+  }
+
+  private collectDimensions(
+    interview: EvaluatableInterview
+  ): string[] {
+    const set = new Set<string>();
+
+    for (const phase of interview.template.phases) {
+      const dims = phase.evaluationDimensions as string[];
+
+      for (const dim of dims ?? []) {
+        set.add(dim);
+      }
+    }
+
+    return [...set];
+  }
+
+  private async buildRubricSection(
+    templateId: string,
+    dimensions: string[]
+  ): Promise<string> {
+    const entries = await Promise.all(
+      dimensions.map(async (dimension) => {
+        const content =
+          await this.promptLoader.loadRubricForDimension(
+            templateId,
+            dimension
+          );
+
+        return `### ${dimension}\n${content}`;
+      })
+    );
+
+    return entries.join("\n\n");
+  }
+
+  private buildPrompt(
+    templateName: string,
+    dimensions: string[],
+    rubricSection: string,
+    transcriptSection: string
+  ): string {
+    return `
+You are evaluating a candidate's performance in a "${templateName}" technical interview.
+
+Score the candidate on EXACTLY these dimensions, no others:
+${dimensions.map((d) => `- ${d}`).join("\n")}
+
+RUBRICS (use these to decide scores):
+
+${rubricSection}
+
+TRANSCRIPT (each line is tagged with a message id and elapsed seconds since interview start):
+
+${transcriptSection}
+
+For each dimension, provide:
+- score: 0-10
+- summary: one sentence justifying the score
+- evidence: 1-3 items, each with:
+  - messageId: the EXACT [id=...] value of a transcript line that supports this score
+  - quote: a short quote (${MAX_QUOTE_WORDS} words or fewer) copied VERBATIM from that exact message's content
+  - comment: why this quote matters for this dimension
+
+Rules:
+- Only cite messages with role USER (the candidate). Never cite your own INTERVIEWER lines as evidence.
+- Every quote must be copied exactly from the cited message. Do not paraphrase and call it a quote.
+- If a dimension has weak or no supporting evidence in the transcript, say so in the summary and score it low — do not invent evidence.
+
+Return ONLY valid JSON with this exact shape:
+
+{
+  "dimensionScores": [
+    {
+      "dimension": "string",
+      "score": 0,
+      "summary": "string",
+      "evidence": [
+        { "messageId": "string", "quote": "string", "comment": "string" }
+      ]
+    }
+  ],
+  "strengths": ["string"],
+  "weaknesses": ["string"],
+  "feedback": "2-4 sentence overall narrative feedback"
+}
+
+Return JSON only. No markdown, no commentary outside the JSON.
+`.trim();
+  }
+
+  private isQuoteGroundedInMessage(
+    quote: string,
+    messageContent: string
+  ): boolean {
+    const normalize = (text: string) =>
+      text.toLowerCase().replace(/\s+/g, " ").trim();
+
+    return normalize(messageContent).includes(
+      normalize(quote)
+    );
+  }
+
+  private capWords(text: string, maxWords: number): string {
+    const words = text.trim().split(/\s+/);
+
+    if (words.length <= maxWords) {
+      return text.trim();
+    }
+
+    return words.slice(0, maxWords).join(" ");
+  }
+}
+================================================
 FILE: ./src/modules/interview/evaluators/TechnicalEvaluator.ts
 ================================================
 
@@ -3712,6 +4854,49 @@ FILE: ./src/modules/interview/evaluators/TechnicalEvaluator.ts
 FILE: ./src/modules/interview/evaluators/CommunicationEvaluator.ts
 ================================================
 
+================================================
+FILE: ./src/modules/interview/evaluators/types.ts
+================================================
+export interface EvidenceItem {
+  messageId: string;
+  timestampSeconds: number;
+  quote: string;
+  comment: string;
+}
+
+export interface DimensionScore {
+  dimension: string;
+  score: number; // 0-10
+  summary: string;
+  evidence: EvidenceItem[];
+}
+
+export interface EvaluationResult {
+  overallScore: number; // 0-100
+  dimensionScores: DimensionScore[];
+  strengths: string[];
+  weaknesses: string[];
+  feedback: string;
+}
+
+/** Minimal shape EvidenceEvaluator needs — matches the Prisma include used in EvaluationService. */
+export interface EvaluatableInterview {
+  id: string;
+  startedAt: Date | null;
+  createdAt: Date;
+  transcript: Array<{
+    id: string;
+    role: string;
+    content: string;
+    createdAt: Date;
+  }>;
+  template: {
+    id: string;
+    slug: string;
+    name: string;
+    phases: Array<{ evaluationDimensions: unknown }>;
+  };
+}
 ================================================
 FILE: ./src/modules/interview/evaluators/RequirementEvaluator.ts
 ================================================
@@ -3781,6 +4966,15 @@ FILE: ./src/modules/interview/prompt/PromptLoader.ts
 import { promises as fs } from "fs";
 import path from "path";
 
+import { prisma } from "@/shared/prisma/client";
+
+const FALLBACK_RUBRIC = (dimension: string) => `
+Score from 0-10 based on how clearly the candidate demonstrated "${dimension}".
+
+No specific rubric has been configured for this dimension yet — score
+conservatively and note in the summary that a dedicated rubric is missing.
+`.trim();
+
 export class PromptLoader {
   private readonly templatesDirectory = path.join(
     process.cwd(),
@@ -3793,9 +4987,9 @@ export class PromptLoader {
 
   private readonly cache = new Map<string, string>();
 
-  async load(
-    templateName: string
-  ): Promise<string> {
+  private readonly rubricCache = new Map<string, string>();
+
+  async load(templateName: string): Promise<string> {
     const cached = this.cache.get(templateName);
 
     if (cached) {
@@ -3815,24 +5009,62 @@ export class PromptLoader {
         "utf-8"
       );
 
-      this.cache.set(
-        templateName,
-        template
-      );
+      this.cache.set(templateName, template);
 
       return template;
     } catch (error) {
       throw new Error(
         `Prompt template "${templateName}" was not found or could not be loaded at "${templatePath}".`,
-        {
-          cause: error,
-        }
+        { cause: error }
       );
     }
   }
 
+  /**
+   * Loads a scoring rubric for a single evaluation dimension, scoped to an
+   * interview template (RubricTemplate row). This is what makes rubrics
+   * extensible along with interview types: a new template brings its own
+   * rubric rows instead of a new static .md file + code path.
+   *
+   * Falls back to a generic rubric (rather than throwing) so a template that
+   * hasn't had every dimension's rubric authored yet still produces a scored,
+   * evidence-backed evaluation instead of a hard failure.
+   */
+  async loadRubricForDimension(
+    templateId: string,
+    dimension: string
+  ): Promise<string> {
+    const cacheKey = `${templateId}:${dimension}`;
+
+    const cached = this.rubricCache.get(cacheKey);
+
+    if (cached) {
+      return cached;
+    }
+
+    const rubric = await prisma.rubricTemplate.findUnique(
+      {
+        where: {
+          templateId_dimension: {
+            templateId,
+            dimension,
+          },
+        },
+      }
+    );
+
+    const content = rubric?.content?.trim()
+      ? rubric.content
+      : FALLBACK_RUBRIC(dimension);
+
+    this.rubricCache.set(cacheKey, content);
+
+    return content;
+  }
+
   clearCache(): void {
     this.cache.clear();
+    this.rubricCache.clear();
   }
 }
 ================================================
@@ -3917,28 +5149,107 @@ FILE: ./src/modules/interview/prompt/templates/evaluation.md
 ================================================
 FILE: ./src/modules/interview/profiles/InterviewProfileResolver.ts
 ================================================
-import { InterviewType } from "@prisma/client";
+import { prisma } from "@/shared/prisma/client";
 
-import { InterviewProfile } from "./InterviewProfile";
-import { HLDInterviewProfile } from "./HLDInterviewProfile";
-import { LLDInterviewProfile } from "./LLDInterviewProfile";
+import {
+  InterviewPhaseDefinition,
+  InterviewProfile,
+} from "./InterviewProfile";
 
-export class InterviewProfileResolver {
-  resolve(
-    type: InterviewType
-  ): InterviewProfile {
-    switch (type) {
-      case InterviewType.HLD:
-        return HLDInterviewProfile;
+/**
+ * Resolves an InterviewProfile from the database instead of a hardcoded
+ * switch statement. Adding a new interview type (DSA, Behavioral,
+ * Concurrency, ...) means inserting InterviewTemplate + InterviewPhaseTemplate
+ * rows (see prisma/seed.ts) — this class never needs to change.
+ *
+ * Replaces: InterviewProfileResolver.ts, HLDInterviewProfile.ts, LLDInterviewProfile.ts
+ */
+export class InterviewProfileService {
+  // Small in-memory cache: templates change rarely, and every interview
+  // message currently re-resolves the profile.
+  private readonly cache = new Map<string, InterviewProfile>();
 
-      case InterviewType.LLD:
-        return LLDInterviewProfile;
+  async resolveByTemplateId(
+    templateId: string
+  ): Promise<InterviewProfile> {
+    const cached = this.cache.get(templateId);
 
-      default:
-        throw new Error(
-          `Unsupported interview type: ${type}`
-        );
+    if (cached) {
+      return cached;
     }
+
+    const template =
+      await prisma.interviewTemplate.findUnique({
+        where: { id: templateId },
+        include: {
+          phases: {
+            orderBy: { order: "asc" },
+          },
+        },
+      });
+
+    if (!template) {
+      throw new Error(
+        `Interview template "${templateId}" was not found.`
+      );
+    }
+
+    if (template.phases.length === 0) {
+      throw new Error(
+        `Interview template "${template.slug}" has no phases configured.`
+      );
+    }
+
+    const profile: InterviewProfile = {
+      type: template.slug,
+
+      phases: template.phases.map(
+        (phase): InterviewPhaseDefinition => ({
+          id: phase.phaseKey,
+          goals: phase.goals as string[],
+          evaluationDimensions:
+            phase.evaluationDimensions as string[],
+          targetDurationRatio:
+            phase.targetDurationRatio,
+          transitionThreshold:
+            phase.transitionThreshold,
+          instructions: phase.instructions,
+        })
+      ),
+    };
+
+    this.cache.set(templateId, profile);
+
+    return profile;
+  }
+
+  async resolveBySlug(
+    slug: string
+  ): Promise<InterviewProfile> {
+    const template =
+      await prisma.interviewTemplate.findUnique({
+        where: { slug },
+      });
+
+    if (!template) {
+      throw new Error(
+        `Interview template "${slug}" was not found.`
+      );
+    }
+
+    return this.resolveByTemplateId(template.id);
+  }
+
+  /** All active templates, for populating setup UIs. */
+  async listActive() {
+    return prisma.interviewTemplate.findMany({
+      where: { isActive: true },
+      orderBy: { name: "asc" },
+    });
+  }
+
+  clearCache(): void {
+    this.cache.clear();
   }
 }
 ================================================
@@ -4337,7 +5648,7 @@ const AIResponseSchema = z.object({
     goalCoverage: z.record(
       z.string(),
       z.number().min(0).max(1)
-    ),
+    ).optional().default({}),
 
     confidence: z
       .number()
@@ -4348,12 +5659,32 @@ const AIResponseSchema = z.object({
       )
       .pipe(
         z.number().min(0).max(1)
-      ),
+      )
+      .optional()
+      .default(0.5),
 
     unresolvedTopics: z.array(
       z.string()
-    ),
-  }),
+    ).optional().default([]),
+  }).optional(),
+
+  // Legacy fields that some AI models might return
+  transition: z.boolean().optional(),
+  nextPhase: z.string().optional(),
+  confidence: z.number().optional(), // Legacy top-level confidence
+}).transform((data) => {
+  // If AI returned legacy format (top-level confidence), convert to new format
+  if (!data.phaseAssessment && (data.confidence !== undefined || data.transition !== undefined)) {
+    return {
+      reply: data.reply,
+      phaseAssessment: {
+        goalCoverage: {},
+        confidence: data.confidence ?? 0.5,
+        unresolvedTopics: [],
+      },
+    };
+  }
+  return data;
 });
 
 export type ParsedResponse = z.infer<
@@ -4599,6 +5930,12 @@ export class PromptBuilder {
         )
         .join("\n");
 
+    const goalCoverageTemplate = phase.goals.length > 0
+      ? phase.goals
+          .map((goal) => `      "${goal}": 0.0`)
+          .join(",\n")
+      : '      "phase_goal": 0.0';
+
     return `
 ${basePrompt}
 
@@ -4638,7 +5975,7 @@ Return ONLY valid JSON using exactly this structure:
   "reply": "Your next interviewer response",
   "phaseAssessment": {
     "goalCoverage": {
-      "${phase.goals[0] ?? "phase_goal"}": 0.0
+${goalCoverageTemplate}
     },
     "confidence": 0.0,
     "unresolvedTopics": []
@@ -4836,10 +6173,15 @@ export class InterviewStateMachine {
       };
     }
 
+    // Only trigger time-pressure transition if we're significantly behind schedule
+    // and have spent at least 30% of the target time for current phase to prevent cascading
+    const timePressureThreshold = 0.3; // 30% behind schedule
+    const minPhaseTimeRatio = 0.3; // Must spend at least 30% of target phase time
+    
     if (
       elapsedRatio >= 0.5 &&
-      actualRemainingSeconds <
-        expectedRemainingSeconds
+      actualRemainingSeconds < expectedRemainingSeconds * (1 - timePressureThreshold) &&
+      context.elapsedPhaseSeconds >= targetPhaseSeconds * minPhaseTimeRatio
     ) {
       return {
         shouldTransition: true,
@@ -5060,8 +6402,9 @@ import {
 } from "@prisma/client";
 
 import { InterviewRepository } from "../../repositories/InterviewRepository";
-
-import { InterviewEngine } from "@src/modules/interview/engine/InterviewEngine";
+import { InterviewEngine } from "../../engine/InterviewEngine";
+import { InterviewProfileService } from "../../profiles/InterviewProfileService";
+import { ChatMessage } from "@/src/modules/ai/services/AIService";
 
 export class InterviewMessageService {
   private readonly repository =
@@ -5069,6 +6412,9 @@ export class InterviewMessageService {
 
   private readonly engine =
     new InterviewEngine();
+
+  private readonly profileService =
+    new InterviewProfileService();
 
   async processMessage(
     interviewId: string,
@@ -5094,15 +6440,6 @@ export class InterviewMessageService {
       );
     }
 
-    /*
-     * Build history INCLUDING the latest
-     * user message.
-     *
-     * Do not persist yet.
-     *
-     * If AI generation fails we do not want
-     * a half-written interview turn.
-     */
     const conversation = [
       ...interview.transcript.map(
         (message) => ({
@@ -5122,64 +6459,88 @@ export class InterviewMessageService {
       },
     ];
 
+    const profile =
+      await this.profileService.resolveByTemplateId(
+        interview.templateId
+      );
+
+    const history: ChatMessage[] = conversation.map(
+      (msg) => ({
+        role: msg.role,
+        content: msg.content,
+      })
+    );
+
+    const problemDescription =
+      interview.problem.description ??
+      interview.problem.title;
+
+    const interviewStartedAt =
+      interview.startedAt ??
+      interview.createdAt;
+
+    // For now, use interview start time as phase start time
+    // TODO: Track actual phase start time in the database
+    const phaseStartedAt = interviewStartedAt;
+
     const result =
-      await this.engine.process({
-        interview: {
-          id: interview.id,
-          type: interview.type,
-          difficulty:
-            interview.difficulty,
-          duration: interview.duration,
-          company: interview.company,
-          currentPhase:
-            interview.currentPhase,
-          createdAt: interview.createdAt,
-        },
-
-        problem: {
-          id: interview.problem.id,
-          title: interview.problem.title,
-          description:
-            interview.problem.description,
-          category:
-            interview.problem.category,
-        },
-
-        conversation,
+      await this.engine.processUserMessage({
+        profile,
+        currentPhase: interview.currentPhase,
+        history,
+        runningSummary: interview.summary,
+        problem: problemDescription,
+        candidateName: "Candidate",
+        interviewDurationMinutes:
+          interview.duration,
+        interviewStartedAt,
+        phaseStartedAt,
       });
 
+    const nextPhase =
+      result.transition.shouldTransition
+        ? result.transition.nextPhase
+        : interview.currentPhase;
+
     const metadata: Prisma.InputJsonValue = {
-      phase: result.phase,
+      phase: nextPhase,
       previousPhase:
         interview.currentPhase,
       transitioned:
-        result.phase !==
-        interview.currentPhase,
-      confidence: result.confidence,
+        result.transition.shouldTransition,
+      confidence:
+        result.phaseAssessment?.confidence ?? 0.5,
+      transitionReason:
+        result.transition.reason,
     };
 
     await this.repository.persistTurn({
       interviewId: interview.id,
       userMessage,
       assistantMessage: result.reply,
-      currentPhase: result.phase,
+      currentPhase: nextPhase,
       status:
-        result.completed === true
-          ? InterviewStatus.COMPLETED
-          : InterviewStatus.IN_PROGRESS,
+        result.transition.reason === "stay" &&
+        !result.transition.shouldTransition
+          ? InterviewStatus.IN_PROGRESS
+          : InterviewStatus.COMPLETED,
       assistantMetadata: metadata,
     });
 
     return {
       reply: result.reply,
-      phase: result.phase,
+      phase: nextPhase,
       previousPhase:
         interview.currentPhase,
       transitioned:
-        result.phase !==
-        interview.currentPhase,
-      confidence: result.confidence,
-      completed: result.completed,
+        result.transition.shouldTransition,
+      confidence:
+        result.phaseAssessment?.confidence ?? 0.5,
+      completed:
+        result.transition.reason === "stay" &&
+        !result.transition.shouldTransition
+          ? false
+          : true,
     };
   }
 }
@@ -5187,65 +6548,88 @@ export class InterviewMessageService {
 FILE: ./src/modules/interview/services/evaluation/EvaluationService.ts
 ================================================
 import { prisma } from "@/shared/prisma/client";
-import { AIService } from "../../../ai/services/AIService";
+import { AIService } from "@/src/modules/ai/services/AIService";
+import logger from "@/src/shared/logger/logger";
+
+import { EvidenceEvaluator } from "../../evaluators/EvidenceEvaluator";
+import { EvaluatableInterview } from "../../evaluators/types";
 import { PromptLoader } from "../../prompt/PromptLoader";
-import { Logger } from "src/shared/logger"
+import { InterviewRepository } from "../../repositories/InterviewRepository";
 
 export class EvaluationService {
+  private readonly evaluator: EvidenceEvaluator;
+
   constructor(
     private readonly ai: AIService,
     private readonly promptLoader: PromptLoader,
-    private readonly logger: Logger
-  ) {}
+    private readonly log: typeof logger = logger
+  ) {
+    this.evaluator = new EvidenceEvaluator(
+      this.ai,
+      this.promptLoader
+    );
+  }
 
   async evaluateInterview(interviewId: string) {
     const interview = await prisma.interview.findUnique({
       where: { id: interviewId },
       include: {
-        transcript: true,
+        transcript: {
+          orderBy: { createdAt: "asc" },
+        },
+        template: {
+          include: { phases: true },
+        },
       },
     });
 
     if (!interview) {
-      throw new Error(`Interview ${interviewId} not found`);
+      throw new Error(
+        `Interview ${interviewId} not found`
+      );
     }
 
-    const transcript = interview.transcript
-      .sort(
-        (a, b) =>
-          a.createdAt.getTime() -
-          b.createdAt.getTime()
-      )
-      .map(
-        (message) =>
-          `${message.role}: ${message.content}`
-      )
-      .join("\n");
+    const evaluatable: EvaluatableInterview = {
+      id: interview.id,
+      startedAt: interview.startedAt,
+      createdAt: interview.createdAt,
+      transcript: interview.transcript,
+      template: interview.template,
+    };
 
-    const rubric = await this.promptLoader.load(
-      "rubrics/scalability.md"
+    const result = await this.evaluator.evaluate(
+      evaluatable
     );
 
-    const template = await this.promptLoader.load(
-      "evaluation.md"
+    const evidence = result.dimensionScores.flatMap(
+      (dimension) =>
+        dimension.evidence.map((item) => ({
+          dimension: dimension.dimension,
+          ...item,
+        }))
     );
 
-    const prompt = template
-      .replace("{{rubric}}", rubric)
-      .replace("{{transcript}}", transcript);
+    const repository = new InterviewRepository();
 
-    const result = await this.ai.chat([
+    const evaluation = await repository.saveEvaluation(
+      interviewId,
       {
-        role: "user",
-        content: prompt,
-      },
-    ]);
-
-    this.logger.info(
-      `Evaluation completed for interview ${interviewId}`
+        overallScore: result.overallScore,
+        dimensionScores: result.dimensionScores,
+        evidence,
+        feedback: result.feedback,
+        metadata: {
+          strengths: result.strengths,
+          weaknesses: result.weaknesses,
+        },
+      }
     );
 
-    return result;
+    this.log.info(
+      `Evaluation completed for interview ${interviewId} (overall: ${result.overallScore}, ${evidence.length} evidence items)`
+    );
+
+    return evaluation;
   }
 }
 ================================================
@@ -5513,7 +6897,7 @@ export interface ChatMessage {
 
 export class FallbackAIProvider {
   private readonly providers = [
-    new OllamaProvider("qwen2.5:7b"),
+    new OllamaProvider("qwen2.5-coder:7b"),
     new OllamaProvider("llama3.2:1b"),
   ];
 
@@ -5572,17 +6956,15 @@ export class ValidatedJSONParser {
       
       const parsed = JSON.parse(cleaned);
 
-if (
-  typeof parsed.confidence === "number" &&
-  parsed.confidence > 1
-) {
-  parsed.confidence = Math.min(
-    parsed.confidence / 100,
-    1
-  );
-}
-
-return schema.parse(parsed);
+      if (
+        typeof parsed.confidence === "number" &&
+        parsed.confidence > 1
+      ) {
+        parsed.confidence = Math.min(
+          parsed.confidence / 100,
+          1
+        );
+      }
 
       return schema.parse(parsed);
     };

@@ -1,83 +1,149 @@
 import { prisma } from "@/shared/prisma/client";
-import { AIService } from "../../../ai/services/AIService";
-import { PromptLoader } from "../../prompt/PromptLoader";
+import { AIService } from "@/src/modules/ai/services/AIService";
 import logger from "@/src/shared/logger/logger";
+
+import { EvidenceEvaluator } from "../../evaluators/EvidenceEvaluator";
+import { EvaluatableInterview } from "../../evaluators/types";
+import { PromptLoader } from "../../prompt/PromptLoader";
 import { InterviewRepository } from "../../repositories/InterviewRepository";
+import { MasteryService } from "../mastery/MasteryService";
 
 export class EvaluationService {
+  private readonly evaluator: EvidenceEvaluator;
+  private readonly mastery: MasteryService;
+
   constructor(
     private readonly ai: AIService,
     private readonly promptLoader: PromptLoader,
-    private readonly logger: any
-  ) {}
+    private readonly log: typeof logger = logger
+  ) {
+    this.evaluator = new EvidenceEvaluator(
+      this.ai,
+      this.promptLoader
+    );
+    this.mastery = new MasteryService();
+  }
 
   async evaluateInterview(interviewId: string) {
     const interview = await prisma.interview.findUnique({
       where: { id: interviewId },
       include: {
-        transcript: true,
+        transcript: {
+          orderBy: { createdAt: "asc" },
+        },
+        template: {
+          include: { phases: true },
+        },
       },
     });
 
     if (!interview) {
-      throw new Error(`Interview ${interviewId} not found`);
+      throw new Error(
+        `Interview ${interviewId} not found`
+      );
     }
 
-    const transcript = interview.transcript
-      .sort(
-        (a, b) =>
-          a.createdAt.getTime() -
-          b.createdAt.getTime()
-      )
-      .map(
-        (message) =>
-          `${message.role}: ${message.content}`
-      )
-      .join("\n");
+    const evaluatable: EvaluatableInterview = {
+      id: interview.id,
+      startedAt: interview.startedAt,
+      createdAt: interview.createdAt,
+      transcript: interview.transcript,
+      template: interview.template,
+    };
 
-    const rubric = await this.promptLoader.loadRubric(
-      "scalability.md"
+    const result = await this.evaluator.evaluate(
+      evaluatable
     );
 
-    const template = await this.promptLoader.load(
-      "evaluation.md"
+    const evidence = result.dimensionScores.flatMap(
+      (dimension) =>
+        dimension.evidence.map((item) => ({
+          dimension: dimension.dimension,
+          ...item,
+        }))
     );
 
-    const prompt = template
-      .replace("{{rubric}}", rubric)
-      .replace("{{transcript}}", transcript);
-
-    const result = await this.ai.chat([
-      {
-        role: "user",
-        content: prompt,
-      },
-    ]);
-
-    this.logger.info(
-      `Evaluation completed for interview ${interviewId}`
-    );
-
-    // Parse the AI response and save to database
     const repository = new InterviewRepository();
-    
-    // For now, return a placeholder evaluation
-    // TODO: Parse the AI response to extract scores and feedback
+
     const evaluation = await repository.saveEvaluation(
       interviewId,
       {
-        overallScore: 75,
-        communicationScore: 80,
-        architectureScore: 75,
-        scalabilityScore: 70,
-        tradeoffScore: 75,
-        feedback: result,
+        overallScore: result.overallScore,
+        dimensionScores: result.dimensionScores,
+        evidence,
+        feedback: result.feedback,
         metadata: {
-          rawResponse: result,
+          strengths: result.strengths,
+          weaknesses: result.weaknesses,
         },
       }
     );
 
+    // Write the normalized evidence/concept rows the Skill Intelligence
+    // Layer reads from. This is separate from the Json blob above — that
+    // stays as a read-optimized cache for the report page.
+    await this.persistEvidenceItems(evaluation.id, evidence);
+
+    await this.mastery.recomputeForEvaluation(evaluation.id);
+
+    this.log.info(
+      `Evaluation completed for interview ${interviewId} (overall: ${result.overallScore}, ${evidence.length} evidence items)`
+    );
+
     return evaluation;
+  }
+
+  private async persistEvidenceItems(
+    evaluationId: string,
+    evidence: Array<{
+      dimension: string;
+      messageId: string;
+      timestampSeconds: number;
+      quote: string;
+      comment: string;
+      conceptSlugs: string[];
+    }>
+  ) {
+    if (evidence.length === 0) return;
+
+    const allConceptSlugs = [
+      ...new Set(evidence.flatMap((e) => e.conceptSlugs)),
+    ];
+
+    const concepts = await prisma.concept.findMany({
+      where: { slug: { in: allConceptSlugs } },
+      select: { id: true, slug: true },
+    });
+
+    const conceptIdBySlug = new Map(
+      concepts.map((c) => [c.slug, c.id])
+    );
+
+    for (const item of evidence) {
+      const created = await prisma.evidenceItem.create({
+        data: {
+          evaluationId,
+          messageId: item.messageId,
+          dimension: item.dimension,
+          timestampSeconds: item.timestampSeconds,
+          quote: item.quote,
+          comment: item.comment,
+        },
+      });
+
+      const conceptLinks = item.conceptSlugs
+        .map((slug) => conceptIdBySlug.get(slug))
+        .filter((id): id is string => Boolean(id));
+
+      if (conceptLinks.length > 0) {
+        await prisma.evidenceConcept.createMany({
+          data: conceptLinks.map((conceptId) => ({
+            evidenceItemId: created.id,
+            conceptId,
+          })),
+          skipDuplicates: true,
+        });
+      }
+    }
   }
 }
