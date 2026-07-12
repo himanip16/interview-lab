@@ -38,6 +38,16 @@ PROJECT STRUCTURE
 │   │   │   └── migration.sql
 │   │   ├── 20260712112215_fix_evaluation_schema
 │   │   │   └── migration.sql
+│   │   ├── 20260712212554_add_whiteboard_support
+│   │   │   └── migration.sql
+│   │   ├── 20260712213459_add_message_timestamp_phase
+│   │   │   └── migration.sql
+│   │   ├── 20260712213737_add_reverse_mode_support
+│   │   │   └── migration.sql
+│   │   ├── 20260712214944_add_normalized_score_to_evidence_item
+│   │   │   └── migration.sql
+│   │   ├── 20260712224820_add_code_state
+│   │   │   └── migration.sql
 │   │   └── migration_lock.toml
 │   ├── schema.prisma
 │   └── seed.ts
@@ -280,10 +290,13 @@ PROJECT STRUCTURE
 │   │       │       ├── intro.md
 │   │       │       ├── judge.md
 │   │       │       ├── judge.ts
+│   │       │       ├── reverse-candidate.md
 │   │       │       └── scaling.md
 │   │       ├── repositories
 │   │       │   ├── InterviewRepository.ts
 │   │       │   └── MessageRepository.ts
+│   │       ├── reverse
+│   │       │   └── CandidatePersonas.ts
 │   │       ├── services
 │   │       │   ├── ProblemPickerService.ts
 │   │       │   ├── TranscriptService.ts
@@ -297,9 +310,13 @@ PROJECT STRUCTURE
 │   │       │   │   └── SkillGraphService.ts
 │   │       │   ├── recommendation
 │   │       │   │   └── RecommendationService.ts
-│   │       │   └── summary
-│   │       │       ├── IncrementalSummaryService.ts
-│   │       │       └── SummaryService.ts
+│   │       │   ├── studyplan
+│   │       │   │   └── StudyResources.ts
+│   │       │   ├── summary
+│   │       │   │   ├── IncrementalSummaryService.ts
+│   │       │   │   └── SummaryService.ts
+│   │       │   └── whiteboard
+│   │       │       └── WhiteboardSerializer.ts
 │   │       └── types.ts
 │   └── shared
 │       ├── config
@@ -311,7 +328,7 @@ PROJECT STRUCTURE
 ├── tsconfig.json
 └── tsconfig.tsbuildinfo
 
-121 directories, 189 files
+129 directories, 198 files
 
 FILE CONTENTS
 
@@ -357,34 +374,42 @@ model User {
 // rows. No enum change, no migration, no new resolver branch, no new profile
 // file.
 // ---------------------------------------------------------------------------
-
 model InterviewTemplate {
   id          String   @id @default(cuid())
-  slug        String   @unique // e.g. "hld", "lld", "dsa", "behavioral"
+  slug        String   @unique
   name        String
   description String?
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  // NEW — tells frontend which node/preset set to load ("hld" | "lld" | null = no whiteboard)
+  whiteboardPreset String?
+
   phases     InterviewPhaseTemplate[]
   rubrics    RubricTemplate[]
   interviews Interview[]
 }
-
 model InterviewPhaseTemplate {
   id         String            @id @default(cuid())
   templateId String
   template   InterviewTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
 
-  phaseKey String // e.g. "introduction", "requirements", "deep_dive"
-  order    Int // execution order within the template
+  phaseKey String
+  order    Int
 
-  goals                Json // string[]
-  evaluationDimensions Json // string[]
+  goals                Json
+  evaluationDimensions Json
   targetDurationRatio  Float
   transitionThreshold  Float
   instructions         String
+
+  // NEW — per-phase gate, not per-template. HLD's "requirements" phase should
+  // NOT show whiteboard even though the template supports it.
+  showWhiteboard Boolean @default(false)
+
+  // NEW — separate dimension set for reverse mode
+  reverseEvaluationDimensions Json @default("[]")
 
   @@unique([templateId, phaseKey])
   @@index([templateId])
@@ -420,12 +445,19 @@ model Interview {
 
   problemId String
 
+  // NEW — interview mode
+  mode             InterviewMode @default(CANDIDATE)
+  candidatePersona Json?
+
+  // NEW — code editor state (deprioritized, not wired into prompts/evaluator yet)
+  codeState Json?
+
   user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   template   InterviewTemplate @relation(fields: [templateId], references: [id])
   evaluation Evaluation?
   problem    Problem           @relation(fields: [problemId], references: [id])
   transcript Message[]
-
+  whiteboardState Json?
   @@index([templateId])
   @@index([userId])
 }
@@ -436,6 +468,11 @@ model Message {
   role        MessageRole
   content     String
   metadata    Json?
+
+  // NEW — written at persist time, not reconstructed later
+  elapsedSeconds Int     @default(0)
+  phase          String?
+
   createdAt   DateTime    @default(now())
   interview   Interview   @relation(fields: [interviewId], references: [id], onDelete: Cascade)
 
@@ -570,6 +607,7 @@ model EvidenceItem {
   timestampSeconds Int
   quote            String
   comment          String
+  normalizedScore  Float      @default(0)
   createdAt        DateTime   @default(now())
 
   concepts EvidenceConcept[]
@@ -637,6 +675,11 @@ enum ExperienceSource {
   ENGINEERBOOGIE
   GLASSDOOR
   USER_SUBMISSION
+}
+
+enum InterviewMode {
+  CANDIDATE
+  REVERSE
 }
 
 enum InterviewStatus {
@@ -884,6 +927,52 @@ const RUBRICS: Record<string, string> = {
     ],
     "only handles edge cases after being explicitly told to"
   ),
+  // Reverse-mode rubrics — evaluating the interviewer's technique
+  rapport_building: rubric(
+    [
+      "Opens with a clear, welcoming introduction",
+      "Sets expectations for the session",
+    ],
+    "jumps into technical questions with no framing"
+  ),
+  requirement_elicitation: rubric(
+    [
+      "Asks open-ended questions to surface functional/non-functional requirements",
+      "Doesn't spoon-feed the answer",
+    ],
+    "tells the candidate the requirements instead of drawing them out"
+  ),
+  probing_depth: rubric(
+    [
+      "Follows up on vague or surface-level answers",
+      "Pushes for specifics (numbers, tradeoffs, edge cases)",
+    ],
+    "accepts shallow answers without pushing further"
+  ),
+  technical_listening: rubric(
+    [
+      "Picks up on what the candidate actually said and builds the next question from it",
+    ],
+    "asks a pre-scripted next question ignoring the candidate's last answer"
+  ),
+  challenging_appropriately: rubric(
+    [
+      "Introduces realistic pressure (scale, failure, edge cases) at the right moments",
+    ],
+    "never challenges the candidate's design, or challenges too aggressively to be useful"
+  ),
+  time_management: rubric(
+    [
+      "Keeps the session moving, doesn't get stuck on one topic too long",
+    ],
+    "lets one phase consume the entire interview"
+  ),
+  summarizing_and_wrap_up: rubric(
+    [
+      "Closes with a clear summary and gives the candidate a chance to ask questions",
+    ],
+    "ends abruptly with no wrap-up"
+  ),
 };
 
 // ---------------------------------------------------------------------------
@@ -901,12 +990,15 @@ type PhaseSeed = {
   targetDurationRatio: number;
   transitionThreshold: number;
   instructions: string;
+  showWhiteboard?: boolean;
+  reverseEvaluationDimensions?: string[];
 };
 
 type TemplateSeed = {
   slug: string;
   name: string;
   description: string;
+  whiteboardPreset?: string;
   phases: PhaseSeed[];
 };
 
@@ -915,6 +1007,7 @@ const templates: TemplateSeed[] = [
     slug: "hld",
     name: "High Level Design",
     description: "Design scalable distributed systems.",
+    whiteboardPreset: "hld",
     phases: [
       {
         phaseKey: "introduction",
@@ -925,6 +1018,7 @@ const templates: TemplateSeed[] = [
         transitionThreshold: 0.7,
         instructions:
           "Introduce the problem briefly. Do not reveal requirements. Ask the candidate to begin by clarifying the problem. Move forward once the candidate demonstrates that they understand the problem and begins requirement discovery.",
+        reverseEvaluationDimensions: ["rapport_building"],
       },
       {
         phaseKey: "requirements",
@@ -944,6 +1038,7 @@ const templates: TemplateSeed[] = [
         transitionThreshold: 0.75,
         instructions:
           "Evaluate requirement gathering. Answer requirement questions when directly asked. Do not volunteer every requirement. Probe missing functional requirements, non-functional requirements, scale, and constraints. Do not discuss architecture yet.",
+        reverseEvaluationDimensions: ["requirement_elicitation", "technical_listening"],
       },
       {
         phaseKey: "high_level_design",
@@ -959,6 +1054,8 @@ const templates: TemplateSeed[] = [
         transitionThreshold: 0.75,
         instructions:
           "Ask the candidate to propose a high-level architecture. Evaluate major components, service boundaries, data flow, and storage decisions. Challenge unclear architectural choices. Do not design the system for the candidate.",
+        showWhiteboard: true,
+        reverseEvaluationDimensions: ["technical_listening", "time_management"],
       },
       {
         phaseKey: "deep_dive",
@@ -974,6 +1071,8 @@ const templates: TemplateSeed[] = [
         transitionThreshold: 0.7,
         instructions:
           "Choose important areas from the candidate's design for deeper discussion. Probe implementation details, data modeling, consistency, and tradeoffs. Prefer areas where the candidate's reasoning is incomplete or weak.",
+        showWhiteboard: true,
+        reverseEvaluationDimensions: ["probing_depth", "challenging_appropriately"],
       },
       {
         phaseKey: "scalability",
@@ -989,6 +1088,8 @@ const templates: TemplateSeed[] = [
         transitionThreshold: 0.7,
         instructions:
           "Probe scalability and reliability. Ask about bottlenecks, failure scenarios, capacity pressure, and scaling strategies. Challenge assumptions using realistic production scenarios.",
+        showWhiteboard: true,
+        reverseEvaluationDimensions: ["challenging_appropriately", "probing_depth"],
       },
       {
         phaseKey: "closing",
@@ -999,6 +1100,7 @@ const templates: TemplateSeed[] = [
         transitionThreshold: 1,
         instructions:
           "Conclude the interview naturally. Ask the candidate to summarize their design and the most important tradeoffs. Do not begin another technical phase.",
+        reverseEvaluationDimensions: ["summarizing_and_wrap_up"],
       },
     ],
   },
@@ -1006,6 +1108,7 @@ const templates: TemplateSeed[] = [
     slug: "lld",
     name: "Low Level Design",
     description: "Object-oriented design and patterns.",
+    whiteboardPreset: "lld",
     phases: [
       {
         phaseKey: "introduction",
@@ -1016,6 +1119,7 @@ const templates: TemplateSeed[] = [
         transitionThreshold: 0.7,
         instructions:
           "Introduce the object-oriented design problem. Ask the candidate to clarify the expected behaviour and scope.",
+        reverseEvaluationDimensions: ["rapport_building"],
       },
       {
         phaseKey: "requirements",
@@ -1026,6 +1130,7 @@ const templates: TemplateSeed[] = [
         transitionThreshold: 0.75,
         instructions:
           "Evaluate whether the candidate identifies important use cases, actors, constraints, and edge cases. Answer clarification questions. Do not propose classes or interfaces.",
+        reverseEvaluationDimensions: ["requirement_elicitation", "technical_listening"],
       },
       {
         phaseKey: "domain_modeling",
@@ -1036,6 +1141,8 @@ const templates: TemplateSeed[] = [
         transitionThreshold: 0.75,
         instructions:
           "Ask the candidate to identify the core entities. Evaluate responsibilities and relationships. Challenge god objects, unclear ownership, and weak abstractions.",
+        showWhiteboard: true,
+        reverseEvaluationDimensions: ["technical_listening", "time_management"],
       },
       {
         phaseKey: "class_design",
@@ -1051,6 +1158,8 @@ const templates: TemplateSeed[] = [
         transitionThreshold: 0.75,
         instructions:
           "Probe concrete class and interface design. Evaluate method boundaries, encapsulation, and separation of concerns. Ask focused questions about design decisions.",
+        showWhiteboard: true,
+        reverseEvaluationDimensions: ["probing_depth", "challenging_appropriately"],
       },
       {
         phaseKey: "extensibility",
@@ -1070,6 +1179,8 @@ const templates: TemplateSeed[] = [
         transitionThreshold: 0.7,
         instructions:
           "Introduce realistic requirement changes. Evaluate whether the design is extensible and testable. Probe design patterns only when relevant. Do not force pattern usage.",
+        showWhiteboard: true,
+        reverseEvaluationDimensions: ["challenging_appropriately", "probing_depth"],
       },
       {
         phaseKey: "closing",
@@ -1080,6 +1191,7 @@ const templates: TemplateSeed[] = [
         transitionThreshold: 1,
         instructions:
           "Ask the candidate to summarize their final design and major tradeoffs. Conclude the interview naturally.",
+        reverseEvaluationDimensions: ["summarizing_and_wrap_up"],
       },
     ],
   },
@@ -1296,6 +1408,9 @@ async function seedTemplates() {
       for (const dim of phase.evaluationDimensions) {
         dimensions.add(dim);
       }
+      for (const dim of phase.reverseEvaluationDimensions ?? []) {
+        dimensions.add(dim);
+      }
     }
 
     const saved = await prisma.interviewTemplate.upsert({
@@ -1304,11 +1419,13 @@ async function seedTemplates() {
         name: template.name,
         description: template.description,
         isActive: true,
+        whiteboardPreset: template.whiteboardPreset,
       },
       create: {
         slug: template.slug,
         name: template.name,
         description: template.description,
+        whiteboardPreset: template.whiteboardPreset,
       },
     });
 
@@ -1328,6 +1445,9 @@ async function seedTemplates() {
           targetDurationRatio: phase.targetDurationRatio,
           transitionThreshold: phase.transitionThreshold,
           instructions: phase.instructions,
+          showWhiteboard: phase.showWhiteboard,
+          reverseEvaluationDimensions:
+            phase.reverseEvaluationDimensions as Prisma.InputJsonValue,
         },
         create: {
           templateId: saved.id,
@@ -1339,6 +1459,9 @@ async function seedTemplates() {
           targetDurationRatio: phase.targetDurationRatio,
           transitionThreshold: phase.transitionThreshold,
           instructions: phase.instructions,
+          showWhiteboard: phase.showWhiteboard,
+          reverseEvaluationDimensions:
+            phase.reverseEvaluationDimensions as Prisma.InputJsonValue,
         },
       });
     }
@@ -1714,7 +1837,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     if (savedTheme) {
       setTheme(savedTheme);
     } else {
-      // Check system preference
       const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
       setTheme(prefersDark ? "dark" : "light");
     }
@@ -1722,23 +1844,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!mounted) return;
-
-    const root = document.documentElement;
-    if (theme === "dark") {
-      root.setAttribute("data-theme", "dark");
-    } else {
-      root.setAttribute("data-theme", "light");
-    }
+    document.documentElement.setAttribute("data-theme", theme);
     localStorage.setItem("theme", theme);
   }, [theme, mounted]);
 
   const toggleTheme = () => {
     setTheme((prev) => (prev === "dark" ? "light" : "dark"));
   };
-
-  if (!mounted) {
-    return <>{children}</>;
-  }
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
@@ -1754,7 +1866,6 @@ export function useTheme() {
   }
   return context;
 }
-
 ================================================
 FILE: ./src/app/diagram/page.tsx
 ================================================
@@ -2229,16 +2340,9 @@ export const metadata: Metadata = {
   description: "Generated by create next app",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         <ThemeProvider>
           <ToastProvider>{children}</ToastProvider>
@@ -2247,7 +2351,6 @@ export default function RootLayout({
     </html>
   );
 }
-
 ================================================
 FILE: ./src/app/api/auth/register/route.ts
 ================================================
@@ -2398,13 +2501,14 @@ export async function POST() {
 FILE: ./src/app/api/interviews/start/route.ts
 ================================================
 import { NextResponse } from "next/server";
-import { Difficulty } from "@prisma/client";
+import { Difficulty, InterviewMode } from "@prisma/client";
 
 import { prisma } from "@/shared/prisma/client";
 import { getCurrentUserId } from "@/src/modules/auth/getCurrentUserId";
 import { createInterview } from "@/src/modules/interview/services/interview/InterviewFactory";
 import { InterviewRepository } from "@/src/modules/interview/repositories/InterviewRepository";
 import { TranscriptService } from "@/src/modules/interview/services/TranscriptService";
+import { pickPersona } from "@/src/modules/interview/reverse/CandidatePersonas";
 
 const difficultyMap: Record<string, Difficulty> = {
   Easy: Difficulty.EASY,
@@ -2416,7 +2520,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    const { type, difficulty, duration, company, problemId } = body;
+    const { type, difficulty, duration, company, problemId, mode } = body;
 
     if (!type || !difficulty || !duration || !company || !problemId) {
       return NextResponse.json(
@@ -2458,13 +2562,18 @@ export async function POST(request: Request) {
 
     const userId = await getCurrentUserId();
 
+    const interviewMode = mode === "REVERSE" ? InterviewMode.REVERSE : InterviewMode.CANDIDATE;
+
     const interviewData = createInterview({
       templateId: template.id,
       difficulty: interviewDifficulty,
       duration,
       company,
       problemId: problem.id,
+      mode: interviewMode,
     });
+
+    const persona = interviewMode === InterviewMode.REVERSE ? pickPersona(interviewDifficulty) : null;
 
     const repository = new InterviewRepository();
 
@@ -2476,6 +2585,8 @@ export async function POST(request: Request) {
       currentPhase: interviewData.currentPhase,
       summary: interviewData.summary,
       promptVersion: interviewData.promptVersion,
+      mode: interviewData.mode,
+      candidatePersona: persona as any,
       user: { connect: { id: userId } },
       template: { connect: { id: template.id } },
       problem: { connect: { id: problem.id } },
@@ -2488,9 +2599,13 @@ export async function POST(request: Request) {
 
     const transcriptService = new TranscriptService();
 
+    const greeting = interviewMode === InterviewMode.REVERSE
+      ? `Hi, I'm ${persona!.name}. Ready when you are — go ahead and start the interview.`
+      : `Welcome! Today we'll design "${problem.title}". Start by asking clarifying questions before proposing your design.`;
+
     await transcriptService.addAssistantMessage(
       savedInterview.id,
-      `Welcome! Today we'll design "${problem.title}". Start by asking clarifying questions before proposing your design.`
+      greeting
     );
 
     return NextResponse.json({ id: savedInterview.id }, { status: 201 });
@@ -2986,6 +3101,7 @@ FILE: ./src/app/api/interviews/[id]/report/route.ts
 import { NextResponse } from "next/server";
 
 import { InterviewRepository } from "@/src/modules/interview/repositories/InterviewRepository";
+import { SkillGraphService } from "@/src/modules/interview/services/mastery/SkillGraphService";
 import logger from "@/src/shared/logger/logger";
 
 type Props = {
@@ -3035,29 +3151,75 @@ export async function GET(request: Request, { params }: Props) {
       );
     }
 
+    // Fetch per-interview concept scores
+    const skillGraphService = new SkillGraphService();
+    const conceptMastery = await skillGraphService.getInterviewConceptScores(
+      interview.evaluation.id
+    );
+
     // Extract dimension scores from the dynamic dimensionScores JSON
     const dimensionScores = interview.evaluation.dimensionScores as Array<{
       dimension: string;
       score: number;
       summary: string;
+      evidence: Array<{
+        messageId: string;
+        timestampSeconds: number;
+        quote: string;
+        comment: string;
+        type: "strength" | "weakness";
+        conceptSlugs: string[];
+      }>;
     }> || [];
 
-    const getScoreByDimension = (dimension: string): number => {
-      const found = dimensionScores.find((ds) => ds.dimension === dimension);
-      return found?.score ?? 0;
+    // Format helper: convert seconds to "MM:SS" string
+    const formatTimestamp = (seconds: number): string => {
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
     };
+
+    // Transform dimension scores to competency scores (convert 0-10 to 0-5 scale)
+    const competencyScores = dimensionScores.map((ds) => ({
+      dimension: ds.dimension,
+      score: Math.round(ds.score / 2), // Convert 0-10 to 0-5
+      summary: ds.summary,
+      evidence: ds.evidence.map((ev) => ({
+        ...ev,
+        timestamp: formatTimestamp(ev.timestampSeconds),
+      })),
+    }));
+
+    // Extract metadata fields
+    const metadata = interview.evaluation.metadata as {
+      strengths?: string[];
+      weaknesses?: string[];
+      missedConcepts?: string[];
+      riskAssessment?: string[];
+      hireRecommendation?: string;
+      studyPlan?: Array<{
+        topic: string;
+        advice: string;
+        resources: string[];
+      }>;
+    } || {};
 
     return NextResponse.json(
       {
         id: interview.evaluation.id,
         interviewId: interview.evaluation.interviewId,
         overallScore: interview.evaluation.overallScore,
-        communicationScore: getScoreByDimension("communication"),
-        architectureScore: getScoreByDimension("architecture"),
-        scalabilityScore: getScoreByDimension("scalability"),
-        tradeoffScore: getScoreByDimension("tradeoff"),
+        dimensionScores: competencyScores,
         feedback: interview.evaluation.feedback,
-        metadata: interview.evaluation.metadata,
+        metadata: {
+          strengths: metadata.strengths || [],
+          weaknesses: metadata.weaknesses || [],
+          missedConcepts: metadata.missedConcepts || [],
+          riskAssessment: metadata.riskAssessment || [],
+          hireRecommendation: metadata.hireRecommendation || "NO_HIRE",
+          studyPlan: metadata.studyPlan || [],
+        },
+        conceptMastery,
         createdAt: interview.evaluation.createdAt,
       },
       {
@@ -3962,7 +4124,7 @@ export default function SkillGraphView({ skillGraph }: Props) {
 ================================================
 FILE: ./src/features/interview/types/CreateInterviewInput.ts
 ================================================
-import { Difficulty } from "@prisma/client";
+import { Difficulty, InterviewMode } from "@prisma/client";
 
 export interface CreateInterviewInput {
   templateId: string;
@@ -3970,6 +4132,7 @@ export interface CreateInterviewInput {
   duration: number;
   company: string;
   problemId: string;
+  mode?: InterviewMode;
 }
 ================================================
 FILE: ./src/features/interview/types/TranscriptMessage.ts
@@ -6211,6 +6374,7 @@ export class InterviewRepository {
       },
       include: {
         problem: true,
+        template: true,
         transcript: {
           orderBy: {
             createdAt: "asc",
@@ -6256,6 +6420,7 @@ export class InterviewRepository {
     currentPhase: string;
     status?: InterviewStatus;
     assistantMetadata?: Prisma.InputJsonValue;
+    elapsedSeconds: number;
   }) {
     const {
       interviewId,
@@ -6264,6 +6429,7 @@ export class InterviewRepository {
       currentPhase,
       status = InterviewStatus.IN_PROGRESS,
       assistantMetadata,
+      elapsedSeconds,
     } = params;
 
     return prisma.$transaction(async (tx) => {
@@ -6272,6 +6438,8 @@ export class InterviewRepository {
           interviewId,
           role: MessageRole.user,
           content: userMessage,
+          elapsedSeconds,
+          phase: currentPhase,
         },
       });
 
@@ -6281,6 +6449,8 @@ export class InterviewRepository {
           role: MessageRole.assistant,
           content: assistantMessage,
           metadata: assistantMetadata,
+          elapsedSeconds,
+          phase: currentPhase,
         },
       });
 
@@ -6500,6 +6670,45 @@ FILE: ./src/modules/interview/models/PhaseResult.ts
 ================================================
 
 ================================================
+FILE: ./src/modules/interview/reverse/CandidatePersonas.ts
+================================================
+export interface CandidatePersona {
+  name: string;
+  seniority: "junior" | "mid" | "senior";
+  background: string;
+  weaknesses: string[];
+}
+
+export const CANDIDATE_PERSONAS: CandidatePersona[] = [
+  {
+    name: "Priya",
+    seniority: "mid",
+    background: "3 years backend experience, mostly CRUD services, limited distributed systems exposure",
+    weaknesses: ["consistency tradeoffs", "capacity estimation"],
+  },
+  {
+    name: "Daniel",
+    seniority: "senior",
+    background: "7 years, strong on architecture, tends to over-engineer and skip requirements gathering",
+    weaknesses: ["scope discipline", "asking clarifying questions before designing"],
+  },
+  {
+    name: "Wei",
+    seniority: "junior",
+    background: "1 year experience, confident communicator but shallow technical depth",
+    weaknesses: ["technical depth under follow-up", "complexity analysis"],
+  },
+];
+
+export function pickPersona(difficulty: "EASY" | "MEDIUM" | "HARD"): CandidatePersona {
+  const pool =
+    difficulty === "EASY" ? CANDIDATE_PERSONAS.filter((p) => p.seniority !== "senior") :
+    difficulty === "HARD" ? CANDIDATE_PERSONAS.filter((p) => p.seniority !== "junior") :
+    CANDIDATE_PERSONAS;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+================================================
 FILE: ./src/modules/interview/evaluators/ArchitectureEvaluator.ts
 ================================================
 
@@ -6523,6 +6732,7 @@ const EvidenceItemSchema = z.object({
   quote: z.string().min(1),
   comment: z.string().min(1),
   conceptSlugs: z.array(z.string()).default([]),
+  type: z.enum(["strength", "weakness"]),
 });
 
 const DimensionScoreSchema = z.object({
@@ -6536,6 +6746,9 @@ const EvaluationResponseSchema = z.object({
   dimensionScores: z.array(DimensionScoreSchema).min(1),
   strengths: z.array(z.string()).default([]),
   weaknesses: z.array(z.string()).default([]),
+  missedConcepts: z.array(z.string()).default([]),
+  riskAssessment: z.array(z.string()).default([]),
+  hireRecommendation: z.enum(["STRONG_HIRE", "HIRE", "NO_HIRE", "STRONG_NO_HIRE"]),
   feedback: z.string(),
 });
 
@@ -6565,8 +6778,9 @@ export const EVALUATION_JSON_SCHEMA = {
                   type: "array",
                   items: { type: "string" },
                 },
+                type: { type: "string", enum: ["strength", "weakness"] },
               },
-              required: ["messageId", "quote", "comment"],
+              required: ["messageId", "quote", "comment", "type"],
             },
           },
         },
@@ -6575,9 +6789,15 @@ export const EVALUATION_JSON_SCHEMA = {
     },
     strengths: { type: "array", items: { type: "string" } },
     weaknesses: { type: "array", items: { type: "string" } },
+    missedConcepts: { type: "array", items: { type: "string" } },
+    riskAssessment: { type: "array", items: { type: "string" } },
+    hireRecommendation: {
+      type: "string",
+      enum: ["STRONG_HIRE", "HIRE", "NO_HIRE", "STRONG_NO_HIRE"],
+    },
     feedback: { type: "string" },
   },
-  required: ["dimensionScores", "feedback"],
+  required: ["dimensionScores", "hireRecommendation", "feedback"],
 } as const;
 
 export class EvidenceEvaluator {
@@ -6586,13 +6806,39 @@ export class EvidenceEvaluator {
     private readonly promptLoader = new PromptLoader()
   ) {}
 
+  /**
+   * Sanity-check the model's hire recommendation against the numeric overall score.
+   * If they disagree by more than one tier, trust the score over the free-text recommendation.
+   */
+  private reconcileHireRecommendation(
+    modelRecommendation: string,
+    overallScore: number
+  ): "STRONG_HIRE" | "HIRE" | "NO_HIRE" | "STRONG_NO_HIRE" {
+    const scoreImplied =
+      overallScore >= 80 ? "STRONG_HIRE" :
+      overallScore >= 60 ? "HIRE" :
+      overallScore >= 35 ? "NO_HIRE" :
+      "STRONG_NO_HIRE";
+
+    const tiers = ["STRONG_NO_HIRE", "NO_HIRE", "HIRE", "STRONG_HIRE"] as const;
+    const modelIdx = tiers.indexOf(modelRecommendation as any);
+    const scoreIdx = tiers.indexOf(scoreImplied);
+
+    // If model and score disagree by more than one tier, trust the score
+    if (Math.abs(modelIdx - scoreIdx) > 1) {
+      return scoreImplied;
+    }
+
+    return modelRecommendation as "STRONG_HIRE" | "HIRE" | "NO_HIRE" | "STRONG_NO_HIRE";
+  }
+
   async evaluate(
     interview: EvaluatableInterview
   ): Promise<EvaluationResult> {
     const startedAt =
       interview.startedAt ?? interview.createdAt;
 
-    const dimensions = this.collectDimensions(interview);
+    const dimensions = this.collectDimensions(interview, interview.mode);
 
     const rubricSection = await this.buildRubricSection(
       interview.template.id,
@@ -6623,14 +6869,7 @@ export class EvidenceEvaluator {
 
     const transcriptSection = interview.transcript
       .map((message) => {
-        const elapsed = Math.max(
-          Math.floor(
-            (message.createdAt.getTime() -
-              startedAt.getTime()) /
-              1000
-          ),
-          0
-        );
+        const elapsed = message.elapsedSeconds ?? 0;
 
         return `[id=${message.id}] [t=${elapsed}s] ${message.role.toUpperCase()}: ${message.content}`;
       })
@@ -6641,7 +6880,8 @@ export class EvidenceEvaluator {
       dimensions,
       rubricSection,
       conceptSection,
-      transcriptSection
+      transcriptSection,
+      interview.mode
     );
 
     const raw = await this.ai.chat(
@@ -6705,14 +6945,7 @@ const parsed = await ValidatedJSONParser.parse(
               item.messageId
             )!;
 
-            const timestampSeconds = Math.max(
-              Math.floor(
-                (message.createdAt.getTime() -
-                  startedAt.getTime()) /
-                  1000
-              ),
-              0
-            );
+            const timestampSeconds = message.elapsedSeconds ?? 0;
 
             return {
               messageId: item.messageId,
@@ -6722,6 +6955,7 @@ const parsed = await ValidatedJSONParser.parse(
                 MAX_QUOTE_WORDS
               ),
               comment: item.comment,
+              type: item.type,
               // Ground concepts against the known vocabulary — never trust
               // a slug the model invented.
               conceptSlugs: item.conceptSlugs.filter((slug) =>
@@ -6741,22 +6975,31 @@ const parsed = await ValidatedJSONParser.parse(
         10
     );
 
+    const reconciledRecommendation = this.reconcileHireRecommendation(
+      parsed.hireRecommendation,
+      overallScore
+    );
+
     return {
       overallScore,
       dimensionScores,
       strengths: parsed.strengths,
       weaknesses: parsed.weaknesses,
+      missedConcepts: parsed.missedConcepts,
+      riskAssessment: parsed.riskAssessment,
+      hireRecommendation: reconciledRecommendation,
       feedback: parsed.feedback,
     };
   }
 
   private collectDimensions(
-    interview: EvaluatableInterview
+    interview: EvaluatableInterview,
+    mode: "CANDIDATE" | "REVERSE"
   ): string[] {
     const set = new Set<string>();
 
     for (const phase of interview.template.phases) {
-      const dims = phase.evaluationDimensions as string[];
+      const dims = (mode === "REVERSE" ? phase.reverseEvaluationDimensions : phase.evaluationDimensions) as string[];
 
       for (const dim of dims ?? []) {
         set.add(dim);
@@ -6790,12 +7033,15 @@ const parsed = await ValidatedJSONParser.parse(
     dimensions: string[],
     rubricSection: string,
     conceptSection: string,
-    transcriptSection: string
+    transcriptSection: string,
+    mode: "CANDIDATE" | "REVERSE"
   ): string {
-    return `
-You are evaluating a candidate's performance in a "${templateName}" technical interview.
+    const target = mode === "REVERSE" ? "INTERVIEWER's (the human's)" : "candidate's";
 
-Score the candidate on EXACTLY these dimensions, no others:
+    return `
+You are evaluating ${target} performance in a "${templateName}" technical interview.
+
+Score the ${mode === "REVERSE" ? "interviewer" : "candidate"} on EXACTLY these dimensions, no others:
 ${dimensions.map((d) => `- ${d}`).join("\n")}
 
 RUBRICS (use these to decide scores):
@@ -6818,12 +7064,19 @@ For each dimension, provide:
   - quote: a short quote (${MAX_QUOTE_WORDS} words or fewer) copied VERBATIM from that exact message's content
   - comment: why this quote matters for this dimension
   - conceptSlugs: 0-3 slugs from the CONCEPT VOCABULARY that this specific quote demonstrates
+  - type: "strength" if this quote demonstrates competence, "weakness" if it demonstrates a gap
+
+Additionally return:
+- missedConcepts: important concepts for this problem that the ${mode === "REVERSE" ? "interviewer" : "candidate"} never addressed (free text, 0-5 items)
+- riskAssessment: concrete concerns an interviewer should flag before making a hire decision (0-4 items, empty array if none)
+- hireRecommendation: one of STRONG_HIRE, HIRE, NO_HIRE, STRONG_NO_HIRE — based on overall dimension scores and severity of weaknesses
 
 Rules:
-- Only cite messages with role USER (the candidate). Never cite your own INTERVIEWER lines as evidence.
+- Only cite messages with role USER (the human). Never cite AI lines as evidence.
 - Every quote must be copied exactly from the cited message. Do not paraphrase and call it a quote.
 - Only use conceptSlugs from the CONCEPT VOCABULARY above. Never invent a slug.
 - If a dimension has weak or no supporting evidence in the transcript, say so in the summary and score it low — do not invent evidence.
+- For hireRecommendation: be grounded in the numeric scores. STRONG_HIRE requires consistently high scores (8+), NO_HIRE requires consistently low scores (3-), and consider the severity of weaknesses.
 
 Return ONLY valid JSON with this exact shape:
 
@@ -6834,12 +7087,15 @@ Return ONLY valid JSON with this exact shape:
       "score": 0,
       "summary": "string",
       "evidence": [
-        { "messageId": "string", "quote": "string", "comment": "string", "conceptSlugs": ["string"] }
+        { "messageId": "string", "quote": "string", "comment": "string", "conceptSlugs": ["string"], "type": "strength" }
       ]
     }
   ],
   "strengths": ["string"],
   "weaknesses": ["string"],
+  "missedConcepts": ["string"],
+  "riskAssessment": ["string"],
+  "hireRecommendation": "STRONG_HIRE",
   "feedback": "2-4 sentence overall narrative feedback"
 }
 
@@ -6885,6 +7141,8 @@ export interface EvidenceItem {
   timestampSeconds: number;
   quote: string;
   comment: string;
+  type: "strength" | "weakness";
+  conceptSlugs: string[];
 }
 
 export interface DimensionScore {
@@ -6899,6 +7157,9 @@ export interface EvaluationResult {
   dimensionScores: DimensionScore[];
   strengths: string[];
   weaknesses: string[];
+  missedConcepts: string[];
+  riskAssessment: string[];
+  hireRecommendation: "STRONG_HIRE" | "HIRE" | "NO_HIRE" | "STRONG_NO_HIRE";
   feedback: string;
 }
 
@@ -6907,17 +7168,19 @@ export interface EvaluatableInterview {
   id: string;
   startedAt: Date | null;
   createdAt: Date;
+  mode: "CANDIDATE" | "REVERSE";
   transcript: Array<{
     id: string;
     role: string;
     content: string;
     createdAt: Date;
+    elapsedSeconds?: number;
   }>;
   template: {
     id: string;
     slug: string;
     name: string;
-    phases: Array<{ evaluationDimensions: unknown }>;
+    phases: Array<{ evaluationDimensions: unknown; reverseEvaluationDimensions?: unknown }>;
   };
 }
 ================================================
@@ -7166,6 +7429,24 @@ FILE: ./src/modules/interview/prompt/templates/clarification.md
 ================================================
 
 ================================================
+FILE: ./src/modules/interview/prompt/templates/reverse-candidate.md
+================================================
+You are role-playing as a job candidate named {{candidateName}}, being interviewed by the user.
+
+Your background: {{background}}
+Your seniority: {{seniority}}
+Areas where you are intentionally weaker (do not volunteer this — let the interviewer discover it through questioning): {{weaknesses}}
+
+Rules:
+- You are being interviewed. The USER is the interviewer, not you.
+- Answer as this persona would — confident where competent, vague or uncertain in your weak areas.
+- Do not solve the problem perfectly. Make realistic mistakes matching your seniority level.
+- Do not break character. Do not mention that you are an AI or that this is a simulation.
+- Do not ask the interviewer meta-questions about the evaluation.
+- Respond only to what the interviewer actually asked. Do not volunteer the entire design unprompted.
+- Keep responses conversational length, not an essay.
+
+================================================
 FILE: ./src/modules/interview/prompt/templates/evaluation.md
 ================================================
 
@@ -7237,6 +7518,7 @@ export class InterviewProfileService {
           transitionThreshold:
             phase.transitionThreshold,
           instructions: phase.instructions,
+          showWhiteboard: phase.showWhiteboard,
         })
       ),
     };
@@ -7477,6 +7759,8 @@ export interface InterviewPhaseDefinition {
   transitionThreshold: number;
 
   instructions: string;
+
+  showWhiteboard: boolean;
 }
 
 export interface InterviewProfile {
@@ -7762,6 +8046,7 @@ import {
 
 import { PromptGuard } from "../guardrails/PromptGuard";
 import { InterviewProfile } from "../profiles/InterviewProfile";
+import { CandidatePersona } from "../reverse/CandidatePersonas";
 
 import { InterviewStateMachine } from "./InterviewStateMachine";
 import { PromptBuilder } from "./PromptBuilder";
@@ -7786,6 +8071,12 @@ export interface InterviewEngineInput {
   interviewStartedAt: Date;
 
   phaseStartedAt: Date;
+
+  whiteboardDescription?: string;
+
+  mode: "CANDIDATE" | "REVERSE";
+
+  persona?: CandidatePersona;
 }
 
 export class InterviewEngine {
@@ -7825,20 +8116,28 @@ export class InterviewEngine {
     const latestMessage =
       recentHistory.at(-1);
 
-    const latestQuestion = recentHistory.length >= 2 
-      ? recentHistory[recentHistory.length - 2]?.content 
+    const latestQuestion = recentHistory.length >= 2
+      ? recentHistory[recentHistory.length - 2]?.content
       : undefined;
     const latestAnswer = latestMessage?.content;
 
-    const systemPrompt =
-      await this.promptBuilder.buildSystemPrompt(
-        phase,
-        input.candidateName,
-        input.problem,
-        input.runningSummary,
-        latestQuestion,
-        latestAnswer
-      );
+    const systemPrompt = input.mode === "REVERSE"
+      ? await this.promptBuilder.buildReverseSystemPrompt(
+          phase,
+          input.persona!,
+          input.problem,
+          input.runningSummary,
+          latestQuestion
+        )
+      : await this.promptBuilder.buildSystemPrompt(
+          phase,
+          input.candidateName,
+          input.problem,
+          input.runningSummary,
+          latestQuestion,
+          latestAnswer,
+          input.whiteboardDescription
+        );
 
     const guardedInput =
       this.promptGuard.guard(
@@ -7972,6 +8271,7 @@ import { PromptLoader } from "@/src/modules/interview/prompt/PromptLoader";
 import { PromptRenderer } from "@/src/modules/interview/prompt/PromptRenderer";
 
 import { InterviewPhaseDefinition } from "../profiles/InterviewProfile";
+import { CandidatePersona } from "../reverse/CandidatePersonas";
 
 export class PromptBuilder {
   constructor(
@@ -7987,7 +8287,8 @@ export class PromptBuilder {
     problem: string,
     runningSummary = "",
     latestQuestion?: string,
-    latestAnswer?: string
+    latestAnswer?: string,
+    whiteboardDescription?: string
   ): Promise<string> {
     const basePrompt =
       await this.promptLoader.load(
@@ -8028,6 +8329,8 @@ ${phase.id}
 
 Running Summary:
 ${runningSummary}
+
+${whiteboardDescription ? `CANDIDATE'S WHITEBOARD:\n${whiteboardDescription}\n` : ""}
 
 PHASE INSTRUCTIONS:
 
@@ -8079,6 +8382,85 @@ Do not solve the problem for the candidate.
 Do not use markdown.
 
 Return JSON only.
+`.trim();
+  }
+
+  async buildReverseSystemPrompt(
+    phase: InterviewPhaseDefinition,
+    persona: CandidatePersona,
+    problem: string,
+    runningSummary = "",
+    latestQuestion?: string
+  ): Promise<string> {
+    const base = await this.promptLoader.load("reverse-candidate.md");
+
+    const rendered = this.promptRenderer.render(base, {
+      candidateName: persona.name,
+      background: persona.background,
+      seniority: persona.seniority,
+      weaknesses: persona.weaknesses.join(", "),
+    });
+
+    const goals = phase.goals
+      .map((goal) => `- ${goal}`)
+      .join("\n");
+
+    const goalCoverageTemplate = phase.goals.length > 0
+      ? phase.goals
+          .map((goal) => `      "${goal}": 0.0`)
+          .join(",\n")
+      : '      "phase_goal": 0.0';
+
+    return `
+${rendered}
+
+Interview Problem (for your context, don't dump this all at once):
+${problem}
+
+Conversation so far (summary):
+${runningSummary}
+
+Latest question from the interviewer:
+${latestQuestion ?? "The interview is just starting — wait for their first question."}
+
+Current Phase:
+${phase.id}
+
+PHASE INSTRUCTIONS:
+
+${phase.instructions}
+
+PHASE GOALS:
+
+${goals || "- No explicit goals"}
+
+You must evaluate only the CURRENT PHASE.
+
+For goalCoverage:
+- Include every phase goal listed above.
+- Values must be between 0 and 1.
+- 0 means not discussed.
+- 0.5 means partially demonstrated.
+- 1 means clearly demonstrated.
+
+confidence must be between 0 and 1.
+
+unresolvedTopics must contain only important topics blocking completion of the current phase.
+
+Return ONLY valid JSON using exactly this structure:
+
+{
+  "reply": "Your in-character reply to the interviewer",
+  "phaseAssessment": {
+    "goalCoverage": {
+${goalCoverageTemplate}
+    },
+    "confidence": 0.0,
+    "unresolvedTopics": []
+  }
+}
+
+Return JSON only. No markdown, no meta commentary.
 `.trim();
   }
 }
@@ -8726,6 +9108,48 @@ export class RecommendationService {
   }
 }
 ================================================
+FILE: ./src/modules/interview/services/whiteboard/WhiteboardSerializer.ts
+================================================
+interface WhiteboardElement {
+  id: string;
+  type: string;
+  label: string;
+  points?: number[];
+  explanationTitle?: string;
+}
+
+export class WhiteboardSerializer {
+  /** Compact text description for prompt injection. Empty string if nothing drawn. */
+  describe(elements: WhiteboardElement[] | null | undefined): string {
+    if (!elements || elements.length === 0) {
+      return "The candidate has not drawn anything on the whiteboard yet.";
+    }
+
+    const nodes = elements.filter((el) => el.type !== "arrow");
+    const arrows = elements.filter((el) => el.type === "arrow");
+
+    const nodeById = new Map(nodes.map((n) => [n.id, n]));
+
+    const nodeLines = nodes.map(
+      (n) => `- ${n.label} (${n.type})` 
+    );
+
+    const connectionLines = arrows
+      .map((a) => a.explanationTitle) // "Connection: X ➜ Y" already stored by the whiteboard component
+      .filter((title): title is string => Boolean(title));
+
+    return [
+      "Components on whiteboard:",
+      ...nodeLines,
+      connectionLines.length > 0 ? "\nConnections:" : "",
+      ...connectionLines,
+    ]
+      .filter(Boolean)
+      .join("\n");
+  }
+}
+
+================================================
 FILE: ./src/modules/interview/services/mastery/SkillGraphService.ts
 ================================================
 import { prisma } from "@/shared/prisma/client";
@@ -8822,6 +9246,49 @@ export class SkillGraphService {
       overallMastery,
       totalConceptsTracked: masteries.length,
     };
+  }
+
+  /**
+   * Compute per-interview concept scores (0-100) from EvidenceItem.normalizedScore.
+   * This is different from the dashboard's rolling mastery — this is interview-scoped,
+   * computed fresh from this evaluation's EvidenceConcept rows, not from the decayed
+   * rolling ConceptMastery table.
+   */
+  async getInterviewConceptScores(
+    evaluationId: string
+  ): Promise<Array<{ concept: string; score: number }>> {
+    const evidenceItems = await prisma.evidenceItem.findMany({
+      where: { evaluationId },
+      include: {
+        concepts: {
+          include: {
+            concept: true,
+          },
+        },
+      },
+    });
+
+    const byConceptSlug = new Map<string, number[]>();
+
+    for (const item of evidenceItems) {
+      for (const link of item.concepts) {
+        const scores = byConceptSlug.get(link.concept.slug) ?? [];
+        scores.push(item.normalizedScore);
+        byConceptSlug.set(link.concept.slug, scores);
+      }
+    }
+
+    const result: Array<{ concept: string; score: number }> = [];
+
+    for (const [conceptSlug, scores] of byConceptSlug.entries()) {
+      const avgScore = scores.reduce((sum, s) => sum + s, 0) / scores.length;
+      result.push({
+        concept: conceptSlug,
+        score: Math.round(avgScore * 100), // Convert 0-1 to 0-100
+      });
+    }
+
+    return result;
   }
 }
 ================================================
@@ -9050,13 +9517,174 @@ export class TranscriptService {
   }
 }
 ================================================
+FILE: ./src/modules/interview/services/studyplan/StudyResources.ts
+================================================
+/**
+ * Static mapping of concepts to study resources and advice.
+ * This is deliberately maintained as a static map rather than LLM-generated
+ * to ensure resource quality and avoid hallucination.
+ */
+
+export interface ConceptResource {
+  advice: string;
+  resources: string[];
+}
+
+export const CONCEPT_RESOURCES: Record<string, ConceptResource> = {
+  "horizontal-scaling": {
+    advice: "Review horizontal vs vertical scaling tradeoffs. Practice identifying bottlenecks and designing stateless services.",
+    resources: [
+      "System Design Primer — Horizontal Scaling",
+      "Designing Data-Intensive Applications, ch. 6",
+    ],
+  },
+  "load-balancing": {
+    advice: "Understand different load balancing algorithms (round-robin, least connections, consistent hashing) and when to use each.",
+    resources: [
+      "System Design Primer — Load Balancing",
+      "NGINX Load Balancing Documentation",
+    ],
+  },
+  "caching-strategy": {
+    advice: "Learn cache eviction policies (LRU, LFU), cache invalidation strategies, and distributed caching challenges.",
+    resources: [
+      "System Design Primer — Caching",
+      "Designing Data-Intensive Applications, ch. 5",
+    ],
+  },
+  "database-sharding": {
+    advice: "Review partitioning strategies and how to handle resharding without downtime. Understand consistent hashing for shard key distribution.",
+    resources: [
+      "System Design Primer — Sharding",
+      "Designing Data-Intensive Applications, ch. 6",
+    ],
+  },
+  "cdn": {
+    advice: "Understand CDN caching hierarchies, cache invalidation, and edge computing patterns.",
+    resources: [
+      "System Design Primer — CDN",
+      "Cloudflare CDN Documentation",
+    ],
+  },
+  "consistent-hashing": {
+    advice: "Practice explaining virtual nodes and how they reduce rebalancing cost. Understand the ring topology and key distribution.",
+    resources: [
+      "System Design Primer — Consistent Hashing",
+      "Dynamo Paper (Amazon)",
+    ],
+  },
+  "cap-theorem": {
+    advice: "Deepen understanding of consistency vs availability tradeoffs. Practice classifying systems by their CAP properties.",
+    resources: [
+      "System Design Primer — CAP Theorem",
+      "Designing Data-Intensive Applications, ch. 9",
+    ],
+  },
+  "message-queues": {
+    advice: "Learn message queue patterns (pub/sub, point-to-point), delivery guarantees, and backpressure handling.",
+    resources: [
+      "System Design Primer — Message Queues",
+      "RabbitMQ Documentation",
+      "Kafka Documentation",
+    ],
+  },
+  "data-consistency": {
+    advice: "Study strong vs eventual consistency models, conflict resolution strategies, and distributed transactions.",
+    resources: [
+      "System Design Primer — Data Consistency",
+      "Designing Data-Intensive Applications, ch. 9",
+    ],
+  },
+  "rate-limiting-algorithms": {
+    advice: "Implement and compare token bucket, leaky bucket, and fixed window algorithms. Understand distributed rate limiting challenges.",
+    resources: [
+      "System Design Primer — Rate Limiting",
+      "Redis Rate Limiting Patterns",
+    ],
+  },
+  "api-design": {
+    advice: "Study REST vs GraphQL, API versioning strategies, authentication/authorization patterns, and error handling.",
+    resources: [
+      "REST API Design Best Practices",
+      "GraphQL Documentation",
+      "API Security Best Practices (OWASP)",
+    ],
+  },
+  "database-indexing": {
+    advice: "Learn B-tree vs hash indexes, composite indexes, index selectivity, and query optimization basics.",
+    resources: [
+      "PostgreSQL Index Documentation",
+      "Database Indexing — Use the Index, Luke",
+    ],
+  },
+  "object-modeling": {
+    advice: "Practice identifying entities, relationships, and responsibilities. Study composition vs inheritance tradeoffs.",
+    resources: [
+      "Domain-Driven Design — Eric Evans",
+      "Clean Architecture — Robert Martin",
+    ],
+  },
+  "design-patterns": {
+    advice: "Study GoF patterns with concrete examples. Understand when patterns help vs when they add unnecessary complexity.",
+    resources: [
+      "Design Patterns — Gang of Four",
+      "Refactoring Guru — Design Patterns",
+    ],
+  },
+  "encapsulation": {
+    advice: "Practice hiding implementation details behind clean interfaces. Study information hiding principles and access modifiers.",
+    resources: [
+      "Clean Code — Robert Martin",
+      "Effective Java — Joshua Bloch",
+    ],
+  },
+  "complexity-analysis": {
+    advice: "Practice analyzing time and space complexity for common algorithms. Learn to recognize O(n log n) patterns and optimize hot paths.",
+    resources: [
+      "Introduction to Algorithms — CLRS",
+      "Cracking the Coding Interview — Complexity Analysis",
+    ],
+  },
+  "edge-case-handling": {
+    advice: "Develop a checklist of common edge cases (empty, null, single element, duplicates, boundaries). Practice defensive programming.",
+    resources: [
+      "Clean Code — Defensive Programming",
+      "The Pragmatic Programmer — Defensive Programming",
+    ],
+  },
+};
+
+/**
+ * Derive study plan items from a list of concept slugs.
+ * Returns only items that have resources defined in CONCEPT_RESOURCES.
+ */
+export function deriveStudyPlan(
+  conceptSlugs: string[]
+): Array<{ topic: string; advice: string; resources: string[] }> {
+  const plan: Array<{ topic: string; advice: string; resources: string[] }> = [];
+
+  for (const slug of conceptSlugs) {
+    const resource = CONCEPT_RESOURCES[slug];
+    if (resource) {
+      plan.push({
+        topic: slug,
+        advice: resource.advice,
+        resources: resource.resources,
+      });
+    }
+  }
+
+  return plan;
+}
+
+================================================
 FILE: ./src/modules/interview/services/ProblemPickerService.ts
 ================================================
 
 ================================================
 FILE: ./src/modules/interview/services/interview/InterviewFactory.ts
 ================================================
-import { InterviewStatus } from "@/src/modules/interview/types";
+import { InterviewStatus, InterviewMode } from "@prisma/client";
 import { CreateInterviewInput } from "@/src/features/interview/types/CreateInterviewInput";
 
 export function createInterview(input: CreateInterviewInput) {
@@ -9066,6 +9694,7 @@ export function createInterview(input: CreateInterviewInput) {
     currentPhase: "introduction",
     summary: "Interview has not started yet.",
     promptVersion: "v1",
+    mode: input.mode ?? InterviewMode.CANDIDATE,
   };
 }
 ================================================
@@ -9082,6 +9711,7 @@ import { ChatMessage } from "@/src/modules/ai/services/AIService";
 import { InterviewEngine } from "../../engine/InterviewEngine";
 import { InterviewRepository } from "../../repositories/InterviewRepository";
 import { InterviewProfileService } from "../../profiles/InterviewProfileService";
+import { WhiteboardSerializer } from "../whiteboard/WhiteboardSerializer";
 
 export interface ProcessInterviewMessageResult {
   reply: string;
@@ -9101,6 +9731,9 @@ export class InterviewMessageService {
 
   private readonly profileService =
     new InterviewProfileService();
+
+  private readonly whiteboardSerializer =
+    new WhiteboardSerializer();
 
   async processMessage(
     interviewId: string,
@@ -9137,8 +9770,18 @@ export class InterviewMessageService {
 
     const profile =
       await this.profileService.resolveByTemplateId(
-        interview.templateId
+        interview.template.id
       );
+
+    const currentPhaseDef = profile.phases.find(
+      (p) => p.id === interview.currentPhase
+    );
+
+    const whiteboardDescription = currentPhaseDef?.showWhiteboard
+      ? this.whiteboardSerializer.describe(
+          interview.whiteboardState as any
+        )
+      : undefined;
 
     const history =
       this.buildConversationHistory(
@@ -9153,6 +9796,13 @@ export class InterviewMessageService {
     const interviewStartedAt =
       interview.startedAt ??
       interview.createdAt;
+
+    const elapsedSeconds = Math.max(
+      Math.floor(
+        (Date.now() - interviewStartedAt.getTime()) / 1000
+      ),
+      0
+    );
 
     /*
      * The schema currently has no phaseStartedAt field.
@@ -9177,6 +9827,9 @@ export class InterviewMessageService {
           interview.duration,
         interviewStartedAt,
         phaseStartedAt,
+        whiteboardDescription,
+        mode: interview.mode,
+        persona: interview.candidatePersona as any,
       });
 
     const previousPhase =
@@ -9217,6 +9870,7 @@ export class InterviewMessageService {
       currentPhase: nextPhase,
       status,
       assistantMetadata: metadata,
+      elapsedSeconds,
     });
 
     return {
@@ -9275,6 +9929,7 @@ import { EvaluatableInterview } from "../../evaluators/types";
 import { PromptLoader } from "../../prompt/PromptLoader";
 import { InterviewRepository } from "../../repositories/InterviewRepository";
 import { MasteryService } from "../mastery/MasteryService";
+import { deriveStudyPlan } from "../studyplan/StudyResources";
 
 export class EvaluationService {
   private readonly evaluator: EvidenceEvaluator;
@@ -9315,6 +9970,7 @@ export class EvaluationService {
       id: interview.id,
       startedAt: interview.startedAt,
       createdAt: interview.createdAt,
+      mode: interview.mode,
       transcript: interview.transcript,
       template: interview.template,
     };
@@ -9327,10 +9983,20 @@ export class EvaluationService {
       (dimension) =>
         dimension.evidence.map((item) => ({
           dimension: dimension.dimension,
-          conceptSlugs: [], // TODO: Extract from evaluator result when available
+          normalizedScore: dimension.score / 10, // 0-1 normalized score for per-interview concept mastery
           ...item,
         }))
     );
+
+    // Collect all concept slugs from evidence and missed concepts for study plan
+    const allConceptSlugs = [
+      ...new Set([
+        ...evidence.flatMap((e) => e.conceptSlugs),
+        ...result.missedConcepts,
+      ]),
+    ];
+
+    const studyPlan = deriveStudyPlan(allConceptSlugs);
 
     const repository = new InterviewRepository();
 
@@ -9344,6 +10010,10 @@ export class EvaluationService {
         metadata: {
           strengths: result.strengths,
           weaknesses: result.weaknesses,
+          missedConcepts: result.missedConcepts,
+          riskAssessment: result.riskAssessment,
+          hireRecommendation: result.hireRecommendation,
+          studyPlan,
         },
       }
     );
@@ -9370,6 +10040,8 @@ export class EvaluationService {
       timestampSeconds: number;
       quote: string;
       comment: string;
+      type: "strength" | "weakness";
+      normalizedScore: number;
       conceptSlugs: string[];
     }>
   ) {
@@ -9397,6 +10069,7 @@ export class EvaluationService {
           timestampSeconds: item.timestampSeconds,
           quote: item.quote,
           comment: item.comment,
+          normalizedScore: item.normalizedScore,
         },
       });
 
