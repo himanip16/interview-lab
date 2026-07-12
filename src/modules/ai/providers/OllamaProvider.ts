@@ -1,4 +1,4 @@
-type ChatMessage = {
+export type ChatMessage = {
   role: "system" | "user" | "assistant";
   content: string;
 };
@@ -11,98 +11,42 @@ type OllamaResponse = {
   error?: string;
 };
 
-const INTERVIEW_RESPONSE_SCHEMA = {
-  type: "object",
-  properties: {
-    reply: {
-      type: "string",
-    },
-    transition: {
-      type: "boolean",
-    },
-    nextPhase: {
-      type: "string",
-    },
-    confidence: {
-      type: "number",
-      minimum: 0,
-      maximum: 1,
-    },
-    phaseAssessment: {
-      type: "object",
-      properties: {
-        goalCoverage: {
-          type: "object",
-          additionalProperties: {
-            type: "number",
-            minimum: 0,
-            maximum: 1,
-          },
-        },
-        confidence: {
-          type: "number",
-          minimum: 0,
-          maximum: 1,
-        },
-        unresolvedTopics: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-        },
-      },
-      required: ["goalCoverage", "confidence", "unresolvedTopics"],
-    },
-  },
-  required: [
-    "reply",
-    "phaseAssessment",
-  ],
-  additionalProperties: false,
-};
+export interface OllamaGenerateOptions {
+  model: string;
+  temperature?: number;
+  format?: object; // raw JSON Schema — the caller's concern, not the provider's
+}
 
 export class OllamaProvider {
-  constructor(
-    private readonly model: string
-  ) {}
-
-  getModel() {
-    return this.model;
-  }
-
-  private readonly baseUrl =
-    "http://127.0.0.1:11434/api/chat";
+  constructor(private readonly baseUrl: string) {}
 
   async generateResponse(
-    messages: ChatMessage[]
+    messages: ChatMessage[],
+    options: OllamaGenerateOptions
   ): Promise<string> {
-    console.log(
-      `🤖 Requesting ${this.model}...`
-    );
+    console.log(`🤖 Requesting ${options.model}...`);
 
-    const response = await fetch(this.baseUrl, {
+    const response = await fetch(`${this.baseUrl}/api/chat`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: this.model,
+        model: options.model,
         messages,
         stream: false,
-        format: INTERVIEW_RESPONSE_SCHEMA,
+        ...(options.format ? { format: options.format } : {}),
         options: {
-          temperature: 0,
+          temperature: options.temperature ?? 0,
         },
       }),
     });
 
-    const data =
-      (await response.json()) as OllamaResponse;
+    const data = (await response.json()) as OllamaResponse;
 
     if (!response.ok) {
       throw new Error(
-        data.error ??
-          `Ollama request failed: ${response.status}`
+        data.error ?? `Ollama request failed: ${response.status}`
       );
     }
 
@@ -110,14 +54,11 @@ export class OllamaProvider {
 
     if (!content?.trim()) {
       throw new Error(
-        "Ollama returned an empty response"
+        `Ollama (${options.model}) returned an empty response`
       );
     }
 
-    console.log(
-      `🤖 ${this.model} response:`,
-      content
-    );
+    console.log(`🤖 ${options.model} response:`, content);
 
     return content;
   }

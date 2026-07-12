@@ -33,6 +33,45 @@ const EvaluationResponseSchema = z.object({
 
 const MAX_QUOTE_WORDS = 20;
 
+// Ollama structured-output schema, matching EvaluationResponseSchema below.
+export const EVALUATION_JSON_SCHEMA = {
+  type: "object",
+  properties: {
+    dimensionScores: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          dimension: { type: "string" },
+          score: { type: "number" },
+          summary: { type: "string" },
+          evidence: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                messageId: { type: "string" },
+                quote: { type: "string" },
+                comment: { type: "string" },
+                conceptSlugs: {
+                  type: "array",
+                  items: { type: "string" },
+                },
+              },
+              required: ["messageId", "quote", "comment"],
+            },
+          },
+        },
+        required: ["dimension", "score", "summary"],
+      },
+    },
+    strengths: { type: "array", items: { type: "string" } },
+    weaknesses: { type: "array", items: { type: "string" } },
+    feedback: { type: "string" },
+  },
+  required: ["dimensionScores", "feedback"],
+} as const;
+
 export class EvidenceEvaluator {
   constructor(
     private readonly ai = new AIService(),
@@ -97,28 +136,40 @@ export class EvidenceEvaluator {
       transcriptSection
     );
 
-    const raw = await this.ai.chat([
-      {
-        role: "system",
-        content:
-          "You are a rigorous, evidence-driven technical interview evaluator.",
-      },
-      { role: "user", content: prompt },
-    ]);
+    const raw = await this.ai.chat(
+  [
+    {
+      role: "system",
+      content:
+        "You are a rigorous, evidence-driven technical interview evaluator.",
+    },
+    { role: "user", content: prompt },
+  ],
+  {
+    task: "evaluation",
+    format: EVALUATION_JSON_SCHEMA,
+  }
+);
 
-    const parsed = await ValidatedJSONParser.parse(
-      raw,
-      EvaluationResponseSchema,
-      () =>
-        this.ai.chat([
-          {
-            role: "system",
-            content:
-              "Repair the response into valid JSON matching the requested schema. Return ONLY JSON.",
-          },
-          { role: "user", content: raw },
-        ])
-    );
+const parsed = await ValidatedJSONParser.parse(
+  raw,
+  EvaluationResponseSchema,
+  () =>
+    this.ai.chat(
+      [
+        {
+          role: "system",
+          content:
+            "Repair the response into valid JSON matching the requested schema. Return ONLY JSON.",
+        },
+        { role: "user", content: raw },
+      ],
+      {
+        task: "repair",
+        format: EVALUATION_JSON_SCHEMA,
+      }
+    )
+);
 
     const dimensionScores = parsed.dimensionScores.map(
       (dimension) => ({

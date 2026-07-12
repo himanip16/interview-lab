@@ -51,17 +51,20 @@ ${transcript}
 `;
 
     try {
-      const summary = await this.aiService.chat([
-        {
-          role: "system",
-          content:
-            "You are an expert technical interviewer.",
-        },
-        {
-          role: "user",
-          content: prompt,
-        },
-      ]);
+      const summary = await this.aiService.chat(
+  [
+    {
+      role: "system",
+      content: "You are an expert technical interviewer.",
+    },
+    {
+      role: "user",
+      content: prompt,
+    },
+  ],
+  { task: "summary" } // no format — this task wants plain text, and now
+                        // actually gets it instead of a forced JSON shape
+);
 
       return summary.trim();
     } catch (error) {

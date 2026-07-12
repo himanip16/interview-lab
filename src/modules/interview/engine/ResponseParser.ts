@@ -2,6 +2,34 @@ import { z } from "zod";
 
 import { ValidatedJSONParser } from "@/src/modules/ai/utils/ValidatedJSONParser";
 
+// Ollama structured-output schema, kept next to the Zod schema it must match
+// exactly — this used to live inside OllamaProvider.ts as a stale constant
+// (transition/nextPhase/confidence) that no longer matched what's parsed
+// below (reply/phaseAssessment). goalCoverage keys are dynamic per phase, so
+// it's constrained via additionalProperties rather than fixed keys.
+export const INTERVIEWER_JSON_SCHEMA = {
+  type: "object",
+  properties: {
+    reply: { type: "string" },
+    phaseAssessment: {
+      type: "object",
+      properties: {
+        goalCoverage: {
+          type: "object",
+          additionalProperties: { type: "number" },
+        },
+        confidence: { type: "number" },
+        unresolvedTopics: {
+          type: "array",
+          items: { type: "string" },
+        },
+      },
+      required: ["goalCoverage", "confidence", "unresolvedTopics"],
+    },
+  },
+  required: ["reply", "phaseAssessment"],
+} as const;
+
 const AIResponseSchema = z.object({
   reply: z.string().min(1),
 
@@ -29,12 +57,10 @@ const AIResponseSchema = z.object({
     ).optional().default([]),
   }).optional(),
 
-  // Legacy fields that some AI models might return
   transition: z.boolean().optional(),
   nextPhase: z.string().optional(),
-  confidence: z.number().optional(), // Legacy top-level confidence
+  confidence: z.number().optional(),
 }).transform((data) => {
-  // If AI returned legacy format (top-level confidence), convert to new format
   if (!data.phaseAssessment && (data.confidence !== undefined || data.transition !== undefined)) {
     return {
       reply: data.reply,
@@ -48,9 +74,7 @@ const AIResponseSchema = z.object({
   return data;
 });
 
-export type ParsedResponse = z.infer<
-  typeof AIResponseSchema
->;
+export type ParsedResponse = z.infer<typeof AIResponseSchema>;
 
 export class ResponseParser {
   async parse(

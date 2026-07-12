@@ -46,15 +46,18 @@ Requirements:
 - Return plain text only.
 `;
 
-    return this.ai.chat([
-      {
-        role: "system",
-        content: "You are an expert technical interviewer.",
-      },
-      {
-        role: "user",
-        content: prompt,
-      },
-    ]);
+    return this.ai.chat(
+  [
+    {
+      role: "system",
+      content: "You are an expert technical interviewer.",
+    },
+    {
+      role: "user",
+      content: prompt,
+    },
+  ],
+  { task: "summary" }
+);
   }
 }

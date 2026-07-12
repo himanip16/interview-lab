@@ -11,6 +11,7 @@ import { InterviewProfile } from "../profiles/InterviewProfile";
 import { InterviewStateMachine } from "./InterviewStateMachine";
 import { PromptBuilder } from "./PromptBuilder";
 import { ResponseParser } from "./ResponseParser";
+import { INTERVIEWER_JSON_SCHEMA } from "./ResponseParser";
 
 export interface InterviewEngineInput {
   profile: InterviewProfile;
@@ -103,17 +104,23 @@ export class InterviewEngine {
       },
     ];
 
-    const aiResponse =
-      await this.aiService.chat(messages);
+    
 
-    const parsed =
-      await this.responseParser.parse(
-        aiResponse,
-        () =>
-          this.aiService.chat([
-            {
-              role: "system",
-              content: `
+const aiResponse =
+  await this.aiService.chat(messages, {
+    task: "interviewer",
+    format: INTERVIEWER_JSON_SCHEMA,
+  });
+
+const parsed =
+  await this.responseParser.parse(
+    aiResponse,
+    () =>
+      this.aiService.chat(
+        [
+          {
+            role: "system",
+            content: `
 Repair the response into valid JSON.
 
 Return ONLY JSON.
@@ -137,13 +144,18 @@ Do not return nextPhase.
 
 All goal coverage values and confidence must be between 0 and 1.
 `.trim(),
-            },
-            {
-              role: "user",
-              content: aiResponse,
-            },
-          ])
-      );
+          },
+          {
+            role: "user",
+            content: aiResponse,
+          },
+        ],
+        {
+          task: "repair",
+          format: INTERVIEWER_JSON_SCHEMA,
+        }
+      )
+  );
 
     const now = Date.now();
 

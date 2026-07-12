@@ -6,42 +6,47 @@ import {
 
 export interface PhaseAssessment {
   goalCoverage: Record<string, number>;
-
   confidence: number;
-
   unresolvedTopics: string[];
 }
 
 export interface TransitionContext {
   currentPhase: PhaseId;
-
   interviewDurationMinutes: number;
-
   elapsedInterviewSeconds: number;
-
   elapsedPhaseSeconds: number;
-
   assessment: PhaseAssessment;
 }
 
+export type TransitionReason =
+  | "goals_completed"
+  | "phase_time_budget_exceeded"
+  | "interview_time_pressure"
+  | "interview_completed"
+  | "stay";
+
 export interface TransitionResult {
   shouldTransition: boolean;
-
+  completed: boolean;
   currentPhase: PhaseId;
-
   nextPhase: PhaseId;
-
-  reason:
-    | "goals_completed"
-    | "phase_time_budget_exceeded"
-    | "interview_time_pressure"
-    | "stay";
+  reason: TransitionReason;
 }
 
 export class InterviewStateMachine {
+  private static readonly TIME_PRESSURE_START_RATIO = 0.5;
+  private static readonly TIME_PRESSURE_THRESHOLD = 0.3;
+  private static readonly MIN_PHASE_TIME_RATIO = 0.3;
+
   constructor(
     private readonly profile: InterviewProfile
-  ) {}
+  ) {
+    if (profile.phases.length === 0) {
+      throw new Error(
+        `Interview profile "${profile.type}" has no phases`
+      );
+    }
+  }
 
   getPhase(
     phaseId: PhaseId
@@ -60,15 +65,7 @@ export class InterviewStateMachine {
   }
 
   getInitialPhase(): PhaseId {
-    const phase = this.profile.phases[0];
-
-    if (!phase) {
-      throw new Error(
-        `Interview profile "${this.profile.type}" has no phases`
-      );
-    }
-
-    return phase.id;
+    return this.profile.phases[0].id;
   }
 
   evaluateTransition(
@@ -80,35 +77,161 @@ export class InterviewStateMachine {
 
     const currentIndex =
       this.profile.phases.findIndex(
-        (phase) =>
-          phase.id === context.currentPhase
+        (phase) => phase.id === currentPhase.id
       );
 
     const nextPhase =
       this.profile.phases[currentIndex + 1];
 
+    const totalInterviewSeconds = Math.max(
+      context.interviewDurationMinutes * 60,
+      1
+    );
+
+    const elapsedInterviewSeconds = Math.max(
+      context.elapsedInterviewSeconds,
+      0
+    );
+
+    const elapsedPhaseSeconds = Math.max(
+      context.elapsedPhaseSeconds,
+      0
+    );
+
+    const targetPhaseSeconds =
+      totalInterviewSeconds *
+      currentPhase.targetDurationRatio;
+
+    const coverage = this.calculateGoalCoverage(
+      currentPhase,
+      context.assessment
+    );
+
+    const goalsCompleted =
+      coverage >= currentPhase.transitionThreshold &&
+      this.clamp(context.assessment.confidence) >=
+        currentPhase.transitionThreshold &&
+      context.assessment.unresolvedTopics.length === 0;
+
+    /*
+     * Terminal phase owns interview completion.
+     *
+     * A terminal phase does NOT complete merely because there is no
+     * next phase. Completion requires its goals to be satisfied.
+     */
     if (!nextPhase) {
+      if (goalsCompleted) {
+        return {
+          shouldTransition: false,
+          completed: true,
+          currentPhase: currentPhase.id,
+          nextPhase: currentPhase.id,
+          reason: "interview_completed",
+        };
+      }
+
       return {
         shouldTransition: false,
+        completed: false,
         currentPhase: currentPhase.id,
         nextPhase: currentPhase.id,
         reason: "stay",
       };
     }
 
-    const totalInterviewSeconds =
-      Math.max(
-        context.interviewDurationMinutes * 60,
-        1
+    if (goalsCompleted) {
+      return this.transitionTo(
+        currentPhase,
+        nextPhase,
+        "goals_completed"
       );
+    }
 
-    const targetPhaseSeconds =
-      totalInterviewSeconds *
-      currentPhase.targetDurationRatio;
+    if (
+      elapsedPhaseSeconds >= targetPhaseSeconds
+    ) {
+      return this.transitionTo(
+        currentPhase,
+        nextPhase,
+        "phase_time_budget_exceeded"
+      );
+    }
+
+    if (
+      this.isUnderTimePressure({
+        currentIndex,
+        totalInterviewSeconds,
+        elapsedInterviewSeconds,
+        elapsedPhaseSeconds,
+        targetPhaseSeconds,
+      })
+    ) {
+      return this.transitionTo(
+        currentPhase,
+        nextPhase,
+        "interview_time_pressure"
+      );
+    }
+
+    return {
+      shouldTransition: false,
+      completed: false,
+      currentPhase: currentPhase.id,
+      nextPhase: currentPhase.id,
+      reason: "stay",
+    };
+  }
+
+  private transitionTo(
+    currentPhase: InterviewPhaseDefinition,
+    nextPhase: InterviewPhaseDefinition,
+    reason: Exclude<
+      TransitionReason,
+      "stay" | "interview_completed"
+    >
+  ): TransitionResult {
+    return {
+      shouldTransition: true,
+      completed: false,
+      currentPhase: currentPhase.id,
+      nextPhase: nextPhase.id,
+      reason,
+    };
+  }
+
+  private isUnderTimePressure(params: {
+    currentIndex: number;
+    totalInterviewSeconds: number;
+    elapsedInterviewSeconds: number;
+    elapsedPhaseSeconds: number;
+    targetPhaseSeconds: number;
+  }): boolean {
+    const {
+      currentIndex,
+      totalInterviewSeconds,
+      elapsedInterviewSeconds,
+      elapsedPhaseSeconds,
+      targetPhaseSeconds,
+    } = params;
 
     const elapsedRatio =
-      context.elapsedInterviewSeconds /
+      elapsedInterviewSeconds /
       totalInterviewSeconds;
+
+    if (
+      elapsedRatio <
+      InterviewStateMachine.TIME_PRESSURE_START_RATIO
+    ) {
+      return false;
+    }
+
+    if (
+      elapsedPhaseSeconds <
+      targetPhaseSeconds *
+        InterviewStateMachine.MIN_PHASE_TIME_RATIO
+    ) {
+      return false;
+    }
 
     const remainingPhaseRatio =
       this.profile.phases
@@ -123,71 +246,18 @@ export class InterviewStateMachine {
       totalInterviewSeconds *
       remainingPhaseRatio;
 
-    const actualRemainingSeconds =
-      Math.max(
-        totalInterviewSeconds -
-          context.elapsedInterviewSeconds,
-        0
-      );
+    const actualRemainingSeconds = Math.max(
+      totalInterviewSeconds -
+        elapsedInterviewSeconds,
+      0
+    );
 
-    const coverage =
-      this.calculateGoalCoverage(
-        currentPhase,
-        context.assessment
-      );
-
-    const goalsCompleted =
-      coverage >=
-        currentPhase.transitionThreshold &&
-      context.assessment.confidence >=
-        currentPhase.transitionThreshold &&
-      context.assessment.unresolvedTopics.length === 0;
-
-    if (goalsCompleted) {
-      return {
-        shouldTransition: true,
-        currentPhase: currentPhase.id,
-        nextPhase: nextPhase.id,
-        reason: "goals_completed",
-      };
-    }
-
-    if (
-      context.elapsedPhaseSeconds >=
-      targetPhaseSeconds
-    ) {
-      return {
-        shouldTransition: true,
-        currentPhase: currentPhase.id,
-        nextPhase: nextPhase.id,
-        reason: "phase_time_budget_exceeded",
-      };
-    }
-
-    // Only trigger time-pressure transition if we're significantly behind schedule
-    // and have spent at least 30% of the target time for current phase to prevent cascading
-    const timePressureThreshold = 0.3; // 30% behind schedule
-    const minPhaseTimeRatio = 0.3; // Must spend at least 30% of target phase time
-    
-    if (
-      elapsedRatio >= 0.5 &&
-      actualRemainingSeconds < expectedRemainingSeconds * (1 - timePressureThreshold) &&
-      context.elapsedPhaseSeconds >= targetPhaseSeconds * minPhaseTimeRatio
-    ) {
-      return {
-        shouldTransition: true,
-        currentPhase: currentPhase.id,
-        nextPhase: nextPhase.id,
-        reason: "interview_time_pressure",
-      };
-    }
-
-    return {
-      shouldTransition: false,
-      currentPhase: currentPhase.id,
-      nextPhase: currentPhase.id,
-      reason: "stay",
-    };
+    return (
+      actualRemainingSeconds <
+      expectedRemainingSeconds *
+        (1 -
+          InterviewStateMachine.TIME_PRESSURE_THRESHOLD)
+    );
   }
 
   private calculateGoalCoverage(
@@ -199,18 +269,22 @@ export class InterviewStateMachine {
     }
 
     const total = phase.goals.reduce(
-      (sum, goal) => {
-        const value =
-          assessment.goalCoverage[goal] ?? 0;
-
-        return (
-          sum +
-          Math.min(Math.max(value, 0), 1)
-        );
-      },
+      (sum, goal) =>
+        sum +
+        this.clamp(
+          assessment.goalCoverage[goal] ?? 0
+        ),
       0
     );
 
     return total / phase.goals.length;
+  }
+
+  private clamp(value: number): number {
+    if (!Number.isFinite(value)) {
+      return 0;
+    }
+
+    return Math.min(Math.max(value, 0), 1);
   }
 }

@@ -1,31 +1,80 @@
 import { ZodSchema } from "zod";
 
+import { env } from "@/src/shared/config/env";
+
 import { FallbackAIProvider } from "../providers/FallbackAIProvider";
+import { ChatMessage } from "../providers/OllamaProvider";
 import { ValidatedJSONParser } from "../utils/ValidatedJSONParser";
 
-export interface ChatMessage {
-  role: "system" | "user" | "assistant";
-  content: string;
+export type { ChatMessage };
+
+export type AITask = "interviewer" | "summary" | "evaluation" | "repair";
+
+interface TaskConfig {
+  model: string;
+  fallbackModel: string;
+  temperature: number;
+}
+
+// Model + temperature routing per workload. This is the ONLY place task
+// names map to specific models — providers below know nothing about tasks.
+const TASK_CONFIG: Record<AITask, TaskConfig> = {
+  interviewer: {
+    model: env.OLLAMA_MODEL_INTERVIEWER,
+    fallbackModel: env.OLLAMA_FALLBACK_MODEL,
+    temperature: 0.3,
+  },
+  summary: {
+    model: env.OLLAMA_MODEL_SUMMARY,
+    fallbackModel: env.OLLAMA_FALLBACK_MODEL,
+    temperature: 0.2,
+  },
+  evaluation: {
+    model: env.OLLAMA_MODEL_EVALUATION,
+    fallbackModel: env.OLLAMA_FALLBACK_MODEL,
+    temperature: 0,
+  },
+  repair: {
+    model: env.OLLAMA_MODEL_REPAIR,
+    fallbackModel: env.OLLAMA_FALLBACK_MODEL,
+    temperature: 0,
+  },
+};
+
+export interface AIRequestOptions {
+  task: AITask;
+  temperature?: number; // overrides the task's default
+  format?: object; // raw JSON Schema for Ollama's structured output — the
+                    // caller's schema, never a provider-level constant
 }
 
 export class AIService {
   private readonly provider = new FallbackAIProvider();
 
-  async chat(messages: ChatMessage[]): Promise<string> {
-    return this.provider.generateResponse(messages);
+  async chat(
+    messages: ChatMessage[],
+    options: AIRequestOptions
+  ): Promise<string> {
+    const config = TASK_CONFIG[options.task];
+
+    return this.provider.generateResponse(messages, {
+      model: config.model,
+      fallbackModel: config.fallbackModel,
+      temperature: options.temperature ?? config.temperature,
+      format: options.format,
+    });
   }
 
   async chatJSON<T>(
     messages: ChatMessage[],
-    schema: ZodSchema<T>
+    schema: ZodSchema<T>,
+    options: AIRequestOptions
   ): Promise<T> {
-    const response = await this.chat(messages);
+    const response = await this.chat(messages, options);
 
-    return ValidatedJSONParser.parse(
-      response,
-      schema,
-      async () => {
-        return this.chat([
+    return ValidatedJSONParser.parse(response, schema, async () => {
+      return this.chat(
+        [
           {
             role: "system",
             content: `
@@ -40,12 +89,16 @@ Do not explain anything.
 The JSON must satisfy the requested schema.
 `.trim(),
           },
-          {
-            role: "user",
-            content: response,
-          },
-        ]);
-      }
-    );
+          { role: "user", content: response },
+        ],
+        {
+          task: "repair",
+          // Repair still needs the ORIGINAL schema constraint, not a
+          // schema-less retry — otherwise the repair model has just as much
+          // room to drift as the first attempt did.
+          format: options.format,
+        }
+      );
+    });
   }
 }

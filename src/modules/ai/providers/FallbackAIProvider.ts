@@ -1,29 +1,36 @@
-import { OllamaProvider } from "./OllamaProvider";
+import { env } from "@/src/shared/config/env";
 
-export interface ChatMessage {
-  role: "system" | "user" | "assistant";
-  content: string;
+import { OllamaProvider, ChatMessage } from "./OllamaProvider";
+
+export type { ChatMessage };
+
+export interface FallbackGenerateOptions {
+  model: string;
+  fallbackModel?: string;
+  temperature?: number;
+  format?: object;
 }
 
 export class FallbackAIProvider {
-  private readonly providers = [
-    new OllamaProvider("qwen2.5-coder:7b"),
-    new OllamaProvider("llama3.2:1b"),
-  ];
+  private readonly provider = new OllamaProvider(env.OLLAMA_BASE_URL);
 
   async generateResponse(
-    messages: ChatMessage[]
+    messages: ChatMessage[],
+    options: FallbackGenerateOptions
   ): Promise<string> {
+    const candidates = [options.model, options.fallbackModel].filter(
+      (model): model is string => Boolean(model)
+    );
+
     let lastError: unknown;
 
-    for (const provider of this.providers) {
+    for (const model of candidates) {
       try {
-        console.log(
-          `🤖 Requesting ${provider.getModel()}...`
-        );
-
-        const response =
-          await provider.generateResponse(messages);
+        const response = await this.provider.generateResponse(messages, {
+          model,
+          temperature: options.temperature,
+          format: options.format,
+        });
 
         if (!response?.trim()) {
           throw new Error("AI returned empty response");
@@ -31,10 +38,7 @@ export class FallbackAIProvider {
 
         return response;
       } catch (error) {
-        console.warn(
-          `Provider ${provider.getModel()} failed.`,
-          error
-        );
+        console.warn(`Provider ${model} failed.`, error);
 
         lastError = error;
       }

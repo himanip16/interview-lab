@@ -14,11 +14,17 @@ const envSchema = z.object({
   OLLAMA_BASE_URL: z
     .string()
     .url()
-    .default("http://localhost:11434"),
+    .default("http://127.0.0.1:11434"),
 
-  OLLAMA_MODEL: z
-    .string()
-    .default("qwen2.5:7b"),
+  // Per-task model routing. Replaces the old single OLLAMA_MODEL var, which
+  // was defined but never actually read by FallbackAIProvider — every task
+  // was silently hardcoded to qwen2.5-coder:7b / llama3.2:1b regardless of
+  // this file. Each task now has its own model + a shared fallback.
+  OLLAMA_MODEL_INTERVIEWER: z.string().default("qwen3:8b"),
+  OLLAMA_MODEL_SUMMARY: z.string().default("qwen3:8b"),
+  OLLAMA_MODEL_EVALUATION: z.string().default("gemma3:12b"),
+  OLLAMA_MODEL_REPAIR: z.string().default("qwen3:8b"),
+  OLLAMA_FALLBACK_MODEL: z.string().default("llama3.2:1b"),
 
   OPENAI_API_KEY: z
     .string()
@@ -57,7 +63,6 @@ const envSchema = z.object({
     .int()
     .positive()
     .default(30000),
-    AUTH_SECRET: z.string().min(1),
 });
 
 export const env = envSchema.parse(process.env);

@@ -51,58 +51,74 @@ export async function POST(
       }
     );
   } catch (error) {
-    logger.error(
-      {
-        err: error,
-        message:
-          error instanceof Error
-            ? error.message
-            : "Unknown error",
-        stack:
-          error instanceof Error
-            ? error.stack
-            : undefined,
-      },
-      "Failed to process interview message"
-    );
+    
+  console.error("ACTUAL INTERVIEW ERROR:", error);
 
-    if (
-      error instanceof Error &&
-      error.message ===
-        "Interview not found."
-    ) {
-      return NextResponse.json(
-        {
-          error: error.message,
-        },
-        {
-          status: 404,
-        }
-      );
+  return NextResponse.json(
+    {
+      error:
+        error instanceof Error
+          ? error.message
+          : String(error),
+    },
+    {
+      status: 500,
     }
-
-    if (
-      error instanceof Error &&
-      error.message ===
-        "Interview has already been completed."
-    ) {
-      return NextResponse.json(
-        {
-          error: error.message,
-        },
-        {
-          status: 409,
-        }
-      );
-    }
-
-    return NextResponse.json(
-      {
-        error: "Internal server error.",
-      },
-      {
-        status: 500,
-      }
-    );
-  }
+  );
 }
+}
+//     logger.error(
+//       {
+//         err: error,
+//         message:
+//           error instanceof Error
+//             ? error.message
+//             : "Unknown error",
+//         stack:
+//           error instanceof Error
+//             ? error.stack
+//             : undefined,
+//       },
+//       "Failed to process interview message"
+//     );
+
+//     if (
+//       error instanceof Error &&
+//       error.message ===
+//         "Interview not found."
+//     ) {
+//       return NextResponse.json(
+//         {
+//           error: error.message,
+//         },
+//         {
+//           status: 404,
+//         }
+//       );
+//     }
+
+//     if (
+//       error instanceof Error &&
+//       error.message ===
+//         "Interview has already been completed."
+//     ) {
+//       return NextResponse.json(
+//         {
+//           error: error.message,
+//         },
+//         {
+//           status: 409,
+//         }
+//       );
+//     }
+
+//     return NextResponse.json(
+//       {
+//         error: "Internal server error.",
+//       },
+//       {
+//         status: 500,
+//       }
+//     );
+//   }
+// }

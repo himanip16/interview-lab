@@ -6,15 +6,15 @@ export default function Hero() {
   return (
     <section className="flex min-h-[80vh] items-center">
       <div className="max-w-3xl">
-        <p className="mb-4 text-blue-400">
+        <p className="mb-4 text-emerald-400 font-mono text-sm">
           Practice Like Top Tech Companies
         </p>
 
-        <h2 className="text-6xl font-bold leading-tight">
+        <h1 className="text-6xl font-bold leading-tight text-white">
           AI Technical
           <br />
           Interview Platform
-        </h2>
+        </h1>
 
         <p className="mt-8 max-w-xl text-lg leading-8 text-zinc-400">
           Practice realistic technical interviews for
@@ -25,14 +25,14 @@ export default function Hero() {
         <div className="mt-10 flex gap-4">
           <Link
             href="/#interviews"
-            className="rounded-lg bg-blue-600 px-6 py-3 font-medium hover:bg-blue-500"
+            className="rounded-lg bg-white px-6 py-3 font-medium text-black hover:bg-zinc-200 transition-colors"
           >
             Start Interview
           </Link>
 
           <Link
             href="/#interviews"
-            className="rounded-lg border border-zinc-700 px-6 py-3"
+            className="rounded-lg border border-zinc-700 px-6 py-3 text-zinc-300 hover:border-zinc-500 hover:text-white transition-colors"
           >
             Browse Interviews
           </Link>

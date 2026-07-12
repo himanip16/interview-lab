@@ -4,10 +4,20 @@ import {
   Prisma,
 } from "@prisma/client";
 
-import { InterviewRepository } from "../../repositories/InterviewRepository";
-import { InterviewEngine } from "../../engine/InterviewEngine";
-import { InterviewProfileService } from "../../profiles/InterviewProfileService";
 import { ChatMessage } from "@/src/modules/ai/services/AIService";
+
+import { InterviewEngine } from "../../engine/InterviewEngine";
+import { InterviewRepository } from "../../repositories/InterviewRepository";
+import { InterviewProfileService } from "../../profiles/InterviewProfileService";
+
+export interface ProcessInterviewMessageResult {
+  reply: string;
+  phase: string;
+  previousPhase: string;
+  transitioned: boolean;
+  confidence: number;
+  completed: boolean;
+}
 
 export class InterviewMessageService {
   private readonly repository =
@@ -22,7 +32,16 @@ export class InterviewMessageService {
   async processMessage(
     interviewId: string,
     userMessage: string
-  ) {
+  ): Promise<ProcessInterviewMessageResult> {
+    const normalizedMessage =
+      userMessage.trim();
+
+    if (!normalizedMessage) {
+      throw new Error(
+        "Interview message cannot be empty."
+      );
+    }
+
     const interview =
       await this.repository.getById(
         interviewId
@@ -43,36 +62,16 @@ export class InterviewMessageService {
       );
     }
 
-    const conversation = [
-      ...interview.transcript.map(
-        (message) => ({
-          role:
-            message.role ===
-            MessageRole.user
-              ? ("user" as const)
-              : ("assistant" as const),
-
-          content: message.content,
-        })
-      ),
-
-      {
-        role: "user" as const,
-        content: userMessage,
-      },
-    ];
-
     const profile =
       await this.profileService.resolveByTemplateId(
         interview.templateId
       );
 
-    const history: ChatMessage[] = conversation.map(
-      (msg) => ({
-        role: msg.role,
-        content: msg.content,
-      })
-    );
+    const history =
+      this.buildConversationHistory(
+        interview.transcript,
+        normalizedMessage
+      );
 
     const problemDescription =
       interview.problem.description ??
@@ -82,16 +81,23 @@ export class InterviewMessageService {
       interview.startedAt ??
       interview.createdAt;
 
-    // For now, use interview start time as phase start time
-    // TODO: Track actual phase start time in the database
-    const phaseStartedAt = interviewStartedAt;
+    /*
+     * The schema currently has no phaseStartedAt field.
+     *
+     * Until that is persisted, createdAt/startedAt is only a fallback.
+     * See note below — phase timing should eventually be stored in DB.
+     */
+    const phaseStartedAt =
+      interviewStartedAt;
 
     const result =
       await this.engine.processUserMessage({
         profile,
-        currentPhase: interview.currentPhase,
+        currentPhase:
+          interview.currentPhase,
         history,
-        runningSummary: interview.summary,
+        runningSummary:
+          interview.summary,
         problem: problemDescription,
         candidateName: "Candidate",
         interviewDurationMinutes:
@@ -100,52 +106,86 @@ export class InterviewMessageService {
         phaseStartedAt,
       });
 
+    const previousPhase =
+      interview.currentPhase;
+
     const nextPhase =
       result.transition.shouldTransition
         ? result.transition.nextPhase
-        : interview.currentPhase;
+        : previousPhase;
+
+    const status =
+      result.transition.completed
+        ? InterviewStatus.COMPLETED
+        : InterviewStatus.IN_PROGRESS;
+
+    const confidence =
+      result.phaseAssessment?.confidence ??
+      0.5;
 
     const metadata: Prisma.InputJsonValue = {
       phase: nextPhase,
-      previousPhase:
-        interview.currentPhase,
+      previousPhase,
       transitioned:
         result.transition.shouldTransition,
-      confidence:
-        result.phaseAssessment?.confidence ?? 0.5,
+      completed:
+        result.transition.completed,
+      confidence,
       transitionReason:
         result.transition.reason,
+      phaseAssessment:
+        result.phaseAssessment ?? null,
     };
 
     await this.repository.persistTurn({
       interviewId: interview.id,
-      userMessage,
+      userMessage: normalizedMessage,
       assistantMessage: result.reply,
       currentPhase: nextPhase,
-      status:
-        result.transition.reason === "stay" &&
-        !result.transition.shouldTransition &&
-        result.transition.nextPhase === result.transition.currentPhase
-          ? InterviewStatus.COMPLETED
-          : InterviewStatus.IN_PROGRESS,
+      status,
       assistantMetadata: metadata,
     });
 
     return {
       reply: result.reply,
       phase: nextPhase,
-      previousPhase:
-        interview.currentPhase,
+      previousPhase,
       transitioned:
         result.transition.shouldTransition,
-      confidence:
-        result.phaseAssessment?.confidence ?? 0.5,
+      confidence,
       completed:
-        result.transition.reason === "stay" &&
-        !result.transition.shouldTransition &&
-        result.transition.nextPhase === result.transition.currentPhase
-          ? true
-          : false,
+        result.transition.completed,
     };
+  }
+
+  private buildConversationHistory(
+    transcript: Array<{
+      role: MessageRole;
+      content: string;
+    }>,
+    userMessage: string
+  ): ChatMessage[] {
+    const history: ChatMessage[] =
+      transcript
+        .filter(
+          (message) =>
+            message.role === MessageRole.user ||
+            message.role ===
+              MessageRole.assistant
+        )
+        .map((message) => ({
+          role:
+            message.role === MessageRole.user
+              ? "user"
+              : "assistant",
+          content: message.content,
+        }));
+
+    history.push({
+      role: "user",
+      content: userMessage,
+    });
+
+    return history;
   }
 }
