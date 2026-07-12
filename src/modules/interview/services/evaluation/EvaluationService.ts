@@ -1,5 +1,5 @@
-import { prisma } from "src/shared/prisma/client";
-import { AIService } from "../../ai/AIService";
+import { prisma } from "@/shared/prisma/client";
+import { AIService } from "../../../ai/services/AIService";
 import { PromptLoader } from "../../prompt/PromptLoader";
 import { Logger } from "src/shared/logger"
 

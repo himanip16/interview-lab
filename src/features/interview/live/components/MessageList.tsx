@@ -1,6 +1,6 @@
 // components/interview/live/MessageList.tsx
 import React, { useEffect, useRef } from 'react';
-import { Message as MessageType } from '@/src/modules/interview/types/message';
+import { Message as MessageType } from '@/src/features/interview/types/message';
 import Message from './Message';
 
 interface MessageListProps {

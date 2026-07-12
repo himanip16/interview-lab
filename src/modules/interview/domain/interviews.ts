@@ -1,4 +1,4 @@
-import { Interview } from "@/src/modules/interview/types/interview";
+import { Interview } from "@/src/features/interview/types/interview";
 
 export const interviews: Interview[] = [
   {

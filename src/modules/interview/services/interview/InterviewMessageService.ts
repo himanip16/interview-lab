@@ -1,8 +1,9 @@
-import { MessageRole } from "@prisma/client";
 
-import { InterviewRepository } from "../repositories/InterviewRepository";
-import { InterviewEngine } from "../engine/InterviewEngine";
-import { Message } from "@prisma/client";
+
+import { InterviewRepository } from "../../repositories/InterviewRepository";
+import { InterviewEngine } from "../../engine/InterviewEngine";
+import { Message, MessageRole } from "@prisma/client";
+import { ChatMessage } from "@/src/modules/ai/services/AIService";
 
 export class InterviewMessageService {
   private repository = new InterviewRepository();
@@ -24,12 +25,21 @@ export class InterviewMessageService {
       message
     );
 
+    const history: ChatMessage[] = interview.transcript.map(
+  (m: Message): ChatMessage => ({
+    role:
+      m.role === MessageRole.user
+        ? "user"
+        : m.role === MessageRole.assistant
+        ? "assistant"
+        : "system",
+    content: m.content,
+  })
+);
+
     const result = await this.engine.processUserMessage(
       interview.currentPhase as any,
-      interview.transcript.map((m: Message) => ({
-        role: m.role,
-        content: m.content,
-      })),
+      history,
       interview.summary,
       "URL Shortener",
       "Candidate"

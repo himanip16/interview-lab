@@ -1,4 +1,4 @@
-import { Interview } from "@/src/modules/interview/types/interview";
+import { Interview } from "@/src/features/interview/types/interview";
 import Link from "next/link";
 type Props = {
   interview: Interview;

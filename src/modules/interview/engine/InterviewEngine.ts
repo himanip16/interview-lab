@@ -3,7 +3,7 @@
 import { InterviewPhase } from "./InterviewStateMachine";
 import { PromptBuilder } from "./PromptBuilder";
 import { ResponseParser } from "./ResponseParser";
-import { AIService, ChatMessage } from "@/src/modules/ai/AIService";
+import { AIService, ChatMessage } from "@/src/modules/ai/services/AIService";
 import { PromptGuard } from "../guardrails/PromptGuard";
 export class InterviewEngine {
   constructor(

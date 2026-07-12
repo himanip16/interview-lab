@@ -1,5 +1,5 @@
 import { MessageRole } from "@prisma/client";
-import { prisma } from "@/src/shared/prisma/client";
+import { prisma } from "@/shared/prisma/client";
 
 export class MessageRepository {
   async create(

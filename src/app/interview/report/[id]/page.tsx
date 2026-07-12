@@ -1,6 +1,6 @@
-import { prisma } from "src/shared/prisma/client";
-import ScoreCard from "@/src/components/interview/report/ScoreCard";
-import FeedbackCard from "@/src/components/interview/report/FeedbackCard";
+import { prisma } from "@/shared/prisma/client";
+import ScoreCard from "@/src/features/interview/report/components/ScoreCard";
+import FeedbackCard from "@/src/features/interview/report/components/FeedbackCard";
 
 type Props = {
   params: Promise<{

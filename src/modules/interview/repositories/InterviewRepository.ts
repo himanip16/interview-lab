@@ -2,8 +2,8 @@
 
 import {InterviewStatus, MessageRole, Prisma} from "@prisma/client";
 
-import { CreateInterviewInput } from "../types/CreateInterviewInput";
-import { prisma } from "@/src/shared/prisma/client";
+import { CreateInterviewInput } from "../../../features/interview/types/CreateInterviewInput";
+import { prisma } from "@/shared/prisma/client";
 export class InterviewRepository {
 
   async create(data: CreateInterviewInput & {  }) {

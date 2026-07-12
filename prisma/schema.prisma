@@ -20,10 +20,7 @@ model User {
 
 model Interview {
   id String @id @default(cuid())
-
-   
   type InterviewType
-
   difficulty Difficulty
 
   duration Int

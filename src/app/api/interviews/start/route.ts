@@ -4,7 +4,7 @@ import {
   InterviewType,
 } from "@prisma/client";
 
-import { createInterview } from "@/src/modules/interview/services/InterviewFactory";
+import { createInterview } from "@/src/modules/interview/services/interview/InterviewFactory";
 import { InterviewRepository } from "@/src/modules/interview/repositories/InterviewRepository";
 import { TranscriptService } from "@/src/modules/interview/services/TranscriptService";
 

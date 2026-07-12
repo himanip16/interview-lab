@@ -3,10 +3,10 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-import CompanySelector from "@/src/components/interview/setup/CompanySelector";
-import DifficultySelector from "@/src/components/interview/setup/DifficultySelector";
-import DurationSelector from "@/src/components/interview/setup/DurationSelector";
-import SetupCard from "@/src/components/interview/setup/SetupCard";
+import CompanySelector from "@/src/features/interview/setup/components/CompanySelector";
+import DifficultySelector from "@/src/features/interview/setup/components/DifficultySelector";
+import DurationSelector from "@/src/features/interview/setup/components/DurationSelector";
+import SetupCard from "@/src/features/interview/setup/components/SetupCard";
 
 export default function InterviewSetupPage() {
   const router = useRouter();

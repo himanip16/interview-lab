@@ -10,6 +10,7 @@ PROJECT STRUCTURE
 │   └── project_dump.txt
 ├── data
 │   ├── features.ts
+│   ├── prompts
 │   ├── rubrics
 │   │   ├── communication.md
 │   │   ├── missing-components.md
@@ -18,13 +19,16 @@ PROJECT STRUCTURE
 │   └── transcript.txt
 ├── dump_project.sh
 ├── eslint.config.mjs
-├── lib
 ├── next-env.d.ts
 ├── next.config.ts
 ├── package-lock.json
 ├── package.json
 ├── postcss.config.mjs
 ├── prisma
+│   ├── migrations
+│   │   ├── 20260711145437_init
+│   │   │   └── migration.sql
+│   │   └── migration_lock.toml
 │   └── schema.prisma
 ├── prisma.config.ts
 ├── project_dump.txt
@@ -35,24 +39,23 @@ PROJECT STRUCTURE
 │   ├── vercel.svg
 │   └── window.svg
 ├── shared
-│   ├── config
-│   ├── errors
-│   ├── logger
-│   ├── prisma
-│   │   └── migrations
-│   │       ├── 20260710054606_init
-│   │       │   └── migration.sql
-│   │       ├── 20260710093705_add_phase_and_defaults
-│   │       │   └── migration.sql
-│   │       ├── 20260710132539_add_summary
-│   │       │   └── migration.sql
-│   │       ├── 20260710141828_production_schema_update
-│   │       │   └── migration.sql
-│   │       └── migration_lock.toml
-│   ├── tests
-│   └── utils
+│   └── prisma
+│       ├── client.ts
+│       └── migrations
+│           ├── 20260710054606_init
+│           │   └── migration.sql
+│           ├── 20260710093705_add_phase_and_defaults
+│           │   └── migration.sql
+│           ├── 20260710132539_add_summary
+│           │   └── migration.sql
+│           ├── 20260710141828_production_schema_update
+│           │   └── migration.sql
+│           └── migration_lock.toml
 ├── src
 │   ├── app
+│   │   ├── (marketing)
+│   │   │   ├── layout.tsx
+│   │   │   └── page.tsx
 │   │   ├── api
 │   │   │   ├── interviews
 │   │   │   │   ├── [id]
@@ -70,7 +73,6 @@ PROJECT STRUCTURE
 │   │   │   │       └── route.ts
 │   │   │   └── judge
 │   │   │       └── route.ts
-│   │   ├── favicon.ico
 │   │   ├── globals.css
 │   │   ├── interview
 │   │   │   ├── live
@@ -80,42 +82,14 @@ PROJECT STRUCTURE
 │   │   │   │   └── [id]
 │   │   │   │       └── page.tsx
 │   │   │   └── setup
-│   │   │       ├── InterviewSetup.tsx
 │   │   │       └── page.tsx
-│   │   ├── layout.tsx
-│   │   └── marketing
-│   │       ├── features
-│   │       └── page.tsx
+│   │   └── layout.tsx
 │   ├── components
 │   │   ├── catalog
 │   │   │   ├── InterviewCard.tsx
 │   │   │   └── InterviewCatalog.tsx
 │   │   ├── conversation
 │   │   ├── interview
-│   │   │   ├── live
-│   │   │   │   ├── Chat.tsx
-│   │   │   │   ├── ChatInput.tsx
-│   │   │   │   ├── Conversation.tsx
-│   │   │   │   ├── InterviewHeader.tsx
-│   │   │   │   ├── LiveInterview.tsx
-│   │   │   │   ├── Message.tsx
-│   │   │   │   ├── MessageList.tsx
-│   │   │   │   ├── Sidebar.tsx
-│   │   │   │   └── Timer.tsx
-│   │   │   ├── report
-│   │   │   │   ├── FeedbackCard.tsx
-│   │   │   │   ├── ScoreCard.tsx
-│   │   │   │   └── Timeline.tsx
-│   │   │   └── setup
-│   │   │       ├── CompanySelector.tsx
-│   │   │       ├── DifficultySelector.tsx
-│   │   │       ├── DurationSelector.tsx
-│   │   │       ├── InterviewTypeSelector.tsx
-│   │   │       └── SetupCard.tsx
-│   │   ├── landing
-│   │   │   ├── FeatureCard.tsx
-│   │   │   ├── Features.tsx
-│   │   │   └── Hero.tsx
 │   │   ├── layout
 │   │   │   ├── Navbar.tsx
 │   │   │   └── PageContainer.tsx
@@ -123,23 +97,75 @@ PROJECT STRUCTURE
 │   │   └── ui
 │   │       ├── Button.tsx
 │   │       ├── Dialog.tsx
-│   │       └── Input.tsx
+│   │       ├── Input.tsx
+│   │       └── Select.tsx
 │   ├── features
-│   │   └── interview
-│   │       ├── api
-│   │       ├── components
-│   │       ├── hooks
-│   │       ├── store
-│   │       └── types
+│   │   ├── interview
+│   │   │   ├── api
+│   │   │   │   └── interviewApi.ts
+│   │   │   ├── components
+│   │   │   ├── hooks
+│   │   │   ├── live
+│   │   │   │   ├── components
+│   │   │   │   │   ├── Chat.tsx
+│   │   │   │   │   ├── ChatInput.tsx
+│   │   │   │   │   ├── Conversation.tsx
+│   │   │   │   │   ├── InterviewHeader.tsx
+│   │   │   │   │   ├── LiveInterview.tsx
+│   │   │   │   │   ├── Message.tsx
+│   │   │   │   │   ├── MessageList.tsx
+│   │   │   │   │   ├── Sidebar.tsx
+│   │   │   │   │   └── Timer.tsx
+│   │   │   │   ├── hooks
+│   │   │   │   │   ├── useInterview.ts
+│   │   │   │   │   ├── useMessages.ts
+│   │   │   │   │   └── useTimer.ts
+│   │   │   │   ├── index.ts
+│   │   │   │   └── store
+│   │   │   │       └── interviewStore.ts
+│   │   │   ├── report
+│   │   │   │   ├── components
+│   │   │   │   │   ├── FeedbackCard.tsx
+│   │   │   │   │   ├── ScoreCard.tsx
+│   │   │   │   │   └── Timeline.tsx
+│   │   │   │   ├── hooks
+│   │   │   │   │   └── useReport.ts
+│   │   │   │   └── index.ts
+│   │   │   ├── setup
+│   │   │   │   ├── components
+│   │   │   │   │   ├── CompanySelector.tsx
+│   │   │   │   │   ├── DifficultySelector.tsx
+│   │   │   │   │   ├── DurationSelector.tsx
+│   │   │   │   │   ├── InterviewTypeSelector.tsx
+│   │   │   │   │   └── SetupCard.tsx
+│   │   │   │   ├── hooks
+│   │   │   │   │   └── useInterviewSetup.ts
+│   │   │   │   └── index.ts
+│   │   │   └── types
+│   │   │       ├── CreateInterviewInput.ts
+│   │   │       ├── InterviewState.ts
+│   │   │       ├── TranscriptMessage.ts
+│   │   │       ├── interview.ts
+│   │   │       └── message.ts
+│   │   ├── landing
+│   │   │   ├── components
+│   │   │   │   ├── CTA.tsx
+│   │   │   │   ├── FeatureCard.tsx
+│   │   │   │   ├── Features.tsx
+│   │   │   │   └── Hero.tsx
+│   │   │   └── index.ts
+│   │   └── shared
 │   ├── modules
 │   │   ├── ai
 │   │   │   ├── AIProvider.ts
-│   │   │   ├── AIService.ts
+│   │   │   ├── parsers
 │   │   │   ├── providers
 │   │   │   │   ├── ClaudeProvider.ts
 │   │   │   │   ├── FallbackAIProvider.ts
 │   │   │   │   ├── OllamaProvider.ts
 │   │   │   │   └── OpenAIProvider.ts
+│   │   │   ├── services
+│   │   │   │   └── AIService.ts
 │   │   │   └── utils
 │   │   │       └── ValidatedJSONParser.ts
 │   │   ├── analytics
@@ -148,84 +174,72 @@ PROJECT STRUCTURE
 │   │   │   └── errors
 │   │   │       └── ApplicationErrors.ts
 │   │   ├── container.ts
-│   │   ├── evaluation
-│   │   ├── interview
-│   │   │   ├── application
-│   │   │   ├── domain
-│   │   │   │   └── interviews.ts
-│   │   │   ├── dto
-│   │   │   ├── engine
-│   │   │   │   ├── InterviewContext.ts
-│   │   │   │   ├── InterviewEngine.ts
-│   │   │   │   ├── InterviewStateMachine.ts
-│   │   │   │   ├── PhaseManager.ts
-│   │   │   │   ├── PromptBuilder.ts
-│   │   │   │   ├── ResponseParser.ts
-│   │   │   │   └── StateUpdater.ts
-│   │   │   ├── evaluators
-│   │   │   │   ├── ArchitectureEvaluator.ts
-│   │   │   │   ├── CommunicationEvaluator.ts
-│   │   │   │   ├── RequirementEvaluator.ts
-│   │   │   │   └── TechnicalEvaluator.ts
-│   │   │   ├── guardrails
-│   │   │   │   └── PromptGuard.ts
-│   │   │   ├── infrastructure
-│   │   │   ├── interfaces
-│   │   │   ├── models
-│   │   │   │   ├── Evaluation.ts
-│   │   │   │   ├── Interview.ts
-│   │   │   │   ├── InterviewContext.ts
-│   │   │   │   ├── Message.ts
-│   │   │   │   ├── PhaseResult.ts
-│   │   │   │   └── Prompt.ts
-│   │   │   ├── phases
-│   │   │   ├── prompt
-│   │   │   │   ├── PromptLoader.ts
-│   │   │   │   ├── PromptRenderer.ts
-│   │   │   │   ├── requirements.ts
-│   │   │   │   └── templates
-│   │   │   │       ├── clarification.md
-│   │   │   │       ├── evaluation.md
-│   │   │   │       ├── intro.md
-│   │   │   │       ├── judge.md
-│   │   │   │       ├── judge.ts
-│   │   │   │       └── scaling.md
-│   │   │   ├── repositories
-│   │   │   │   ├── InterviewRepository.ts
-│   │   │   │   └── MessageRepository.ts
-│   │   │   ├── services
-│   │   │   │   ├── EvaluationService.ts
-│   │   │   │   ├── IncrementalSummaryService.ts
-│   │   │   │   ├── InterviewFactory.ts
-│   │   │   │   ├── InterviewMessageService
-│   │   │   │   ├── SummaryService.ts
-│   │   │   │   └── TranscriptService.ts
-│   │   │   ├── state
-│   │   │   ├── templates
-│   │   │   ├── types
-│   │   │   │   ├── CreateInterviewInput.ts
-│   │   │   │   ├── InterviewState.ts
-│   │   │   │   ├── TranscriptMessage.ts
-│   │   │   │   ├── index.ts
-│   │   │   │   ├── interview.ts
-│   │   │   │   └── message.ts
-│   │   │   └── types.ts
-│   │   ├── prompt
-│   │   │   └── PromptLoader.ts
-│   │   └── workspace
+│   │   └── interview
+│   │       ├── application
+│   │       ├── domain
+│   │       │   └── interviews.ts
+│   │       ├── dto
+│   │       ├── engine
+│   │       │   ├── InterviewContext.ts
+│   │       │   ├── InterviewEngine.ts
+│   │       │   ├── InterviewStateMachine.ts
+│   │       │   ├── PhaseManager.ts
+│   │       │   ├── PromptBuilder.ts
+│   │       │   ├── ResponseParser.ts
+│   │       │   ├── StateUpdater.ts
+│   │       │   ├── context
+│   │       │   ├── parser
+│   │       │   ├── pipeline
+│   │       │   └── state
+│   │       ├── evaluators
+│   │       │   ├── ArchitectureEvaluator.ts
+│   │       │   ├── CommunicationEvaluator.ts
+│   │       │   ├── RequirementEvaluator.ts
+│   │       │   └── TechnicalEvaluator.ts
+│   │       ├── guardrails
+│   │       │   └── PromptGuard.ts
+│   │       ├── models
+│   │       │   ├── Evaluation.ts
+│   │       │   ├── Interview.ts
+│   │       │   ├── Message.ts
+│   │       │   └── PhaseResult.ts
+│   │       ├── phases
+│   │       ├── prompt
+│   │       │   ├── PromptLoader.ts
+│   │       │   ├── PromptRenderer.ts
+│   │       │   ├── requirements.ts
+│   │       │   └── templates
+│   │       │       ├── clarification.md
+│   │       │       ├── evaluation.md
+│   │       │       ├── intro.md
+│   │       │       ├── judge.md
+│   │       │       ├── judge.ts
+│   │       │       └── scaling.md
+│   │       ├── repositories
+│   │       │   ├── InterviewRepository.ts
+│   │       │   └── MessageRepository.ts
+│   │       ├── services
+│   │       │   ├── EvaluationService.ts
+│   │       │   ├── IncrementalSummaryService.ts
+│   │       │   ├── InterviewFactory.ts
+│   │       │   ├── InterviewMessageService.ts
+│   │       │   ├── SummaryService.ts
+│   │       │   ├── TranscriptService.ts
+│   │       │   ├── evaluation
+│   │       │   ├── interview
+│   │       │   └── summary
+│   │       └── types.ts
 │   └── shared
 │       ├── config
 │       │   ├── constants.ts
 │       │   └── env.ts
-│       ├── logger
-│       │   └── logger.ts
-│       └── prisma
-│           └── client.ts
+│       └── logger
+│           └── logger.ts
 ├── tests
 ├── tsconfig.json
 └── tsconfig.tsbuildinfo
 
-90 directories, 134 files
+94 directories, 144 files
 
 FILE CONTENTS
 
@@ -258,8 +272,6 @@ model User {
 
   email String @unique
 
-  interviews Interview[]
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -268,9 +280,7 @@ model User {
 model Interview {
   id String @id @default(cuid())
 
-  userId String
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
+   
   type InterviewType
 
   difficulty Difficulty
@@ -295,8 +305,6 @@ model Interview {
 
   updatedAt DateTime @updatedAt
 
-
-  @@index([userId])
   @@index([createdAt])
   @@index([status])
 }
@@ -369,6 +377,23 @@ enum Difficulty {
 enum MessageRole {
   assistant
   user
+}
+================================================
+FILE: ./shared/prisma/client.ts
+================================================
+import { PrismaClient } from "@prisma/client";
+
+const globalForPrisma =
+  globalThis as unknown as {
+    prisma: PrismaClient | undefined;
+  };
+
+export const prisma =
+  globalForPrisma.prisma ??
+  new PrismaClient();
+
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.prisma = prisma;
 }
 ================================================
 FILE: ./prisma.config.ts
@@ -478,6 +503,7 @@ FILE: ./package.json
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
+    "pino-pretty": "^13.1.3",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
@@ -638,12 +664,31 @@ const nextConfig: NextConfig = {
 export default nextConfig;
 
 ================================================
-FILE: ./src/app/interview/setup/InterviewSetup.tsx
+FILE: ./src/app/(marketing)/layout.tsx
 ================================================
-"use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+================================================
+FILE: ./src/app/(marketing)/page.tsx
+================================================
+import Hero from "@/src/components/landing/Hero";
+import Features from "@/src/components/landing/Features";
+import InterviewCatalog from "@/src/components/catalog/InterviewCatalog";
+import Navbar from "@/src/components/layout/Navbar";
+import PageContainer from "@/src/components/layout/PageContainer";
+
+export default function Home() {
+  return (
+    <PageContainer>
+      <Navbar />
+
+      <Hero />
+
+      <InterviewCatalog />
+
+      <Features />
+    </PageContainer>
+  );
+}
 ================================================
 FILE: ./src/app/interview/setup/page.tsx
 ================================================
@@ -666,37 +711,73 @@ export default function InterviewSetupPage() {
   const [difficulty, setDifficulty] = useState("Medium");
   const [duration, setDuration] = useState(45);
   const [company, setCompany] = useState("Google");
+  const [loading, setLoading] = useState(false);
 
   async function handleStartInterview() {
-    console.log("Sending request to /api/interview/start"); // Add this line
-  
-    const response = await fetch("/api/interview/start", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    try {
+      setLoading(true);
+
+      const payload = {
         type: interviewType,
         difficulty,
         duration,
         company,
-      }),
-    });
+      };
 
-if (!response.ok) {
-  throw new Error(await response.text());
+      console.log("Request payload:", payload);
+
+      const response = await fetch("/api/interviews/start", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    type: interviewType,
+    difficulty,
+    duration,
+    company,
+  }),
+});
+
+      const text = await response.text();
+
+      console.log("Status:", response.status);
+      console.log("Response:", text);
+
+      if (!response.ok) {
+  alert(text);
+  console.error(text);
+  return;
 }
-console.log(response.status);
 
-    const interview = await response.json();
+      if (text.startsWith("<!DOCTYPE") || text.startsWith("<html")) {
+  console.error("Server returned HTML instead of JSON");
+  console.error(text);
+  return;
+}
 
-    router.push(`/interview/live/${interview.id}`);
+const interview = JSON.parse(text);
+
+router.push(`/interview/live/${interview.id}`);
+    } catch (error) {
+      console.error(error);
+
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Unknown error"
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
     <main className="min-h-screen bg-zinc-950 px-6 py-12 text-white">
       <SetupCard>
-        <h1 className="text-4xl font-bold">Interview Setup</h1>
+        <h1 className="text-4xl font-bold">
+          Interview Setup
+        </h1>
 
         <p className="mt-3 text-zinc-400">
           Configure your interview before starting.
@@ -728,10 +809,12 @@ console.log(response.status);
         />
 
         <button
+          type="button"
+          disabled={loading}
           onClick={handleStartInterview}
-          className="mt-10 w-full rounded-lg bg-blue-600 py-4 text-lg font-semibold hover:bg-blue-500"
+          className="mt-10 w-full rounded-lg bg-blue-600 py-4 text-lg font-semibold hover:bg-blue-500 disabled:opacity-50"
         >
-          Start Interview
+          {loading ? "Starting..." : "Start Interview"}
         </button>
       </SetupCard>
     </main>
@@ -741,8 +824,8 @@ console.log(response.status);
 FILE: ./src/app/interview/live/[id]/page.tsx
 ================================================
 // app/interview/live/[id]/page.tsx
-import { prisma } from "@/lib/prisma";
-import LiveInterview from "@/src/components/interview/live/LiveInterview";
+import { prisma } from "@/shared/prisma/client";
+import LiveInterview from "@/src/features/interview/live/components/LiveInterview";
 import { notFound } from "next/navigation";
 
 type Props = {
@@ -777,7 +860,7 @@ export default async function Page({ params }: Props) {
 ================================================
 FILE: ./src/app/interview/report/[id]/page.tsx
 ================================================
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/shared/prisma/client";
 import ScoreCard from "@/src/components/interview/report/ScoreCard";
 import FeedbackCard from "@/src/components/interview/report/FeedbackCard";
 
@@ -888,36 +971,38 @@ export async function POST() {
 FILE: ./src/app/api/interviews/start/route.ts
 ================================================
 import { NextResponse } from "next/server";
+import {
+  Difficulty,
+  InterviewType,
+} from "@prisma/client";
 
 import { createInterview } from "@/src/modules/interview/services/InterviewFactory";
 import { InterviewRepository } from "@/src/modules/interview/repositories/InterviewRepository";
 import { TranscriptService } from "@/src/modules/interview/services/TranscriptService";
-import logger from "@/lib/logger";
 
+const interviewTypeMap: Record<string, InterviewType> = {
+  hld: InterviewType.HLD,
+  lld: InterviewType.LLD,
+};
 
-export async function POST(
-  request: Request
-) {
+const difficultyMap: Record<string, Difficulty> = {
+  Easy: Difficulty.EASY,
+  Medium: Difficulty.MEDIUM,
+  Hard: Difficulty.HARD,
+};
+
+export async function POST(request: Request) {
   try {
-
     const body = await request.json();
 
     const {
-      userId,
       type,
       difficulty,
       duration,
       company,
     } = body;
 
-
-    if (
-      !userId ||
-      !type ||
-      !difficulty ||
-      !duration ||
-      !company
-    ) {
+    if (!type || !difficulty || !duration || !company) {
       return NextResponse.json(
         {
           error: "Missing required fields.",
@@ -928,34 +1013,51 @@ export async function POST(
       );
     }
 
+    const interviewType = interviewTypeMap[type];
+    const interviewDifficulty = difficultyMap[difficulty];
 
-    const interview =
-      createInterview({
-        userId,
-        type,
-        difficulty,
-        duration,
-        company,
-      });
+    if (!interviewType) {
+      return NextResponse.json(
+        {
+          error: "Invalid interview type.",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
 
+    if (!interviewDifficulty) {
+      return NextResponse.json(
+        {
+          error: "Invalid difficulty.",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
 
-    const repository =
-      new InterviewRepository();
+    const interview = createInterview({
+  
+      type: interviewType,
+      difficulty: interviewDifficulty,
+      duration,
+      company,
+    });
 
+    const repository = new InterviewRepository();
 
     const savedInterview =
       await repository.create(interview);
 
-
     const transcriptService =
       new TranscriptService();
-
 
     await transcriptService.addAssistantMessage(
       savedInterview.id,
       "Welcome! Today we'll design a URL Shortener. Start by asking clarifying questions."
     );
-
 
     return NextResponse.json(
       {
@@ -965,24 +1067,18 @@ export async function POST(
         status: 201,
       }
     );
-
-
-  } catch(error) {
-
-    logger.error(
-      {
-        error,
-      },
-      "Failed to start interview"
-    );
-
+  } catch (error) {
+    console.error(error);
 
     return NextResponse.json(
       {
-        error: "Failed to start interview.",
+        error:
+          error instanceof Error
+            ? error.message
+            : String(error),
       },
       {
-        status:500,
+        status: 500,
       }
     );
   }
@@ -1034,26 +1130,36 @@ FILE: ./src/app/api/interviews/route.ts
 FILE: ./src/app/api/interviews/[id]/message/route.ts
 ================================================
 import { NextResponse } from "next/server";
+import logger from "@/src/shared/logger/logger";
 
-import { InterviewMessageService } from "@/modules/interview/services/InterviewMessageService";
-import logger from "@/lib/logger";
+import { InterviewMessageService } from "@/src/modules/interview/services/InterviewMessageService";
 
 
 export async function POST(
-  req: Request
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  
 
   try {
+    const { id } = await params;
 
     const body = await req.json();
+    const { message } = body;
+    console.log({
+  params: await params,
+  body,
+});
 
-    const {
-      interviewId,
-      message,
-    } = body;
+    if (!message?.trim()) {
+    return NextResponse.json(
+      { error: "Invalid request" },
+      { status: 400 }
+    );
+  }
 
 
-    if (!interviewId || !message?.trim()) {
+    if (!id || !message?.trim()) {
 
       return NextResponse.json(
         {
@@ -1072,7 +1178,7 @@ export async function POST(
 
     const result =
       await service.processMessage(
-        interviewId,
+        id,
         message
       );
 
@@ -1088,12 +1194,21 @@ export async function POST(
   } catch(error) {
 
 
-    logger.error(
-      {
-        error,
-      },
-      "Failed to process interview message"
-    );
+    if (error instanceof Error) {
+  logger.error(
+    {
+      err: error,
+      message: error.message,
+      stack: error.stack,
+    },
+    "Failed to process interview message"
+  );
+} else {
+  logger.error(
+    { error },
+    "Failed to process interview message"
+  );
+}
 
 
     return NextResponse.json(
@@ -1113,7 +1228,7 @@ FILE: ./src/app/api/interviews/[id]/route.ts
 import { NextResponse } from "next/server";
 
 import { InterviewRepository } from "@/src/modules/interview/repositories/InterviewRepository";
-import logger from "@/lib/logger";
+import logger from "@/src/shared/logger/logger";
 
 type Props = {
   params: Promise<{
@@ -1170,13 +1285,21 @@ export async function GET({ params }: Props) {
     );
 
   } catch (error) {
-    logger.error(
-      {
-        error,
-        interviewId: id,
-      },
-      "Failed to fetch interview"
-    );
+    if (error instanceof Error) {
+  logger.error(
+    {
+      err: error,
+      message: error.message,
+      stack: error.stack,
+    },
+    "Failed to process interview message"
+  );
+} else {
+  logger.error(
+    { error },
+    "Failed to process interview message"
+  );
+}
 
     return NextResponse.json(
       {
@@ -1195,7 +1318,7 @@ import { NextResponse } from "next/server";
 
 import { InterviewRepository } from "@/src/modules/interview/repositories/InterviewRepository";
 import { EvaluationService } from "@/src/modules/interview/services/EvaluationService";
-import logger from "@/lib/logger";
+import logger from "@/src/shared/logger/logger";
 import { InterviewStatus } from "@prisma/client";
 
 
@@ -1271,12 +1394,21 @@ export async function POST(
 
   } catch(error) {
 
-    logger.error(
-      {
-        error,
-      },
-      "Failed to finish interview"
-    );
+    if (error instanceof Error) {
+  logger.error(
+    {
+      err: error,
+      message: error.message,
+      stack: error.stack,
+    },
+    "Failed to process interview message"
+  );
+} else {
+  logger.error(
+    { error },
+    "Failed to process interview message"
+  );
+}
 
 
     return NextResponse.json(
@@ -1293,28 +1425,6 @@ export async function POST(
 FILE: ./src/app/api/interviews/[id]/report/route.ts
 ================================================
 
-================================================
-FILE: ./src/app/marketing/page.tsx
-================================================
-import Hero from "@/src/components/landing/Hero";
-import Features from "@/src/components/landing/Features";
-import InterviewCatalog from "@/src/components/catalog/InterviewCatalog";
-import Navbar from "@/src/components/layout/Navbar";
-import PageContainer from "@/src/components/layout/PageContainer";
-
-export default function Home() {
-  return (
-    <PageContainer>
-      <Navbar />
-
-      <Hero />
-
-      <InterviewCatalog />
-
-      <Features />
-    </PageContainer>
-  );
-}
 ================================================
 FILE: ./src/app/globals.css
 ================================================
@@ -1362,333 +1472,7 @@ button {
   cursor: pointer;
 }
 ================================================
-FILE: ./src/shared/logger/logger.ts
-================================================
-import pino from "pino";
-
-const logger = pino({
-  level: process.env.LOG_LEVEL || "info",
-
-  base: {
-    service: "ai-system-design-interviewer",
-  },
-
-  ...(process.env.NODE_ENV !== "production" && {
-    transport: {
-      target: "pino-pretty",
-      options: {
-        colorize: true,
-      },
-    },
-  }),
-});
-
-export default logger;
-================================================
-FILE: ./src/shared/config/constants.ts
-================================================
-import { env } from "./env";
-
-export const MODEL_NAME = env.OPENAI_MODEL;
-
-export const TEMPERATURE =
-  env.MODEL_TEMPERATURE;
-
-export const MAX_OUTPUT_TOKENS =
-  env.MAX_OUTPUT_TOKENS;
-
-export const REQUEST_TIMEOUT_MS =
-  env.REQUEST_TIMEOUT_MS;
-================================================
-FILE: ./src/shared/config/env.ts
-================================================
-import { z } from "zod";
-
-const envSchema = z.object({
-  NODE_ENV: z
-    .enum(["development", "test", "production"])
-    .default("development"),
-
-  DATABASE_URL: z.string().url(),
-
-  OPENAI_API_KEY: z.string().min(1),
-
-  OPENAI_MODEL: z
-    .string()
-    .default("gpt-5.5"),
-
-  LOG_LEVEL: z
-    .enum([
-      "fatal",
-      "error",
-      "warn",
-      "info",
-      "debug",
-      "trace",
-      "silent",
-    ])
-    .default("info"),
-
-  MODEL_TEMPERATURE: z.coerce
-    .number()
-    .min(0)
-    .max(2)
-    .default(0.5),
-
-  MAX_OUTPUT_TOKENS: z.coerce
-    .number()
-    .int()
-    .positive()
-    .default(512),
-
-  REQUEST_TIMEOUT_MS: z.coerce
-    .number()
-    .int()
-    .positive()
-    .default(30000),
-});
-
-export const env = envSchema.parse(process.env);
-
-export type Env = z.infer<typeof envSchema>;
-================================================
-FILE: ./src/shared/prisma/client.ts
-================================================
-import { PrismaClient } from "@prisma/client";
-
-const globalForPrisma =
-  globalThis as unknown as {
-    prisma: PrismaClient | undefined;
-  };
-
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient();
-
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
-}
-================================================
-FILE: ./src/components/ui/Dialog.tsx
-================================================
-"use client";
-
-import * as React from "react";
-import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
-
-function cn(...inputs: Parameters<typeof clsx>) {
-  return twMerge(clsx(inputs));
-}
-
-const Dialog = DialogPrimitive.Root;
-
-const DialogTrigger = DialogPrimitive.Trigger;
-
-const DialogPortal = DialogPrimitive.Portal;
-
-const DialogClose = DialogPrimitive.Close;
-
-const DialogOverlay = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Overlay>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
->(({ className, ...props }, ref) => (
-  <DialogPrimitive.Overlay
-    ref={ref}
-    className={cn(
-      "fixed inset-0 z-50 bg-black/50 backdrop-blur-sm",
-      "data-[state=open]:animate-in data-[state=closed]:animate-out",
-      className
-    )}
-    {...props}
-  />
-));
-
-DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
-
-const DialogContent = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
->(({ className, children, ...props }, ref) => (
-  <DialogPortal>
-    <DialogOverlay />
-
-    <DialogPrimitive.Content
-      ref={ref}
-      className={cn(
-        "fixed left-1/2 top-1/2 z-50 w-[95vw] max-w-lg",
-        "-translate-x-1/2 -translate-y-1/2",
-        "rounded-2xl border border-zinc-200 bg-white p-6 shadow-xl",
-        "dark:border-zinc-800 dark:bg-zinc-900",
-        "focus:outline-none",
-        className
-      )}
-      {...props}
-    >
-      {children}
-    </DialogPrimitive.Content>
-  </DialogPortal>
-));
-
-DialogContent.displayName = DialogPrimitive.Content.displayName;
-
-function DialogHeader({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
-  return (
-    <div
-      className={cn("flex flex-col space-y-2", className)}
-      {...props}
-    />
-  );
-}
-
-function DialogFooter({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
-  return (
-    <div
-      className={cn(
-        "mt-6 flex justify-end gap-2",
-        className
-      )}
-      {...props}
-    />
-  );
-}
-
-const DialogTitle = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Title>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
->(({ className, ...props }, ref) => (
-  <DialogPrimitive.Title
-    ref={ref}
-    className={cn(
-      "text-lg font-semibold text-zinc-900 dark:text-zinc-100",
-      className
-    )}
-    {...props}
-  />
-));
-
-DialogTitle.displayName = DialogPrimitive.Title.displayName;
-
-const DialogDescription = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Description>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
->(({ className, ...props }, ref) => (
-  <DialogPrimitive.Description
-    ref={ref}
-    className={cn(
-      "text-sm text-zinc-600 dark:text-zinc-400",
-      className
-    )}
-    {...props}
-  />
-));
-
-DialogDescription.displayName =
-  DialogPrimitive.Description.displayName;
-
-export {
-  Dialog,
-  DialogTrigger,
-  DialogPortal,
-  DialogClose,
-  DialogOverlay,
-  DialogContent,
-  DialogHeader,
-  DialogFooter,
-  DialogTitle,
-  DialogDescription,
-};
-================================================
-FILE: ./src/components/ui/Button.tsx
-================================================
-import * as React from "react";
-import { clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
-
-interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "outline";
-}
-
-function cn(...inputs: Parameters<typeof clsx>) {
-  return twMerge(clsx(inputs));
-}
-
-export const Button = React.forwardRef<
-  HTMLButtonElement,
-  ButtonProps
->(
-  (
-    {
-      children,
-      variant = "primary",
-      className,
-      type = "button",
-      ...props
-    },
-    ref
-  ) => {
-    const baseStyles =
-      "px-4 py-2 rounded-md font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
-
-    const variants = {
-      primary:
-        "bg-blue-600 text-white hover:bg-blue-700",
-      secondary:
-        "bg-gray-200 text-gray-800 hover:bg-gray-300",
-      outline:
-        "border border-gray-300 bg-transparent hover:bg-gray-50",
-    };
-
-    return (
-      <button
-        ref={ref}
-        type={type}
-        className={cn(
-          baseStyles,
-          variants[variant],
-          className
-        )}
-        {...props}
-      >
-        {children}
-      </button>
-    );
-  }
-);
-
-Button.displayName = "Button";
-================================================
-FILE: ./src/components/ui/Input.tsx
-================================================
-
-
-// components/ui/Input.tsx
-import React from "react";
-
-export const Input = ({ className = "", ...props }: React.InputHTMLAttributes<HTMLInputElement>) => {
-  return (
-    <input
-      className={`
-        flex h-10 w-full rounded-md border border-gray-300 
-        bg-white px-3 py-2 text-sm text-black 
-        placeholder:text-gray-500 focus:outline-none 
-        focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed 
-        disabled:opacity-50 ${className}
-      `}
-      {...props}
-    />
-  );
-};
-================================================
-FILE: ./src/components/landing/Hero.tsx
+FILE: ./src/features/landing/components/Hero.tsx
 ================================================
 "use client";
 
@@ -1733,7 +1517,7 @@ export default function Hero() {
   );
 }
 ================================================
-FILE: ./src/components/landing/Features.tsx
+FILE: ./src/features/landing/components/Features.tsx
 ================================================
 import FeatureCard from "./FeatureCard";
 import { features } from "@/data/features";
@@ -1764,7 +1548,11 @@ export default function Features() {
   );
 }
 ================================================
-FILE: ./src/components/landing/FeatureCard.tsx
+FILE: ./src/features/landing/components/CTA.tsx
+================================================
+
+================================================
+FILE: ./src/features/landing/components/FeatureCard.tsx
 ================================================
 import type { FC } from "react";
 
@@ -1790,127 +1578,80 @@ const FeatureCard: FC<Props> = ({
 
 export default FeatureCard;
 ================================================
-FILE: ./src/components/layout/Navbar.tsx
+FILE: ./src/features/landing/index.ts
 ================================================
-import Link from "next/link";
+export * from "../interview/types/CreateInterviewInput";
+export * from "../interview/types/InterviewState";
+export * from "../interview/types/TranscriptMessage";
+================================================
+FILE: ./src/features/interview/types/CreateInterviewInput.ts
+================================================
+import { Difficulty, InterviewType } from "@prisma/client";
 
-export default function Navbar() {
-  return (
-    <nav className="flex items-center justify-between py-6">
+export interface CreateInterviewInput {
 
-      <Link
-        href="/"
-        className="text-xl font-bold"
-      >
-        AI Interviewer
-      </Link>
+  type: InterviewType;
 
+  difficulty: Difficulty;
 
-      <div className="flex gap-6 text-sm text-zinc-400">
+  duration: number;
 
-        <Link href="/interview/setup">
-          Interviews
-        </Link>
-
-        <Link href="/analytics">
-          Analytics
-        </Link>
-
-      </div>
-
-    </nav>
-  );
+  company: string;
 }
 ================================================
-FILE: ./src/components/layout/PageContainer.tsx
+FILE: ./src/features/interview/types/TranscriptMessage.ts
 ================================================
-type Props = {
-  children: React.ReactNode;
+export interface TranscriptMessage {
+  role: "assistant" | "user";
+  content: string;
+}
+================================================
+FILE: ./src/features/interview/types/InterviewState.ts
+================================================
+import { InterviewStatus } from "@prisma/client";
+import { TranscriptMessage } from "./TranscriptMessage";
+
+export interface InterviewState {
+  id: string;
+
+  type: string;
+  difficulty: string;
+  duration: number;
+  company: string;
+
+  status: InterviewStatus;
+
+  currentPhase: string;
+
+  summary: string;
+
+  createdAt: Date;
+  updatedAt: Date;
+
+  transcript: TranscriptMessage[];
+}
+================================================
+FILE: ./src/features/interview/types/message.ts
+================================================
+// types/message.ts
+export interface Message {
+  id?: string;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  createdAt?: Date;
+}
+================================================
+FILE: ./src/features/interview/types/interview.ts
+================================================
+export type Interview = {
+  id: string;
+  title: string;
+  description: string;
+  duration: number;
+  difficulty: "Easy" | "Medium" | "Hard";
 };
-
-export default function PageContainer({
-  children,
-}: Props) {
-  return (
-    <main className="min-h-screen bg-zinc-950 px-6 text-white">
-      {children}
-    </main>
-  );
-}
 ================================================
-FILE: ./src/components/catalog/InterviewCard.tsx
-================================================
-import { Interview } from "@/src/modules/interview/types/interview";
-import Link from "next/link";
-type Props = {
-  interview: Interview;
-};
-
-export default function InterviewCard({
-  interview,
-}: Props) {
-  return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-6 transition hover:border-blue-500">
-
-      <h3 className="text-xl font-semibold">
-        {interview.title}
-      </h3>
-
-      <p className="mt-2 text-sm text-zinc-400">
-        {interview.description}
-      </p>
-
-      <div className="mt-6 flex items-center justify-between">
-
-        <span className="text-sm text-zinc-500">
-          {interview.duration} min • {interview.difficulty}
-        </span>
-
-        <Link
-  href={`/interview/setup?type=${interview.id}`}
-  className="rounded-lg bg-blue-600 px-4 py-2 text-sm hover:bg-blue-500"
->
-  Start →
-</Link>
-      </div>
-
-    </div>
-  );
-}
-================================================
-FILE: ./src/components/catalog/InterviewCatalog.tsx
-================================================
-import InterviewCard from "./InterviewCard";
-import { interviews } from "@/src/modules/interview/domain/interviews";
-
-export default function InterviewCatalog() {
-  return (
-    <section className="py-20">
-
-      <h2 className="text-4xl font-bold">
-        Practice Interviews
-      </h2>
-
-      <p className="mt-3 text-zinc-400">
-        Choose an interview and start practicing.
-      </p>
-
-      <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-
-        {interviews.map((interview) => (
-          <InterviewCard
-            key={interview.id}
-            interview={interview}
-          />
-        ))}
-
-      </div>
-
-    </section>
-  );
-}
-================================================
-FILE: ./src/components/interview/setup/DurationSelector.tsx
+FILE: ./src/features/interview/setup/components/DurationSelector.tsx
 ================================================
 import { Button } from "@/src/components/ui/Button";
 
@@ -1948,7 +1689,7 @@ export default function DurationSelector({
   );
 }
 ================================================
-FILE: ./src/components/interview/setup/SetupCard.tsx
+FILE: ./src/features/interview/setup/components/SetupCard.tsx
 ================================================
 type Props = {
     children: React.ReactNode;
@@ -1964,10 +1705,10 @@ export default function SetupCard({
     );
 }
 ================================================
-FILE: ./src/components/interview/setup/CompanySelector.tsx
+FILE: ./src/features/interview/setup/components/CompanySelector.tsx
 ================================================
 import { Input } from "@/src/components/ui/Input";
-
+import { Select } from "@/src/components/ui/Select";
 type Props = {
   value: string;
   onChange: (value: string) => void;
@@ -1991,25 +1732,24 @@ export default function CompanySelector({
         Interview Style
       </h3>
 
-      <Input
-        as="select"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-      >
-        {COMPANIES.map((company) => (
-          <option
-            key={company}
-            value={company}
-          >
-            {company}
-          </option>
-        ))}
-      </Input>
+      <Select
+  value={value}
+  onChange={(e) => onChange(e.target.value)}
+>
+  {COMPANIES.map((company) => (
+    <option
+      key={company}
+      value={company}
+    >
+      {company}
+    </option>
+  ))}
+</Select>
     </div>
   );
 }
 ================================================
-FILE: ./src/components/interview/setup/InterviewTypeSelector.tsx
+FILE: ./src/features/interview/setup/components/InterviewTypeSelector.tsx
 ================================================
 import { Button } from "@/src/components/ui/Button";
 
@@ -2069,7 +1809,7 @@ export default function InterviewTypeSelector({
   );
 }
 ================================================
-FILE: ./src/components/interview/setup/DifficultySelector.tsx
+FILE: ./src/features/interview/setup/components/DifficultySelector.tsx
 ================================================
 import { Button } from "@/src/components/ui/Button";
 
@@ -2112,7 +1852,15 @@ export default function DifficultySelector({
   );
 }
 ================================================
-FILE: ./src/components/interview/live/LiveInterview.tsx
+FILE: ./src/features/interview/setup/hooks/useInterviewSetup.ts
+================================================
+
+================================================
+FILE: ./src/features/interview/setup/index.ts
+================================================
+
+================================================
+FILE: ./src/features/interview/live/components/LiveInterview.tsx
 ================================================
 'use client';
 
@@ -2148,18 +1896,30 @@ export default function LiveInterview({
     setMessages((prev) => [...prev, userMsg]);
 
     try {
-      const response = await fetch("/api/interview/message", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          interviewId,
-          message: content,
-        }),
-      });
+      const response = await fetch(
+  `/api/interviews/${interviewId}/message`,
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      message: content,
+    }),
+  }
+);
 
-      const data = await response.json();
+      const text = await response.text();
+
+console.log("Status:", response.status);
+console.log("Response:", text);
+
+if (!response.ok) {
+  alert(text);
+  return;
+}
+
+const data = JSON.parse(text);
 
       if (data.aiMessage) {
         setMessages((prev) => [...prev, data.aiMessage]);
@@ -2195,11 +1955,11 @@ export default function LiveInterview({
   );
 }
 ================================================
-FILE: ./src/components/interview/live/MessageList.tsx
+FILE: ./src/features/interview/live/components/MessageList.tsx
 ================================================
 // components/interview/live/MessageList.tsx
 import React, { useEffect, useRef } from 'react';
-import { Message as MessageType } from '@/src/modules/interview/types/message';
+import { Message as MessageType } from '@/src/features/interview/types/message';
 import Message from './Message';
 
 interface MessageListProps {
@@ -2236,11 +1996,11 @@ const MessageList: React.FC<MessageListProps> = ({ messages }) => {
 
 export default MessageList; // This "export" makes it a module
 ================================================
-FILE: ./src/components/interview/live/Conversation.tsx
+FILE: ./src/features/interview/live/components/Conversation.tsx
 ================================================
 
 ================================================
-FILE: ./src/components/interview/live/Timer.tsx
+FILE: ./src/features/interview/live/components/Timer.tsx
 ================================================
 // components/interview/live/Timer.tsx
 'use client';
@@ -2288,7 +2048,7 @@ export default function Timer({ durationInMinutes, interviewId }: TimerProps) {
   );
 }
 ================================================
-FILE: ./src/components/interview/live/Sidebar.tsx
+FILE: ./src/features/interview/live/components/Sidebar.tsx
 ================================================
 // components/interview/live/Sidebar.tsx
 interface SidebarProps {
@@ -2327,11 +2087,11 @@ export default function Sidebar({ summary, phase }: SidebarProps) {
   );
 }
 ================================================
-FILE: ./src/components/interview/live/Message.tsx
+FILE: ./src/features/interview/live/components/Message.tsx
 ================================================
 // components/interview/live/Message.tsx
 import React from 'react';
-import { Message as MessageType } from '@/src/modules/interview/types/message';
+import { Message as MessageType } from '@/src/features/interview/types/message';
 
 interface MessageProps {
   message: MessageType;
@@ -2362,7 +2122,7 @@ const Message: React.FC<MessageProps> = ({ message }) => {
 
 export default Message;
 ================================================
-FILE: ./src/components/interview/live/Chat.tsx
+FILE: ./src/features/interview/live/components/Chat.tsx
 ================================================
 // components/interview/live/Chat.tsx
 'use client';
@@ -2406,7 +2166,7 @@ export default function Chat({ messages, onSendMessage, isLoading }: ChatProps) 
   );
 }
 ================================================
-FILE: ./src/components/interview/live/InterviewHeader.tsx
+FILE: ./src/features/interview/live/components/InterviewHeader.tsx
 ================================================
 import Timer from "./Timer";
 
@@ -2444,7 +2204,7 @@ export default function InterviewHeader({
   );
 }
 ================================================
-FILE: ./src/components/interview/live/ChatInput.tsx
+FILE: ./src/features/interview/live/components/ChatInput.tsx
 ================================================
 'use client';
 
@@ -2693,7 +2453,31 @@ export default function ChatInput({
   );
 }
 ================================================
-FILE: ./src/components/interview/report/ScoreCard.tsx
+FILE: ./src/features/interview/live/hooks/useInterview.ts
+================================================
+
+================================================
+FILE: ./src/features/interview/live/hooks/useMessages.ts
+================================================
+
+================================================
+FILE: ./src/features/interview/live/hooks/useTimer.ts
+================================================
+
+================================================
+FILE: ./src/features/interview/live/index.ts
+================================================
+
+================================================
+FILE: ./src/features/interview/live/store/interviewStore.ts
+================================================
+
+================================================
+FILE: ./src/features/interview/api/interviewApi.ts
+================================================
+
+================================================
+FILE: ./src/features/interview/report/components/ScoreCard.tsx
 ================================================
 // components/interview/report/ScoreCard.tsx
 export default function ScoreCard({ score, label = "Overall Score" }: { score: number, label?: string }) {
@@ -2717,11 +2501,11 @@ export default function ScoreCard({ score, label = "Overall Score" }: { score: n
   );
 }
 ================================================
-FILE: ./src/components/interview/report/Timeline.tsx
+FILE: ./src/features/interview/report/components/Timeline.tsx
 ================================================
 
 ================================================
-FILE: ./src/components/interview/report/FeedbackCard.tsx
+FILE: ./src/features/interview/report/components/FeedbackCard.tsx
 ================================================
 interface FeedbackCardProps {
   strengths: string[];
@@ -2773,23 +2557,491 @@ export default function FeedbackCard({
   );
 }
 ================================================
+FILE: ./src/features/interview/report/hooks/useReport.ts
+================================================
+
+================================================
+FILE: ./src/features/interview/report/index.ts
+================================================
+
+================================================
+FILE: ./src/shared/logger/logger.ts
+================================================
+import pino from "pino";
+
+const logger =
+  process.env.NODE_ENV === "production"
+    ? pino({
+        level: process.env.LOG_LEVEL ?? "info",
+        base: {
+          service: "ai-system-design-interviewer",
+        },
+      })
+    : pino({
+        transport: {
+          target: "pino-pretty",
+        },
+      });
+
+export default logger;
+================================================
+FILE: ./src/shared/config/constants.ts
+================================================
+import { env } from "./env";
+
+export const MODEL_NAME = env.OPENAI_MODEL;
+
+export const TEMPERATURE =
+  env.MODEL_TEMPERATURE;
+
+export const MAX_OUTPUT_TOKENS =
+  env.MAX_OUTPUT_TOKENS;
+
+export const REQUEST_TIMEOUT_MS =
+  env.REQUEST_TIMEOUT_MS;
+================================================
+FILE: ./src/shared/config/env.ts
+================================================
+import { z } from "zod";
+
+const envSchema = z.object({
+  NODE_ENV: z
+    .enum(["development", "test", "production"])
+    .default("development"),
+
+  DATABASE_URL: z.string().url(),
+
+  OPENAI_API_KEY: z.string().min(1),
+
+  OPENAI_MODEL: z
+    .string()
+    .default("gpt-5.5"),
+
+  LOG_LEVEL: z
+    .enum([
+      "fatal",
+      "error",
+      "warn",
+      "info",
+      "debug",
+      "trace",
+      "silent",
+    ])
+    .default("info"),
+
+  MODEL_TEMPERATURE: z.coerce
+    .number()
+    .min(0)
+    .max(2)
+    .default(0.5),
+
+  MAX_OUTPUT_TOKENS: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(512),
+
+  REQUEST_TIMEOUT_MS: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(30000),
+});
+
+export const env = envSchema.parse(process.env);
+
+export type Env = z.infer<typeof envSchema>;
+================================================
+FILE: ./src/components/ui/Dialog.tsx
+================================================
+"use client";
+
+import * as React from "react";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
+import { clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+function cn(...inputs: Parameters<typeof clsx>) {
+  return twMerge(clsx(inputs));
+}
+
+const Dialog = DialogPrimitive.Root;
+
+const DialogTrigger = DialogPrimitive.Trigger;
+
+const DialogPortal = DialogPrimitive.Portal;
+
+const DialogClose = DialogPrimitive.Close;
+
+const DialogOverlay = React.forwardRef<
+  React.ElementRef<typeof DialogPrimitive.Overlay>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
+>(({ className, ...props }, ref) => (
+  <DialogPrimitive.Overlay
+    ref={ref}
+    className={cn(
+      "fixed inset-0 z-50 bg-black/50 backdrop-blur-sm",
+      "data-[state=open]:animate-in data-[state=closed]:animate-out",
+      className
+    )}
+    {...props}
+  />
+));
+
+DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
+
+const DialogContent = React.forwardRef<
+  React.ElementRef<typeof DialogPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
+>(({ className, children, ...props }, ref) => (
+  <DialogPortal>
+    <DialogOverlay />
+
+    <DialogPrimitive.Content
+      ref={ref}
+      className={cn(
+        "fixed left-1/2 top-1/2 z-50 w-[95vw] max-w-lg",
+        "-translate-x-1/2 -translate-y-1/2",
+        "rounded-2xl border border-zinc-200 bg-white p-6 shadow-xl",
+        "dark:border-zinc-800 dark:bg-zinc-900",
+        "focus:outline-none",
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </DialogPrimitive.Content>
+  </DialogPortal>
+));
+
+DialogContent.displayName = DialogPrimitive.Content.displayName;
+
+function DialogHeader({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      className={cn("flex flex-col space-y-2", className)}
+      {...props}
+    />
+  );
+}
+
+function DialogFooter({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      className={cn(
+        "mt-6 flex justify-end gap-2",
+        className
+      )}
+      {...props}
+    />
+  );
+}
+
+const DialogTitle = React.forwardRef<
+  React.ElementRef<typeof DialogPrimitive.Title>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
+>(({ className, ...props }, ref) => (
+  <DialogPrimitive.Title
+    ref={ref}
+    className={cn(
+      "text-lg font-semibold text-zinc-900 dark:text-zinc-100",
+      className
+    )}
+    {...props}
+  />
+));
+
+DialogTitle.displayName = DialogPrimitive.Title.displayName;
+
+const DialogDescription = React.forwardRef<
+  React.ElementRef<typeof DialogPrimitive.Description>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
+>(({ className, ...props }, ref) => (
+  <DialogPrimitive.Description
+    ref={ref}
+    className={cn(
+      "text-sm text-zinc-600 dark:text-zinc-400",
+      className
+    )}
+    {...props}
+  />
+));
+
+DialogDescription.displayName =
+  DialogPrimitive.Description.displayName;
+
+export {
+  Dialog,
+  DialogTrigger,
+  DialogPortal,
+  DialogClose,
+  DialogOverlay,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+};
+================================================
+FILE: ./src/components/ui/Button.tsx
+================================================
+import * as React from "react";
+import { clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: "primary" | "secondary" | "outline";
+}
+
+function cn(...inputs: Parameters<typeof clsx>) {
+  return twMerge(clsx(inputs));
+}
+
+export const Button = React.forwardRef<
+  HTMLButtonElement,
+  ButtonProps
+>(
+  (
+    {
+      children,
+      variant = "primary",
+      className,
+      type = "button",
+      ...props
+    },
+    ref
+  ) => {
+    const baseStyles =
+      "px-4 py-2 rounded-md font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
+
+    const variants = {
+      primary:
+        "bg-blue-600 text-white hover:bg-blue-700",
+      secondary:
+        "bg-gray-200 text-gray-800 hover:bg-gray-300",
+      outline:
+        "border border-gray-300 bg-transparent hover:bg-gray-50",
+    };
+
+    return (
+      <button
+        ref={ref}
+        type={type}
+        className={cn(
+          baseStyles,
+          variants[variant],
+          className
+        )}
+        {...props}
+      >
+        {children}
+      </button>
+    );
+  }
+);
+
+Button.displayName = "Button";
+================================================
+FILE: ./src/components/ui/Select.tsx
+================================================
+import * as React from "react";
+import { clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+function cn(...inputs: Parameters<typeof clsx>) {
+  return twMerge(clsx(inputs));
+}
+
+export interface SelectProps
+  extends React.SelectHTMLAttributes<HTMLSelectElement> {}
+
+export const Select = React.forwardRef<
+  HTMLSelectElement,
+  SelectProps
+>(({ className, children, ...props }, ref) => {
+  return (
+    <select
+      ref={ref}
+      className={cn(
+        "flex h-10 w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm",
+        "focus:outline-none focus:ring-2 focus:ring-blue-500",
+        "disabled:cursor-not-allowed disabled:opacity-50",
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </select>
+  );
+});
+
+Select.displayName = "Select";
+================================================
+FILE: ./src/components/ui/Input.tsx
+================================================
+
+
+// components/ui/Input.tsx
+import React from "react";
+
+export const Input = ({ className = "", ...props }: React.InputHTMLAttributes<HTMLInputElement>) => {
+  return (
+    <input
+      className={`
+        flex h-10 w-full rounded-md border border-gray-300 
+        bg-white px-3 py-2 text-sm text-black 
+        placeholder:text-gray-500 focus:outline-none 
+        focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed 
+        disabled:opacity-50 ${className}
+      `}
+      {...props}
+    />
+  );
+};
+================================================
+FILE: ./src/components/layout/Navbar.tsx
+================================================
+import Link from "next/link";
+
+export default function Navbar() {
+  return (
+    <nav className="flex items-center justify-between py-6">
+
+      <Link
+        href="/"
+        className="text-xl font-bold"
+      >
+        AI Interviewer
+      </Link>
+
+
+      <div className="flex gap-6 text-sm text-zinc-400">
+
+        <Link href="/interview/setup">
+          Interviews
+        </Link>
+
+        <Link href="/analytics">
+          Analytics
+        </Link>
+
+      </div>
+
+    </nav>
+  );
+}
+================================================
+FILE: ./src/components/layout/PageContainer.tsx
+================================================
+type Props = {
+  children: React.ReactNode;
+};
+
+export default function PageContainer({
+  children,
+}: Props) {
+  return (
+    <main className="min-h-screen bg-zinc-950 px-6 text-white">
+      {children}
+    </main>
+  );
+}
+================================================
+FILE: ./src/components/catalog/InterviewCard.tsx
+================================================
+import { Interview } from "@/src/features/interview/types/interview";
+import Link from "next/link";
+type Props = {
+  interview: Interview;
+};
+
+export default function InterviewCard({
+  interview,
+}: Props) {
+  return (
+    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-6 transition hover:border-blue-500">
+
+      <h3 className="text-xl font-semibold">
+        {interview.title}
+      </h3>
+
+      <p className="mt-2 text-sm text-zinc-400">
+        {interview.description}
+      </p>
+
+      <div className="mt-6 flex items-center justify-between">
+
+        <span className="text-sm text-zinc-500">
+          {interview.duration} min • {interview.difficulty}
+        </span>
+
+        <Link
+  href={`/interview/setup?type=${interview.id}`}
+  className="rounded-lg bg-blue-600 px-4 py-2 text-sm hover:bg-blue-500"
+>
+  Start →
+</Link>
+      </div>
+
+    </div>
+  );
+}
+================================================
+FILE: ./src/components/catalog/InterviewCatalog.tsx
+================================================
+import InterviewCard from "./InterviewCard";
+import { interviews } from "@/src/modules/interview/domain/interviews";
+
+export default function InterviewCatalog() {
+  return (
+    <section className="py-20">
+
+      <h2 className="text-4xl font-bold">
+        Practice Interviews
+      </h2>
+
+      <p className="mt-3 text-zinc-400">
+        Choose an interview and start practicing.
+      </p>
+
+      <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+
+        {interviews.map((interview) => (
+          <InterviewCard
+            key={interview.id}
+            interview={interview}
+          />
+        ))}
+
+      </div>
+
+    </section>
+  );
+}
+================================================
 FILE: ./src/modules/container.ts
 ================================================
-import { AIService } from "./ai/AIService";
-import { PromptLoader } from "./prompt/PromptLoader";
-import { Logger } from "./logging/Logger";
+import { AIService } from "./ai/services/AIService";
+import { PromptLoader } from "@/src/modules/interview/prompt/PromptLoader";
+import logger  from "@/src/shared/logger/logger";
 import { EvaluationService } from "./interview/services/EvaluationService";
 
-const ai = new AIService();
-const promptLoader = new PromptLoader();
-const logger = new Logger();
-
-export const evaluationService =
-  new EvaluationService(
-    ai,
-    promptLoader,
+export function createEvaluationService() {
+  return new EvaluationService(
+    new AIService(),
+    new PromptLoader(),
     logger
   );
+}
+
+
 ================================================
 FILE: ./src/modules/common/errors/ApplicationErrors.ts
 ================================================
@@ -2814,118 +3066,6 @@ export class ValidationError extends ApplicationError {}
 export class InterviewStateError extends ApplicationError {}
 
 export class PersistenceError extends ApplicationError {}
-================================================
-FILE: ./src/modules/prompt/PromptLoader.ts
-================================================
-import { readFile } from "fs/promises";
-import path from "path";
-
-export class PromptLoader {
-  private static readonly cache = new Map<string, string>();
-
-  async load(file: string): Promise<string> {
-    const cached = PromptLoader.cache.get(file);
-
-    if (cached) {
-      return cached;
-    }
-
-    const fullPath = path.join(
-      process.cwd(),
-      "prompts",
-      file
-    );
-
-    const content = await readFile(fullPath, "utf-8");
-
-    PromptLoader.cache.set(file, content);
-
-    return content;
-  }
-
-  clearCache(): void {
-    PromptLoader.cache.clear();
-  }
-}
-================================================
-FILE: ./src/modules/interview/types/CreateInterviewInput.ts
-================================================
-import {
-  InterviewType,
-  Difficulty,
-} from "@prisma/client";
-
-export interface CreateInterviewInput {
-  userId: string;
-
-  type: InterviewType;
-
-  difficulty: Difficulty;
-
-  duration: number;
-
-  company: string;
-}
-================================================
-FILE: ./src/modules/interview/types/TranscriptMessage.ts
-================================================
-export interface TranscriptMessage {
-  role: "assistant" | "user";
-  content: string;
-}
-================================================
-FILE: ./src/modules/interview/types/InterviewState.ts
-================================================
-import { InterviewStatus } from "@prisma/client";
-import { TranscriptMessage } from "./TranscriptMessage";
-
-export interface InterviewState {
-  id: string;
-
-  userId: string;
-
-  type: string;
-  difficulty: string;
-  duration: number;
-  company: string;
-
-  status: InterviewStatus;
-
-  currentPhase: string;
-
-  summary: string;
-
-  createdAt: Date;
-  updatedAt: Date;
-
-  transcript: TranscriptMessage[];
-}
-================================================
-FILE: ./src/modules/interview/types/message.ts
-================================================
-// types/message.ts
-export interface Message {
-  id?: string;
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-  createdAt?: Date;
-}
-================================================
-FILE: ./src/modules/interview/types/index.ts
-================================================
-export * from "./CreateInterviewInput";
-export * from "./InterviewState";
-export * from "./TranscriptMessage";
-================================================
-FILE: ./src/modules/interview/types/interview.ts
-================================================
-export type Interview = {
-  id: string;
-  title: string;
-  description: string;
-  duration: number;
-  difficulty: "Easy" | "Medium" | "Hard";
-};
 ================================================
 FILE: ./src/modules/interview/guardrails/PromptGuard.ts
 ================================================
@@ -2974,37 +3114,25 @@ Continue the interview normally and redirect the candidate back to the technical
 ================================================
 FILE: ./src/modules/interview/repositories/InterviewRepository.ts
 ================================================
-import { prisma } from "@/lib/prisma";
-import {
-  InterviewStatus,
-  MessageRole,
-  Prisma,
-} from "@prisma/client";
 
-import { CreateInterviewInput } from "../types/CreateInterviewInput";
 
+import {InterviewStatus, MessageRole, Prisma} from "@prisma/client";
+
+import { CreateInterviewInput } from "../../../features/interview/types/CreateInterviewInput";
+import { prisma } from "@/shared/prisma/client";
 export class InterviewRepository {
 
-  async create(data: CreateInterviewInput) {
-  const {
-    userId,
-    ...interviewData
-  } = data;
+  async create(data: CreateInterviewInput & {  }) {
+    const {  ...rest } = data;
 
-  return prisma.interview.create({
-    data: {
-      ...interviewData,
-
-      status: InterviewStatus.SETUP,
-
-      user: {
-        connect: {
-          id: userId,
-        },
+    return prisma.interview.create({
+      data: {
+        ...rest,
+        status: InterviewStatus.SETUP,
+        
       },
-    },
-  });
-}
+    });
+  }
 
 
   async getById(id: string) {
@@ -3154,7 +3282,7 @@ export class InterviewRepository {
 FILE: ./src/modules/interview/repositories/MessageRepository.ts
 ================================================
 import { MessageRole } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/shared/prisma/client";
 
 export class MessageRepository {
   async create(
@@ -3190,14 +3318,6 @@ export class MessageRepository {
     });
   }
 }
-================================================
-FILE: ./src/modules/interview/models/InterviewContext.ts
-================================================
-
-================================================
-FILE: ./src/modules/interview/models/Prompt.ts
-================================================
-
 ================================================
 FILE: ./src/modules/interview/models/Message.ts
 ================================================
@@ -3358,24 +3478,57 @@ import { promises as fs } from "fs";
 import path from "path";
 
 export class PromptLoader {
-  private readonly templatesDirectory: string;
+  private readonly templatesDirectory = path.join(
+    process.cwd(),
+    "src",
+    "modules",
+    "interview",
+    "prompt",
+    "templates"
+  );
 
-  constructor() {
-    this.templatesDirectory = path.join(
-      process.cwd(),
-      "modules",
-      "prompt",
-      "templates"
-    );
-  }
+  private readonly cache = new Map<string, string>();
 
-  async load(templateName: string): Promise<string> {
+  async load(
+    templateName: string
+  ): Promise<string> {
+    const cached = this.cache.get(templateName);
+
+    if (cached) {
+      return cached;
+    }
+
     const templatePath = path.join(
       this.templatesDirectory,
       templateName
     );
 
-    return fs.readFile(templatePath, "utf-8");
+    try {
+      await fs.access(templatePath);
+
+      const template = await fs.readFile(
+        templatePath,
+        "utf-8"
+      );
+
+      this.cache.set(
+        templateName,
+        template
+      );
+
+      return template;
+    } catch (error) {
+      throw new Error(
+        `Prompt template "${templateName}" was not found or could not be loaded at "${templatePath}".`,
+        {
+          cause: error,
+        }
+      );
+    }
+  }
+
+  clearCache(): void {
+    this.cache.clear();
   }
 }
 ================================================
@@ -3500,7 +3653,7 @@ FILE: ./src/modules/interview/engine/InterviewEngine.ts
 import { InterviewPhase } from "./InterviewStateMachine";
 import { PromptBuilder } from "./PromptBuilder";
 import { ResponseParser } from "./ResponseParser";
-import { AIService, ChatMessage } from "@/src/modules/ai/AIService";
+import { AIService, ChatMessage } from "@/src/modules/ai/services/AIService";
 import { PromptGuard } from "../guardrails/PromptGuard";
 export class InterviewEngine {
   constructor(
@@ -3559,7 +3712,7 @@ export class InterviewEngine {
 ================================================
 FILE: ./src/modules/interview/engine/PromptBuilder.ts
 ================================================
-import { PromptLoader } from "@/src/modules/prompt/PromptLoader";
+import { PromptLoader } from "@/src/modules/interview/prompt/PromptLoader";
 import { InterviewPhase } from "./InterviewStateMachine";
 
 export class PromptBuilder {
@@ -3571,10 +3724,10 @@ export class PromptBuilder {
     phase: InterviewPhase,
     candidateName: string,
     problem: string,
-    summary: string = ""
+    summary = ""
   ): Promise<string> {
     const basePrompt = await this.promptLoader.load(
-      "interview/judge.md"
+      "judge.md"
     );
 
     const phasePrompt = await this.promptLoader.load(
@@ -3605,22 +3758,22 @@ ${phasePrompt}
   ): string {
     switch (phase) {
       case InterviewPhase.INTRODUCTION:
-        return "interview/intro.md";
+        return "intro.md";
 
       case InterviewPhase.REQUIREMENTS:
-        return "interview/clarification.md";
+        return "clarification.md";
 
       case InterviewPhase.HIGH_LEVEL_DESIGN:
-        return "interview/scaling.md";
+        return "scaling.md";
 
       case InterviewPhase.DEEP_DIVE:
-        return "interview/deep_dive.md";
+        return "deep_dive.md";
 
       case InterviewPhase.BOTTLE_NECKS:
-        return "interview/bottlenecks.md";
+        return "bottlenecks.md";
 
       case InterviewPhase.CLOSING:
-        return "interview/closing.md";
+        return "closing.md";
 
       default:
         throw new Error(`Unknown phase: ${phase}`);
@@ -3785,46 +3938,46 @@ FILE: ./src/modules/interview/engine/StateUpdater.ts
 ================================================
 FILE: ./src/modules/interview/domain/interviews.ts
 ================================================
-import { Interview } from "@/src/modules/interview/types/interview";
+import { Interview } from "@/src/features/interview/types/interview";
 
 export const interviews: Interview[] = [
   {
-    id: "hld",
+    id: "SYSTEM_DESIGN",
     title: "High Level Design",
     description: "Design scalable distributed systems.",
     duration: 45,
     difficulty: "Medium",
   },
   {
-    id: "lld",
+    id: "LOW_LEVEL_DESIGN",
     title: "Low Level Design",
     description: "Object-oriented design and patterns.",
     duration: 60,
     difficulty: "Medium",
   },
   {
-    id: "backend",
+    id: "LOW_LEVEL_DESIGN",
     title: "Backend Fundamentals",
     description: "REST APIs, caching, databases and scaling.",
     duration: 45,
     difficulty: "Medium",
   },
   {
-    id: "java",
+    id: "LOW_LEVEL_DESIGN",
     title: "Java Core",
     description: "Collections, JVM, concurrency and streams.",
     duration: 30,
     difficulty: "Medium",
   },
   {
-    id: "sql",
+    id: "LOW_LEVEL_DESIGN",
     title: "SQL & Databases",
     description: "Queries, indexing, normalization and transactions.",
     duration: 30,
     difficulty: "Easy",
   },
   {
-    id: "distributed",
+    id: "LOW_LEVEL_DESIGN",
     title: "Distributed Systems",
     description: "Kafka, Redis, CAP theorem and replication.",
     duration: 60,
@@ -3836,10 +3989,10 @@ console.log("Interview type:", interviews[0].id);
 ================================================
 FILE: ./src/modules/interview/services/EvaluationService.ts
 ================================================
-import { prisma } from "@/lib/prisma";
-import { AIService } from "../../ai/AIService";
+import { prisma } from "@/shared/prisma/client";
+import { AIService } from "../../ai/services/AIService";
 import { PromptLoader } from "../../prompt/PromptLoader";
-import { Logger } from "../../logging/Logger";
+import { Logger } from "src/shared/logger"
 
 export class EvaluationService {
   constructor(
@@ -3942,47 +4095,20 @@ FILE: ./src/modules/interview/services/InterviewFactory.ts
 ================================================
 import {
   Difficulty,
-  InterviewStatus,
   InterviewType,
 } from "@prisma/client";
 
-import { InterviewState } from "../types/InterviewState";
+import { CreateInterviewInput } from "../../../features/interview/types/CreateInterviewInput";
 
 export function createInterview(
-  input: {
-    userId: string;
-    type: InterviewType;
-    difficulty: Difficulty;
-    duration: number;
-    company: string;
-  }
-): Omit<InterviewState, "id"> {
-  return {
-    userId: input.userId,
-
-    type: input.type,
-
-    difficulty: input.difficulty,
-
-    duration: input.duration,
-
-    company: input.company,
-
-    status: InterviewStatus.SETUP,
-
-    currentPhase: "introduction",
-
-    summary: "Interview has not started yet.",
-
-    createdAt: new Date(),
-
-    updatedAt: new Date(),
-  };
+  input: CreateInterviewInput
+): CreateInterviewInput {
+  return input;
 }
 ================================================
 FILE: ./src/modules/interview/services/SummaryService.ts
 ================================================
-import { AIService } from "@/src/modules/ai/AIService";
+import { AIService } from "@/src/modules/ai/services/AIService";
 
 type TranscriptMessage = {
   role: string;
@@ -4059,11 +4185,78 @@ ${transcript}
   }
 }
 ================================================
+FILE: ./src/modules/interview/services/InterviewMessageService.ts
+================================================
+
+
+import { InterviewRepository } from "../repositories/InterviewRepository";
+import { InterviewEngine } from "../engine/InterviewEngine";
+import { Message, MessageRole } from "@prisma/client";
+import { ChatMessage } from "@/src/modules/ai/services/AIService";
+
+export class InterviewMessageService {
+  private repository = new InterviewRepository();
+  private engine = new InterviewEngine();
+
+  async processMessage(
+    interviewId: string,
+    message: string
+  ) {
+    const interview = await this.repository.getById(interviewId);
+
+    if (!interview) {
+      throw new Error("Interview not found");
+    }
+
+    await this.repository.addMessage(
+      interviewId,
+      MessageRole.user,
+      message
+    );
+
+    const history: ChatMessage[] = interview.transcript.map(
+  (m: Message): ChatMessage => ({
+    role:
+      m.role === MessageRole.user
+        ? "user"
+        : m.role === MessageRole.assistant
+        ? "assistant"
+        : "system",
+    content: m.content,
+  })
+);
+
+    const result = await this.engine.processUserMessage(
+      interview.currentPhase as any,
+      history,
+      interview.summary,
+      "URL Shortener",
+      "Candidate"
+    );
+
+    const aiMessage = await this.repository.addMessage(
+      interviewId,
+      MessageRole.assistant,
+      result.reply
+    );
+
+    await this.repository.updateSummary(
+      interviewId,
+      interview.summary
+    );
+
+    return {
+      aiMessage,
+      newSummary: interview.summary,
+    };
+  }
+}
+================================================
 FILE: ./src/modules/interview/services/IncrementalSummaryService.ts
 ================================================
 // src/modules/interview/services/IncrementalSummaryService.ts
 
-import { AIService } from "@/src/modules/ai/AIService";
+import { AIService } from "@/src/modules/ai/services/AIService";
 
 export interface TranscriptMessage {
   role: string;
@@ -4157,8 +4350,23 @@ export class OllamaProvider {
         }),
       });
 
-      const data = await response.json();
-      return data.message.content;
+//       const response = await fetch(`${this.baseUrl}/api/chat`, {
+//   method: "POST",
+//   headers: {
+//     "Content-Type": "application/json",
+//   },
+//   body: JSON.stringify({
+//     model: this.model,
+//     messages,
+//     stream: false,
+//   }),
+// });
+
+const data = await response.json();
+
+return data.message.content;
+
+      
     } catch (e) {
       console.error("Ollama connection failed. Is the app open?");
       return "I'm having trouble connecting to my brain (Ollama).";
@@ -4224,28 +4432,35 @@ export class FallbackAIProvider {
 ================================================
 FILE: ./src/modules/ai/utils/ValidatedJSONParser.ts
 ================================================
-// src/modules/ai/utils/ValidatedJSONParser.ts
-
-import { z, ZodSchema } from "zod";
+import { ZodSchema } from "zod";
 
 export class ValidatedJSONParser {
   static async parse<T>(
     response: string,
     schema: ZodSchema<T>,
-    retry?: () => Promise<string>
+    repair?: () => Promise<string>
   ): Promise<T> {
-    try {
-      const parsed = JSON.parse(response);
+    const tryParse = (text: string): T => {
+      const cleaned = text
+        .replace(/^```json/i, "")
+        .replace(/^```/i, "")
+        .replace(/```$/i, "")
+        .trim();
+
+      const parsed = JSON.parse(cleaned);
+
       return schema.parse(parsed);
-    } catch (error) {
-      // Retry once if provided
-      if (retry) {
+    };
+
+    try {
+      return tryParse(response);
+    } catch {
+      if (repair) {
         try {
-          const retriedResponse = await retry();
-          const parsed = JSON.parse(retriedResponse);
-          return schema.parse(parsed);
+          const repaired = await repair();
+          return tryParse(repaired);
         } catch {
-          // continue to fallback
+          // fall through
         }
       }
 
@@ -4256,47 +4471,62 @@ export class ValidatedJSONParser {
   }
 }
 ================================================
-FILE: ./src/modules/ai/AIService.ts
+FILE: ./src/modules/ai/AIProvider.ts
 ================================================
-import { OllamaProvider } from "./providers/OllamaProvider";
-  import { ZodSchema } from "zod";
-import { ValidatedJSONParser } from "./utils/ValidatedJSONParser";
-import { FallbackAIProvider } from "./providers/FallbackAIProvider";
+export interface AIProvider {
+  generate(prompt: string): Promise<string>;
+}
+================================================
+FILE: ./src/modules/ai/services/AIService.ts
+================================================
+import { ZodSchema } from "zod";
 
-
+import { FallbackAIProvider } from "../providers/FallbackAIProvider";
+import { ValidatedJSONParser } from "../utils/ValidatedJSONParser";
 
 export interface ChatMessage {
   role: "system" | "user" | "assistant";
   content: string;
 }
 
-
 export class AIService {
   private readonly provider = new FallbackAIProvider();
 
   async chat(messages: ChatMessage[]): Promise<string> {
-  return this.provider.generateResponse(messages);
-}
+    return this.provider.generateResponse(messages);
+  }
 
+  async chatJSON<T>(
+    messages: ChatMessage[],
+    schema: ZodSchema<T>
+  ): Promise<T> {
+    const response = await this.chat(messages);
 
-async chatJSON<T>(
-  messages: ChatMessage[],
-  schema: ZodSchema<T>
-): Promise<T> {
-  const retry = () => this.chat(messages);
+    return ValidatedJSONParser.parse(
+      response,
+      schema,
+      async () => {
+        return this.chat([
+          {
+            role: "system",
+            content: `
+Convert the following text into valid JSON.
 
-  const response = await this.chat(messages);
+Return ONLY JSON.
 
-  return ValidatedJSONParser.parse(
-    response,
-    schema,
-    retry
-  );
-}
-}
-================================================
-FILE: ./src/modules/ai/AIProvider.ts
-================================================
-export interface AIProvider {
-  generate(prompt: string): Promise<string>;
+Do not use markdown.
+
+Do not explain anything.
+
+The JSON must satisfy the requested schema.
+`.trim(),
+          },
+          {
+            role: "user",
+            content: response,
+          },
+        ]);
+      }
+    );
+  }
 }
