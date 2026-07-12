@@ -10,13 +10,14 @@ datasource db {
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
-  passwordHash String?  // null for guest users
+  passwordHash String?
   isGuest      Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  interviews Interview[]
-  masteries  ConceptMastery[]
+  interviews      Interview[]
+  masteries       ConceptMastery[]
+  learningAttempts UserLearningAttempt[]
 }
 
 // ---------------------------------------------------------------------------
@@ -236,7 +237,7 @@ model Concept {
   slug        String  @unique
   name        String
   description String?
-  category    String // free text, e.g. "scalability", "data_modeling" — seeded like rubric dimensions
+  category    String
 
   parentId String?
   parent   Concept?  @relation("ConceptHierarchy", fields: [parentId], references: [id])
@@ -247,6 +248,8 @@ model Concept {
   evidenceLinks EvidenceConcept[]
   masteries     ConceptMastery[]
   problems      ProblemConcept[]
+
+  learningSegments LearningSegmentConcept[]
 }
 
 model EvidenceItem {
@@ -309,6 +312,201 @@ model ProblemConcept {
   @@id([problemId, conceptId])
 }
 
+
+model LearningScenario {
+  id          String  @id @default(cuid())
+  slug        String  @unique
+  title       String
+  description String?
+
+  // e.g. "Design a Payment System"
+  context Json?
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  segments LearningSegment[]
+}
+
+model LearningSegment {
+  id         String @id @default(cuid())
+  scenarioId String
+
+  scenario LearningScenario @relation(
+    fields: [scenarioId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  order        Int
+  conversation Json
+  takeaway     String?
+
+  actions  LearningAction[]
+  concepts LearningSegmentConcept[]
+
+  @@unique([scenarioId, order])
+  @@index([scenarioId])
+}
+
+model LearningSegmentConcept {
+  scenarioId String
+  segmentId  String
+  conceptId  String
+
+  weight Float @default(1.0)
+
+  segment LearningSegment @relation(
+    fields: [scenarioId, segmentId],
+    references: [scenarioId, id],
+    onDelete: Cascade
+  )
+
+  concept Concept @relation(
+    fields: [conceptId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  @@id([scenarioId, segmentId, conceptId])
+  @@index([conceptId])
+}
+
+model LearningAction {
+  id        String @id @default(cuid())
+  segmentId String
+
+  segment LearningSegment @relation(
+    fields: [segmentId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  type LearningActionType
+
+  title        String
+  instructions String?
+  content      Json
+  contentVersion Int @default(1)
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  attempts UserLearningAttempt[]
+
+  @@index([segmentId])
+  @@index([type, isActive])
+}
+
+model LearningActionConcept {
+  actionId  String
+  conceptId String
+
+  weight Float @default(1.0)
+
+  action LearningAction @relation(
+    fields: [actionId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  concept Concept @relation(
+    fields: [conceptId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  @@id([actionId, conceptId])
+  @@index([conceptId])
+}
+
+model UserLearningAttempt {
+  id       String @id @default(cuid())
+  userId   String
+  actionId String
+
+  user User @relation(
+    fields: [userId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  action LearningAction @relation(
+    fields: [actionId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  status LearningAttemptStatus @default(STARTED)
+
+  response        Json?
+  responseVersion Int          @default(1)
+
+  score    Float?
+  feedback String?
+
+  startedAt   DateTime @default(now())
+  completedAt DateTime?
+
+  @@index([userId, completedAt])
+  @@index([userId, actionId])
+  @@index([actionId])
+}
+
+model LearningRecommendation {
+  id       String @id @default(cuid())
+  userId   String
+  actionId String
+  conceptId String
+
+  user User @relation(
+    fields: [userId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  action LearningAction @relation(
+    fields: [actionId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  concept Concept @relation(
+    fields: [conceptId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  masteryScore      Float
+  masteryConfidence Float
+
+  reason String
+
+  createdAt DateTime @default(now())
+  dismissedAt DateTime?
+  consumedAt  DateTime?
+
+  @@index([userId, createdAt])
+  @@index([userId, consumedAt])
+}
+
+enum LearningAttemptStatus {
+  STARTED
+  COMPLETED
+  ABANDONED
+}
+
+enum LearningActionType {
+  OBSERVE
+  JUDGE
+  FIX
+  PREDICT
+  COMPARE
+}
+
 enum ProblemCategory {
   SYSTEM_DESIGN
   LOW_LEVEL_DESIGN
@@ -349,4 +547,155 @@ enum Difficulty {
 enum MessageRole {
   assistant
   user
+}
+
+model PracticeActivity {
+  id          String @id @default(cuid())
+  slug        String @unique
+  title       String
+  description String?
+
+  type PracticeActivityType
+
+  difficulty Difficulty
+
+  estimatedMinutes Int?
+
+  content        Json
+  contentVersion Int @default(1)
+
+  isPublished Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  concepts PracticeActivityConcept[]
+  attempts PracticeAttempt[]
+
+  recommendationItems PracticeRecommendationItem[]
+
+  @@index([type, isPublished])
+  @@index([difficulty, isPublished])
+}
+
+model PracticeActivityConcept {
+  activityId String
+  conceptId  String
+
+  weight Float @default(1.0)
+
+  activity PracticeActivity @relation(
+    fields: [activityId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  concept Concept @relation(
+    fields: [conceptId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  @@id([activityId, conceptId])
+  @@index([conceptId])
+}
+
+model PracticeAttempt {
+  id         String @id @default(cuid())
+  userId     String
+  activityId String
+
+  user User @relation(
+    fields: [userId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  activity PracticeActivity @relation(
+    fields: [activityId],
+    references: [id],
+    onDelete: Restrict
+  )
+
+  status PracticeAttemptStatus @default(STARTED)
+
+  response        Json?
+  responseVersion Int @default(1)
+
+  score    Float?
+  feedback String?
+
+  startedAt   DateTime @default(now())
+  completedAt DateTime?
+
+  @@index([userId, completedAt])
+  @@index([userId, activityId])
+}
+
+model PracticeRecommendation {
+  id     String @id @default(cuid())
+  userId String
+
+  user User @relation(
+    fields: [userId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  reason String?
+
+  createdAt DateTime @default(now())
+  expiresAt DateTime?
+
+  items PracticeRecommendationItem[]
+
+  @@index([userId, createdAt])
+}
+
+model PracticeRecommendationItem {
+  recommendationId String
+  activityId       String
+
+  rank Int
+
+  targetConceptId String?
+
+  recommendation PracticeRecommendation @relation(
+    fields: [recommendationId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  activity PracticeActivity @relation(
+    fields: [activityId],
+    references: [id],
+    onDelete: Restrict
+  )
+
+  targetConcept Concept? @relation(
+    fields: [targetConceptId],
+    references: [id],
+    onDelete: SetNull
+  )
+
+  reason String?
+
+  @@id([recommendationId, activityId])
+  @@index([activityId])
+  @@index([targetConceptId])
+}
+
+enum PracticeActivityType {
+  MOCK_INTERVIEW
+  BUG_HUNT
+  JUDGE
+  FIX
+  PREDICT
+  COMPARE
+}
+
+enum PracticeAttemptStatus {
+  STARTED
+  COMPLETED
+  ABANDONED
 }

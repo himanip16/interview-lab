@@ -796,6 +796,240 @@ async function seedTemplates() {
 }
 
 
+// Additions for prisma/seed.ts — call seedLearningScenarios() from main(),
+// after seedConcepts()/seedProblemConcepts() since segments reference concept
+// slugs that must already exist.
+//
+// This seeds exactly the "Design a Payment System" example from the design
+// doc: one scenario, three segments, and one action of each type, wired to
+// whichever segment its concept actually belongs to.
+
+import { LearningActionType, Prisma } from "@prisma/client";
+import { prisma } from "../shared/prisma/client"; // adjust import to your actual seed.ts prisma instance
+
+type SegmentSeed = {
+  order: number;
+  title: string;
+  dialogue: { role: "interviewer" | "candidate"; content: string }[];
+  conceptSlugs: string[]; // must already exist via seedConcepts()
+  actions: {
+    type: LearningActionType;
+    order: number;
+    prompt: string;
+    reflection: string;
+    payload: Prisma.InputJsonValue;
+  }[];
+};
+
+const PAYMENT_SCENARIO = {
+  slug: "design-a-payment-system",
+  title: "Design a Payment System",
+  description:
+    "A candidate reasons through what happens when a payment succeeds but the system never observes it.",
+  segments: [
+    {
+      order: 1,
+      title: "Payment succeeds, but the event is lost",
+      dialogue: [
+        {
+          role: "interviewer",
+          content:
+            "Let's say the payment succeeded, but our order service never received the event. What happens?",
+        },
+        {
+          role: "candidate",
+          content:
+            "I wouldn't retry the payment itself. I'd first separate payment state from event delivery.",
+        },
+        { role: "interviewer", content: "Why?" },
+        {
+          role: "candidate",
+          content:
+            "Because the external side effect may already have happened. My uncertainty is whether our system observed it — not whether the charge occurred.",
+        },
+        { role: "interviewer", content: "Okay. So how do you recover?" },
+        {
+          role: "candidate",
+          content:
+            "I'd persist the payment result, then publish through an outbox. The consumer must also be idempotent.",
+        },
+      ],
+      conceptSlugs: ["data-consistency", "message-queues"],
+      actions: [
+        {
+          type: LearningActionType.WATCH,
+          order: 0,
+          prompt: "Watch how someone else handles it.",
+          reflection:
+            "Notice what they did? The candidate separated whether the action happened from whether the system observed it. In your interview, you combined these two concerns.",
+          payload: {},
+        },
+      ],
+    },
+    {
+      order: 2,
+      title: "Client retries the payment request",
+      dialogue: [
+        {
+          role: "interviewer",
+          content: "The client times out and retries the same payment request. What could go wrong?",
+        },
+        {
+          role: "candidate",
+          content:
+            "If we're not careful, we'd charge the customer twice — the retry looks like a brand new request unless we can recognize it as the same one.",
+        },
+      ],
+      conceptSlugs: ["rate-limiting-algorithms"],
+      actions: [
+        {
+          type: LearningActionType.FIX,
+          order: 0,
+          prompt: "Fix this answer.",
+          reflection:
+            "Better. You correctly questioned the delivery guarantee. One thing is still missing: what happens between the database commit and publishing the event?",
+          payload: {
+            interviewerQuestion: "How do you maintain consistency between services?",
+            flawedAnswer:
+              "I'd use Kafka because Kafka guarantees message delivery and makes the system eventually consistent.",
+            evaluationFocus:
+              "Whether the fix identifies the gap between the database write and the event publish, not just naming a technology.",
+          },
+        },
+      ],
+    },
+    {
+      order: 3,
+      title: "Kafka consumer crashes before publishing",
+      dialogue: [
+        {
+          role: "interviewer",
+          content:
+            "The database write succeeds. The service crashes before publishing to Kafka. What does the system believe happened?",
+        },
+      ],
+      conceptSlugs: ["message-queues", "consistent-hashing"],
+      actions: [
+        {
+          type: LearningActionType.PREDICT,
+          order: 0,
+          prompt: "What breaks first?",
+          reflection:
+            "The order was persisted, but downstream services never learn about it until the outbox relay catches up — the system silently drifts out of sync in the meantime.",
+          payload: {
+            question:
+              "Order Service → Database → Kafka → Inventory Service. The database write succeeds. The service crashes before publishing to Kafka. What does the system believe happened?",
+            revealExplanation:
+              "The Inventory Service has no idea the order exists yet. Without an outbox pattern, this gap is invisible until someone notices inventory never decremented.",
+          },
+        },
+        {
+          type: LearningActionType.JUDGE,
+          order: 1,
+          prompt: "Your turn to interview. A candidate is designing a chat system.",
+          reflection:
+            "Exactly. The interesting boundary is between the database write and event publication — that's the failure mode you missed in your own interview.",
+          payload: {
+            options: [
+              { id: "a", text: "Why Kafka instead of RabbitMQ?" },
+              { id: "b", text: "What happens if the database write succeeds but publishing fails?" },
+              { id: "c", text: "How many Kafka partitions would you use?" },
+              { id: "d", text: "Would you use WebSockets?" },
+            ],
+            correctOptionId: "b",
+          },
+        },
+        {
+          type: LearningActionType.COMPARE,
+          order: 2,
+          prompt: "Who handled this better?",
+          reflection:
+            "Candidate B — not because they used a more advanced term, but because they scoped the consistency decision instead of applying one model to the entire system.",
+          payload: {
+            candidateA:
+              "I'd use eventual consistency because availability is more important here.",
+            candidateB:
+              "I think eventual consistency is acceptable for the read model, but I wouldn't apply that assumption to payment state — those have different failure costs.",
+            correctChoice: "B",
+          },
+        },
+      ],
+    },
+  ] satisfies SegmentSeed[],
+};
+
+export async function seedLearningScenarios() {
+  const scenario = await prisma.learningScenario.upsert({
+    where: { slug: PAYMENT_SCENARIO.slug },
+    update: {
+      title: PAYMENT_SCENARIO.title,
+      description: PAYMENT_SCENARIO.description,
+      isActive: true,
+    },
+    create: {
+      slug: PAYMENT_SCENARIO.slug,
+      title: PAYMENT_SCENARIO.title,
+      description: PAYMENT_SCENARIO.description,
+    },
+  });
+
+  for (const segmentSeed of PAYMENT_SCENARIO.segments) {
+    const segment = await prisma.scenarioSegment.upsert({
+      where: { scenarioId_order: { scenarioId: scenario.id, order: segmentSeed.order } },
+      update: {
+        title: segmentSeed.title,
+        dialogue: segmentSeed.dialogue as Prisma.InputJsonValue,
+      },
+      create: {
+        scenarioId: scenario.id,
+        order: segmentSeed.order,
+        title: segmentSeed.title,
+        dialogue: segmentSeed.dialogue as Prisma.InputJsonValue,
+      },
+    });
+
+    for (const slug of segmentSeed.conceptSlugs) {
+      const concept = await prisma.concept.findUnique({ where: { slug } });
+
+      if (!concept) {
+        console.warn(`Skipping unknown concept slug "${slug}" for segment "${segmentSeed.title}".`);
+        continue;
+      }
+
+      await prisma.scenarioSegmentConcept.upsert({
+        where: { segmentId_conceptId: { segmentId: segment.id, conceptId: concept.id } },
+        update: {},
+        create: { segmentId: segment.id, conceptId: concept.id },
+      });
+    }
+
+    for (const actionSeed of segmentSeed.actions) {
+      const existing = await prisma.learningAction.findFirst({
+        where: { segmentId: segment.id, order: actionSeed.order },
+      });
+
+      const data = {
+        segmentId: segment.id,
+        type: actionSeed.type,
+        order: actionSeed.order,
+        prompt: actionSeed.prompt,
+        reflection: actionSeed.reflection,
+        payload: actionSeed.payload,
+      };
+
+      if (existing) {
+        await prisma.learningAction.update({ where: { id: existing.id }, data });
+      } else {
+        await prisma.learningAction.create({ data });
+      }
+    }
+  }
+
+  console.log(
+    `Seeded learning scenario "${scenario.slug}" (${PAYMENT_SCENARIO.segments.length} segments).`
+  );
+}
+
 async function main() {
   for (const problem of problems) {
     await prisma.problem.upsert({
