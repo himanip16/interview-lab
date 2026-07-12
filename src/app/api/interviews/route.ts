@@ -3,16 +3,17 @@ import { NextResponse } from "next/server";
 import { InterviewRepository } from "@/src/modules/interview/repositories/InterviewRepository";
 import { createInterview } from "@/src/modules/interview/services/interview/InterviewFactory";
 import { CreateInterviewInput } from "@/src/features/interview/types/CreateInterviewInput";
+import { getCurrentUserId } from "@/src/modules/auth/getCurrentUserId";
 import logger from "@/src/shared/logger/logger";
 
 export async function POST(request: Request) {
   try {
     const body: CreateInterviewInput = await request.json();
 
-    if (!body.type || !body.difficulty || !body.duration || !body.company || !body.problemId) {
+    if (!body.templateId || !body.difficulty || !body.duration || !body.company || !body.problemId) {
       return NextResponse.json(
         {
-          error: "Missing required fields: type, difficulty, duration, company, problemId",
+          error: "Missing required fields: templateId, difficulty, duration, company, problemId",
         },
         {
           status: 400,
@@ -24,8 +25,9 @@ export async function POST(request: Request) {
 
     const interviewData = createInterview(body);
 
+    const userId = await getCurrentUserId();
+
     const interview = await repository.create({
-      type: interviewData.type,
       difficulty: interviewData.difficulty,
       duration: interviewData.duration,
       company: interviewData.company,
@@ -33,6 +35,16 @@ export async function POST(request: Request) {
       problem: {
         connect: {
           id: interviewData.problemId,
+        },
+      },
+      template: {
+        connect: {
+          id: interviewData.templateId,
+        },
+      },
+      user: {
+        connect: {
+          id: userId,
         },
       },
       currentPhase: interviewData.currentPhase,
@@ -44,7 +56,7 @@ export async function POST(request: Request) {
       {
         id: interview.id,
         status: interview.status,
-        type: interview.type,
+        templateId: interview.templateId,
         difficulty: interview.difficulty,
         duration: interview.duration,
         company: interview.company,

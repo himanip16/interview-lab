@@ -142,10 +142,8 @@ export class InterviewRepository {
     interviewId: string,
     data: {
       overallScore: number;
-      communicationScore: number;
-      architectureScore: number;
-      scalabilityScore: number;
-      tradeoffScore: number;
+      dimensionScores: Prisma.InputJsonValue;
+      evidence: Prisma.InputJsonValue;
       feedback: string;
       metadata?: Prisma.InputJsonValue;
     }

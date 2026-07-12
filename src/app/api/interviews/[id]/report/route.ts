@@ -50,15 +50,27 @@ export async function GET(request: Request, { params }: Props) {
       );
     }
 
+    // Extract dimension scores from the dynamic dimensionScores JSON
+    const dimensionScores = interview.evaluation.dimensionScores as Array<{
+      dimension: string;
+      score: number;
+      summary: string;
+    }> || [];
+
+    const getScoreByDimension = (dimension: string): number => {
+      const found = dimensionScores.find((ds) => ds.dimension === dimension);
+      return found?.score ?? 0;
+    };
+
     return NextResponse.json(
       {
         id: interview.evaluation.id,
         interviewId: interview.evaluation.interviewId,
         overallScore: interview.evaluation.overallScore,
-        communicationScore: interview.evaluation.communicationScore,
-        architectureScore: interview.evaluation.architectureScore,
-        scalabilityScore: interview.evaluation.scalabilityScore,
-        tradeoffScore: interview.evaluation.tradeoffScore,
+        communicationScore: getScoreByDimension("communication"),
+        architectureScore: getScoreByDimension("architecture"),
+        scalabilityScore: getScoreByDimension("scalability"),
+        tradeoffScore: getScoreByDimension("tradeoff"),
         feedback: interview.evaluation.feedback,
         metadata: interview.evaluation.metadata,
         createdAt: interview.evaluation.createdAt,

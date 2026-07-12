@@ -66,6 +66,11 @@ PROJECT STRUCTURE
 │   │   │   ├── layout.tsx
 │   │   │   └── page.tsx
 │   │   ├── api
+│   │   │   ├── auth
+│   │   │   │   ├── [...nextauth]
+│   │   │   │   │   └── route.ts
+│   │   │   │   └── register
+│   │   │   │       └── route.ts
 │   │   │   ├── interviews
 │   │   │   │   ├── [id]
 │   │   │   │   │   ├── finish
@@ -101,7 +106,11 @@ PROJECT STRUCTURE
 │   │   │   │       └── page.tsx
 │   │   │   └── setup
 │   │   │       └── page.tsx
-│   │   └── layout.tsx
+│   │   ├── layout.tsx
+│   │   ├── login
+│   │   │   └── page.tsx
+│   │   └── register
+│   │       └── page.tsx
 │   ├── components
 │   │   ├── catalog
 │   │   │   ├── InterviewCard.tsx
@@ -194,6 +203,8 @@ PROJECT STRUCTURE
 │   │   │       └── ValidatedJSONParser.ts
 │   │   ├── analytics
 │   │   ├── auth
+│   │   │   ├── auth.ts
+│   │   │   └── getCurrentUserId.ts
 │   │   ├── common
 │   │   │   └── errors
 │   │   │       └── ApplicationErrors.ts
@@ -277,7 +288,7 @@ PROJECT STRUCTURE
 ├── tsconfig.json
 └── tsconfig.tsbuildinfo
 
-109 directories, 167 files
+114 directories, 173 files
 
 FILE CONTENTS
 
@@ -305,10 +316,12 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String?  // null for guest users
+  isGuest      Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   interviews Interview[]
   masteries  ConceptMastery[]
@@ -1471,9 +1484,11 @@ FILE: ./package.json
   "dependencies": {
     "@prisma/client": "^6.19.3",
     "@radix-ui/react-dialog": "^1.1.19",
+    "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
     "lucide-react": "^1.24.0",
     "next": "16.2.10",
+    "next-auth": "^5.0.0-beta.31",
     "ollama": "^0.6.3",
     "pino": "^10.3.1",
     "prisma": "^6.19.3",
@@ -1728,6 +1743,93 @@ export default async function DashboardPage({ params }: Props) {
       <div className="mt-8">
         <SkillGraphView skillGraph={skillGraph} />
       </div>
+    </main>
+  );
+}
+================================================
+FILE: ./src/app/register/page.tsx
+================================================
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+
+export default function RegisterPage() {
+  const router = useRouter();
+
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    const formData = new FormData(event.currentTarget);
+
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: formData.get("email"),
+          password: formData.get("password"),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error ?? "Registration failed.");
+      }
+
+      router.push("/login");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown error.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <main className="mx-auto max-w-md px-6 py-20 text-white">
+      <h1 className="text-3xl font-bold">Create an Account</h1>
+
+      <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+        <input
+          name="email"
+          type="email"
+          required
+          placeholder="Email"
+          className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2"
+        />
+
+        <input
+          name="password"
+          type="password"
+          required
+          minLength={8}
+          placeholder="Password (min 8 characters)"
+          className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2"
+        />
+
+        {error && <p className="text-sm text-red-500">{error}</p>}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full rounded-lg bg-blue-600 py-3 font-semibold hover:bg-blue-500 disabled:opacity-50"
+        >
+          {loading ? "Creating account..." : "Register"}
+        </button>
+      </form>
+
+      <p className="mt-4 text-sm text-zinc-400">
+        Already have an account?{" "}
+        <a href="/login" className="text-blue-400">
+          Log in
+        </a>
+      </p>
     </main>
   );
 }
@@ -2042,6 +2144,66 @@ export default function RootLayout({
 }
 
 ================================================
+FILE: ./src/app/api/auth/register/route.ts
+================================================
+import { NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
+
+import { prisma } from "@/shared/prisma/client";
+
+export async function POST(request: Request) {
+  try {
+    const { email, password } = await request.json();
+
+    if (
+      typeof email !== "string" ||
+      typeof password !== "string" ||
+      password.length < 8
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Email and a password of at least 8 characters are required.",
+        },
+        { status: 400 }
+      );
+    }
+
+    const existing = await prisma.user.findUnique({ where: { email } });
+
+    if (existing) {
+      return NextResponse.json(
+        { error: "An account with this email already exists." },
+        { status: 409 }
+      );
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const user = await prisma.user.create({
+      data: { email, passwordHash },
+    });
+
+    return NextResponse.json(
+      { id: user.id, email: user.email },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error(error);
+
+    return NextResponse.json(
+      { error: "Internal server error." },
+      { status: 500 }
+    );
+  }
+}
+================================================
+FILE: ./src/app/api/auth/[...nextauth]/route.ts
+================================================
+import { handlers } from "@/src/modules/auth/auth";
+
+export const { GET, POST } = handlers;
+================================================
 FILE: ./src/app/api/users/[id]/recommendations/route.ts
 ================================================
 import { NextResponse } from "next/server";
@@ -2131,21 +2293,13 @@ export async function POST() {
 FILE: ./src/app/api/interviews/start/route.ts
 ================================================
 import { NextResponse } from "next/server";
-
-import { InterviewType, Difficulty } from "@prisma/client";
-import { MessageRole } from "@prisma/client";
-
+import { Difficulty } from "@prisma/client";
 
 import { prisma } from "@/shared/prisma/client";
-
+import { getCurrentUserId } from "@/src/modules/auth/getCurrentUserId";
 import { createInterview } from "@/src/modules/interview/services/interview/InterviewFactory";
 import { InterviewRepository } from "@/src/modules/interview/repositories/InterviewRepository";
 import { TranscriptService } from "@/src/modules/interview/services/TranscriptService";
-
-const interviewTypeMap: Record<string, InterviewType> = {
-  hld: InterviewType.HLD,
-  lld: InterviewType.LLD,
-};
 
 const difficultyMap: Record<string, Difficulty> = {
   Easy: Difficulty.EASY,
@@ -2157,75 +2311,50 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    const {
-      type,
-      difficulty,
-      duration,
-      company,
-      problemId,
-    } = body;
+    const { type, difficulty, duration, company, problemId } = body;
 
-    if (
-      !type ||
-      !difficulty ||
-      !duration ||
-      !company ||
-      !problemId
-    ) {
+    if (!type || !difficulty || !duration || !company || !problemId) {
       return NextResponse.json(
-        {
-          error: "Missing required fields.",
-        },
-        {
-          status: 400,
-        }
+        { error: "Missing required fields." },
+        { status: 400 }
       );
     }
 
-    const interviewType = interviewTypeMap[type];
+    const template = await prisma.interviewTemplate.findUnique({
+      where: { slug: type },
+    });
+
+    if (!template) {
+      return NextResponse.json(
+        { error: "Invalid interview type." },
+        { status: 400 }
+      );
+    }
+
     const interviewDifficulty = difficultyMap[difficulty];
-
-    if (!interviewType) {
-      return NextResponse.json(
-        {
-          error: "Invalid interview type.",
-        },
-        {
-          status: 400,
-        }
-      );
-    }
 
     if (!interviewDifficulty) {
       return NextResponse.json(
-        {
-          error: "Invalid difficulty.",
-        },
-        {
-          status: 400,
-        }
+        { error: "Invalid difficulty." },
+        { status: 400 }
       );
     }
 
     const problem = await prisma.problem.findUnique({
-      where: {
-        id: problemId,
-      },
+      where: { id: problemId },
     });
 
     if (!problem) {
       return NextResponse.json(
-        {
-          error: "Problem not found.",
-        },
-        {
-          status: 404,
-        }
+        { error: "Problem not found." },
+        { status: 404 }
       );
     }
 
-    const interview = createInterview({
-      type: interviewType,
+    const userId = await getCurrentUserId();
+
+    const interviewData = createInterview({
+      templateId: template.id,
       difficulty: interviewDifficulty,
       duration,
       company,
@@ -2234,36 +2363,32 @@ export async function POST(request: Request) {
 
     const repository = new InterviewRepository();
 
-    const savedInterview =
-      await repository.create(interview);
-
-    await prisma.problem.update({
-      where: {
-        id: problem.id,
-      },
-      data: {
-        interviewCount: {
-          increment: 1,
-        },
-      },
+    const savedInterview = await repository.create({
+      difficulty: interviewData.difficulty,
+      duration: interviewData.duration,
+      company: interviewData.company,
+      status: interviewData.status,
+      currentPhase: interviewData.currentPhase,
+      summary: interviewData.summary,
+      promptVersion: interviewData.promptVersion,
+      user: { connect: { id: userId } },
+      template: { connect: { id: template.id } },
+      problem: { connect: { id: problem.id } },
     });
 
-    const transcriptService =
-      new TranscriptService();
+    await prisma.problem.update({
+      where: { id: problem.id },
+      data: { interviewCount: { increment: 1 } },
+    });
+
+    const transcriptService = new TranscriptService();
 
     await transcriptService.addAssistantMessage(
       savedInterview.id,
       `Welcome! Today we'll design "${problem.title}". Start by asking clarifying questions before proposing your design.`
     );
 
-    return NextResponse.json(
-      {
-        id: savedInterview.id,
-      },
-      {
-        status: 201,
-      }
-    );
+    return NextResponse.json({ id: savedInterview.id }, { status: 201 });
   } catch (error) {
     console.error(error);
 
@@ -2274,9 +2399,7 @@ export async function POST(request: Request) {
             ? error.message
             : "Internal server error",
       },
-      {
-        status: 500,
-      }
+      { status: 500 }
     );
   }
 }
@@ -2866,6 +2989,60 @@ body {
 
 button {
   cursor: pointer;
+}
+================================================
+FILE: ./src/app/login/page.tsx
+================================================
+import { signIn } from "@/src/modules/auth/auth";
+
+export default function LoginPage() {
+  async function loginAction(formData: FormData) {
+    "use server";
+
+    await signIn("credentials", {
+      email: formData.get("email"),
+      password: formData.get("password"),
+      redirectTo: "/",
+    });
+  }
+
+  return (
+    <main className="mx-auto max-w-md px-6 py-20 text-white">
+      <h1 className="text-3xl font-bold">Log In</h1>
+
+      <form action={loginAction} className="mt-8 space-y-4">
+        <input
+          name="email"
+          type="email"
+          required
+          placeholder="Email"
+          className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2"
+        />
+
+        <input
+          name="password"
+          type="password"
+          required
+          placeholder="Password"
+          className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2"
+        />
+
+        <button
+          type="submit"
+          className="w-full rounded-lg bg-blue-600 py-3 font-semibold hover:bg-blue-500"
+        >
+          Log In
+        </button>
+      </form>
+
+      <p className="mt-4 text-sm text-zinc-400">
+        No account?{" "}
+        <a href="/register" className="text-blue-400">
+          Register
+        </a>
+      </p>
+    </main>
+  );
 }
 ================================================
 FILE: ./src/features/landing/components/Hero.tsx
@@ -4288,6 +4465,7 @@ const envSchema = z.object({
     .int()
     .positive()
     .default(30000),
+    AUTH_SECRET: z.string().min(1),
 });
 
 export const env = envSchema.parse(process.env);
@@ -4681,6 +4859,111 @@ export default async function InterviewCatalog() {
     </section>
   );
 }
+================================================
+FILE: ./src/modules/auth/getCurrentUserId.ts
+================================================
+import { cookies } from "next/headers";
+import { randomUUID } from "crypto";
+
+import { prisma } from "@/shared/prisma/client";
+
+import { auth } from "./auth";
+
+const GUEST_COOKIE = "guest_user_id";
+const GUEST_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 30; // 30 days
+
+export async function getCurrentUserId(): Promise<string> {
+  const session = await auth();
+
+  if (session?.user?.id) {
+    return session.user.id;
+  }
+
+  const cookieStore = await cookies();
+  const existingGuestId = cookieStore.get(GUEST_COOKIE)?.value;
+
+  if (existingGuestId) {
+    const guest = await prisma.user.findUnique({
+      where: { id: existingGuestId },
+    });
+
+    if (guest) return guest.id;
+    // Cookie pointed at a user that no longer exists — fall through and
+    // provision a fresh one below.
+  }
+
+  const guest = await prisma.user.create({
+    data: {
+      email: `guest-${randomUUID()}@guest.local`,
+      isGuest: true,
+    },
+  });
+
+  cookieStore.set(GUEST_COOKIE, guest.id, {
+    httpOnly: true,
+    sameSite: "lax",
+    maxAge: GUEST_COOKIE_MAX_AGE_SECONDS,
+    path: "/",
+  });
+
+  return guest.id;
+}
+================================================
+FILE: ./src/modules/auth/auth.ts
+================================================
+import NextAuth from "next-auth";
+import Credentials from "next-auth/providers/credentials";
+import bcrypt from "bcryptjs";
+
+import { prisma } from "@/shared/prisma/client";
+
+export const { handlers, auth, signIn, signOut } = NextAuth({
+  session: { strategy: "jwt" },
+
+  providers: [
+    Credentials({
+      name: "credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        const email = credentials?.email as string | undefined;
+        const password = credentials?.password as string | undefined;
+
+        if (!email || !password) return null;
+
+        const user = await prisma.user.findUnique({ where: { email } });
+
+        if (!user || !user.passwordHash) return null;
+
+        const valid = await bcrypt.compare(password, user.passwordHash);
+
+        if (!valid) return null;
+
+        return { id: user.id, email: user.email };
+      },
+    }),
+  ],
+
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) token.userId = user.id;
+      return token;
+    },
+
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.id = token.userId as string;
+      }
+      return session;
+    },
+  },
+
+  pages: {
+    signIn: "/login",
+  },
+});
 ================================================
 FILE: ./src/modules/container.ts
 ================================================
