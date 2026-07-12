@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/shared/prisma/client";
 import { AIService } from "@/src/modules/ai/services/AIService";
 import logger from "@/src/shared/logger/logger";
@@ -59,6 +60,7 @@ export class EvaluationService {
       (dimension) =>
         dimension.evidence.map((item) => ({
           dimension: dimension.dimension,
+          conceptSlugs: [], // TODO: Extract from evaluator result when available
           ...item,
         }))
     );
@@ -69,8 +71,8 @@ export class EvaluationService {
       interviewId,
       {
         overallScore: result.overallScore,
-        dimensionScores: result.dimensionScores,
-        evidence,
+        dimensionScores: result.dimensionScores as unknown as Prisma.InputJsonValue,
+        evidence: evidence as unknown as Prisma.InputJsonValue,
         feedback: result.feedback,
         metadata: {
           strengths: result.strengths,

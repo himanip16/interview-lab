@@ -1,23 +1,34 @@
 import { PromptLoader } from "@/src/modules/interview/prompt/PromptLoader";
+import { PromptRenderer } from "@/src/modules/interview/prompt/PromptRenderer";
 
 import { InterviewPhaseDefinition } from "../profiles/InterviewProfile";
 
 export class PromptBuilder {
   constructor(
     private readonly promptLoader =
-      new PromptLoader()
+      new PromptLoader(),
+    private readonly promptRenderer =
+      new PromptRenderer()
   ) {}
 
   async buildSystemPrompt(
     phase: InterviewPhaseDefinition,
     candidateName: string,
     problem: string,
-    runningSummary = ""
+    runningSummary = "",
+    latestQuestion?: string,
+    latestAnswer?: string
   ): Promise<string> {
     const basePrompt =
       await this.promptLoader.load(
         "judge.md"
       );
+
+    const renderedBasePrompt = this.promptRenderer.render(basePrompt, {
+      candidate: candidateName,
+      question: latestQuestion || "Starting the interview",
+      answer: latestAnswer || "No response yet",
+    });
 
     const goals = phase.goals
       .map((goal) => `- ${goal}`)
@@ -37,10 +48,7 @@ export class PromptBuilder {
       : '      "phase_goal": 0.0';
 
     return `
-${basePrompt}
-
-Candidate:
-${candidateName}
+${renderedBasePrompt}
 
 Interview Problem:
 ${problem}

@@ -61,14 +61,6 @@ export class InterviewEngine {
       input.currentPhase
     );
 
-    const systemPrompt =
-      await this.promptBuilder.buildSystemPrompt(
-        phase,
-        input.candidateName,
-        input.problem,
-        input.runningSummary
-      );
-
     const recentHistory =
       input.history.slice(
         -InterviewEngine.HISTORY_WINDOW
@@ -77,9 +69,24 @@ export class InterviewEngine {
     const latestMessage =
       recentHistory.at(-1);
 
+    const latestQuestion = recentHistory.length >= 2 
+      ? recentHistory[recentHistory.length - 2]?.content 
+      : undefined;
+    const latestAnswer = latestMessage?.content;
+
+    const systemPrompt =
+      await this.promptBuilder.buildSystemPrompt(
+        phase,
+        input.candidateName,
+        input.problem,
+        input.runningSummary,
+        latestQuestion,
+        latestAnswer
+      );
+
     const guardedInput =
       this.promptGuard.guard(
-        latestMessage?.content ?? ""
+        latestAnswer ?? ""
       );
 
     const messages: ChatMessage[] = [
@@ -174,7 +181,11 @@ All goal coverage values and confidence must be between 0 and 1.
         elapsedPhaseSeconds,
 
         assessment:
-          parsed.phaseAssessment,
+          parsed.phaseAssessment ?? {
+            goalCoverage: {},
+            confidence: 0.5,
+            unresolvedTopics: [],
+          },
       });
 
     return {

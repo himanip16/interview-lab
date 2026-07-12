@@ -124,9 +124,10 @@ export class InterviewMessageService {
       currentPhase: nextPhase,
       status:
         result.transition.reason === "stay" &&
-        !result.transition.shouldTransition
-          ? InterviewStatus.IN_PROGRESS
-          : InterviewStatus.COMPLETED,
+        !result.transition.shouldTransition &&
+        result.transition.nextPhase === result.transition.currentPhase
+          ? InterviewStatus.COMPLETED
+          : InterviewStatus.IN_PROGRESS,
       assistantMetadata: metadata,
     });
 
@@ -141,9 +142,10 @@ export class InterviewMessageService {
         result.phaseAssessment?.confidence ?? 0.5,
       completed:
         result.transition.reason === "stay" &&
-        !result.transition.shouldTransition
-          ? false
-          : true,
+        !result.transition.shouldTransition &&
+        result.transition.nextPhase === result.transition.currentPhase
+          ? true
+          : false,
     };
   }
 }

@@ -28,11 +28,35 @@ const INTERVIEW_RESPONSE_SCHEMA = {
       minimum: 0,
       maximum: 1,
     },
+    phaseAssessment: {
+      type: "object",
+      properties: {
+        goalCoverage: {
+          type: "object",
+          additionalProperties: {
+            type: "number",
+            minimum: 0,
+            maximum: 1,
+          },
+        },
+        confidence: {
+          type: "number",
+          minimum: 0,
+          maximum: 1,
+        },
+        unresolvedTopics: {
+          type: "array",
+          items: {
+            type: "string",
+          },
+        },
+      },
+      required: ["goalCoverage", "confidence", "unresolvedTopics"],
+    },
   },
   required: [
     "reply",
-    "transition",
-    "confidence",
+    "phaseAssessment",
   ],
   additionalProperties: false,
 };
