@@ -57,6 +57,7 @@ const envSchema = z.object({
     .int()
     .positive()
     .default(30000),
+    AUTH_SECRET: z.string().min(1),
 });
 
 export const env = envSchema.parse(process.env);

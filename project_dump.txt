@@ -80,8 +80,17 @@ PROJECT STRUCTURE
 │   │   │   │   │   └── route.ts
 │   │   │   │   └── status
 │   │   │   │       └── route.ts
-│   │   │   └── judge
-│   │   │       └── route.ts
+│   │   │   ├── judge
+│   │   │   │   └── route.ts
+│   │   │   └── users
+│   │   │       └── [id]
+│   │   │           ├── recommendations
+│   │   │           │   └── route.ts
+│   │   │           └── skill-graph
+│   │   │               └── route.ts
+│   │   ├── dashboard
+│   │   │   └── [userId]
+│   │   │       └── page.tsx
 │   │   ├── globals.css
 │   │   ├── interview
 │   │   │   ├── live
@@ -109,6 +118,10 @@ PROJECT STRUCTURE
 │   │       ├── Input.tsx
 │   │       └── Select.tsx
 │   ├── features
+│   │   ├── dashboard
+│   │   │   └── components
+│   │   │       ├── NextRecommendedInterview.tsx
+│   │   │       └── SkillGraphView.tsx
 │   │   ├── interview
 │   │   │   ├── api
 │   │   │   │   └── interviewApi.ts
@@ -245,6 +258,11 @@ PROJECT STRUCTURE
 │   │       │   ├── interview
 │   │       │   │   ├── InterviewFactory.ts
 │   │       │   │   └── InterviewMessageService.ts
+│   │       │   ├── mastery
+│   │       │   │   ├── MasteryService.ts
+│   │       │   │   └── SkillGraphService.ts
+│   │       │   ├── recommendation
+│   │       │   │   └── RecommendationService.ts
 │   │       │   └── summary
 │   │       │       ├── IncrementalSummaryService.ts
 │   │       │       └── SummaryService.ts
@@ -259,7 +277,7 @@ PROJECT STRUCTURE
 ├── tsconfig.json
 └── tsconfig.tsbuildinfo
 
-99 directories, 159 files
+109 directories, 167 files
 
 FILE CONTENTS
 
@@ -291,6 +309,9 @@ model User {
   email     String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  interviews Interview[]
+  masteries  ConceptMastery[]
 }
 
 // ---------------------------------------------------------------------------
@@ -347,6 +368,7 @@ model RubricTemplate {
 
 model Interview {
   id            String          @id @default(cuid())
+  userId        String
   templateId    String
   difficulty    Difficulty
   duration      Int
@@ -362,12 +384,14 @@ model Interview {
 
   problemId String
 
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   template   InterviewTemplate @relation(fields: [templateId], references: [id])
   evaluation Evaluation?
   problem    Problem           @relation(fields: [problemId], references: [id])
   transcript Message[]
 
   @@index([templateId])
+  @@index([userId])
 }
 
 model Message {
@@ -378,6 +402,8 @@ model Message {
   metadata    Json?
   createdAt   DateTime    @default(now())
   interview   Interview   @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+
+  evidenceItems EvidenceItem[]
 
   @@index([interviewId])
 }
@@ -396,6 +422,7 @@ model Problem {
   experiences    InterviewExperience[]
   companies      ProblemCompany[]
   tags           ProblemTag[]
+  concepts       ProblemConcept[]
 }
 
 model Company {
@@ -447,11 +474,9 @@ model InterviewExperience {
 }
 
 // ---------------------------------------------------------------------------
-// Evidence-based evaluation. dimensionScores/evidence are dynamic (Json)
-// because the set of dimensions is now defined per-template, not hardcoded
-// columns. Each evidence item points back at a real Message.id so a score can
-// always be traced to an actual transcript line instead of being trusted
-// blindly.
+// Evidence-based evaluation. dimensionScores/evidence stay as denormalized
+// Json — they're a read-optimized cache for the report page. EvidenceItem
+// below is the normalized, queryable source of truth that Mastery reads from.
 // ---------------------------------------------------------------------------
 
 model Evaluation {
@@ -470,7 +495,92 @@ model Evaluation {
   metadata  Json?
   createdAt DateTime @default(now())
 
-  interview Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  interview     Interview      @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  evidenceItems EvidenceItem[]
+}
+
+// ---------------------------------------------------------------------------
+// Skill Intelligence Layer: Interview -> Evidence -> Concepts -> Mastery ->
+// Recommendations. EvidenceItem/EvidenceConcept are written alongside the
+// Evaluation.evidence Json blob (see EvaluationService); ConceptMastery is
+// recomputed from them after every evaluation (see MasteryService).
+// ---------------------------------------------------------------------------
+
+model Concept {
+  id          String  @id @default(cuid())
+  slug        String  @unique
+  name        String
+  description String?
+  category    String // free text, e.g. "scalability", "data_modeling" — seeded like rubric dimensions
+
+  parentId String?
+  parent   Concept?  @relation("ConceptHierarchy", fields: [parentId], references: [id])
+  children Concept[] @relation("ConceptHierarchy")
+
+  createdAt DateTime @default(now())
+
+  evidenceLinks EvidenceConcept[]
+  masteries     ConceptMastery[]
+  problems      ProblemConcept[]
+}
+
+model EvidenceItem {
+  id               String     @id @default(cuid())
+  evaluationId     String
+  evaluation       Evaluation @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  messageId        String
+  message          Message    @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  dimension        String
+  timestampSeconds Int
+  quote            String
+  comment          String
+  createdAt        DateTime   @default(now())
+
+  concepts EvidenceConcept[]
+
+  @@index([evaluationId])
+  @@index([messageId])
+}
+
+model EvidenceConcept {
+  evidenceItemId String
+  conceptId      String
+  weight         Float @default(1.0) // how strongly this item demonstrates the concept, 0-1
+
+  evidenceItem EvidenceItem @relation(fields: [evidenceItemId], references: [id], onDelete: Cascade)
+  concept      Concept      @relation(fields: [conceptId], references: [id], onDelete: Cascade)
+
+  @@id([evidenceItemId, conceptId])
+  @@index([conceptId])
+}
+
+model ConceptMastery {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  conceptId String
+  concept   Concept @relation(fields: [conceptId], references: [id], onDelete: Cascade)
+
+  score              Float     @default(0) // 0-1 rolling estimate
+  confidence         Float     @default(0) // 0-1, low until enough evidence accumulates
+  sampleCount        Int       @default(0)
+  lastDemonstratedAt DateTime?
+  updatedAt          DateTime  @updatedAt
+
+  @@unique([userId, conceptId])
+  @@index([userId])
+}
+
+model ProblemConcept {
+  problemId String
+  conceptId String
+  weight    Float @default(1.0) // how heavily this problem exercises the concept
+
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  concept Concept @relation(fields: [conceptId], references: [id], onDelete: Cascade)
+
+  @@id([problemId, conceptId])
 }
 
 enum ProblemCategory {
@@ -998,6 +1108,150 @@ const templates: TemplateSeed[] = [
   },
 ];
 
+// ---------------------------------------------------------------------------
+// Concept taxonomy. This is the vocabulary EvidenceEvaluator tags evidence
+// against — deliberately small to start. Expand as real transcripts surface
+// concepts that don't fit anywhere yet; don't try to pre-populate a complete
+// taxonomy up front.
+// ---------------------------------------------------------------------------
+
+type ConceptSeed = {
+  slug: string;
+  name: string;
+  category: string;
+  description?: string;
+};
+
+const concepts: ConceptSeed[] = [
+  { slug: "horizontal-scaling", name: "Horizontal Scaling", category: "scalability" },
+  { slug: "load-balancing", name: "Load Balancing", category: "scalability" },
+  { slug: "caching-strategy", name: "Caching Strategy", category: "scalability" },
+  { slug: "database-sharding", name: "Database Sharding", category: "scalability" },
+  { slug: "cdn", name: "CDN", category: "scalability" },
+  { slug: "consistent-hashing", name: "Consistent Hashing", category: "distributed_systems" },
+  { slug: "cap-theorem", name: "CAP Theorem Tradeoffs", category: "distributed_systems" },
+  { slug: "message-queues", name: "Message Queues", category: "distributed_systems" },
+  { slug: "data-consistency", name: "Data Consistency Models", category: "distributed_systems" },
+  { slug: "rate-limiting-algorithms", name: "Rate Limiting Algorithms", category: "backend" },
+  { slug: "api-design", name: "API Design", category: "backend" },
+  { slug: "database-indexing", name: "Database Indexing", category: "databases" },
+  { slug: "object-modeling", name: "Object Modeling", category: "lld" },
+  { slug: "design-patterns", name: "Design Patterns", category: "lld" },
+  { slug: "encapsulation", name: "Encapsulation", category: "lld" },
+  { slug: "complexity-analysis", name: "Time/Space Complexity", category: "dsa" },
+  { slug: "edge-case-handling", name: "Edge Case Handling", category: "dsa" },
+];
+
+// problemSlug -> [{ conceptSlug, weight }]. Weight = how central the concept
+// is to that problem. Only a starter set is mapped — expand per problem as
+// you go rather than guessing weights for problems you haven't seeded evidence for.
+const problemConcepts: Record<string, { conceptSlug: string; weight: number }[]> = {
+  "url-shortener": [
+    { conceptSlug: "database-sharding", weight: 0.9 },
+    { conceptSlug: "caching-strategy", weight: 0.8 },
+    { conceptSlug: "api-design", weight: 0.6 },
+  ],
+  "rate-limiter": [
+    { conceptSlug: "rate-limiting-algorithms", weight: 1.0 },
+    { conceptSlug: "consistent-hashing", weight: 0.5 },
+  ],
+  "news-feed": [
+    { conceptSlug: "caching-strategy", weight: 0.9 },
+    { conceptSlug: "message-queues", weight: 0.7 },
+    { conceptSlug: "database-sharding", weight: 0.6 },
+  ],
+  "chat-system": [
+    { conceptSlug: "message-queues", weight: 0.9 },
+    { conceptSlug: "data-consistency", weight: 0.7 },
+    { conceptSlug: "horizontal-scaling", weight: 0.6 },
+  ],
+  "file-storage": [
+    { conceptSlug: "database-sharding", weight: 0.7 },
+    { conceptSlug: "cdn", weight: 0.8 },
+    { conceptSlug: "data-consistency", weight: 0.6 },
+  ],
+  "design-uber": [
+    { conceptSlug: "consistent-hashing", weight: 0.8 },
+    { conceptSlug: "data-consistency", weight: 0.7 },
+    { conceptSlug: "load-balancing", weight: 0.6 },
+  ],
+  "design-youtube": [
+    { conceptSlug: "cdn", weight: 0.9 },
+    { conceptSlug: "database-sharding", weight: 0.7 },
+    { conceptSlug: "caching-strategy", weight: 0.6 },
+  ],
+};
+
+async function seedConcepts() {
+  const savedBySlug = new Map<string, string>();
+
+  for (const concept of concepts) {
+    const saved = await prisma.concept.upsert({
+      where: { slug: concept.slug },
+      update: {
+        name: concept.name,
+        category: concept.category,
+        description: concept.description,
+      },
+      create: {
+        slug: concept.slug,
+        name: concept.name,
+        category: concept.category,
+        description: concept.description,
+      },
+    });
+
+    savedBySlug.set(concept.slug, saved.id);
+  }
+
+  console.log(`Seeded ${concepts.length} concepts.`);
+
+  return savedBySlug;
+}
+
+async function seedProblemConcepts(conceptIdBySlug: Map<string, string>) {
+  let count = 0;
+
+  for (const [problemSlug, links] of Object.entries(problemConcepts)) {
+    const problem = await prisma.problem.findUnique({
+      where: { slug: problemSlug },
+    });
+
+    if (!problem) {
+      console.warn(`Skipping problem-concept links for unknown problem "${problemSlug}".`);
+      continue;
+    }
+
+    for (const link of links) {
+      const conceptId = conceptIdBySlug.get(link.conceptSlug);
+
+      if (!conceptId) {
+        console.warn(`Skipping unknown concept slug "${link.conceptSlug}".`);
+        continue;
+      }
+
+      await prisma.problemConcept.upsert({
+        where: {
+          problemId_conceptId: {
+            problemId: problem.id,
+            conceptId,
+          },
+        },
+        update: { weight: link.weight },
+        create: {
+          problemId: problem.id,
+          conceptId,
+          weight: link.weight,
+        },
+      });
+
+      count++;
+    }
+  }
+
+  console.log(`Seeded ${count} problem-concept links.`);
+}
+
 async function seedTemplates() {
   for (const template of templates) {
     const dimensions = new Set<string>();
@@ -1085,6 +1339,7 @@ async function seedTemplates() {
   }
 }
 
+
 async function main() {
   for (const problem of problems) {
     await prisma.problem.upsert({
@@ -1097,8 +1352,10 @@ async function main() {
   console.log(`Seeded ${problems.length} problems.`);
 
   await seedTemplates();
-}
 
+  const conceptIdBySlug = await seedConcepts();
+  await seedProblemConcepts(conceptIdBySlug);
+}
 main()
   .catch((error) => {
     console.error(error);
@@ -1431,6 +1688,50 @@ export default function Home() {
   );
 }
 ================================================
+FILE: ./src/app/dashboard/[userId]/page.tsx
+================================================
+import { notFound } from "next/navigation";
+
+import { prisma } from "@/shared/prisma/client";
+import { SkillGraphService } from "@/src/modules/interview/services/mastery/SkillGraphService";
+import { RecommendationService } from "@/src/modules/interview/services/recommendation/RecommendationService";
+import SkillGraphView from "@/src/features/dashboard/components/SkillGraphView";
+import NextRecommendedInterview from "@/src/features/dashboard/components/NextRecommendedInterview";
+
+type Props = {
+  params: Promise<{ userId: string }>;
+};
+
+export default async function DashboardPage({ params }: Props) {
+  const { userId } = await params;
+
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+
+  if (!user) return notFound();
+
+  const skillGraphService = new SkillGraphService();
+  const recommendationService = new RecommendationService();
+
+  const [skillGraph, recommendation] = await Promise.all([
+    skillGraphService.getSkillGraph(userId),
+    recommendationService.nextRecommended(userId),
+  ]);
+
+  return (
+    <main className="mx-auto max-w-5xl px-6 py-12 text-white">
+      <h1 className="text-4xl font-bold">Your Dashboard</h1>
+
+      <div className="mt-8">
+        <NextRecommendedInterview recommendation={recommendation} />
+      </div>
+
+      <div className="mt-8">
+        <SkillGraphView skillGraph={skillGraph} />
+      </div>
+    </main>
+  );
+}
+================================================
 FILE: ./src/app/interview/setup/page.tsx
 ================================================
 "use client";
@@ -1740,6 +2041,82 @@ export default function RootLayout({
   );
 }
 
+================================================
+FILE: ./src/app/api/users/[id]/recommendations/route.ts
+================================================
+import { NextResponse } from "next/server";
+
+import { RecommendationService } from "@/src/modules/interview/services/recommendation/RecommendationService";
+
+type Props = {
+  params: Promise<{ id: string }>;
+};
+
+export async function GET(request: Request, { params }: Props) {
+  try {
+    const { id } = await params;
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "Missing user id." },
+        { status: 400 }
+      );
+    }
+
+    const limitParam = new URL(request.url).searchParams.get("limit");
+
+    const limit = limitParam
+      ? Math.min(Math.max(parseInt(limitParam, 10) || 5, 1), 20)
+      : 5;
+
+    const service = new RecommendationService();
+    const recommendations = await service.recommend(id, limit);
+
+    return NextResponse.json({ recommendations }, { status: 200 });
+  } catch (error) {
+    console.error(error);
+
+    return NextResponse.json(
+      { error: "Internal server error." },
+      { status: 500 }
+    );
+  }
+}
+================================================
+FILE: ./src/app/api/users/[id]/skill-graph/route.ts
+================================================
+import { NextResponse } from "next/server";
+
+import { SkillGraphService } from "@/src/modules/interview/services/mastery/SkillGraphService";
+
+type Props = {
+  params: Promise<{ id: string }>;
+};
+
+export async function GET(request: Request, { params }: Props) {
+  try {
+    const { id } = await params;
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "Missing user id." },
+        { status: 400 }
+      );
+    }
+
+    const service = new SkillGraphService();
+    const graph = await service.getSkillGraph(id);
+
+    return NextResponse.json(graph, { status: 200 });
+  } catch (error) {
+    console.error(error);
+
+    return NextResponse.json(
+      { error: "Internal server error." },
+      { status: 500 }
+    );
+  }
+}
 ================================================
 FILE: ./src/app/api/judge/route.ts
 ================================================
@@ -2603,6 +2980,157 @@ FILE: ./src/features/landing/index.ts
 export * from "@/src/features/interview/types/CreateInterviewInput";
 export * from "@/src/features/interview/types/InterviewState";
 export * from "@/src/features/interview/types/TranscriptMessage";
+================================================
+FILE: ./src/features/dashboard/components/NextRecommendedInterview.tsx
+================================================
+import Link from "next/link";
+
+import type { Recommendation } from "@/src/modules/interview/services/recommendation/RecommendationService";
+
+type Props = {
+  recommendation: Recommendation | null;
+};
+
+export default function NextRecommendedInterview({ recommendation }: Props) {
+  if (!recommendation) {
+    return (
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-6">
+        <h2 className="text-xl font-semibold">Next Recommended Interview</h2>
+
+        <p className="mt-3 text-sm text-zinc-400">
+          Complete a few interviews to unlock personalized recommendations.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-xl border border-blue-900 bg-gradient-to-br from-zinc-900 to-blue-950 p-6">
+      <p className="text-xs uppercase tracking-wide text-blue-400">
+        Next Recommended Interview
+      </p>
+
+      <h2 className="mt-2 text-2xl font-bold">{recommendation.title}</h2>
+
+      <span className="mt-1 inline-block text-sm capitalize text-zinc-400">
+        {recommendation.difficulty.toLowerCase()}
+      </span>
+
+      <ul className="mt-4 space-y-1 text-sm text-zinc-300">
+        {recommendation.reasons.map((reason, i) => (
+          <li key={i}>• {reason}</li>
+        ))}
+      </ul>
+
+      <Link
+        href={`/interview/setup?problemId=${recommendation.problemId}&type=hld`}
+        className="mt-6 inline-block rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium hover:bg-blue-500"
+      >
+        Start Interview →
+      </Link>
+    </div>
+  );
+}
+================================================
+FILE: ./src/features/dashboard/components/SkillGraphView.tsx
+================================================
+import type { SkillGraph } from "@/src/modules/interview/services/mastery/SkillGraphService";
+
+function scoreColor(score: number | null): string {
+  if (score === null) return "bg-zinc-800";
+  if (score >= 0.7) return "bg-green-500";
+  if (score >= 0.4) return "bg-yellow-500";
+  return "bg-red-500";
+}
+
+type Props = {
+  skillGraph: SkillGraph;
+};
+
+export default function SkillGraphView({ skillGraph }: Props) {
+  const categories = Object.entries(skillGraph.categories);
+
+  return (
+    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold">Skill Graph</h2>
+
+        {skillGraph.overallMastery !== null && (
+          <span className="text-sm text-zinc-400">
+            Overall mastery: {Math.round(skillGraph.overallMastery * 100)}%
+          </span>
+        )}
+      </div>
+
+      <div className="mt-8 space-y-8">
+        {categories.map(([category, concepts]) => (
+          <div key={category}>
+            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-500">
+              {category.replace(/_/g, " ")}
+            </h3>
+
+            <div className="space-y-3">
+              {concepts.map((concept) => (
+                <div key={concept.conceptId}>
+                  <div className="mb-1 flex items-center justify-between text-sm">
+                    <span className="text-zinc-300">{concept.name}</span>
+
+                    <span className="text-zinc-500">
+                      {concept.score === null
+                        ? "Not yet assessed"
+                        : `${Math.round(concept.score * 100)}%`}
+                    </span>
+                  </div>
+
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-zinc-800">
+                    <div
+                      className={`h-full ${scoreColor(concept.score)} transition-all`}
+                      style={{
+                        width: `${
+                          concept.score !== null
+                            ? Math.round(concept.score * 100)
+                            : 8
+                        }%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {(skillGraph.strengths.length > 0 || skillGraph.weaknesses.length > 0) && (
+        <div className="mt-8 grid gap-6 border-t border-zinc-800 pt-6 sm:grid-cols-2">
+          <div>
+            <h3 className="mb-2 text-sm font-semibold text-green-500">
+              Strengths
+            </h3>
+
+            <ul className="space-y-1 text-sm text-zinc-400">
+              {skillGraph.strengths.map((s) => (
+                <li key={s.conceptId}>{s.name}</li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="mb-2 text-sm font-semibold text-red-500">
+              Focus Areas
+            </h3>
+
+            <ul className="space-y-1 text-sm text-zinc-400">
+              {skillGraph.weaknesses.map((w) => (
+                <li key={w.conceptId}>{w.name}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 ================================================
 FILE: ./src/features/interview/types/CreateInterviewInput.ts
 ================================================
@@ -4568,6 +5096,7 @@ import { z } from "zod";
 
 import { AIService } from "@/src/modules/ai/services/AIService";
 import { ValidatedJSONParser } from "@/src/modules/ai/utils/ValidatedJSONParser";
+import { prisma } from "@/shared/prisma/client";
 
 import { PromptLoader } from "../prompt/PromptLoader";
 import {
@@ -4579,6 +5108,7 @@ const EvidenceItemSchema = z.object({
   messageId: z.string(),
   quote: z.string().min(1),
   comment: z.string().min(1),
+  conceptSlugs: z.array(z.string()).default([]),
 });
 
 const DimensionScoreSchema = z.object({
@@ -4616,6 +5146,21 @@ export class EvidenceEvaluator {
       dimensions
     );
 
+    // Closed vocabulary for concept tagging — same grounding pattern as
+    // quotes below: anything the model returns outside this set is dropped,
+    // never trusted or auto-created.
+    const conceptVocabulary = await prisma.concept.findMany({
+      select: { slug: true, name: true, category: true },
+    });
+
+    const knownConceptSlugs = new Set(
+      conceptVocabulary.map((c) => c.slug)
+    );
+
+    const conceptSection = conceptVocabulary
+      .map((c) => `- ${c.slug} (${c.category}): ${c.name}`)
+      .join("\n");
+
     const transcriptById = new Map(
       interview.transcript.map((message) => [
         message.id,
@@ -4642,6 +5187,7 @@ export class EvidenceEvaluator {
       interview.template.name,
       dimensions,
       rubricSection,
+      conceptSection,
       transcriptSection
     );
 
@@ -4711,6 +5257,11 @@ export class EvidenceEvaluator {
                 MAX_QUOTE_WORDS
               ),
               comment: item.comment,
+              // Ground concepts against the known vocabulary — never trust
+              // a slug the model invented.
+              conceptSlugs: item.conceptSlugs.filter((slug) =>
+                knownConceptSlugs.has(slug)
+              ),
             };
           }),
       })
@@ -4773,6 +5324,7 @@ export class EvidenceEvaluator {
     templateName: string,
     dimensions: string[],
     rubricSection: string,
+    conceptSection: string,
     transcriptSection: string
   ): string {
     return `
@@ -4785,6 +5337,10 @@ RUBRICS (use these to decide scores):
 
 ${rubricSection}
 
+CONCEPT VOCABULARY (use ONLY these slugs when tagging evidence with concepts; if none apply, return an empty array):
+
+${conceptSection}
+
 TRANSCRIPT (each line is tagged with a message id and elapsed seconds since interview start):
 
 ${transcriptSection}
@@ -4796,10 +5352,12 @@ For each dimension, provide:
   - messageId: the EXACT [id=...] value of a transcript line that supports this score
   - quote: a short quote (${MAX_QUOTE_WORDS} words or fewer) copied VERBATIM from that exact message's content
   - comment: why this quote matters for this dimension
+  - conceptSlugs: 0-3 slugs from the CONCEPT VOCABULARY that this specific quote demonstrates
 
 Rules:
 - Only cite messages with role USER (the candidate). Never cite your own INTERVIEWER lines as evidence.
 - Every quote must be copied exactly from the cited message. Do not paraphrase and call it a quote.
+- Only use conceptSlugs from the CONCEPT VOCABULARY above. Never invent a slug.
 - If a dimension has weak or no supporting evidence in the transcript, say so in the summary and score it low — do not invent evidence.
 
 Return ONLY valid JSON with this exact shape:
@@ -4811,7 +5369,7 @@ Return ONLY valid JSON with this exact shape:
       "score": 0,
       "summary": "string",
       "evidence": [
-        { "messageId": "string", "quote": "string", "comment": "string" }
+        { "messageId": "string", "quote": "string", "comment": "string", "conceptSlugs": ["string"] }
       ]
     }
   ],
@@ -6322,6 +6880,530 @@ export const interviews: Interview[] = [
 
 console.log("Interview type:", interviews[0].id);
 ================================================
+FILE: ./src/modules/interview/services/recommendation/RecommendationService.ts
+================================================
+import { Difficulty, InterviewStatus } from "@prisma/client";
+
+import { prisma } from "@/shared/prisma/client";
+
+const RECENCY_REVIEW_DAYS = 21; // untouched this long -> due for spaced-repetition review
+const RECENT_PRACTICE_PENALTY_DAYS = 3; // touched this recently -> deprioritize to encourage variety
+const NOVELTY_PENALTY_WINDOW_DAYS = 14; // problems solved this recently -> deprioritized, not excluded
+const NOVELTY_PENALTY_FACTOR = 0.35;
+const TRANSFER_BOOST_WEIGHT = 0.15; // how much category-level strength nudges an untouched concept in that category
+const EXPLORATION_PRIORITY = 0.55; // priority for concepts with zero data — enough to get sampled, not enough to drown out known weak spots
+const MIN_CONFIDENCE_FOR_TRANSFER = 0.4;
+
+const DIFFICULTY_ANCHOR: Record<Difficulty, number> = {
+  EASY: 0.2,
+  MEDIUM: 0.5,
+  HARD: 0.8,
+};
+
+export interface Recommendation {
+  problemId: string;
+  slug: string;
+  title: string;
+  difficulty: Difficulty;
+  score: number;
+  reasons: string[];
+}
+
+type MasteryWithConcept = {
+  conceptId: string;
+  score: number;
+  confidence: number;
+  lastDemonstratedAt: Date | null;
+  concept: { category: string };
+};
+
+export class RecommendationService {
+  async recommend(userId: string, limit = 5): Promise<Recommendation[]> {
+    const [problems, masteries, recentInterviews] = await Promise.all([
+      prisma.problem.findMany({
+        include: { concepts: { include: { concept: true } } },
+      }),
+      prisma.conceptMastery.findMany({
+        where: { userId },
+        include: { concept: { select: { category: true } } },
+      }),
+      prisma.interview.findMany({
+        where: {
+          userId,
+          status: InterviewStatus.COMPLETED,
+          completedAt: {
+            gte: new Date(
+              Date.now() -
+                NOVELTY_PENALTY_WINDOW_DAYS * 24 * 60 * 60 * 1000
+            ),
+          },
+        },
+        select: { problemId: true },
+      }),
+    ]);
+
+    const masteryByConceptId = new Map(
+      masteries.map((m) => [m.conceptId, m])
+    );
+
+    const recentlySolvedProblemIds = new Set(
+      recentInterviews.map((i) => i.problemId)
+    );
+
+    const overallMastery = this.computeOverallMastery(masteries);
+    const categoryStrength = this.computeCategoryStrength(masteries);
+
+    const scored: Recommendation[] = [];
+
+    for (const problem of problems) {
+      if (problem.concepts.length === 0) continue; // not yet tagged in ProblemConcept — nothing to score against
+
+      let weightedPrioritySum = 0;
+      let weightTotal = 0;
+      const reasonCandidates: { text: string; priority: number }[] = [];
+
+      for (const link of problem.concepts) {
+        const mastery = masteryByConceptId.get(link.conceptId);
+
+        const { priority, reason } = this.conceptPriority(
+          link.concept.name,
+          link.concept.category,
+          mastery,
+          categoryStrength
+        );
+
+        weightedPrioritySum += priority * link.weight;
+        weightTotal += link.weight;
+
+        if (reason) reasonCandidates.push({ text: reason, priority });
+      }
+
+      if (weightTotal === 0) continue;
+
+      const conceptScore = weightedPrioritySum / weightTotal;
+      const difficultyFit = this.difficultyFit(problem.difficulty, overallMastery);
+
+      const noveltyFactor = recentlySolvedProblemIds.has(problem.id)
+        ? NOVELTY_PENALTY_FACTOR
+        : 1;
+
+      const score = conceptScore * difficultyFit * noveltyFactor;
+
+      const reasons = reasonCandidates
+        .sort((a, b) => b.priority - a.priority)
+        .slice(0, 2)
+        .map((r) => r.text);
+
+      reasons.push(this.difficultyReason(problem.difficulty, overallMastery));
+
+      scored.push({
+        problemId: problem.id,
+        slug: problem.slug,
+        title: problem.title,
+        difficulty: problem.difficulty,
+        score,
+        reasons,
+      });
+    }
+
+    return scored.sort((a, b) => b.score - a.score).slice(0, limit);
+  }
+
+  async nextRecommended(userId: string): Promise<Recommendation | null> {
+    const [top] = await this.recommend(userId, 1);
+    return top ?? null;
+  }
+
+  private conceptPriority(
+    name: string,
+    category: string,
+    mastery: MasteryWithConcept | undefined,
+    categoryStrength: Map<string, number>
+  ): { priority: number; reason: string | null } {
+    if (!mastery) {
+      const transfer =
+        (categoryStrength.get(category) ?? 0) * TRANSFER_BOOST_WEIGHT;
+
+      return {
+        priority: Math.min(EXPLORATION_PRIORITY + transfer, 1),
+        reason: `New concept for you: ${name}`,
+      };
+    }
+
+    const gap = 1 - mastery.score;
+
+    // Confident gaps matter more than noisy ones, but even a low-confidence
+    // gap keeps a floor so it still gets sampled instead of ignored.
+    let priority = gap * (0.3 + 0.7 * mastery.confidence);
+
+    let recencyNote: string | null = null;
+
+    if (mastery.lastDemonstratedAt) {
+      const daysSince =
+        (Date.now() - mastery.lastDemonstratedAt.getTime()) /
+        (1000 * 60 * 60 * 24);
+
+      if (daysSince >= RECENCY_REVIEW_DAYS) {
+        priority += 0.15;
+        recencyNote = `Due for review: ${name}`;
+      } else if (daysSince <= RECENT_PRACTICE_PENALTY_DAYS) {
+        priority *= 0.6; // just practiced — favor variety over repetition
+      }
+    }
+
+    priority = Math.min(Math.max(priority, 0), 1);
+
+    let reason: string | null = recencyNote;
+
+    if (!reason && gap >= 0.35 && mastery.confidence >= 0.4) {
+      reason = `Strengthens a weak spot: ${name}`;
+    }
+
+    return { priority, reason };
+  }
+
+  private computeOverallMastery(
+    masteries: { score: number; confidence: number }[]
+  ): number {
+    if (masteries.length === 0) return 0.4; // no data — bias toward EASY/MEDIUM until we know more
+
+    const weightedSum = masteries.reduce(
+      (s, m) => s + m.score * m.confidence,
+      0
+    );
+
+    const weightTotal = masteries.reduce((s, m) => s + m.confidence, 0);
+
+    return weightTotal > 0
+      ? weightedSum / weightTotal
+      : masteries.reduce((s, m) => s + m.score, 0) / masteries.length;
+  }
+
+  private computeCategoryStrength(
+    masteries: MasteryWithConcept[]
+  ): Map<string, number> {
+    const sums = new Map<string, { weighted: number; weight: number }>();
+
+    for (const m of masteries) {
+      if (m.confidence < MIN_CONFIDENCE_FOR_TRANSFER) continue; // only confident data informs transfer boosts
+
+      const entry = sums.get(m.concept.category) ?? {
+        weighted: 0,
+        weight: 0,
+      };
+
+      entry.weighted += m.score * m.confidence;
+      entry.weight += m.confidence;
+
+      sums.set(m.concept.category, entry);
+    }
+
+    const result = new Map<string, number>();
+
+    for (const [category, { weighted, weight }] of sums) {
+      result.set(category, weight > 0 ? weighted / weight : 0);
+    }
+
+    return result;
+  }
+
+  private difficultyFit(difficulty: Difficulty, overallMastery: number): number {
+    // Aim slightly above current level — a stretch, not a repeat.
+    const target = Math.min(Math.max(overallMastery + 0.1, 0.15), 0.85);
+    const distance = Math.abs(DIFFICULTY_ANCHOR[difficulty] - target);
+
+    return Math.max(1 - distance * 1.5, 0.1);
+  }
+
+  private difficultyReason(
+    difficulty: Difficulty,
+    overallMastery: number
+  ): string {
+    const target = Math.min(Math.max(overallMastery + 0.1, 0.15), 0.85);
+    const anchor = DIFFICULTY_ANCHOR[difficulty];
+
+    if (Math.abs(anchor - target) < 0.15) {
+      return "A good stretch for your current level";
+    }
+
+    return anchor < target
+      ? "A confidence-building warm-up"
+      : "A reach — attempt when you have time to struggle with it";
+  }
+}
+================================================
+FILE: ./src/modules/interview/services/mastery/SkillGraphService.ts
+================================================
+import { prisma } from "@/shared/prisma/client";
+
+const CONFIDENCE_THRESHOLD_FOR_RANKING = 0.4; // ~2+ evidence samples before a concept counts toward strengths/weaknesses
+const TOP_N = 5;
+
+export interface ConceptMasterySnapshot {
+  conceptId: string;
+  slug: string;
+  name: string;
+  category: string;
+  score: number | null; // null = not yet assessed
+  confidence: number;
+  sampleCount: number;
+  lastDemonstratedAt: Date | null;
+}
+
+export interface SkillGraph {
+  userId: string;
+  categories: Record<string, ConceptMasterySnapshot[]>;
+  strengths: ConceptMasterySnapshot[];
+  weaknesses: ConceptMasterySnapshot[];
+  overallMastery: number | null;
+  totalConceptsTracked: number;
+}
+
+export class SkillGraphService {
+  async getSkillGraph(userId: string): Promise<SkillGraph> {
+    const [concepts, masteries] = await Promise.all([
+      prisma.concept.findMany({
+        orderBy: [{ category: "asc" }, { name: "asc" }],
+      }),
+      prisma.conceptMastery.findMany({ where: { userId } }),
+    ]);
+
+    const masteryByConceptId = new Map(
+      masteries.map((m) => [m.conceptId, m])
+    );
+
+    const snapshots: ConceptMasterySnapshot[] = concepts.map((concept) => {
+      const mastery = masteryByConceptId.get(concept.id);
+
+      return {
+        conceptId: concept.id,
+        slug: concept.slug,
+        name: concept.name,
+        category: concept.category,
+        score: mastery ? mastery.score : null,
+        confidence: mastery?.confidence ?? 0,
+        sampleCount: mastery?.sampleCount ?? 0,
+        lastDemonstratedAt: mastery?.lastDemonstratedAt ?? null,
+      };
+    });
+
+    const categories: Record<string, ConceptMasterySnapshot[]> = {};
+
+    for (const snapshot of snapshots) {
+      (categories[snapshot.category] ??= []).push(snapshot);
+    }
+
+    const ranked = snapshots.filter(
+      (s): s is ConceptMasterySnapshot & { score: number } =>
+        s.score !== null &&
+        s.confidence >= CONFIDENCE_THRESHOLD_FOR_RANKING
+    );
+
+    const strengths = [...ranked]
+      .sort((a, b) => b.score - a.score)
+      .slice(0, TOP_N);
+
+    const weaknesses = [...ranked]
+      .sort((a, b) => a.score - b.score)
+      .slice(0, TOP_N);
+
+    const weightedSum = masteries.reduce(
+      (sum, m) => sum + m.score * m.confidence,
+      0
+    );
+
+    const weightTotal = masteries.reduce(
+      (sum, m) => sum + m.confidence,
+      0
+    );
+
+    const overallMastery =
+      weightTotal > 0 ? weightedSum / weightTotal : null;
+
+    return {
+      userId,
+      categories,
+      strengths,
+      weaknesses,
+      overallMastery,
+      totalConceptsTracked: masteries.length,
+    };
+  }
+}
+================================================
+FILE: ./src/modules/interview/services/mastery/MasteryService.ts
+================================================
+import { prisma } from "@/shared/prisma/client";
+import logger from "@/src/shared/logger/logger";
+
+// How quickly old mastery pulls back toward "unknown" (0.5) if a concept
+// hasn't been demonstrated recently. 90 days = one full decay step.
+const DECAY_HALF_LIFE_DAYS = 90;
+
+// How much a single new evaluation can move the score, before decay/sample
+// weighting. Kept fixed rather than 1/sampleCount so mastery can still shift
+// meaningfully after many interviews instead of ossifying.
+const BASE_LEARNING_RATE = 0.3;
+
+type ConceptSignal = {
+  conceptId: string;
+  // 0-1, derived from the dimension score(s) of the evidence tagging this concept
+  demonstratedScore: number;
+};
+
+export class MasteryService {
+  /**
+   * Recomputes ConceptMastery for every concept touched by a single
+   * evaluation. Call this right after EvaluationService persists
+   * EvidenceItem/EvidenceConcept rows for that evaluation.
+   */
+  async recomputeForEvaluation(evaluationId: string): Promise<void> {
+    const evaluation = await prisma.evaluation.findUnique({
+      where: { id: evaluationId },
+      include: {
+        interview: { select: { userId: true } },
+        evidenceItems: {
+          include: { concepts: true },
+        },
+      },
+    });
+
+    if (!evaluation) {
+      throw new Error(`Evaluation ${evaluationId} not found`);
+    }
+
+    const dimensionScoresById = new Map(
+      (
+        evaluation.dimensionScores as Array<{
+          dimension: string;
+          score: number;
+        }>
+      ).map((d) => [d.dimension, d.score])
+    );
+
+    // Aggregate per-concept signal across every evidence item in this
+    // evaluation that tagged it — a concept demonstrated by 3 evidence items
+    // gets the average of those items' dimension scores.
+    const signalsByConceptId = new Map<string, number[]>();
+
+    for (const item of evaluation.evidenceItems) {
+      const dimensionScore =
+        dimensionScoresById.get(item.dimension) ?? 0;
+
+      const normalized = Math.min(
+        Math.max(dimensionScore / 10, 0),
+        1
+      );
+
+      for (const link of item.concepts) {
+        const existing =
+          signalsByConceptId.get(link.conceptId) ?? [];
+
+        existing.push(normalized * link.weight);
+
+        signalsByConceptId.set(link.conceptId, existing);
+      }
+    }
+
+    const signals: ConceptSignal[] = [
+      ...signalsByConceptId.entries(),
+    ].map(([conceptId, scores]) => ({
+      conceptId,
+      demonstratedScore:
+        scores.reduce((sum, s) => sum + s, 0) / scores.length,
+    }));
+
+    for (const signal of signals) {
+      await this.applySignal(
+        evaluation.interview.userId,
+        signal
+      );
+    }
+
+    logger.info(
+      `Mastery recomputed for evaluation ${evaluationId}: ${signals.length} concepts touched`
+    );
+  }
+
+  private async applySignal(
+    userId: string,
+    signal: ConceptSignal
+  ): Promise<void> {
+    const existing = await prisma.conceptMastery.findUnique({
+      where: {
+        userId_conceptId: {
+          userId,
+          conceptId: signal.conceptId,
+        },
+      },
+    });
+
+    const now = new Date();
+
+    const decayedScore = existing
+      ? this.applyDecay(
+          existing.score,
+          existing.lastDemonstratedAt,
+          now
+        )
+      : 0.5; // no prior data — start neutral, not zero
+
+    const newScore =
+      decayedScore +
+      (signal.demonstratedScore - decayedScore) *
+        BASE_LEARNING_RATE;
+
+    const newSampleCount = (existing?.sampleCount ?? 0) + 1;
+
+    // Confidence grows asymptotically: 1 sample ~0.33, 5 samples ~0.71,
+    // 10 samples ~0.83. Never fully reaches 1 — there's always more signal
+    // that could still shift the estimate.
+    const newConfidence = newSampleCount / (newSampleCount + 2);
+
+    await prisma.conceptMastery.upsert({
+      where: {
+        userId_conceptId: {
+          userId,
+          conceptId: signal.conceptId,
+        },
+      },
+      update: {
+        score: newScore,
+        confidence: newConfidence,
+        sampleCount: newSampleCount,
+        lastDemonstratedAt: now,
+      },
+      create: {
+        userId,
+        conceptId: signal.conceptId,
+        score: newScore,
+        confidence: newConfidence,
+        sampleCount: newSampleCount,
+        lastDemonstratedAt: now,
+      },
+    });
+  }
+
+  /** Pulls a stale score back toward 0.5 (unknown) the longer it's been since it was last demonstrated. */
+  private applyDecay(
+    score: number,
+    lastDemonstratedAt: Date | null,
+    now: Date
+  ): number {
+    if (!lastDemonstratedAt) return score;
+
+    const daysSince =
+      (now.getTime() - lastDemonstratedAt.getTime()) /
+      (1000 * 60 * 60 * 24);
+
+    const decaySteps = daysSince / DECAY_HALF_LIFE_DAYS;
+
+    const decayFactor = Math.pow(0.5, decaySteps);
+
+    return 0.5 + (score - 0.5) * decayFactor;
+  }
+}
+================================================
 FILE: ./src/modules/interview/services/TranscriptService.ts
 ================================================
 import {
@@ -6555,9 +7637,11 @@ import { EvidenceEvaluator } from "../../evaluators/EvidenceEvaluator";
 import { EvaluatableInterview } from "../../evaluators/types";
 import { PromptLoader } from "../../prompt/PromptLoader";
 import { InterviewRepository } from "../../repositories/InterviewRepository";
+import { MasteryService } from "../mastery/MasteryService";
 
 export class EvaluationService {
   private readonly evaluator: EvidenceEvaluator;
+  private readonly mastery: MasteryService;
 
   constructor(
     private readonly ai: AIService,
@@ -6568,6 +7652,7 @@ export class EvaluationService {
       this.ai,
       this.promptLoader
     );
+    this.mastery = new MasteryService();
   }
 
   async evaluateInterview(interviewId: string) {
@@ -6625,11 +7710,72 @@ export class EvaluationService {
       }
     );
 
+    // Write the normalized evidence/concept rows the Skill Intelligence
+    // Layer reads from. This is separate from the Json blob above — that
+    // stays as a read-optimized cache for the report page.
+    await this.persistEvidenceItems(evaluation.id, evidence);
+
+    await this.mastery.recomputeForEvaluation(evaluation.id);
+
     this.log.info(
       `Evaluation completed for interview ${interviewId} (overall: ${result.overallScore}, ${evidence.length} evidence items)`
     );
 
     return evaluation;
+  }
+
+  private async persistEvidenceItems(
+    evaluationId: string,
+    evidence: Array<{
+      dimension: string;
+      messageId: string;
+      timestampSeconds: number;
+      quote: string;
+      comment: string;
+      conceptSlugs: string[];
+    }>
+  ) {
+    if (evidence.length === 0) return;
+
+    const allConceptSlugs = [
+      ...new Set(evidence.flatMap((e) => e.conceptSlugs)),
+    ];
+
+    const concepts = await prisma.concept.findMany({
+      where: { slug: { in: allConceptSlugs } },
+      select: { id: true, slug: true },
+    });
+
+    const conceptIdBySlug = new Map(
+      concepts.map((c) => [c.slug, c.id])
+    );
+
+    for (const item of evidence) {
+      const created = await prisma.evidenceItem.create({
+        data: {
+          evaluationId,
+          messageId: item.messageId,
+          dimension: item.dimension,
+          timestampSeconds: item.timestampSeconds,
+          quote: item.quote,
+          comment: item.comment,
+        },
+      });
+
+      const conceptLinks = item.conceptSlugs
+        .map((slug) => conceptIdBySlug.get(slug))
+        .filter((id): id is string => Boolean(id));
+
+      if (conceptLinks.length > 0) {
+        await prisma.evidenceConcept.createMany({
+          data: conceptLinks.map((conceptId) => ({
+            evidenceItemId: created.id,
+            conceptId,
+          })),
+          skipDuplicates: true,
+        });
+      }
+    }
   }
 }
 ================================================
