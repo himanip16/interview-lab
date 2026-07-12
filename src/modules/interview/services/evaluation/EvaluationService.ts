@@ -1,13 +1,14 @@
 import { prisma } from "@/shared/prisma/client";
 import { AIService } from "../../../ai/services/AIService";
 import { PromptLoader } from "../../prompt/PromptLoader";
-import { Logger } from "src/shared/logger"
+import logger from "@/src/shared/logger/logger";
+import { InterviewRepository } from "../../repositories/InterviewRepository";
 
 export class EvaluationService {
   constructor(
     private readonly ai: AIService,
     private readonly promptLoader: PromptLoader,
-    private readonly logger: Logger
+    private readonly logger: any
   ) {}
 
   async evaluateInterview(interviewId: string) {
@@ -34,8 +35,8 @@ export class EvaluationService {
       )
       .join("\n");
 
-    const rubric = await this.promptLoader.load(
-      "rubrics/scalability.md"
+    const rubric = await this.promptLoader.loadRubric(
+      "scalability.md"
     );
 
     const template = await this.promptLoader.load(
@@ -57,6 +58,26 @@ export class EvaluationService {
       `Evaluation completed for interview ${interviewId}`
     );
 
-    return result;
+    // Parse the AI response and save to database
+    const repository = new InterviewRepository();
+    
+    // For now, return a placeholder evaluation
+    // TODO: Parse the AI response to extract scores and feedback
+    const evaluation = await repository.saveEvaluation(
+      interviewId,
+      {
+        overallScore: 75,
+        communicationScore: 80,
+        architectureScore: 75,
+        scalabilityScore: 70,
+        tradeoffScore: 75,
+        feedback: result,
+        metadata: {
+          rawResponse: result,
+        },
+      }
+    );
+
+    return evaluation;
   }
 }

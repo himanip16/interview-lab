@@ -9,7 +9,7 @@ type Props = {
   }>;
 };
 
-export async function GET({ params }: Props) {
+export async function GET(request: Request, { params }: Props) {
   const { id } = await params;
 
   try {
@@ -51,6 +51,9 @@ export async function GET({ params }: Props) {
         transcript: interview.transcript,
         evaluation: interview.evaluation,
         summary: interview.summary,
+        currentPhase: interview.currentPhase,
+        createdAt: interview.createdAt,
+        updatedAt: interview.updatedAt,
       },
       {
         status: 200,

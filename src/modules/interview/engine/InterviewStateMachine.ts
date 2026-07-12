@@ -164,10 +164,15 @@ export class InterviewStateMachine {
       };
     }
 
+    // Only trigger time-pressure transition if we're significantly behind schedule
+    // and have spent at least 30% of the target time for current phase to prevent cascading
+    const timePressureThreshold = 0.3; // 30% behind schedule
+    const minPhaseTimeRatio = 0.3; // Must spend at least 30% of target phase time
+    
     if (
       elapsedRatio >= 0.5 &&
-      actualRemainingSeconds <
-        expectedRemainingSeconds
+      actualRemainingSeconds < expectedRemainingSeconds * (1 - timePressureThreshold) &&
+      context.elapsedPhaseSeconds >= targetPhaseSeconds * minPhaseTimeRatio
     ) {
       return {
         shouldTransition: true,

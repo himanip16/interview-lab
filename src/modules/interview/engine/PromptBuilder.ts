@@ -30,6 +30,12 @@ export class PromptBuilder {
         )
         .join("\n");
 
+    const goalCoverageTemplate = phase.goals.length > 0
+      ? phase.goals
+          .map((goal) => `      "${goal}": 0.0`)
+          .join(",\n")
+      : '      "phase_goal": 0.0';
+
     return `
 ${basePrompt}
 
@@ -69,7 +75,7 @@ Return ONLY valid JSON using exactly this structure:
   "reply": "Your next interviewer response",
   "phaseAssessment": {
     "goalCoverage": {
-      "${phase.goals[0] ?? "phase_goal"}": 0.0
+${goalCoverageTemplate}
     },
     "confidence": 0.0,
     "unresolvedTopics": []

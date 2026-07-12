@@ -9,7 +9,6 @@ const DIFFICULTY_OPTIONS = [
   "Easy",
   "Medium",
   "Hard",
-  "Staff",
 ] as const;
 
 export default function DifficultySelector({

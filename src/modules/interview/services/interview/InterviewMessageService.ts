@@ -5,8 +5,9 @@ import {
 } from "@prisma/client";
 
 import { InterviewRepository } from "../../repositories/InterviewRepository";
-
-import { InterviewEngine } from "@src/modules/interview/engine/InterviewEngine";
+import { InterviewEngine } from "../../engine/InterviewEngine";
+import { InterviewProfileResolver } from "../../profiles/InterviewProfileResolver";
+import { ChatMessage } from "@/src/modules/ai/services/AIService";
 
 export class InterviewMessageService {
   private readonly repository =
@@ -14,6 +15,9 @@ export class InterviewMessageService {
 
   private readonly engine =
     new InterviewEngine();
+
+  private readonly profileResolver =
+    new InterviewProfileResolver();
 
   async processMessage(
     interviewId: string,
@@ -67,64 +71,87 @@ export class InterviewMessageService {
       },
     ];
 
+    const profile = this.profileResolver.resolve(
+      interview.type
+    );
+
+    const history: ChatMessage[] = conversation.map(
+      (msg) => ({
+        role: msg.role,
+        content: msg.content,
+      })
+    );
+
+    const problemDescription =
+      interview.problem.description ??
+      interview.problem.title;
+
+    const interviewStartedAt =
+      interview.startedAt ??
+      interview.createdAt;
+
+    // For now, use interview start time as phase start time
+    // TODO: Track actual phase start time in the database
+    const phaseStartedAt = interviewStartedAt;
+
     const result =
-      await this.engine.process({
-        interview: {
-          id: interview.id,
-          type: interview.type,
-          difficulty:
-            interview.difficulty,
-          duration: interview.duration,
-          company: interview.company,
-          currentPhase:
-            interview.currentPhase,
-          createdAt: interview.createdAt,
-        },
-
-        problem: {
-          id: interview.problem.id,
-          title: interview.problem.title,
-          description:
-            interview.problem.description,
-          category:
-            interview.problem.category,
-        },
-
-        conversation,
+      await this.engine.processUserMessage({
+        profile,
+        currentPhase: interview.currentPhase,
+        history,
+        runningSummary: interview.summary,
+        problem: problemDescription,
+        candidateName: "Candidate",
+        interviewDurationMinutes:
+          interview.duration,
+        interviewStartedAt,
+        phaseStartedAt,
       });
 
+    const nextPhase =
+      result.transition.shouldTransition
+        ? result.transition.nextPhase
+        : interview.currentPhase;
+
     const metadata: Prisma.InputJsonValue = {
-      phase: result.phase,
+      phase: nextPhase,
       previousPhase:
         interview.currentPhase,
       transitioned:
-        result.phase !==
-        interview.currentPhase,
-      confidence: result.confidence,
+        result.transition.shouldTransition,
+      confidence:
+        result.phaseAssessment?.confidence ?? 0.5,
+      transitionReason:
+        result.transition.reason,
     };
 
     await this.repository.persistTurn({
       interviewId: interview.id,
       userMessage,
       assistantMessage: result.reply,
-      currentPhase: result.phase,
+      currentPhase: nextPhase,
       status:
-        result.completed === true
-          ? InterviewStatus.COMPLETED
-          : InterviewStatus.IN_PROGRESS,
+        result.transition.reason === "stay" &&
+        !result.transition.shouldTransition
+          ? InterviewStatus.IN_PROGRESS
+          : InterviewStatus.COMPLETED,
       assistantMetadata: metadata,
     });
 
     return {
       reply: result.reply,
-      phase: result.phase,
+      phase: nextPhase,
       previousPhase:
         interview.currentPhase,
       transitioned:
-        result.phase !==
-        interview.currentPhase,
-      confidence: result.confidence,
-      completed: result.completed,
+        result.transition.shouldTransition,
+      confidence:
+        result.phaseAssessment?.confidence ?? 0.5,
+      completed:
+        result.transition.reason === "stay" &&
+        !result.transition.shouldTransition
+          ? false
+          : true,
     };
   }
 }

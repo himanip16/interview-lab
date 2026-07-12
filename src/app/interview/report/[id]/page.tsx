@@ -30,7 +30,7 @@ export default async function ReportPage({ params }: Props) {
     );
   }
 
-  const metadata =
+  const metadata: EvaluationMetadata =
     (evaluation.metadata as EvaluationMetadata | null) ?? {};
 
   return (
@@ -40,7 +40,7 @@ export default async function ReportPage({ params }: Props) {
       </h1>
 
       <div className="mb-12 grid gap-8 md:grid-cols-2">
-        <ScoreCard score={evaluation.score} />
+        <ScoreCard score={evaluation.overallScore} />
 
         <div className="rounded-xl border bg-white p-6 shadow-sm">
           <h3 className="mb-2 font-bold">Expert Feedback</h3>

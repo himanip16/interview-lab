@@ -16,17 +16,15 @@ export class ValidatedJSONParser {
       
       const parsed = JSON.parse(cleaned);
 
-if (
-  typeof parsed.confidence === "number" &&
-  parsed.confidence > 1
-) {
-  parsed.confidence = Math.min(
-    parsed.confidence / 100,
-    1
-  );
-}
-
-return schema.parse(parsed);
+      if (
+        typeof parsed.confidence === "number" &&
+        parsed.confidence > 1
+      ) {
+        parsed.confidence = Math.min(
+          parsed.confidence / 100,
+          1
+        );
+      }
 
       return schema.parse(parsed);
     };

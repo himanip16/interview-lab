@@ -20,7 +20,7 @@ const MessageList: React.FC<MessageListProps> = ({ messages }) => {
   return (
     <div 
       ref={scrollRef}
-      className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50"
+      className="p-4 space-y-4 bg-gray-50"
     >
       {messages.map((msg, index) => (
         <Message key={msg.id || index} message={msg} />

@@ -7,7 +7,7 @@ export interface ChatMessage {
 
 export class FallbackAIProvider {
   private readonly providers = [
-    new OllamaProvider("qwen2.5:7b"),
+    new OllamaProvider("qwen2.5-coder:7b"),
     new OllamaProvider("llama3.2:1b"),
   ];
 
