@@ -13,7 +13,7 @@ export default function DurationSelector({
 }: Props) {
   return (
     <div className="mt-8">
-      <h3 className="mb-3 font-semibold">
+      <h3 className="mb-3 font-semibold text-white">
         Duration
       </h3>
 

@@ -11,6 +11,7 @@ import DifficultySelector from "@/src/features/interview/setup/components/Diffic
 import DurationSelector from "@/src/features/interview/setup/components/DurationSelector";
 import SetupCard from "@/src/features/interview/setup/components/SetupCard";
 import { useToast } from "@/src/components/ui/Toast";
+import { Button } from "@/src/components/ui/Button";
 
 export default function InterviewSetupPage() {
   const router = useRouter();
@@ -93,9 +94,9 @@ export default function InterviewSetupPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background px-6 py-12 text-foreground">
+    <main className="min-h-screen bg-background px-6 py-12">
       <SetupCard>
-        <h1 className="text-4xl font-bold">
+        <h1 className="text-4xl font-bold text-foreground">
           Interview Setup
         </h1>
 
@@ -108,7 +109,7 @@ export default function InterviewSetupPage() {
             Interview Type
           </p>
 
-          <h2 className="mt-2 text-2xl font-semibold capitalize">
+          <h2 className="mt-2 text-2xl font-semibold capitalize text-foreground">
             {interviewType}
           </h2>
         </div>
@@ -128,16 +129,17 @@ export default function InterviewSetupPage() {
           onChange={setCompany}
         />
 
-        <button
+        <Button
           type="button"
+          variant="primary"
           disabled={loading || !problemId}
           onClick={handleStartInterview}
-          className="mt-10 w-full rounded-lg bg-zinc-900 py-4 text-lg font-semibold hover:bg-zinc-800 disabled:opacity-50 text-white"
+          className="mt-10 w-full py-4 text-lg"
         >
           {loading
             ? "Starting..."
             : "Start Interview"}
-        </button>
+        </Button>
       </SetupCard>
     </main>
   );

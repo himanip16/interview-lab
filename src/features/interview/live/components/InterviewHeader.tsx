@@ -10,10 +10,10 @@ export default function InterviewHeader({
   interviewId,
 }: InterviewHeaderProps) {
   return (
-    <header className="h-16 border-b border-zinc-200 flex items-center justify-between px-6 bg-zinc-50">
+    <header className="h-16 border-b border-zinc-800 flex items-center justify-between px-6 bg-zinc-900">
       <div className="flex items-center gap-2">
-        <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
-        <span className="font-semibold text-zinc-900">
+        <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse" />
+        <span className="font-semibold text-white">
           Live Interview Session
         </span>
       </div>

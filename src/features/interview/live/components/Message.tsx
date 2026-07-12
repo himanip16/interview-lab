@@ -14,8 +14,8 @@ const Message: React.FC<MessageProps> = ({ message }) => {
       <div
         className={`max-w-[80%] rounded-lg p-4 ${
           isAI
-            ? 'bg-white text-zinc-900 border border-zinc-200 shadow-sm'
-            : 'bg-zinc-900 text-white shadow-md'
+            ? 'bg-zinc-800 text-white border border-zinc-700 shadow-sm'
+            : 'bg-emerald-600 text-white shadow-md'
         }`}
       >
         <div className="text-xs mb-1 opacity-70 font-semibold uppercase">

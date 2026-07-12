@@ -1,3 +1,6 @@
+import Card from "@/src/components/ui/Card";
+import Text from "@/src/components/ui/Text";
+
 type Props = {
   score: number;
 };
@@ -10,16 +13,16 @@ export default function OverallScoreCard({ score }: Props) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 border border-zinc-200 text-center">
-      <p className="text-sm font-semibold text-zinc-500 mb-4">
+    <Card className="text-center">
+      <Text variant="small" className="font-semibold mb-4">
         OVERALL SCORE
-      </p>
-      <p className="text-6xl font-bold text-zinc-900 mb-2">
+      </Text>
+      <p className="text-6xl font-bold text-foreground mb-2">
         {score}
       </p>
-      <p className="text-sm text-zinc-500">
+      <Text variant="small">
         {getDifficultyLevel(score)}
-      </p>
-    </div>
+      </Text>
+    </Card>
   );
 }

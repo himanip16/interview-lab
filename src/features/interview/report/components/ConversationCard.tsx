@@ -1,3 +1,6 @@
+import Card from "@/src/components/ui/Card";
+import Text from "@/src/components/ui/Text";
+
 type EvidenceItem = {
   dimension: string;
   timestampSeconds: number;
@@ -17,30 +20,30 @@ export default function ConversationCard({ evidence }: Props) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 border border-zinc-200">
+    <Card>
       {evidence.length > 0 ? (
         <div className="space-y-4">
           {evidence.map((item, index) => (
-            <div key={index} className="border-b border-zinc-100 pb-4 last:border-0 last:pb-0">
+            <div key={index} className="border-b border-border pb-4 last:border-0 last:pb-0">
               <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-semibold text-zinc-500">
+                <span className="text-sm font-semibold text-muted-foreground">
                   {item.dimension === 'INTERVIEWER' ? 'INTERVIEWER' : 'CANDIDATE'}
                 </span>
-                <span className="text-sm text-zinc-400">
+                <Text variant="small">
                   {formatTimestamp(item.timestampSeconds)}
-                </span>
+                </Text>
               </div>
-              <p className="text-zinc-900 leading-relaxed font-normal">
+              <Text variant="body" className="leading-relaxed">
                 {item.quote}
-              </p>
+              </Text>
             </div>
           ))}
         </div>
       ) : (
-        <div className="text-center py-8 text-zinc-400">
-          No conversation data available
+        <div className="text-center py-8">
+          <Text variant="muted">No conversation data available</Text>
         </div>
       )}
-    </div>
+    </Card>
   );
 }

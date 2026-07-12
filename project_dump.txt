@@ -98,6 +98,8 @@ PROJECT STRUCTURE
 │   │   ├── dashboard
 │   │   │   └── [userId]
 │   │   │       └── page.tsx
+│   │   ├── diagram
+│   │   │   └── page.tsx
 │   │   ├── globals.css
 │   │   ├── interview
 │   │   │   ├── live
@@ -123,17 +125,28 @@ PROJECT STRUCTURE
 │   │   │   ├── Navbar.tsx
 │   │   │   └── PageContainer.tsx
 │   │   ├── report
+│   │   ├── theme
+│   │   │   └── ThemeProvider.tsx
 │   │   └── ui
 │   │       ├── Button.tsx
+│   │       ├── Card.tsx
 │   │       ├── Dialog.tsx
+│   │       ├── Heading.tsx
 │   │       ├── Input.tsx
 │   │       ├── Select.tsx
+│   │       ├── Text.tsx
+│   │       ├── ThemeToggle.tsx
 │   │       └── Toast.tsx
+│   ├── contexts
+│   │   └── ThemeContext.tsx
 │   ├── features
 │   │   ├── dashboard
 │   │   │   └── components
 │   │   │       ├── NextRecommendedInterview.tsx
 │   │   │       └── SkillGraphView.tsx
+│   │   ├── diagram
+│   │   │   └── components
+│   │   │       └── SystemDiagram.tsx
 │   │   ├── interview
 │   │   │   ├── api
 │   │   │   │   └── interviewApi.ts
@@ -159,10 +172,13 @@ PROJECT STRUCTURE
 │   │   │   │       └── interviewStore.ts
 │   │   │   ├── report
 │   │   │   │   ├── components
+│   │   │   │   │   ├── ConversationCard.tsx
 │   │   │   │   │   ├── EvidenceTimeline.tsx
 │   │   │   │   │   ├── FeedbackCard.tsx
+│   │   │   │   │   ├── OverallScoreCard.tsx
 │   │   │   │   │   ├── ScoreCard.tsx
-│   │   │   │   │   └── Timeline.tsx
+│   │   │   │   │   ├── Timeline.tsx
+│   │   │   │   │   └── WhatHappenedCard.tsx
 │   │   │   │   ├── hooks
 │   │   │   │   │   └── useReport.ts
 │   │   │   │   └── index.ts
@@ -188,7 +204,9 @@ PROJECT STRUCTURE
 │   │   │   │   ├── CTA.tsx
 │   │   │   │   ├── FeatureCard.tsx
 │   │   │   │   ├── Features.tsx
-│   │   │   │   └── Hero.tsx
+│   │   │   │   ├── Hero.tsx
+│   │   │   │   ├── PersonalNotebooks.tsx
+│   │   │   │   └── SmartMentor.tsx
 │   │   │   └── index.ts
 │   │   └── shared
 │   ├── lib
@@ -293,7 +311,7 @@ PROJECT STRUCTURE
 ├── tsconfig.json
 └── tsconfig.tsbuildinfo
 
-116 directories, 176 files
+121 directories, 189 files
 
 FILE CONTENTS
 
@@ -1671,6 +1689,86 @@ const nextConfig: NextConfig = {
 export default nextConfig;
 
 ================================================
+FILE: ./src/contexts/ThemeContext.tsx
+================================================
+"use client";
+
+import { createContext, useContext, useEffect, useState } from "react";
+
+type Theme = "dark" | "light";
+
+type ThemeContextType = {
+  theme: Theme;
+  toggleTheme: () => void;
+};
+
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const [theme, setTheme] = useState<Theme>("dark");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const savedTheme = localStorage.getItem("theme") as Theme | null;
+    if (savedTheme) {
+      setTheme(savedTheme);
+    } else {
+      // Check system preference
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      setTheme(prefersDark ? "dark" : "light");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+
+    const root = document.documentElement;
+    if (theme === "dark") {
+      root.setAttribute("data-theme", "dark");
+    } else {
+      root.setAttribute("data-theme", "light");
+    }
+    localStorage.setItem("theme", theme);
+  }, [theme, mounted]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+  };
+
+  if (!mounted) {
+    return <>{children}</>;
+  }
+
+  return (
+    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+}
+
+export function useTheme() {
+  const context = useContext(ThemeContext);
+  if (context === undefined) {
+    throw new Error("useTheme must be used within a ThemeProvider");
+  }
+  return context;
+}
+
+================================================
+FILE: ./src/app/diagram/page.tsx
+================================================
+import SystemDiagram from "@/src/features/diagram/components/SystemDiagram";
+
+export default function DiagramPage() {
+  return (
+    <div className="h-screen">
+      <SystemDiagram />
+    </div>
+  );
+}
+
+================================================
 FILE: ./src/app/(marketing)/layout.tsx
 ================================================
 import type { ReactNode } from "react";
@@ -1693,6 +1791,8 @@ import PageContainer from "@/src/components/layout/PageContainer";
 
 import Hero from "@/src/features/landing/components/Hero";
 import Features from "@/src/features/landing/components/Features";
+import SmartMentor from "@/src/features/landing/components/SmartMentor";
+import PersonalNotebooks from "@/src/features/landing/components/PersonalNotebooks";
 
 export default function Home() {
   return (
@@ -1700,6 +1800,10 @@ export default function Home() {
       <Navbar />
 
       <Hero />
+
+      <SmartMentor />
+
+      <PersonalNotebooks />
 
       <InterviewCatalog />
 
@@ -1738,8 +1842,8 @@ export default async function DashboardPage({ params }: Props) {
   ]);
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-12 text-white">
-      <h1 className="text-4xl font-bold">Your Dashboard</h1>
+    <main className="mx-auto max-w-5xl px-6 py-12 text-foreground">
+      <h1 className="text-4xl font-bold text-white">Your Dashboard</h1>
 
       <div className="mt-8">
         <NextRecommendedInterview recommendation={recommendation} />
@@ -1797,8 +1901,8 @@ export default function RegisterPage() {
   }
 
   return (
-    <main className="mx-auto max-w-md px-6 py-20 text-white">
-      <h1 className="text-3xl font-bold">Create an Account</h1>
+    <main className="mx-auto max-w-md px-6 py-20">
+      <h1 className="text-3xl font-bold text-foreground">Create an Account</h1>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
         <input
@@ -1806,7 +1910,7 @@ export default function RegisterPage() {
           type="email"
           required
           placeholder="Email"
-          className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2"
+          className="w-full rounded-md border border-border bg-card px-3 py-2 text-foreground"
         />
 
         <input
@@ -1815,7 +1919,7 @@ export default function RegisterPage() {
           required
           minLength={8}
           placeholder="Password (min 8 characters)"
-          className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2"
+          className="w-full rounded-md border border-border bg-card px-3 py-2 text-foreground"
         />
 
         {error && <p className="text-sm text-red-500">{error}</p>}
@@ -1823,15 +1927,15 @@ export default function RegisterPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-lg bg-blue-600 py-3 font-semibold hover:bg-blue-500 disabled:opacity-50"
+          className="w-full rounded-lg bg-primary py-3 font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50"
         >
           {loading ? "Creating account..." : "Register"}
         </button>
       </form>
 
-      <p className="mt-4 text-sm text-zinc-400">
+      <p className="mt-4 text-sm text-muted-foreground">
         Already have an account?{" "}
-        <a href="/login" className="text-blue-400">
+        <a href="/login" className="text-primary hover:opacity-80">
           Log in
         </a>
       </p>
@@ -1854,6 +1958,7 @@ import DifficultySelector from "@/src/features/interview/setup/components/Diffic
 import DurationSelector from "@/src/features/interview/setup/components/DurationSelector";
 import SetupCard from "@/src/features/interview/setup/components/SetupCard";
 import { useToast } from "@/src/components/ui/Toast";
+import { Button } from "@/src/components/ui/Button";
 
 export default function InterviewSetupPage() {
   const router = useRouter();
@@ -1936,9 +2041,9 @@ export default function InterviewSetupPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background px-6 py-12 text-foreground">
+    <main className="min-h-screen bg-background px-6 py-12">
       <SetupCard>
-        <h1 className="text-4xl font-bold">
+        <h1 className="text-4xl font-bold text-foreground">
           Interview Setup
         </h1>
 
@@ -1951,7 +2056,7 @@ export default function InterviewSetupPage() {
             Interview Type
           </p>
 
-          <h2 className="mt-2 text-2xl font-semibold capitalize">
+          <h2 className="mt-2 text-2xl font-semibold capitalize text-foreground">
             {interviewType}
           </h2>
         </div>
@@ -1971,16 +2076,17 @@ export default function InterviewSetupPage() {
           onChange={setCompany}
         />
 
-        <button
+        <Button
           type="button"
+          variant="primary"
           disabled={loading || !problemId}
           onClick={handleStartInterview}
-          className="mt-10 w-full rounded-lg bg-blue-600 py-4 text-lg font-semibold hover:bg-blue-500 disabled:opacity-50"
+          className="mt-10 w-full py-4 text-lg"
         >
           {loading
             ? "Starting..."
             : "Start Interview"}
-        </button>
+        </Button>
       </SetupCard>
     </main>
   );
@@ -2026,9 +2132,9 @@ export default async function Page({ params }: Props) {
 FILE: ./src/app/interview/report/[id]/page.tsx
 ================================================
 import { prisma } from "@/shared/prisma/client";
-import ScoreCard from "@/src/features/interview/report/components/ScoreCard";
-import FeedbackCard from "@/src/features/interview/report/components/FeedbackCard";
-import EvidenceTimeline from "@/src/features/interview/report/components/EvidenceTimeline";
+import ConversationCard from "@/src/features/interview/report/components/ConversationCard";
+import OverallScoreCard from "@/src/features/interview/report/components/OverallScoreCard";
+import WhatHappenedCard from "@/src/features/interview/report/components/WhatHappenedCard";
 
 type Props = {
   params: Promise<{
@@ -2039,6 +2145,7 @@ type Props = {
 type EvaluationMetadata = {
   strengths?: string[];
   weaknesses?: string[];
+  observations?: Array<{ type: "OBSERVATION" | "ADVISORY"; text: string }>;
 };
 
 type DimensionScore = {
@@ -2065,8 +2172,10 @@ export default async function ReportPage({ params }: Props) {
 
   if (!evaluation) {
     return (
-      <div className="p-20 text-center">
-        Generating your detailed feedback... Please refresh in a moment.
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="text-center">
+          <p className="text-muted-foreground">Generating your detailed feedback... Please refresh in a moment.</p>
+        </div>
       </div>
     );
   }
@@ -2081,41 +2190,18 @@ export default async function ReportPage({ params }: Props) {
     (evaluation.evidence as unknown as EvidenceItem[]) ?? [];
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-12 bg-background text-foreground">
-      <h1 className="mb-8 text-4xl font-bold">
-        Interview Performance Report
-      </h1>
+    <div className="min-h-screen bg-background p-4 md:p-8">
+      <div className="mx-auto max-w-4xl space-y-6">
+        <ConversationCard evidence={evidence} />
 
-      <div className="mb-12 grid gap-8 md:grid-cols-2">
-        <ScoreCard score={evaluation.overallScore} />
+        <OverallScoreCard score={evaluation.overallScore} />
 
-        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-          <h3 className="mb-2 font-bold">Expert Feedback</h3>
-
-          <p className="leading-relaxed text-muted-foreground">
-            {evaluation.feedback}
-          </p>
-        </div>
+        <WhatHappenedCard
+          observations={metadata.observations ?? []}
+          strengths={metadata.strengths ?? []}
+          weaknesses={metadata.weaknesses ?? []}
+        />
       </div>
-
-      <div className="mb-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {dimensionScores.map((dimension) => (
-          <ScoreCard
-            key={dimension.dimension}
-            score={Math.round(dimension.score * 10)}
-            label={dimension.dimension.replace(/_/g, " ")}
-          />
-        ))}
-      </div>
-
-      <div className="mb-12">
-        <EvidenceTimeline evidence={evidence} />
-      </div>
-
-      <FeedbackCard
-        strengths={metadata.strengths ?? []}
-        weaknesses={metadata.weaknesses ?? []}
-      />
     </div>
   );
 }
@@ -2126,6 +2212,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from "../components/ui/Toast";
+import { ThemeProvider } from "../contexts/ThemeContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -2153,7 +2240,9 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <ToastProvider>{children}</ToastProvider>
+        <ThemeProvider>
+          <ToastProvider>{children}</ToastProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
@@ -3024,8 +3113,21 @@ FILE: ./src/app/globals.css
   --font-mono: var(--font-geist-mono);
 }
 
-/* Light Theme */
+/* Dark Theme (Default) */
 :root,
+[data-theme="dark"] {
+  --background: #09090b;
+  --foreground: #fafafa;
+  --muted: #18181b;
+  --muted-foreground: #a1a1aa;
+  --card: #18181b;
+  --card-foreground: #fafafa;
+  --border: #27272a;
+  --primary: #10b981;
+  --primary-foreground: #ffffff;
+}
+
+/* Light Theme */
 [data-theme="light"] {
   --background: #ffffff;
   --foreground: #3f3f46;
@@ -3035,19 +3137,6 @@ FILE: ./src/app/globals.css
   --card-foreground: #3f3f46;
   --border: #e2e8f0;
   --primary: #2563eb;
-  --primary-foreground: #ffffff;
-}
-
-/* Dark Theme */
-[data-theme="dark"] {
-  --background: #18181b;
-  --foreground: #f4f4f5;
-  --muted: #27272a;
-  --muted-foreground: #a1a1aa;
-  --card: #18181b;
-  --card-foreground: #f4f4f5;
-  --border: #27272a;
-  --primary: #3b82f6;
   --primary-foreground: #ffffff;
 }
 
@@ -3084,8 +3173,8 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="mx-auto max-w-md px-6 py-20 text-white">
-      <h1 className="text-3xl font-bold">Log In</h1>
+    <main className="mx-auto max-w-md px-6 py-20">
+      <h1 className="text-3xl font-bold text-foreground">Log In</h1>
 
       <form action={loginAction} className="mt-8 space-y-4">
         <input
@@ -3093,7 +3182,7 @@ export default function LoginPage() {
           type="email"
           required
           placeholder="Email"
-          className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2"
+          className="w-full rounded-md border border-border bg-card px-3 py-2 text-foreground"
         />
 
         <input
@@ -3101,20 +3190,20 @@ export default function LoginPage() {
           type="password"
           required
           placeholder="Password"
-          className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2"
+          className="w-full rounded-md border border-border bg-card px-3 py-2 text-foreground"
         />
 
         <button
           type="submit"
-          className="w-full rounded-lg bg-blue-600 py-3 font-semibold hover:bg-blue-500"
+          className="w-full rounded-lg bg-primary py-3 font-semibold text-primary-foreground hover:opacity-90"
         >
           Log In
         </button>
       </form>
 
-      <p className="mt-4 text-sm text-zinc-400">
+      <p className="mt-4 text-sm text-muted-foreground">
         No account?{" "}
-        <a href="/register" className="text-blue-400">
+        <a href="/register" className="text-primary hover:opacity-80">
           Register
         </a>
       </p>
@@ -3132,15 +3221,15 @@ export default function Hero() {
   return (
     <section className="flex min-h-[80vh] items-center">
       <div className="max-w-3xl">
-        <p className="mb-4 text-blue-400">
+        <p className="mb-4 text-emerald-400 font-mono text-sm">
           Practice Like Top Tech Companies
         </p>
 
-        <h2 className="text-6xl font-bold leading-tight">
+        <h1 className="text-6xl font-bold leading-tight text-white">
           AI Technical
           <br />
           Interview Platform
-        </h2>
+        </h1>
 
         <p className="mt-8 max-w-xl text-lg leading-8 text-zinc-400">
           Practice realistic technical interviews for
@@ -3151,14 +3240,14 @@ export default function Hero() {
         <div className="mt-10 flex gap-4">
           <Link
             href="/#interviews"
-            className="rounded-lg bg-blue-600 px-6 py-3 font-medium hover:bg-blue-500"
+            className="rounded-lg bg-white px-6 py-3 font-medium text-black hover:bg-zinc-200 transition-colors"
           >
             Start Interview
           </Link>
 
           <Link
             href="/#interviews"
-            className="rounded-lg border border-zinc-700 px-6 py-3"
+            className="rounded-lg border border-zinc-700 px-6 py-3 text-zinc-300 hover:border-zinc-500 hover:text-white transition-colors"
           >
             Browse Interviews
           </Link>
@@ -3167,6 +3256,67 @@ export default function Hero() {
     </section>
   );
 }
+================================================
+FILE: ./src/features/landing/components/SmartMentor.tsx
+================================================
+"use client";
+
+import Link from "next/link";
+import Card from "@/src/components/ui/Card";
+import Heading from "@/src/components/ui/Heading";
+import Text from "@/src/components/ui/Text";
+
+export default function SmartMentor() {
+  return (
+    <section className="py-16">
+      <div className="mb-8">
+        <Heading level="h2" className="mb-2">
+          Smart Recommendation
+        </Heading>
+        <Text variant="muted">What should I practice next?</Text>
+      </div>
+
+      <Card rounded="2xl" padding="8">
+        <div className="flex items-start justify-between mb-6">
+          <div>
+            <Heading level="h3" className="mb-2">
+              Recommended Practice
+            </Heading>
+            <Text variant="small">
+              Based on your skill graph
+            </Text>
+          </div>
+          <span className="px-3 py-1 bg-emerald-500/10 text-emerald-400 text-xs font-mono rounded-full border border-emerald-500/20">
+            Easy • 30 min
+          </span>
+        </div>
+
+        <div className="flex flex-wrap gap-2 mb-6">
+          <span className="px-3 py-1 bg-muted text-foreground text-sm rounded-md">
+            Base62 Encoding
+          </span>
+          <span className="px-3 py-1 bg-muted text-foreground text-sm rounded-md">
+            Key Generation Service
+          </span>
+          <span className="px-3 py-1 bg-muted text-foreground text-sm rounded-md">
+            Database Indexing
+          </span>
+        </div>
+
+        <Link
+          href="/interview/setup"
+          className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-opacity"
+        >
+          Start Practice
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        </Link>
+      </Card>
+    </section>
+  );
+}
+
 ================================================
 FILE: ./src/features/landing/components/Features.tsx
 ================================================
@@ -3203,9 +3353,89 @@ FILE: ./src/features/landing/components/CTA.tsx
 ================================================
 
 ================================================
+FILE: ./src/features/landing/components/PersonalNotebooks.tsx
+================================================
+"use client";
+
+import Link from "next/link";
+import Card from "@/src/components/ui/Card";
+import Heading from "@/src/components/ui/Heading";
+import Text from "@/src/components/ui/Text";
+
+const notebooks = [
+  {
+    title: "Dropbox System Design",
+    description: "File sync architecture, block storage, metadata service",
+    readTime: "25 min read",
+    type: "HLD"
+  },
+  {
+    title: "URL Shortener Deep Dive",
+    description: "Base62 encoding, key generation, cache invalidation",
+    readTime: "20 min read",
+    type: "HLD"
+  },
+  {
+    title: "Rate Limiter Implementation",
+    description: "Token bucket, sliding window, distributed algorithms",
+    readTime: "15 min read",
+    type: "LLD"
+  },
+  {
+    title: "Chat System Architecture",
+    description: "WebSockets, message queues, presence service",
+    readTime: "30 min read",
+    type: "HLD"
+  },
+];
+
+export default function PersonalNotebooks() {
+  return (
+    <section className="py-16">
+      <div className="mb-8">
+        <Heading level="h2" className="mb-2">
+          System Design Library
+        </Heading>
+        <Text variant="muted">Master distributed system architectures</Text>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {notebooks.map((notebook, index) => (
+          <Card
+            key={index}
+            className="hover:border-border transition-colors cursor-pointer group"
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <span className="px-2 py-1 bg-muted text-muted-foreground text-xs font-mono rounded">
+                {notebook.type}
+              </span>
+            </div>
+            <h3 className="text-card-foreground font-medium mb-2 group-hover:text-foreground transition-colors">
+              {notebook.title}
+            </h3>
+            <Text variant="small" className="mb-3 line-clamp-2">
+              {notebook.description}
+            </Text>
+            <div className="flex items-center justify-between">
+              <Text variant="small">{notebook.readTime}</Text>
+              <svg className="w-4 h-4 text-muted-foreground group-hover:text-muted-foreground/80 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+================================================
 FILE: ./src/features/landing/components/FeatureCard.tsx
 ================================================
 import type { FC } from "react";
+import Card from "@/src/components/ui/Card";
+import Heading from "@/src/components/ui/Heading";
+import Text from "@/src/components/ui/Text";
 
 type Props = {
   title: string;
@@ -3217,13 +3447,13 @@ const FeatureCard: FC<Props> = ({
   description,
 }) => {
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-6">
-      <h3 className="text-lg font-semibold">{title}</h3>
+    <Card>
+      <Heading level="h4">{title}</Heading>
 
-      <p className="mt-3 text-sm leading-6 text-zinc-400">
+      <Text variant="small" className="mt-3 leading-6">
         {description}
-      </p>
-    </div>
+      </Text>
+    </Card>
   );
 };
 
@@ -3234,6 +3464,350 @@ FILE: ./src/features/landing/index.ts
 export * from "@/src/features/interview/types/CreateInterviewInput";
 export * from "@/src/features/interview/types/InterviewState";
 export * from "@/src/features/interview/types/TranscriptMessage";
+================================================
+FILE: ./src/features/diagram/components/SystemDiagram.tsx
+================================================
+"use client";
+
+import { useState } from "react";
+
+interface ComponentDetail {
+  id: string;
+  name: string;
+  type: "client" | "service" | "storage" | "gateway";
+  roleAndDuty: string;
+  extremeDeepDive: string;
+  failureScenarios: string;
+  designTradeoffs: string;
+}
+
+interface DiagramComponent {
+  id: string;
+  name: string;
+  type: "client" | "service" | "storage" | "gateway";
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  details: ComponentDetail;
+}
+
+const dropboxComponents: DiagramComponent[] = [
+  {
+    id: "client",
+    name: "Dropbox Desktop App",
+    type: "client",
+    x: 50,
+    y: 100,
+    width: 180,
+    height: 60,
+    details: {
+      id: "client",
+      name: "Dropbox Desktop App",
+      type: "client",
+      roleAndDuty: "Client application that runs on user devices, handles file synchronization, and provides user interface for file management.",
+      extremeDeepDive: "Implements file watching using OS-specific APIs (inotify on Linux, FSEvents on macOS, ReadDirectoryChangesW on Windows). Uses chunking algorithm to split large files into blocks. Maintains local SQLite database for file metadata and sync state. Implements conflict resolution using last-write-wins with version vectors.",
+      failureScenarios: "Network disconnection - queues changes locally. Disk full - shows user-friendly error and pauses sync. Corrupt local cache - triggers full resync from server.",
+      designTradeoffs: "Local storage vs cloud-only - chose hybrid for offline access. Real-time sync vs batch - chose near real-time with conflict resolution. Encryption at rest vs performance - chose client-side encryption with performance tradeoff."
+    }
+  },
+  {
+    id: "gateway",
+    name: "API Gateway & LB",
+    type: "gateway",
+    x: 300,
+    y: 100,
+    width: 180,
+    height: 60,
+    details: {
+      id: "gateway",
+      name: "API Gateway & LB",
+      type: "gateway",
+      roleAndDuty: "Entry point for all API requests, handles load balancing, rate limiting, authentication, and request routing to appropriate services.",
+      extremeDeepDive: "Uses NGINX/HAProxy for load balancing with round-robin and least-connection algorithms. Implements API versioning and request validation. JWT token validation at gateway level. Circuit breaker pattern to prevent cascading failures. Request/response transformation and protocol translation.",
+      failureScenarios: "Gateway failure - redundant instances with health checks. DDoS attack - rate limiting and IP whitelisting. SSL termination failure - certificate auto-renewal and backup certificates.",
+      designTradeoffs: "Centralized gateway vs per-service routing - chose centralized for consistency. Synchronous vs asynchronous calls - chose synchronous with timeout fallback. Stateful vs stateless - chose stateless for horizontal scaling."
+    }
+  },
+  {
+    id: "block-sync",
+    name: "Block Sync Service",
+    type: "service",
+    x: 300,
+    y: 250,
+    width: 180,
+    height: 60,
+    details: {
+      id: "block-sync",
+      name: "Block Sync Service",
+      type: "service",
+      roleAndDuty: "Handles file block upload, download, and synchronization. Manages block deduplication and storage allocation.",
+      extremeDeepDive: "Implements content-addressable storage using SHA-256 hashes for deduplication. Uses multipart upload for large files with parallel chunk uploads. Implements block-level delta sync using rolling hash (Rabin fingerprinting). Maintains block metadata in Redis for fast lookup. Uses worker queues for async processing.",
+      failureScenarios: "Upload failure - automatic retry with exponential backoff. Deduplication collision - hash verification with secondary checksum. Storage quota exceeded - graceful degradation and user notification.",
+      designTradeoffs: "Block size vs overhead - chose 4MB blocks as balance. Immediate vs delayed deduplication - chose immediate for storage efficiency. Strong vs eventual consistency - chose eventual for performance."
+    }
+  },
+  {
+    id: "metadata",
+    name: "Metadata Service",
+    type: "service",
+    x: 550,
+    y: 250,
+    width: 180,
+    height: 60,
+    details: {
+      id: "metadata",
+      name: "Metadata Service",
+      type: "service",
+      roleAndDuty: "Maintains databases recording file names, file trees, share links, and version sequences. Exposes clean REST APIs for file operations.",
+      extremeDeepDive: "Uses PostgreSQL with JSONB for flexible schema. Implements hierarchical file structure using materialized path pattern. Maintains file version history with time-travel queries. Implements share link system with expiration and permission management. Uses database transactions for atomic operations. Caches frequently accessed metadata in Redis.",
+      failureScenarios: "Metadata inconsistency - managed by single master databases and strong transactional boundaries. Database connection pool exhaustion - connection pooling and circuit breakers. Slow queries - query optimization and read replicas.",
+      designTradeoffs: "SQL vs NoSQL - chose SQL for ACID compliance. Single database vs sharding - chose single for simplicity with future sharding path. Strong vs eventual consistency - chose strong for metadata accuracy."
+    }
+  },
+  {
+    id: "s3",
+    name: "Amazon S3 Storage",
+    type: "storage",
+    x: 300,
+    y: 400,
+    width: 180,
+    height: 60,
+    details: {
+      id: "s3",
+      name: "Amazon S3 Storage",
+      type: "storage",
+      roleAndDuty: "Durable object storage for file blocks. Provides high availability, durability, and scalability for block storage.",
+      extremeDeepDive: "Uses S3 Standard storage with 99.999999999% durability. Implements lifecycle policies for cost optimization (Standard → IA → Glacier). Uses server-side encryption with KMS. Implements multipart upload for parallel processing. Uses S3 Cross-Region Replication for disaster recovery. Implements S3 Versioning for block version history.",
+      failureScenarios: "S3 outage - multi-AZ deployment with automatic failover. Data corruption - S3 integrity checks and automatic repair. Cost overrun - lifecycle policies and monitoring alerts.",
+      designTradeoffs: "S3 vs custom storage - chose S3 for managed service benefits. Hot vs cold storage - chose tiered approach for cost optimization. Single region vs multi-region - chose multi-region for disaster recovery."
+    }
+  },
+  {
+    id: "metadata-db",
+    name: "Metadata DB (SQL)",
+    type: "storage",
+    x: 550,
+    y: 400,
+    width: 180,
+    height: 60,
+    details: {
+      id: "metadata-db",
+      name: "Metadata DB (SQL)",
+      type: "storage",
+      roleAndDuty: "Relational database storing file metadata, user information, sharing permissions, and version history.",
+      extremeDeepDive: "Uses PostgreSQL 14+ with partitioning by user_id. Implements read replicas for query scaling. Uses connection pooling with PgBouncer. Implements WAL archiving for point-in-time recovery. Uses database triggers for audit logging. Implements row-level security for multi-tenancy.",
+      failureScenarios: "Database corruption - WAL replay from backups. Connection failure - automatic reconnection with retry logic. Performance degradation - query optimization and index tuning.",
+      designTradeoffs: "PostgreSQL vs MySQL - chose PostgreSQL for advanced features. Single instance vs cluster - chose primary-replica for HA. Vertical vs horizontal scaling - chose horizontal with read replicas."
+    }
+  }
+];
+
+const connections = [
+  { from: "client", to: "gateway", label: "API Calls" },
+  { from: "gateway", to: "block-sync", label: "Stream Block" },
+  { from: "gateway", to: "metadata", label: "Update Metadata" },
+  { from: "block-sync", to: "s3", label: "Store/Retrieve" },
+  { from: "metadata", to: "metadata-db", label: "Query/Update" }
+];
+
+const typeColors = {
+  client: { bg: "#1a1a2e", border: "#4a4a6a", dot: "#000000" },
+  service: { bg: "#16213e", border: "#0f3460", dot: "#0066cc" },
+  storage: { bg: "#1a1a2e", border: "#e94560", dot: "#cc0000" },
+  gateway: { bg: "#1f4068", border: "#162447", dot: "#0099cc" }
+};
+
+export default function SystemDiagram() {
+  const [selectedComponent, setSelectedComponent] = useState<ComponentDetail | null>(null);
+  const [hoveredComponent, setHoveredComponent] = useState<string | null>(null);
+
+  const handleComponentClick = (component: DiagramComponent) => {
+    setSelectedComponent(component.details);
+  };
+
+  return (
+    <div className="flex h-screen bg-zinc-900">
+      {/* Diagram Area */}
+      <div className="flex-1 relative overflow-auto">
+        <svg className="w-full h-full" style={{ minWidth: "800px", minHeight: "600px" }}>
+          {/* Connections */}
+          {connections.map((conn, index) => {
+            const fromComp = dropboxComponents.find(c => c.id === conn.from);
+            const toComp = dropboxComponents.find(c => c.id === conn.to);
+            if (!fromComp || !toComp) return null;
+
+            const fromX = fromComp.x + fromComp.width / 2;
+            const fromY = fromComp.y + fromComp.height;
+            const toX = toComp.x + toComp.width / 2;
+            const toY = toComp.y;
+
+            return (
+              <g key={index}>
+                <line
+                  x1={fromX}
+                  y1={fromY}
+                  x2={toX}
+                  y2={toY}
+                  stroke="#4a4a6a"
+                  strokeWidth="2"
+                  markerEnd="url(#arrowhead)"
+                />
+                <text
+                  x={(fromX + toX) / 2}
+                  y={(fromY + toY) / 2 - 10}
+                  fill="#6b7280"
+                  fontSize="12"
+                  textAnchor="middle"
+                >
+                  {conn.label}
+                </text>
+              </g>
+            );
+          })}
+
+          {/* Arrow marker definition */}
+          <defs>
+            <marker
+              id="arrowhead"
+              markerWidth="10"
+              markerHeight="7"
+              refX="9"
+              refY="3.5"
+              orient="auto"
+            >
+              <polygon
+                points="0 0, 10 3.5, 0 7"
+                fill="#4a4a6a"
+              />
+            </marker>
+          </defs>
+
+          {/* Components */}
+          {dropboxComponents.map((component) => (
+            <g
+              key={component.id}
+              onClick={() => handleComponentClick(component)}
+              onMouseEnter={() => setHoveredComponent(component.id)}
+              onMouseLeave={() => setHoveredComponent(null)}
+              style={{ cursor: "pointer" }}
+            >
+              <rect
+                x={component.x}
+                y={component.y}
+                width={component.width}
+                height={component.height}
+                fill={typeColors[component.type].bg}
+                stroke={hoveredComponent === component.id || selectedComponent?.id === component.id 
+                  ? "#ffffff" 
+                  : typeColors[component.type].border}
+                strokeWidth={hoveredComponent === component.id || selectedComponent?.id === component.id ? 3 : 2}
+                rx="8"
+              />
+              <circle
+                cx={component.x + 20}
+                cy={component.y + 30}
+                r="6"
+                fill={typeColors[component.type].dot}
+              />
+              <text
+                x={component.x + 35}
+                y={component.y + 35}
+                fill="#ffffff"
+                fontSize="14"
+                fontWeight="500"
+              >
+                {component.name}
+              </text>
+            </g>
+          ))}
+        </svg>
+
+        {/* Legend */}
+        <div className="absolute bottom-4 left-4 bg-zinc-800 p-4 rounded-lg border border-zinc-700">
+          <h4 className="text-white font-semibold mb-2 text-sm">Legend</h4>
+          <div className="space-y-2 text-xs">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-black" />
+              <span className="text-zinc-300">Actor / Entry</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-blue-600" />
+              <span className="text-zinc-300">Active Logic</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-red-600" />
+              <span className="text-zinc-300">Storage Layer</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Hint */}
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-zinc-800 px-4 py-2 rounded-lg border border-zinc-700">
+          <p className="text-zinc-400 text-xs">Click any component to inspect its architecture in detail</p>
+        </div>
+      </div>
+
+      {/* Inspection Panel */}
+      {selectedComponent && (
+        <div className="w-96 bg-zinc-800 border-l border-zinc-700 overflow-y-auto">
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-white">{selectedComponent.name}</h2>
+              <button
+                onClick={() => setSelectedComponent(null)}
+                className="text-zinc-400 hover:text-white"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-2">
+                  Role & Duty
+                </h3>
+                <p className="text-zinc-300 text-sm leading-relaxed">
+                  {selectedComponent.roleAndDuty}
+                </p>
+              </div>
+
+              <div>
+                <h3 className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-2">
+                  Extreme Deep-Dive Details
+                </h3>
+                <p className="text-zinc-300 text-sm leading-relaxed">
+                  {selectedComponent.extremeDeepDive}
+                </p>
+              </div>
+
+              <div>
+                <h3 className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-2">
+                  Failure Scenarios & Mitigation
+                </h3>
+                <p className="text-zinc-300 text-sm leading-relaxed">
+                  {selectedComponent.failureScenarios}
+                </p>
+              </div>
+
+              <div>
+                <h3 className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-2">
+                  Design Tradeoffs & Constraints
+                </h3>
+                <p className="text-zinc-300 text-sm leading-relaxed">
+                  {selectedComponent.designTradeoffs}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 ================================================
 FILE: ./src/features/dashboard/components/NextRecommendedInterview.tsx
 ================================================
@@ -3467,7 +4041,7 @@ export default function DurationSelector({
 }: Props) {
   return (
     <div className="mt-8">
-      <h3 className="mb-3 font-semibold">
+      <h3 className="mb-3 font-semibold text-white">
         Duration
       </h3>
 
@@ -3498,7 +4072,7 @@ export default function SetupCard({
     children,
 }: Props) {
     return (
-        <div className="mx-auto mt-16 max-w-3xl rounded-xl border border-zinc-800 bg-zinc-900 p-10">
+        <div className="mx-auto mt-16 max-w-3xl rounded-xl border border-zinc-800 bg-zinc-900 p-10 shadow-sm">
             {children}
         </div>
     );
@@ -3527,7 +4101,7 @@ export default function CompanySelector({
 }: Props) {
   return (
     <div className="mt-8">
-      <h3 className="mb-3 font-semibold">
+      <h3 className="mb-3 font-semibold text-white">
         Interview Style
       </h3>
 
@@ -3641,7 +4215,7 @@ export default function DifficultySelector({
 }: Props) {
   return (
     <div className="mt-8">
-      <h3 className="mb-3 font-semibold">
+      <h3 className="mb-3 font-semibold text-white">
         Difficulty
       </h3>
 
@@ -3872,28 +4446,28 @@ interface SidebarProps {
 
 export default function Sidebar({ summary, phase }: SidebarProps) {
   return (
-    <aside className="w-80 border-l border-border bg-muted flex flex-col h-full">
-      <div className="p-6 border-b border-border bg-card">
-        <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">Current Phase</h2>
-        <div className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium inline-block capitalize">
+    <aside className="w-80 border-l border-zinc-800 bg-zinc-900 flex flex-col h-full">
+      <div className="p-6 border-b border-zinc-800 bg-zinc-900">
+        <h2 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1">Current Phase</h2>
+        <div className="px-3 py-1 bg-emerald-500/10 text-emerald-400 rounded-full text-sm font-medium inline-block capitalize">
           {phase?.replace('_', ' ') || 'Intro'}
         </div>
       </div>
 
       <div className="p-6 flex-1 overflow-y-auto">
-        <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-4">Design Summary</h2>
+        <h2 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4">Design Summary</h2>
         {summary ? (
           <div className="space-y-4">
             {summary.split('\n').map((line, i) => (
-              <p key={i} className="text-sm text-foreground leading-relaxed">
+              <p key={i} className="text-sm text-zinc-300 leading-relaxed">
                 {line.startsWith('-') ? line : `• ${line}`}
               </p>
             ))}
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center h-40 text-center">
-            <div className="w-8 h-8 border-2 border-muted border-t-foreground rounded-full animate-spin mb-2" />
-            <p className="text-xs text-muted-foreground italic">Analyzing design requirements...</p>
+            <div className="w-8 h-8 border-2 border-zinc-700 border-t-emerald-500 rounded-full animate-spin mb-2" />
+            <p className="text-xs text-zinc-500 italic">Analyzing design requirements...</p>
           </div>
         )}
       </div>
@@ -3919,8 +4493,8 @@ const Message: React.FC<MessageProps> = ({ message }) => {
       <div
         className={`max-w-[80%] rounded-lg p-4 ${
           isAI
-            ? 'bg-white text-gray-800 border border-gray-200 shadow-sm'
-            : 'bg-blue-600 text-white shadow-md'
+            ? 'bg-zinc-800 text-white border border-zinc-700 shadow-sm'
+            : 'bg-emerald-600 text-white shadow-md'
         }`}
       >
         <div className="text-xs mb-1 opacity-70 font-semibold uppercase">
@@ -3961,9 +4535,9 @@ export default function Chat({ messages, onSendMessage, isLoading }: ChatProps) 
   }, [messages, isLoading]);
 
   return (
-    <div className="flex flex-col h-full bg-background">
-      <div 
-        ref={scrollRef} 
+    <div className="flex flex-col h-full bg-zinc-950">
+      <div
+        ref={scrollRef}
         className="flex-1 overflow-y-auto p-6 space-y-6"
         aria-live="polite"
         aria-atomic="false"
@@ -3971,15 +4545,15 @@ export default function Chat({ messages, onSendMessage, isLoading }: ChatProps) 
         <MessageList messages={messages} />
         {isLoading && (
           <div className="flex gap-3 animate-pulse">
-            <div className="w-8 h-8 bg-muted rounded-full" />
+            <div className="w-8 h-8 bg-zinc-800 rounded-full" />
             <div className="flex-1 space-y-2">
-              <div className="h-4 bg-muted rounded w-1/4" />
-              <div className="h-10 bg-muted rounded w-3/4" />
+              <div className="h-4 bg-zinc-800 rounded w-1/4" />
+              <div className="h-10 bg-zinc-800 rounded w-3/4" />
             </div>
           </div>
         )}
       </div>
-      <div className="p-4 border-t border-border bg-muted">
+      <div className="p-4 border-t border-zinc-800 bg-zinc-900">
         <ChatInput onSendMessage={onSendMessage} disabled={isLoading} />
       </div>
     </div>
@@ -4000,17 +4574,17 @@ export default function InterviewHeader({
   interviewId,
 }: InterviewHeaderProps) {
   return (
-    <header className="h-16 border-b flex items-center justify-between px-6 bg-slate-50">
+    <header className="h-16 border-b border-zinc-800 flex items-center justify-between px-6 bg-zinc-900">
       <div className="flex items-center gap-2">
-        <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
-        <span className="font-semibold text-slate-700">
+        <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse" />
+        <span className="font-semibold text-white">
           Live Interview Session
         </span>
       </div>
 
       <div className="flex items-center gap-6">
         <div className="flex flex-col items-end">
-          <span className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">
+          <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">
             Time Remaining
           </span>
 
@@ -4302,6 +4876,67 @@ FILE: ./src/features/interview/api/interviewApi.ts
 ================================================
 
 ================================================
+FILE: ./src/features/interview/report/components/WhatHappenedCard.tsx
+================================================
+import Card from "@/src/components/ui/Card";
+import Text from "@/src/components/ui/Text";
+
+type Observation = {
+  type: "OBSERVATION" | "ADVISORY";
+  text: string;
+};
+
+type Props = {
+  observations: Observation[];
+  strengths?: string[];
+  weaknesses?: string[];
+};
+
+export default function WhatHappenedCard({ observations, strengths, weaknesses }: Props) {
+  // Combine observations with strengths and weaknesses if no explicit observations
+  const allItems = observations.length > 0 
+    ? observations 
+    : [
+        ...(strengths?.map(s => ({ type: "OBSERVATION" as const, text: s })) ?? []),
+        ...(weaknesses?.map(w => ({ type: "ADVISORY" as const, text: w })) ?? [])
+      ];
+
+  return (
+    <Card>
+      <Text variant="small" className="font-semibold mb-4">
+        WHAT HAPPENED
+      </Text>
+
+      {allItems.length > 0 ? (
+        <ul className="space-y-3">
+          {allItems.map((item, index) => (
+            <li key={index} className="flex items-start gap-3">
+              <span
+                className={`flex-shrink-0 w-2.5 h-2.5 rounded-full mt-1.5 ${
+                  item.type === "OBSERVATION" ? "bg-emerald-500" : "bg-orange-500"
+                }`}
+              />
+              <div className="flex-1">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  {item.type}
+                </span>
+                <Text variant="body" className="leading-relaxed mt-1">
+                  {item.text}
+                </Text>
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <div className="text-center py-8">
+          <Text variant="muted">No observations available</Text>
+        </div>
+      )}
+    </Card>
+  );
+}
+
+================================================
 FILE: ./src/features/interview/report/components/ScoreCard.tsx
 ================================================
 // components/interview/report/ScoreCard.tsx
@@ -4325,6 +4960,91 @@ export default function ScoreCard({ score, label = "Overall Score" }: { score: n
     </div>
   );
 }
+================================================
+FILE: ./src/features/interview/report/components/OverallScoreCard.tsx
+================================================
+import Card from "@/src/components/ui/Card";
+import Text from "@/src/components/ui/Text";
+
+type Props = {
+  score: number;
+};
+
+export default function OverallScoreCard({ score }: Props) {
+  const getDifficultyLevel = (score: number) => {
+    if (score >= 80) return "EASY LEVEL";
+    if (score >= 60) return "MEDIUM LEVEL";
+    return "HARD LEVEL";
+  };
+
+  return (
+    <Card className="text-center">
+      <Text variant="small" className="font-semibold mb-4">
+        OVERALL SCORE
+      </Text>
+      <p className="text-6xl font-bold text-foreground mb-2">
+        {score}
+      </p>
+      <Text variant="small">
+        {getDifficultyLevel(score)}
+      </Text>
+    </Card>
+  );
+}
+
+================================================
+FILE: ./src/features/interview/report/components/ConversationCard.tsx
+================================================
+import Card from "@/src/components/ui/Card";
+import Text from "@/src/components/ui/Text";
+
+type EvidenceItem = {
+  dimension: string;
+  timestampSeconds: number;
+  quote: string;
+  comment: string;
+};
+
+type Props = {
+  evidence: EvidenceItem[];
+};
+
+export default function ConversationCard({ evidence }: Props) {
+  const formatTimestamp = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
+  return (
+    <Card>
+      {evidence.length > 0 ? (
+        <div className="space-y-4">
+          {evidence.map((item, index) => (
+            <div key={index} className="border-b border-border pb-4 last:border-0 last:pb-0">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm font-semibold text-muted-foreground">
+                  {item.dimension === 'INTERVIEWER' ? 'INTERVIEWER' : 'CANDIDATE'}
+                </span>
+                <Text variant="small">
+                  {formatTimestamp(item.timestampSeconds)}
+                </Text>
+              </div>
+              <Text variant="body" className="leading-relaxed">
+                {item.quote}
+              </Text>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-8">
+          <Text variant="muted">No conversation data available</Text>
+        </div>
+      )}
+    </Card>
+  );
+}
+
 ================================================
 FILE: ./src/features/interview/report/components/Timeline.tsx
 ================================================
@@ -4569,6 +5289,119 @@ export const env = envSchema.parse(process.env);
 
 export type Env = z.infer<typeof envSchema>;
 ================================================
+FILE: ./src/components/ui/Card.tsx
+================================================
+import type { FC, ReactNode } from "react";
+
+type Props = {
+  children: ReactNode;
+  className?: string;
+  rounded?: "xl" | "2xl";
+  padding?: "6" | "8";
+};
+
+const Card: FC<Props> = ({
+  children,
+  className = "",
+  rounded = "xl",
+  padding = "6",
+}) => {
+  const roundedClass = rounded === "xl" ? "rounded-xl" : "rounded-2xl";
+  const paddingClass = padding === "6" ? "p-6" : "p-8";
+
+  return (
+    <div className={`${roundedClass} bg-card ${paddingClass} border border-border ${className}`}>
+      {children}
+    </div>
+  );
+};
+
+export default Card;
+
+================================================
+FILE: ./src/components/ui/Heading.tsx
+================================================
+import type { FC, ReactNode } from "react";
+
+type Props = {
+  children: ReactNode;
+  level?: "h1" | "h2" | "h3" | "h4";
+  className?: string;
+};
+
+const Heading: FC<Props> = ({
+  children,
+  level = "h2",
+  className = "",
+}) => {
+  const levelClasses = {
+    h1: "text-4xl font-bold text-foreground",
+    h2: "text-3xl font-bold text-foreground",
+    h3: "text-2xl font-bold text-foreground",
+    h4: "text-xl font-semibold text-foreground",
+  };
+
+  const Tag = level;
+
+  return (
+    <Tag className={`${levelClasses[level]} ${className}`}>
+      {children}
+    </Tag>
+  );
+};
+
+export default Heading;
+
+================================================
+FILE: ./src/components/ui/ThemeToggle.tsx
+================================================
+"use client";
+
+import { useTheme } from "@/src/contexts/ThemeContext";
+
+export default function ThemeToggle() {
+  const { theme, toggleTheme } = useTheme();
+
+  return (
+    <button
+      onClick={toggleTheme}
+      className="p-2 rounded-md hover:bg-muted transition-colors"
+      aria-label="Toggle theme"
+    >
+      {theme === "dark" ? (
+        <svg
+          className="w-5 h-5 text-foreground"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+          />
+        </svg>
+      ) : (
+        <svg
+          className="w-5 h-5 text-foreground"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+          />
+        </svg>
+      )}
+    </button>
+  );
+}
+
+================================================
 FILE: ./src/components/ui/Dialog.tsx
 ================================================
 "use client";
@@ -4615,7 +5448,6 @@ const DialogContent = React.forwardRef<
         "fixed left-1/2 top-1/2 z-50 w-[95vw] max-w-lg",
         "-translate-x-1/2 -translate-y-1/2",
         "rounded-2xl border border-zinc-200 bg-white p-6 shadow-xl",
-        "dark:border-zinc-800 dark:bg-zinc-900",
         "focus:outline-none",
         className
       )}
@@ -4662,7 +5494,7 @@ const DialogTitle = React.forwardRef<
   <DialogPrimitive.Title
     ref={ref}
     className={cn(
-      "text-lg font-semibold text-zinc-900 dark:text-zinc-100",
+      "text-lg font-semibold text-zinc-900",
       className
     )}
     {...props}
@@ -4678,7 +5510,7 @@ const DialogDescription = React.forwardRef<
   <DialogPrimitive.Description
     ref={ref}
     className={cn(
-      "text-sm text-zinc-600 dark:text-zinc-400",
+      "text-sm text-zinc-600",
       className
     )}
     {...props}
@@ -4730,11 +5562,11 @@ export const Button = React.forwardRef<
 
     const variants = {
       primary:
-        "bg-blue-600 text-white hover:bg-blue-700",
+        "bg-primary text-primary-foreground hover:opacity-90",
       secondary:
-        "bg-gray-200 text-gray-800 hover:bg-gray-300",
+        "bg-muted text-muted-foreground hover:bg-muted/80",
       outline:
-        "border border-gray-300 bg-transparent hover:bg-gray-50",
+        "border border-border bg-transparent hover:bg-muted text-muted-foreground",
     };
 
     return (
@@ -4755,6 +5587,38 @@ export const Button = React.forwardRef<
 );
 
 Button.displayName = "Button";
+================================================
+FILE: ./src/components/ui/Text.tsx
+================================================
+import type { FC, ReactNode } from "react";
+
+type Props = {
+  children: ReactNode;
+  variant?: "body" | "muted" | "small" | "large";
+  className?: string;
+};
+
+const Text: FC<Props> = ({
+  children,
+  variant = "body",
+  className = "",
+}) => {
+  const variantClasses = {
+    body: "text-base text-foreground",
+    muted: "text-base text-muted-foreground",
+    small: "text-sm text-muted-foreground",
+    large: "text-lg text-foreground",
+  };
+
+  return (
+    <p className={`${variantClasses[variant]} ${className}`}>
+      {children}
+    </p>
+  );
+};
+
+export default Text;
+
 ================================================
 FILE: ./src/components/ui/Toast.tsx
 ================================================
@@ -4881,8 +5745,8 @@ export const Select = React.forwardRef<
     <select
       ref={ref}
       className={cn(
-        "flex h-10 w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm",
-        "focus:outline-none focus:ring-2 focus:ring-blue-500",
+        "flex h-10 w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white",
+        "focus:outline-none focus:ring-2 focus:ring-emerald-500",
         "disabled:cursor-not-allowed disabled:opacity-50",
         className
       )}
@@ -4898,7 +5762,6 @@ Select.displayName = "Select";
 FILE: ./src/components/ui/Input.tsx
 ================================================
 
-
 // components/ui/Input.tsx
 import React from "react";
 
@@ -4906,10 +5769,10 @@ export const Input = ({ className = "", ...props }: React.InputHTMLAttributes<HT
   return (
     <input
       className={`
-        flex h-10 w-full rounded-md border border-gray-300 
-        bg-white px-3 py-2 text-sm text-black 
-        placeholder:text-gray-500 focus:outline-none 
-        focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed 
+        flex h-10 w-full rounded-md border border-zinc-700
+        bg-zinc-900 px-3 py-2 text-sm text-white
+        placeholder:text-zinc-500 focus:outline-none
+        focus:ring-2 focus:ring-emerald-500 disabled:cursor-not-allowed
         disabled:opacity-50 ${className}
       `}
       {...props}
@@ -4920,28 +5783,30 @@ export const Input = ({ className = "", ...props }: React.InputHTMLAttributes<HT
 FILE: ./src/components/layout/Navbar.tsx
 ================================================
 import Link from "next/link";
+import ThemeToggle from "@/src/components/ui/ThemeToggle";
 
 export default function Navbar() {
   return (
-    <nav className="flex items-center justify-between py-6">
+    <nav className="flex items-center justify-between py-6 border-b border-border">
 
       <Link
         href="/"
-        className="text-xl font-bold"
+        className="text-xl font-bold text-foreground tracking-tight"
       >
         AI Interviewer
       </Link>
 
 
-      <div className="flex gap-6 text-sm text-zinc-400">
+      <div className="flex gap-8 text-sm text-muted-foreground items-center">
 
-        <Link href="/interview/setup">
+        <Link 
+          href="/interview/setup"
+          className="hover:text-foreground transition-colors"
+        >
           Interviews
         </Link>
 
-        <Link href="/analytics">
-          Analytics
-        </Link>
+        <ThemeToggle />
 
       </div>
 
@@ -4970,6 +5835,10 @@ FILE: ./src/components/catalog/InterviewCard.tsx
 import Link from "next/link";
 
 import { Interview } from "@/src/features/interview/types/interview";
+import Card from "@/src/components/ui/Card";
+import { Button } from "@/src/components/ui/Button";
+import Heading from "@/src/components/ui/Heading";
+import Text from "@/src/components/ui/Text";
 
 type Props = {
   interview: Interview;
@@ -4979,29 +5848,30 @@ export default function InterviewCard({
   interview,
 }: Props) {
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-6 transition hover:border-blue-500">
-      <h3 className="text-xl font-semibold">
+    <Card className="shadow-sm transition hover:border-border/80">
+      <Heading level="h3">
         {interview.title}
-      </h3>
+      </Heading>
 
-      <p className="mt-2 text-sm text-zinc-400">
+      <Text variant="body" className="mt-2">
         {interview.description}
-      </p>
+      </Text>
 
       <div className="mt-6 flex items-center justify-between">
-        <span className="text-sm text-zinc-500">
+        <Text variant="small">
           {interview.duration} min •{" "}
           {interview.difficulty}
-        </span>
+        </Text>
 
         <Link
           href={`/interview/setup?problemId=${interview.id}&type=hld`}
-          className="rounded-lg bg-blue-600 px-4 py-2 text-sm hover:bg-blue-500"
         >
-          Start →
+          <Button variant="primary" className="px-4 py-2 text-sm">
+            Start →
+          </Button>
         </Link>
       </div>
-    </div>
+    </Card>
   );
 }
 ================================================
@@ -5050,6 +5920,68 @@ export default async function InterviewCatalog() {
     </section>
   );
 }
+================================================
+FILE: ./src/components/theme/ThemeProvider.tsx
+================================================
+"use client";
+
+import { createContext, useContext, useEffect, useState } from "react";
+
+type Theme = "light" | "dark";
+
+interface ThemeContextType {
+  theme: Theme;
+  toggleTheme: () => void;
+}
+
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const [theme, setTheme] = useState<Theme>("dark");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const savedTheme = localStorage.getItem("theme") as Theme | null;
+    if (savedTheme) {
+      setTheme(savedTheme);
+    } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      setTheme("dark");
+    } else {
+      setTheme("light");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+    
+    localStorage.setItem("theme", theme);
+    document.documentElement.setAttribute("data-theme", theme);
+  }, [theme, mounted]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === "light" ? "dark" : "light"));
+  };
+
+  if (!mounted) {
+    return <>{children}</>;
+  }
+
+  return (
+    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+}
+
+export function useTheme() {
+  const context = useContext(ThemeContext);
+  if (context === undefined) {
+    throw new Error("useTheme must be used within a ThemeProvider");
+  }
+  return context;
+}
+
 ================================================
 FILE: ./src/lib/utils.ts
 ================================================
@@ -6834,6 +7766,7 @@ import { InterviewProfile } from "../profiles/InterviewProfile";
 import { InterviewStateMachine } from "./InterviewStateMachine";
 import { PromptBuilder } from "./PromptBuilder";
 import { ResponseParser } from "./ResponseParser";
+import { INTERVIEWER_JSON_SCHEMA } from "./ResponseParser";
 
 export interface InterviewEngineInput {
   profile: InterviewProfile;
@@ -6926,9 +7859,7 @@ export class InterviewEngine {
       },
     ];
 
-    import { INTERVIEWER_JSON_SCHEMA } from "./ResponseParser";
-
-// ...
+    
 
 const aiResponse =
   await this.aiService.chat(messages, {

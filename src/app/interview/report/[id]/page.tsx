@@ -39,9 +39,9 @@ export default async function ReportPage({ params }: Props) {
 
   if (!evaluation) {
     return (
-      <div className="min-h-screen bg-zinc-100 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="text-center">
-          <p className="text-zinc-600">Generating your detailed feedback... Please refresh in a moment.</p>
+          <p className="text-muted-foreground">Generating your detailed feedback... Please refresh in a moment.</p>
         </div>
       </div>
     );
@@ -57,13 +57,13 @@ export default async function ReportPage({ params }: Props) {
     (evaluation.evidence as unknown as EvidenceItem[]) ?? [];
 
   return (
-    <div className="min-h-screen bg-zinc-100 p-4 md:p-8">
+    <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="mx-auto max-w-4xl space-y-6">
         <ConversationCard evidence={evidence} />
-        
+
         <OverallScoreCard score={evaluation.overallScore} />
-        
-        <WhatHappenedCard 
+
+        <WhatHappenedCard
           observations={metadata.observations ?? []}
           strengths={metadata.strengths ?? []}
           weaknesses={metadata.weaknesses ?? []}

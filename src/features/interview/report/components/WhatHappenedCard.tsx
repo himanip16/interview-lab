@@ -1,3 +1,6 @@
+import Card from "@/src/components/ui/Card";
+import Text from "@/src/components/ui/Text";
+
 type Observation = {
   type: "OBSERVATION" | "ADVISORY";
   text: string;
@@ -19,36 +22,36 @@ export default function WhatHappenedCard({ observations, strengths, weaknesses }
       ];
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 border border-zinc-200">
-      <p className="text-sm font-semibold text-zinc-500 mb-4">
+    <Card>
+      <Text variant="small" className="font-semibold mb-4">
         WHAT HAPPENED
-      </p>
-      
+      </Text>
+
       {allItems.length > 0 ? (
         <ul className="space-y-3">
           {allItems.map((item, index) => (
             <li key={index} className="flex items-start gap-3">
-              <span 
+              <span
                 className={`flex-shrink-0 w-2.5 h-2.5 rounded-full mt-1.5 ${
-                  item.type === "OBSERVATION" ? "bg-green-500" : "bg-orange-500"
+                  item.type === "OBSERVATION" ? "bg-emerald-500" : "bg-orange-500"
                 }`}
               />
               <div className="flex-1">
-                <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wide">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                   {item.type}
                 </span>
-                <p className="text-zinc-900 leading-relaxed mt-1 font-normal">
+                <Text variant="body" className="leading-relaxed mt-1">
                   {item.text}
-                </p>
+                </Text>
               </div>
             </li>
           ))}
         </ul>
       ) : (
-        <div className="text-center py-8 text-zinc-400">
-          No observations available
+        <div className="text-center py-8">
+          <Text variant="muted">No observations available</Text>
         </div>
       )}
-    </div>
+    </Card>
   );
 }

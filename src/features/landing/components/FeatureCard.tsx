@@ -1,4 +1,7 @@
 import type { FC } from "react";
+import Card from "@/src/components/ui/Card";
+import Heading from "@/src/components/ui/Heading";
+import Text from "@/src/components/ui/Text";
 
 type Props = {
   title: string;
@@ -10,13 +13,13 @@ const FeatureCard: FC<Props> = ({
   description,
 }) => {
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-6">
-      <h3 className="text-lg font-semibold">{title}</h3>
+    <Card>
+      <Heading level="h4">{title}</Heading>
 
-      <p className="mt-3 text-sm leading-6 text-zinc-400">
+      <Text variant="small" className="mt-3 leading-6">
         {description}
-      </p>
-    </div>
+      </Text>
+    </Card>
   );
 };
 
