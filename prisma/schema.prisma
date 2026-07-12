@@ -21,12 +21,16 @@ model Interview {
   duration      Int
   company       String
   status        InterviewStatus
-  currentPhase  String          @default("introduction")
+  currentPhase  String
   summary       String          @default("Interview has not started yet.")
   promptVersion String          @default("v1")
+  startedAt     DateTime?
+  completedAt   DateTime?
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
+
   problemId     String
+
   evaluation    Evaluation?
   problem       Problem         @relation(fields: [problemId], references: [id])
   transcript    Message[]

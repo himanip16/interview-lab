@@ -1,49 +1,42 @@
 import { NextResponse } from "next/server";
+
 import logger from "@/src/shared/logger/logger";
 
 import { InterviewMessageService } from "@/src/modules/interview/services/interview/InterviewMessageService";
 
-
 export async function POST(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  {
+    params,
+  }: {
+    params: Promise<{
+      id: string;
+    }>;
+  }
 ) {
-  
-
   try {
     const { id } = await params;
 
     const body = await req.json();
-    const { message } = body;
-    console.log({
-  params: await params,
-  body,
-});
 
-    if (!message?.trim()) {
-    return NextResponse.json(
-      { error: "Invalid request" },
-      { status: 400 }
-    );
-  }
+    const message =
+      typeof body.message === "string"
+        ? body.message.trim()
+        : "";
 
-
-    if (!id || !message?.trim()) {
-
+    if (!id || !message) {
       return NextResponse.json(
         {
-          error: "Invalid request",
+          error: "Invalid request.",
         },
         {
-          status:400,
+          status: 400,
         }
       );
     }
 
-
     const service =
       new InterviewMessageService();
-
 
     const result =
       await service.processMessage(
@@ -51,43 +44,65 @@ export async function POST(
         message
       );
 
-
     return NextResponse.json(
       result,
       {
-        status:200,
+        status: 200,
       }
     );
+  } catch (error) {
+    logger.error(
+      {
+        err: error,
+        message:
+          error instanceof Error
+            ? error.message
+            : "Unknown error",
+        stack:
+          error instanceof Error
+            ? error.stack
+            : undefined,
+      },
+      "Failed to process interview message"
+    );
 
+    if (
+      error instanceof Error &&
+      error.message ===
+        "Interview not found."
+    ) {
+      return NextResponse.json(
+        {
+          error: error.message,
+        },
+        {
+          status: 404,
+        }
+      );
+    }
 
-  } catch(error) {
-
-
-    if (error instanceof Error) {
-  logger.error(
-    {
-      err: error,
-      message: error.message,
-      stack: error.stack,
-    },
-    "Failed to process interview message"
-  );
-} else {
-  logger.error(
-    { error },
-    "Failed to process interview message"
-  );
-}
-
+    if (
+      error instanceof Error &&
+      error.message ===
+        "Interview has already been completed."
+    ) {
+      return NextResponse.json(
+        {
+          error: error.message,
+        },
+        {
+          status: 409,
+        }
+      );
+    }
 
     return NextResponse.json(
       {
-        error:"Internal server error",
+        error: "Internal server error.",
       },
       {
-        status:500,
+        status: 500,
       }
     );
-
   }
 }

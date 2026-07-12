@@ -1,24 +1,34 @@
 import { PromptLoader } from "@/src/modules/interview/prompt/PromptLoader";
-import { InterviewPhase } from "./InterviewStateMachine";
+
+import { InterviewPhaseDefinition } from "../profiles/InterviewProfile";
 
 export class PromptBuilder {
   constructor(
-    private readonly promptLoader = new PromptLoader()
+    private readonly promptLoader =
+      new PromptLoader()
   ) {}
 
   async buildSystemPrompt(
-    phase: InterviewPhase,
+    phase: InterviewPhaseDefinition,
     candidateName: string,
     problem: string,
-    summary = ""
+    runningSummary = ""
   ): Promise<string> {
-    const basePrompt = await this.promptLoader.load(
-      "judge.md"
-    );
+    const basePrompt =
+      await this.promptLoader.load(
+        "judge.md"
+      );
 
-    const phasePrompt = await this.promptLoader.load(
-      this.getPhasePrompt(phase)
-    );
+    const goals = phase.goals
+      .map((goal) => `- ${goal}`)
+      .join("\n");
+
+    const dimensions =
+      phase.evaluationDimensions
+        .map(
+          (dimension) => `- ${dimension}`
+        )
+        .join("\n");
 
     return `
 ${basePrompt}
@@ -26,43 +36,65 @@ ${basePrompt}
 Candidate:
 ${candidateName}
 
-Problem:
+Interview Problem:
 ${problem}
 
 Current Phase:
-${phase}
+${phase.id}
 
 Running Summary:
-${summary}
+${runningSummary}
 
-${phasePrompt}
-`.trim();
+PHASE INSTRUCTIONS:
+
+${phase.instructions}
+
+PHASE GOALS:
+
+${goals || "- No explicit goals"}
+
+EVALUATION DIMENSIONS:
+
+${dimensions || "- None"}
+
+You must evaluate only the CURRENT PHASE.
+
+Do not decide whether the interview should transition.
+
+Do not return transition or nextPhase.
+
+Return ONLY valid JSON using exactly this structure:
+
+{
+  "reply": "Your next interviewer response",
+  "phaseAssessment": {
+    "goalCoverage": {
+      "${phase.goals[0] ?? "phase_goal"}": 0.0
+    },
+    "confidence": 0.0,
+    "unresolvedTopics": []
   }
+}
 
-  private getPhasePrompt(
-    phase: InterviewPhase
-  ): string {
-    switch (phase) {
-      case InterviewPhase.INTRODUCTION:
-        return "intro.md";
+For goalCoverage:
 
-      case InterviewPhase.REQUIREMENTS:
-        return "clarification.md";
+- Include every phase goal listed above.
+- Values must be between 0 and 1.
+- 0 means not discussed.
+- 0.5 means partially demonstrated.
+- 1 means clearly demonstrated.
 
-      case InterviewPhase.HIGH_LEVEL_DESIGN:
-        return "scaling.md";
+confidence must be between 0 and 1.
 
-      case InterviewPhase.DEEP_DIVE:
-        return "deep_dive.md";
+unresolvedTopics must contain only important topics blocking completion of the current phase.
 
-      case InterviewPhase.BOTTLE_NECKS:
-        return "bottlenecks.md";
+Ask one focused interview question at a time.
 
-      case InterviewPhase.CLOSING:
-        return "closing.md";
+Do not solve the problem for the candidate.
 
-      default:
-        throw new Error(`Unknown phase: ${phase}`);
-    }
+Do not use markdown.
+
+Return JSON only.
+`.trim();
   }
 }

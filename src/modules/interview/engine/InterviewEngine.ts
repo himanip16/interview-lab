@@ -1,61 +1,189 @@
 "use strict";
 
-import { InterviewPhase } from "./InterviewStateMachine";
+import {
+  AIService,
+  ChatMessage,
+} from "@/src/modules/ai/services/AIService";
+
+import { PromptGuard } from "../guardrails/PromptGuard";
+import { InterviewProfile } from "../profiles/InterviewProfile";
+
+import { InterviewStateMachine } from "./InterviewStateMachine";
 import { PromptBuilder } from "./PromptBuilder";
 import { ResponseParser } from "./ResponseParser";
-import { AIService, ChatMessage } from "@/src/modules/ai/services/AIService";
-import { PromptGuard } from "../guardrails/PromptGuard";
+
+export interface InterviewEngineInput {
+  profile: InterviewProfile;
+
+  currentPhase: string;
+
+  history: ChatMessage[];
+
+  runningSummary: string;
+
+  problem: string;
+
+  candidateName: string;
+
+  interviewDurationMinutes: number;
+
+  interviewStartedAt: Date;
+
+  phaseStartedAt: Date;
+}
+
 export class InterviewEngine {
   constructor(
-    private readonly aiService = new AIService(),
-    private readonly promptBuilder = new PromptBuilder(),
-    private readonly responseParser = new ResponseParser(),
-    private readonly promptGuard = new PromptGuard()
+    private readonly aiService =
+      new AIService(),
+
+    private readonly promptBuilder =
+      new PromptBuilder(),
+
+    private readonly responseParser =
+      new ResponseParser(),
+
+    private readonly promptGuard =
+      new PromptGuard()
   ) {}
 
   private static readonly HISTORY_WINDOW = 20;
 
   async processUserMessage(
-    currentPhase: InterviewPhase,
-    history: ChatMessage[],
-    runningSummary: string,
-    problem: string,
-    candidateName: string
+    input: InterviewEngineInput
   ) {
-    const systemPrompt =
-      await this.promptBuilder.buildSystemPrompt(
-        currentPhase,
-        candidateName,
-        problem,
-        runningSummary
+    const stateMachine =
+      new InterviewStateMachine(
+        input.profile
       );
 
-    // Only send the most recent conversation window
-    const recentHistory = history.slice(
-      -InterviewEngine.HISTORY_WINDOW
+    const phase = stateMachine.getPhase(
+      input.currentPhase
     );
-    const guardedInput = this.promptGuard.guard(
-    history.at(-1)?.content ?? ""
-);
 
+    const systemPrompt =
+      await this.promptBuilder.buildSystemPrompt(
+        phase,
+        input.candidateName,
+        input.problem,
+        input.runningSummary
+      );
 
-    const messages = [
-    {
+    const recentHistory =
+      input.history.slice(
+        -InterviewEngine.HISTORY_WINDOW
+      );
+
+    const latestMessage =
+      recentHistory.at(-1);
+
+    const guardedInput =
+      this.promptGuard.guard(
+        latestMessage?.content ?? ""
+      );
+
+    const messages: ChatMessage[] = [
+      {
         role: "system",
         content: systemPrompt,
-    },
-    ...recentHistory.slice(0, -1),
-    {
+      },
+
+      ...recentHistory.slice(0, -1),
+
+      {
         role: "user",
         content: guardedInput,
+      },
+    ];
+
+    const aiResponse =
+      await this.aiService.chat(messages);
+
+    const parsed =
+      await this.responseParser.parse(
+        aiResponse,
+        () =>
+          this.aiService.chat([
+            {
+              role: "system",
+              content: `
+Repair the response into valid JSON.
+
+Return ONLY JSON.
+
+Required shape:
+
+{
+  "reply": "string",
+  "phaseAssessment": {
+    "goalCoverage": {
+      "goal_name": 0.0
     },
-];
+    "confidence": 0.0,
+    "unresolvedTopics": []
+  }
+}
 
-    const aiResponse = await this.aiService.chat(messages);
+Do not return transition.
 
-    return this.responseParser.parse(
-      aiResponse,
-      () => this.aiService.chat(messages)
-    );
+Do not return nextPhase.
+
+All goal coverage values and confidence must be between 0 and 1.
+`.trim(),
+            },
+            {
+              role: "user",
+              content: aiResponse,
+            },
+          ])
+      );
+
+    const now = Date.now();
+
+    const elapsedInterviewSeconds =
+      Math.max(
+        Math.floor(
+          (
+            now -
+            input.interviewStartedAt.getTime()
+          ) / 1000
+        ),
+        0
+      );
+
+    const elapsedPhaseSeconds =
+      Math.max(
+        Math.floor(
+          (
+            now -
+            input.phaseStartedAt.getTime()
+          ) / 1000
+        ),
+        0
+      );
+
+    const transition =
+      stateMachine.evaluateTransition({
+        currentPhase: input.currentPhase,
+
+        interviewDurationMinutes:
+          input.interviewDurationMinutes,
+
+        elapsedInterviewSeconds,
+
+        elapsedPhaseSeconds,
+
+        assessment:
+          parsed.phaseAssessment,
+      });
+
+    return {
+      reply: parsed.reply,
+
+      phaseAssessment:
+        parsed.phaseAssessment,
+
+      transition,
+    };
   }
 }

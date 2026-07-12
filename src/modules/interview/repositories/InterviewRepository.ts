@@ -1,11 +1,12 @@
-import { Prisma } from "@prisma/client";
+import {
+  InterviewStatus,
+  MessageRole,
+  Prisma,
+} from "@prisma/client";
+
 import { prisma } from "@/shared/prisma/client";
-import { InterviewStatus } from "@prisma/client";
-import { MessageRole } from "@prisma/client";
-import { TranscriptService } from "@/src/modules/interview/services/TranscriptService";
 
 export class InterviewRepository {
-
   async create(data: Prisma.InterviewCreateInput) {
     return prisma.interview.create({
       data: {
@@ -15,15 +16,13 @@ export class InterviewRepository {
     });
   }
 
-
-
-
   async getById(id: string) {
     return prisma.interview.findUnique({
       where: {
         id,
       },
       include: {
+        problem: true,
         transcript: {
           orderBy: {
             createdAt: "asc",
@@ -34,21 +33,18 @@ export class InterviewRepository {
     });
   }
 
-
   async exists(id: string): Promise<boolean> {
-    const interview =
-      await prisma.interview.findUnique({
-        where: {
-          id,
-        },
-        select: {
-          id: true,
-        },
-      });
+    const interview = await prisma.interview.findUnique({
+      where: {
+        id,
+      },
+      select: {
+        id: true,
+      },
+    });
 
     return interview !== null;
   }
-
 
   async updateProgress(
     id: string,
@@ -65,6 +61,52 @@ export class InterviewRepository {
     });
   }
 
+  async persistTurn(params: {
+    interviewId: string;
+    userMessage: string;
+    assistantMessage: string;
+    currentPhase: string;
+    status?: InterviewStatus;
+    assistantMetadata?: Prisma.InputJsonValue;
+  }) {
+    const {
+      interviewId,
+      userMessage,
+      assistantMessage,
+      currentPhase,
+      status = InterviewStatus.IN_PROGRESS,
+      assistantMetadata,
+    } = params;
+
+    return prisma.$transaction(async (tx) => {
+      await tx.message.create({
+        data: {
+          interviewId,
+          role: MessageRole.user,
+          content: userMessage,
+        },
+      });
+
+      await tx.message.create({
+        data: {
+          interviewId,
+          role: MessageRole.assistant,
+          content: assistantMessage,
+          metadata: assistantMetadata,
+        },
+      });
+
+      return tx.interview.update({
+        where: {
+          id: interviewId,
+        },
+        data: {
+          currentPhase,
+          status,
+        },
+      });
+    });
+  }
 
   async addMessage(
     interviewId: string,
@@ -82,7 +124,6 @@ export class InterviewRepository {
     });
   }
 
-
   async updateSummary(
     interviewId: string,
     summary: string
@@ -96,7 +137,6 @@ export class InterviewRepository {
       },
     });
   }
-
 
   async saveEvaluation(
     interviewId: string,
@@ -122,11 +162,7 @@ export class InterviewRepository {
     });
   }
 
-
-  async listAll(
-    limit = 10,
-    offset = 0
-  ) {
+  async listAll(limit = 10, offset = 0) {
     const safeLimit = Math.min(
       Math.max(limit, 1),
       100
@@ -143,7 +179,6 @@ export class InterviewRepository {
     });
   }
 
-
   async delete(id: string) {
     return prisma.interview.delete({
       where: {
@@ -151,7 +186,6 @@ export class InterviewRepository {
       },
     });
   }
-
 
   async transaction<T>(
     callback: (

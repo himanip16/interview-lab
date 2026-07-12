@@ -1,105 +1,211 @@
-// src/modules/interview/engine/InterviewStateMachine.ts
+import {
+  InterviewPhaseDefinition,
+  InterviewProfile,
+  PhaseId,
+} from "../profiles/InterviewProfile";
 
-export enum InterviewPhase {
-  INTRODUCTION = "introduction",
-  REQUIREMENTS = "requirements",
-  HIGH_LEVEL_DESIGN = "high_level_design",
-  DEEP_DIVE = "deep_dive",
-  BOTTLE_NECKS = "bottlenecks",
-  CLOSING = "closing",
-}
+export interface PhaseAssessment {
+  goalCoverage: Record<string, number>;
 
-export interface PhaseContext {
-  phase: InterviewPhase;
-
-  // Phase completion
-  requirementsCovered: boolean;
-  architectureCovered: boolean;
-  deepDiveCompleted: boolean;
-  bottlenecksCovered: boolean;
-
-  // Interview quality
-  interviewerGoalsCompleted: boolean;
-  unansweredQuestions: number;
-
-  // LLM confidence (0-1)
   confidence: number;
+
+  unresolvedTopics: string[];
 }
 
-interface PhaseDefinition {
-  phase: InterviewPhase;
-  next?: InterviewPhase;
+export interface TransitionContext {
+  currentPhase: PhaseId;
 
-  isComplete(context: PhaseContext): boolean;
+  interviewDurationMinutes: number;
+
+  elapsedInterviewSeconds: number;
+
+  elapsedPhaseSeconds: number;
+
+  assessment: PhaseAssessment;
+}
+
+export interface TransitionResult {
+  shouldTransition: boolean;
+
+  currentPhase: PhaseId;
+
+  nextPhase: PhaseId;
+
+  reason:
+    | "goals_completed"
+    | "phase_time_budget_exceeded"
+    | "interview_time_pressure"
+    | "stay";
 }
 
 export class InterviewStateMachine {
-  private readonly phases: Record<InterviewPhase, PhaseDefinition> = {
-    [InterviewPhase.INTRODUCTION]: {
-      phase: InterviewPhase.INTRODUCTION,
-      next: InterviewPhase.REQUIREMENTS,
-      isComplete: () => true,
-    },
+  constructor(
+    private readonly profile: InterviewProfile
+  ) {}
 
-    [InterviewPhase.REQUIREMENTS]: {
-      phase: InterviewPhase.REQUIREMENTS,
-      next: InterviewPhase.HIGH_LEVEL_DESIGN,
-      isComplete: (ctx) =>
-        ctx.requirementsCovered &&
-        ctx.interviewerGoalsCompleted &&
-        ctx.unansweredQuestions === 0 &&
-        ctx.confidence >= 0.85,
-    },
+  getPhase(
+    phaseId: PhaseId
+  ): InterviewPhaseDefinition {
+    const phase = this.profile.phases.find(
+      (candidate) => candidate.id === phaseId
+    );
 
-    [InterviewPhase.HIGH_LEVEL_DESIGN]: {
-      phase: InterviewPhase.HIGH_LEVEL_DESIGN,
-      next: InterviewPhase.DEEP_DIVE,
-      isComplete: (ctx) =>
-        ctx.architectureCovered &&
-        ctx.interviewerGoalsCompleted &&
-        ctx.unansweredQuestions === 0 &&
-        ctx.confidence >= 0.85,
-    },
-
-    [InterviewPhase.DEEP_DIVE]: {
-      phase: InterviewPhase.DEEP_DIVE,
-      next: InterviewPhase.BOTTLE_NECKS,
-      isComplete: (ctx) =>
-        ctx.deepDiveCompleted &&
-        ctx.confidence >= 0.8,
-    },
-
-    [InterviewPhase.BOTTLE_NECKS]: {
-      phase: InterviewPhase.BOTTLE_NECKS,
-      next: InterviewPhase.CLOSING,
-      isComplete: (ctx) =>
-        ctx.bottlenecksCovered &&
-        ctx.confidence >= 0.8,
-    },
-
-    [InterviewPhase.CLOSING]: {
-      phase: InterviewPhase.CLOSING,
-      isComplete: () => true,
-    },
-  };
-
-  getCurrentPhase(context: PhaseContext): InterviewPhase {
-    return context.phase;
-  }
-
-  shouldTransition(context: PhaseContext): boolean {
-    return this.phases[context.phase].isComplete(context);
-  }
-
-  getNextPhase(context: PhaseContext): InterviewPhase {
-    const current = this.phases[context.phase];
-
-    if (!current.next) {
-      return context.phase;
+    if (!phase) {
+      throw new Error(
+        `Unknown phase "${phaseId}" for interview type "${this.profile.type}"`
+      );
     }
 
-    return this.shouldTransition(context)
-      ? current.next
-      : context.phase;
+    return phase;
+  }
+
+  getInitialPhase(): PhaseId {
+    const phase = this.profile.phases[0];
+
+    if (!phase) {
+      throw new Error(
+        `Interview profile "${this.profile.type}" has no phases`
+      );
+    }
+
+    return phase.id;
+  }
+
+  evaluateTransition(
+    context: TransitionContext
+  ): TransitionResult {
+    const currentPhase = this.getPhase(
+      context.currentPhase
+    );
+
+    const currentIndex =
+      this.profile.phases.findIndex(
+        (phase) =>
+          phase.id === context.currentPhase
+      );
+
+    const nextPhase =
+      this.profile.phases[currentIndex + 1];
+
+    if (!nextPhase) {
+      return {
+        shouldTransition: false,
+        currentPhase: currentPhase.id,
+        nextPhase: currentPhase.id,
+        reason: "stay",
+      };
+    }
+
+    const totalInterviewSeconds =
+      Math.max(
+        context.interviewDurationMinutes * 60,
+        1
+      );
+
+    const targetPhaseSeconds =
+      totalInterviewSeconds *
+      currentPhase.targetDurationRatio;
+
+    const elapsedRatio =
+      context.elapsedInterviewSeconds /
+      totalInterviewSeconds;
+
+    const remainingPhaseRatio =
+      this.profile.phases
+        .slice(currentIndex + 1)
+        .reduce(
+          (sum, phase) =>
+            sum + phase.targetDurationRatio,
+          0
+        );
+
+    const expectedRemainingSeconds =
+      totalInterviewSeconds *
+      remainingPhaseRatio;
+
+    const actualRemainingSeconds =
+      Math.max(
+        totalInterviewSeconds -
+          context.elapsedInterviewSeconds,
+        0
+      );
+
+    const coverage =
+      this.calculateGoalCoverage(
+        currentPhase,
+        context.assessment
+      );
+
+    const goalsCompleted =
+      coverage >=
+        currentPhase.transitionThreshold &&
+      context.assessment.confidence >=
+        currentPhase.transitionThreshold &&
+      context.assessment.unresolvedTopics.length === 0;
+
+    if (goalsCompleted) {
+      return {
+        shouldTransition: true,
+        currentPhase: currentPhase.id,
+        nextPhase: nextPhase.id,
+        reason: "goals_completed",
+      };
+    }
+
+    if (
+      context.elapsedPhaseSeconds >=
+      targetPhaseSeconds
+    ) {
+      return {
+        shouldTransition: true,
+        currentPhase: currentPhase.id,
+        nextPhase: nextPhase.id,
+        reason: "phase_time_budget_exceeded",
+      };
+    }
+
+    if (
+      elapsedRatio >= 0.5 &&
+      actualRemainingSeconds <
+        expectedRemainingSeconds
+    ) {
+      return {
+        shouldTransition: true,
+        currentPhase: currentPhase.id,
+        nextPhase: nextPhase.id,
+        reason: "interview_time_pressure",
+      };
+    }
+
+    return {
+      shouldTransition: false,
+      currentPhase: currentPhase.id,
+      nextPhase: currentPhase.id,
+      reason: "stay",
+    };
+  }
+
+  private calculateGoalCoverage(
+    phase: InterviewPhaseDefinition,
+    assessment: PhaseAssessment
+  ): number {
+    if (phase.goals.length === 0) {
+      return 1;
+    }
+
+    const total = phase.goals.reduce(
+      (sum, goal) => {
+        const value =
+          assessment.goalCoverage[goal] ?? 0;
+
+        return (
+          sum +
+          Math.min(Math.max(value, 0), 1)
+        );
+      },
+      0
+    );
+
+    return total / phase.goals.length;
   }
 }

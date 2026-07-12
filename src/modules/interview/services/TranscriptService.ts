@@ -1,36 +1,49 @@
-import { MessageRepository } from "../repositories/MessageRepository";
+import {
+  MessageRole,
+  Prisma,
+} from "@prisma/client";
+
+import { prisma } from "@/shared/prisma/client";
 
 export class TranscriptService {
-  private repository =
-    new MessageRepository();
-
   async addUserMessage(
     interviewId: string,
     message: string
   ) {
-    return this.repository.create(
-      interviewId,
-      "user",
-      message
-    );
+    return prisma.message.create({
+      data: {
+        interviewId,
+        role: MessageRole.user,
+        content: message,
+      },
+    });
   }
 
   async addAssistantMessage(
     interviewId: string,
-    message: string
+    message: string,
+    metadata?: Prisma.InputJsonValue
   ) {
-    return this.repository.create(
-      interviewId,
-      "assistant",
-      message
-    );
+    return prisma.message.create({
+      data: {
+        interviewId,
+        role: MessageRole.assistant,
+        content: message,
+        metadata,
+      },
+    });
   }
 
   async getTranscript(
     interviewId: string
   ) {
-    return this.repository.list(
-      interviewId
-    );
+    return prisma.message.findMany({
+      where: {
+        interviewId,
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+    });
   }
 }

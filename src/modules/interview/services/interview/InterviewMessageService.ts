@@ -1,64 +1,130 @@
-
+import {
+  InterviewStatus,
+  MessageRole,
+  Prisma,
+} from "@prisma/client";
 
 import { InterviewRepository } from "../../repositories/InterviewRepository";
-import { InterviewEngine } from "../../engine/InterviewEngine";
-import { Message, MessageRole } from "@prisma/client";
-import { ChatMessage } from "@/src/modules/ai/services/AIService";
+
+import { InterviewEngine } from "@src/modules/interview/engine/InterviewEngine";
 
 export class InterviewMessageService {
-  private repository = new InterviewRepository();
-  private engine = new InterviewEngine();
+  private readonly repository =
+    new InterviewRepository();
+
+  private readonly engine =
+    new InterviewEngine();
 
   async processMessage(
     interviewId: string,
-    message: string
+    userMessage: string
   ) {
-    const interview = await this.repository.getById(interviewId);
+    const interview =
+      await this.repository.getById(
+        interviewId
+      );
 
     if (!interview) {
-      throw new Error("Interview not found");
+      throw new Error(
+        "Interview not found."
+      );
     }
 
-    await this.repository.addMessage(
-      interviewId,
-      MessageRole.user,
-      message
-    );
+    if (
+      interview.status ===
+      InterviewStatus.COMPLETED
+    ) {
+      throw new Error(
+        "Interview has already been completed."
+      );
+    }
 
-    const history: ChatMessage[] = interview.transcript.map(
-  (m: Message): ChatMessage => ({
-    role:
-      m.role === MessageRole.user
-        ? "user"
-        : m.role === MessageRole.assistant
-        ? "assistant"
-        : "system",
-    content: m.content,
-  })
-);
+    /*
+     * Build history INCLUDING the latest
+     * user message.
+     *
+     * Do not persist yet.
+     *
+     * If AI generation fails we do not want
+     * a half-written interview turn.
+     */
+    const conversation = [
+      ...interview.transcript.map(
+        (message) => ({
+          role:
+            message.role ===
+            MessageRole.user
+              ? ("user" as const)
+              : ("assistant" as const),
 
-    const result = await this.engine.processUserMessage(
-      interview.currentPhase as any,
-      history,
-      interview.summary,
-      interview.topic,
-      "Candidate"
-    );
+          content: message.content,
+        })
+      ),
 
-    const aiMessage = await this.repository.addMessage(
-      interviewId,
-      MessageRole.assistant,
-      result.reply
-    );
+      {
+        role: "user" as const,
+        content: userMessage,
+      },
+    ];
 
-    await this.repository.updateSummary(
-      interviewId,
-      interview.summary
-    );
+    const result =
+      await this.engine.process({
+        interview: {
+          id: interview.id,
+          type: interview.type,
+          difficulty:
+            interview.difficulty,
+          duration: interview.duration,
+          company: interview.company,
+          currentPhase:
+            interview.currentPhase,
+          createdAt: interview.createdAt,
+        },
+
+        problem: {
+          id: interview.problem.id,
+          title: interview.problem.title,
+          description:
+            interview.problem.description,
+          category:
+            interview.problem.category,
+        },
+
+        conversation,
+      });
+
+    const metadata: Prisma.InputJsonValue = {
+      phase: result.phase,
+      previousPhase:
+        interview.currentPhase,
+      transitioned:
+        result.phase !==
+        interview.currentPhase,
+      confidence: result.confidence,
+    };
+
+    await this.repository.persistTurn({
+      interviewId: interview.id,
+      userMessage,
+      assistantMessage: result.reply,
+      currentPhase: result.phase,
+      status:
+        result.completed === true
+          ? InterviewStatus.COMPLETED
+          : InterviewStatus.IN_PROGRESS,
+      assistantMetadata: metadata,
+    });
 
     return {
-      aiMessage,
-      newSummary: interview.summary,
+      reply: result.reply,
+      phase: result.phase,
+      previousPhase:
+        interview.currentPhase,
+      transitioned:
+        result.phase !==
+        interview.currentPhase,
+      confidence: result.confidence,
+      completed: result.completed,
     };
   }
 }

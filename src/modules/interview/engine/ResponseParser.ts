@@ -1,18 +1,36 @@
 import { z } from "zod";
-import { InterviewPhase } from "./InterviewStateMachine";
+
 import { ValidatedJSONParser } from "@/src/modules/ai/utils/ValidatedJSONParser";
 
 const AIResponseSchema = z.object({
-  reply: z.string(),
+  reply: z.string().min(1),
 
-  transition: z.boolean(),
+  phaseAssessment: z.object({
+    goalCoverage: z.record(
+      z.string(),
+      z.number().min(0).max(1)
+    ),
 
-  nextPhase: z.nativeEnum(InterviewPhase).optional(),
+    confidence: z
+      .number()
+      .transform((value) =>
+        value > 1
+          ? Math.min(value / 100, 1)
+          : value
+      )
+      .pipe(
+        z.number().min(0).max(1)
+      ),
 
-  confidence: z.number().min(0).max(1).optional(),
+    unresolvedTopics: z.array(
+      z.string()
+    ),
+  }),
 });
 
-export type ParsedResponse = z.infer<typeof AIResponseSchema>;
+export type ParsedResponse = z.infer<
+  typeof AIResponseSchema
+>;
 
 export class ResponseParser {
   async parse(
