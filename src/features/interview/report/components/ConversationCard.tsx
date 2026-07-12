@@ -17,7 +17,7 @@ export default function ConversationCard({ evidence }: Props) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6 border border-zinc-200">
+    <div className="bg-white rounded-lg shadow-md p-6 border border-zinc-200">
       {evidence.length > 0 ? (
         <div className="space-y-4">
           {evidence.map((item, index) => (
@@ -30,7 +30,7 @@ export default function ConversationCard({ evidence }: Props) {
                   {formatTimestamp(item.timestampSeconds)}
                 </span>
               </div>
-              <p className="text-zinc-800 leading-relaxed">
+              <p className="text-zinc-900 leading-relaxed font-normal">
                 {item.quote}
               </p>
             </div>

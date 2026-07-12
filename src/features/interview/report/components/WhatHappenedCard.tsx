@@ -19,7 +19,7 @@ export default function WhatHappenedCard({ observations, strengths, weaknesses }
       ];
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6 border border-zinc-200">
+    <div className="bg-white rounded-lg shadow-md p-6 border border-zinc-200">
       <p className="text-sm font-semibold text-zinc-500 mb-4">
         WHAT HAPPENED
       </p>
@@ -37,7 +37,7 @@ export default function WhatHappenedCard({ observations, strengths, weaknesses }
                 <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wide">
                   {item.type}
                 </span>
-                <p className="text-zinc-800 leading-relaxed mt-1">
+                <p className="text-zinc-900 leading-relaxed mt-1 font-normal">
                   {item.text}
                 </p>
               </div>

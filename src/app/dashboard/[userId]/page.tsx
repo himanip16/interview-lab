@@ -26,8 +26,8 @@ export default async function DashboardPage({ params }: Props) {
   ]);
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-12 text-white">
-      <h1 className="text-4xl font-bold">Your Dashboard</h1>
+    <main className="mx-auto max-w-5xl px-6 py-12 text-foreground">
+      <h1 className="text-4xl font-bold text-white">Your Dashboard</h1>
 
       <div className="mt-8">
         <NextRecommendedInterview recommendation={recommendation} />

@@ -42,7 +42,6 @@ const DialogContent = React.forwardRef<
         "fixed left-1/2 top-1/2 z-50 w-[95vw] max-w-lg",
         "-translate-x-1/2 -translate-y-1/2",
         "rounded-2xl border border-zinc-200 bg-white p-6 shadow-xl",
-        "dark:border-zinc-800 dark:bg-zinc-900",
         "focus:outline-none",
         className
       )}
@@ -89,7 +88,7 @@ const DialogTitle = React.forwardRef<
   <DialogPrimitive.Title
     ref={ref}
     className={cn(
-      "text-lg font-semibold text-zinc-900 dark:text-zinc-100",
+      "text-lg font-semibold text-zinc-900",
       className
     )}
     {...props}
@@ -105,7 +104,7 @@ const DialogDescription = React.forwardRef<
   <DialogPrimitive.Description
     ref={ref}
     className={cn(
-      "text-sm text-zinc-600 dark:text-zinc-400",
+      "text-sm text-zinc-600",
       className
     )}
     {...props}

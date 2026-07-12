@@ -10,12 +10,12 @@ export default function InterviewCard({
   interview,
 }: Props) {
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-6 transition hover:border-blue-500">
-      <h3 className="text-xl font-semibold">
+    <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm transition hover:border-zinc-400">
+      <h3 className="text-xl font-semibold text-zinc-900">
         {interview.title}
       </h3>
 
-      <p className="mt-2 text-sm text-zinc-400">
+      <p className="mt-2 text-sm text-zinc-600">
         {interview.description}
       </p>
 
@@ -27,7 +27,7 @@ export default function InterviewCard({
 
         <Link
           href={`/interview/setup?problemId=${interview.id}&type=hld`}
-          className="rounded-lg bg-blue-600 px-4 py-2 text-sm hover:bg-blue-500"
+          className="rounded-lg bg-zinc-900 px-4 py-2 text-sm text-white hover:bg-zinc-800"
         >
           Start →
         </Link>

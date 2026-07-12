@@ -25,11 +25,11 @@ export const Button = React.forwardRef<
 
     const variants = {
       primary:
-        "bg-blue-600 text-white hover:bg-blue-700",
+        "bg-zinc-900 text-white hover:bg-zinc-800",
       secondary:
-        "bg-gray-200 text-gray-800 hover:bg-gray-300",
+        "bg-zinc-200 text-zinc-900 hover:bg-zinc-300",
       outline:
-        "border border-gray-300 bg-transparent hover:bg-gray-50",
+        "border border-zinc-300 bg-transparent hover:bg-zinc-50 text-zinc-900",
     };
 
     return (

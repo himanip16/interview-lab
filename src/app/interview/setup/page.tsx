@@ -132,7 +132,7 @@ export default function InterviewSetupPage() {
           type="button"
           disabled={loading || !problemId}
           onClick={handleStartInterview}
-          className="mt-10 w-full rounded-lg bg-blue-600 py-4 text-lg font-semibold hover:bg-blue-500 disabled:opacity-50"
+          className="mt-10 w-full rounded-lg bg-zinc-900 py-4 text-lg font-semibold hover:bg-zinc-800 disabled:opacity-50 text-white"
         >
           {loading
             ? "Starting..."
