@@ -7,7 +7,22 @@ const envSchema = z.object({
 
   DATABASE_URL: z.string().url(),
 
-  OPENAI_API_KEY: z.string().min(1),
+  AI_PROVIDER: z
+    .enum(["ollama", "openai"])
+    .default("ollama"),
+
+  OLLAMA_BASE_URL: z
+    .string()
+    .url()
+    .default("http://localhost:11434"),
+
+  OLLAMA_MODEL: z
+    .string()
+    .default("qwen2.5:7b"),
+
+  OPENAI_API_KEY: z
+    .string()
+    .optional(),
 
   OPENAI_MODEL: z
     .string()

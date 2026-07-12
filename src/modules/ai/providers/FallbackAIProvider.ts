@@ -1,5 +1,3 @@
-// src/modules/ai/providers/FallbackAIProvider.ts
-
 import { OllamaProvider } from "./OllamaProvider";
 
 export interface ChatMessage {
@@ -10,25 +8,26 @@ export interface ChatMessage {
 export class FallbackAIProvider {
   private readonly providers = [
     new OllamaProvider("qwen2.5:7b"),
-    new OllamaProvider("llama3:8b"),
+    new OllamaProvider("llama3.2:1b"),
   ];
 
-  private readonly cache = new Map<string, string>();
-
-  async generateResponse(messages: ChatMessage[]): Promise<string> {
-    const cacheKey = JSON.stringify(messages);
-
-    if (this.cache.has(cacheKey)) {
-      return this.cache.get(cacheKey)!;
-    }
-
+  async generateResponse(
+    messages: ChatMessage[]
+  ): Promise<string> {
     let lastError: unknown;
 
     for (const provider of this.providers) {
       try {
-        const response = await provider.generateResponse(messages);
+        console.log(
+          `🤖 Requesting ${provider.getModel()}...`
+        );
 
-        this.cache.set(cacheKey, response);
+        const response =
+          await provider.generateResponse(messages);
+
+        if (!response?.trim()) {
+          throw new Error("AI returned empty response");
+        }
 
         return response;
       } catch (error) {
@@ -41,13 +40,8 @@ export class FallbackAIProvider {
       }
     }
 
-    if (this.cache.has(cacheKey)) {
-      return this.cache.get(cacheKey)!;
-    }
-
-    throw new Error(
-      `All AI providers failed.`,
-      { cause: lastError }
-    );
+    throw new Error("All AI providers failed.", {
+      cause: lastError,
+    });
   }
 }

@@ -1,4 +1,42 @@
-// modules/ai/providers/ollama.ts
+type ChatMessage = {
+  role: "system" | "user" | "assistant";
+  content: string;
+};
+
+type OllamaResponse = {
+  message?: {
+    role: string;
+    content: string;
+  };
+  error?: string;
+};
+
+const INTERVIEW_RESPONSE_SCHEMA = {
+  type: "object",
+  properties: {
+    reply: {
+      type: "string",
+    },
+    transition: {
+      type: "boolean",
+    },
+    nextPhase: {
+      type: "string",
+    },
+    confidence: {
+      type: "number",
+      minimum: 0,
+      maximum: 1,
+    },
+  },
+  required: [
+    "reply",
+    "transition",
+    "confidence",
+  ],
+  additionalProperties: false,
+};
+
 export class OllamaProvider {
   constructor(
     private readonly model: string
@@ -8,41 +46,55 @@ export class OllamaProvider {
     return this.model;
   }
 
-  private baseUrl = "http://127.0.0.1:11434/api/chat";
-  
-  async generateResponse(messages: { role: string; content: string }[]) {
-    try {
-      console.log("🤖 Requesting Qwen...");
-      const response = await fetch(this.baseUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: this.model,
-          messages: messages,
-          stream: false,
-        }),
-      });
+  private readonly baseUrl =
+    "http://127.0.0.1:11434/api/chat";
 
-//       const response = await fetch(`${this.baseUrl}/api/chat`, {
-//   method: "POST",
-//   headers: {
-//     "Content-Type": "application/json",
-//   },
-//   body: JSON.stringify({
-//     model: this.model,
-//     messages,
-//     stream: false,
-//   }),
-// });
+  async generateResponse(
+    messages: ChatMessage[]
+  ): Promise<string> {
+    console.log(
+      `🤖 Requesting ${this.model}...`
+    );
 
-const data = await response.json();
+    const response = await fetch(this.baseUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: this.model,
+        messages,
+        stream: false,
+        format: INTERVIEW_RESPONSE_SCHEMA,
+        options: {
+          temperature: 0,
+        },
+      }),
+    });
 
-return data.message.content;
+    const data =
+      (await response.json()) as OllamaResponse;
 
-      
-    } catch (e) {
-      console.error("Ollama connection failed. Is the app open?");
-      return "I'm having trouble connecting to my brain (Ollama).";
+    if (!response.ok) {
+      throw new Error(
+        data.error ??
+          `Ollama request failed: ${response.status}`
+      );
     }
+
+    const content = data.message?.content;
+
+    if (!content?.trim()) {
+      throw new Error(
+        "Ollama returned an empty response"
+      );
+    }
+
+    console.log(
+      `🤖 ${this.model} response:`,
+      content
+    );
+
+    return content;
   }
 }
