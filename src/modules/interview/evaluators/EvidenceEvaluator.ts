@@ -121,7 +121,7 @@ export class EvidenceEvaluator {
     const startedAt =
       interview.startedAt ?? interview.createdAt;
 
-    const dimensions = this.collectDimensions(interview);
+    const dimensions = this.collectDimensions(interview, interview.mode);
 
     const rubricSection = await this.buildRubricSection(
       interview.template.id,
@@ -163,7 +163,8 @@ export class EvidenceEvaluator {
       dimensions,
       rubricSection,
       conceptSection,
-      transcriptSection
+      transcriptSection,
+      interview.mode
     );
 
     const raw = await this.ai.chat(
@@ -275,12 +276,13 @@ const parsed = await ValidatedJSONParser.parse(
   }
 
   private collectDimensions(
-    interview: EvaluatableInterview
+    interview: EvaluatableInterview,
+    mode: "CANDIDATE" | "REVERSE"
   ): string[] {
     const set = new Set<string>();
 
     for (const phase of interview.template.phases) {
-      const dims = phase.evaluationDimensions as string[];
+      const dims = (mode === "REVERSE" ? phase.reverseEvaluationDimensions : phase.evaluationDimensions) as string[];
 
       for (const dim of dims ?? []) {
         set.add(dim);
@@ -314,12 +316,15 @@ const parsed = await ValidatedJSONParser.parse(
     dimensions: string[],
     rubricSection: string,
     conceptSection: string,
-    transcriptSection: string
+    transcriptSection: string,
+    mode: "CANDIDATE" | "REVERSE"
   ): string {
-    return `
-You are evaluating a candidate's performance in a "${templateName}" technical interview.
+    const target = mode === "REVERSE" ? "INTERVIEWER's (the human's)" : "candidate's";
 
-Score the candidate on EXACTLY these dimensions, no others:
+    return `
+You are evaluating ${target} performance in a "${templateName}" technical interview.
+
+Score the ${mode === "REVERSE" ? "interviewer" : "candidate"} on EXACTLY these dimensions, no others:
 ${dimensions.map((d) => `- ${d}`).join("\n")}
 
 RUBRICS (use these to decide scores):
@@ -345,12 +350,12 @@ For each dimension, provide:
   - type: "strength" if this quote demonstrates competence, "weakness" if it demonstrates a gap
 
 Additionally return:
-- missedConcepts: important concepts for this problem that the candidate never addressed (free text, 0-5 items)
+- missedConcepts: important concepts for this problem that the ${mode === "REVERSE" ? "interviewer" : "candidate"} never addressed (free text, 0-5 items)
 - riskAssessment: concrete concerns an interviewer should flag before making a hire decision (0-4 items, empty array if none)
 - hireRecommendation: one of STRONG_HIRE, HIRE, NO_HIRE, STRONG_NO_HIRE — based on overall dimension scores and severity of weaknesses
 
 Rules:
-- Only cite messages with role USER (the candidate). Never cite your own INTERVIEWER lines as evidence.
+- Only cite messages with role USER (the human). Never cite AI lines as evidence.
 - Every quote must be copied exactly from the cited message. Do not paraphrase and call it a quote.
 - Only use conceptSlugs from the CONCEPT VOCABULARY above. Never invent a slug.
 - If a dimension has weak or no supporting evidence in the transcript, say so in the summary and score it low — do not invent evidence.

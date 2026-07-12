@@ -101,6 +101,9 @@ model Interview {
   mode             InterviewMode @default(CANDIDATE)
   candidatePersona Json?
 
+  // NEW — code editor state (deprioritized, not wired into prompts/evaluator yet)
+  codeState Json?
+
   user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   template   InterviewTemplate @relation(fields: [templateId], references: [id])
   evaluation Evaluation?

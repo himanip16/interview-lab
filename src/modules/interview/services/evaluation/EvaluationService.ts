@@ -49,6 +49,7 @@ export class EvaluationService {
       id: interview.id,
       startedAt: interview.startedAt,
       createdAt: interview.createdAt,
+      mode: interview.mode,
       transcript: interview.transcript,
       template: interview.template,
     };

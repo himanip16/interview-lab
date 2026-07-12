@@ -68,7 +68,7 @@ export class InterviewMessageService {
 
     const profile =
       await this.profileService.resolveByTemplateId(
-        interview.templateId
+        interview.template.id
       );
 
     const currentPhaseDef = profile.phases.find(
@@ -126,6 +126,8 @@ export class InterviewMessageService {
         interviewStartedAt,
         phaseStartedAt,
         whiteboardDescription,
+        mode: interview.mode,
+        persona: interview.candidatePersona as any,
       });
 
     const previousPhase =

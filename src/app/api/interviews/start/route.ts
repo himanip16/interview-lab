@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
-import { Difficulty } from "@prisma/client";
+import { Difficulty, InterviewMode } from "@prisma/client";
 
 import { prisma } from "@/shared/prisma/client";
 import { getCurrentUserId } from "@/src/modules/auth/getCurrentUserId";
 import { createInterview } from "@/src/modules/interview/services/interview/InterviewFactory";
 import { InterviewRepository } from "@/src/modules/interview/repositories/InterviewRepository";
 import { TranscriptService } from "@/src/modules/interview/services/TranscriptService";
+import { pickPersona } from "@/src/modules/interview/reverse/CandidatePersonas";
 
 const difficultyMap: Record<string, Difficulty> = {
   Easy: Difficulty.EASY,
@@ -17,7 +18,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    const { type, difficulty, duration, company, problemId } = body;
+    const { type, difficulty, duration, company, problemId, mode } = body;
 
     if (!type || !difficulty || !duration || !company || !problemId) {
       return NextResponse.json(
@@ -59,13 +60,18 @@ export async function POST(request: Request) {
 
     const userId = await getCurrentUserId();
 
+    const interviewMode = mode === "REVERSE" ? InterviewMode.REVERSE : InterviewMode.CANDIDATE;
+
     const interviewData = createInterview({
       templateId: template.id,
       difficulty: interviewDifficulty,
       duration,
       company,
       problemId: problem.id,
+      mode: interviewMode,
     });
+
+    const persona = interviewMode === InterviewMode.REVERSE ? pickPersona(interviewDifficulty) : null;
 
     const repository = new InterviewRepository();
 
@@ -77,6 +83,8 @@ export async function POST(request: Request) {
       currentPhase: interviewData.currentPhase,
       summary: interviewData.summary,
       promptVersion: interviewData.promptVersion,
+      mode: interviewData.mode,
+      candidatePersona: persona as any,
       user: { connect: { id: userId } },
       template: { connect: { id: template.id } },
       problem: { connect: { id: problem.id } },
@@ -89,9 +97,13 @@ export async function POST(request: Request) {
 
     const transcriptService = new TranscriptService();
 
+    const greeting = interviewMode === InterviewMode.REVERSE
+      ? `Hi, I'm ${persona!.name}. Ready when you are — go ahead and start the interview.`
+      : `Welcome! Today we'll design "${problem.title}". Start by asking clarifying questions before proposing your design.`;
+
     await transcriptService.addAssistantMessage(
       savedInterview.id,
-      `Welcome! Today we'll design "${problem.title}". Start by asking clarifying questions before proposing your design.`
+      greeting
     );
 
     return NextResponse.json({ id: savedInterview.id }, { status: 201 });

@@ -7,6 +7,7 @@ import {
 
 import { PromptGuard } from "../guardrails/PromptGuard";
 import { InterviewProfile } from "../profiles/InterviewProfile";
+import { CandidatePersona } from "../reverse/CandidatePersonas";
 
 import { InterviewStateMachine } from "./InterviewStateMachine";
 import { PromptBuilder } from "./PromptBuilder";
@@ -33,6 +34,10 @@ export interface InterviewEngineInput {
   phaseStartedAt: Date;
 
   whiteboardDescription?: string;
+
+  mode: "CANDIDATE" | "REVERSE";
+
+  persona?: CandidatePersona;
 }
 
 export class InterviewEngine {
@@ -72,21 +77,28 @@ export class InterviewEngine {
     const latestMessage =
       recentHistory.at(-1);
 
-    const latestQuestion = recentHistory.length >= 2 
-      ? recentHistory[recentHistory.length - 2]?.content 
+    const latestQuestion = recentHistory.length >= 2
+      ? recentHistory[recentHistory.length - 2]?.content
       : undefined;
     const latestAnswer = latestMessage?.content;
 
-    const systemPrompt =
-      await this.promptBuilder.buildSystemPrompt(
-        phase,
-        input.candidateName,
-        input.problem,
-        input.runningSummary,
-        latestQuestion,
-        latestAnswer,
-        input.whiteboardDescription
-      );
+    const systemPrompt = input.mode === "REVERSE"
+      ? await this.promptBuilder.buildReverseSystemPrompt(
+          phase,
+          input.persona!,
+          input.problem,
+          input.runningSummary,
+          latestQuestion
+        )
+      : await this.promptBuilder.buildSystemPrompt(
+          phase,
+          input.candidateName,
+          input.problem,
+          input.runningSummary,
+          latestQuestion,
+          latestAnswer,
+          input.whiteboardDescription
+        );
 
     const guardedInput =
       this.promptGuard.guard(

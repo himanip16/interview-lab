@@ -30,16 +30,18 @@ export interface EvaluatableInterview {
   id: string;
   startedAt: Date | null;
   createdAt: Date;
+  mode: "CANDIDATE" | "REVERSE";
   transcript: Array<{
     id: string;
     role: string;
     content: string;
     createdAt: Date;
+    elapsedSeconds?: number;
   }>;
   template: {
     id: string;
     slug: string;
     name: string;
-    phases: Array<{ evaluationDimensions: unknown }>;
+    phases: Array<{ evaluationDimensions: unknown; reverseEvaluationDimensions?: unknown }>;
   };
 }

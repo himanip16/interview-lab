@@ -1,4 +1,4 @@
-import { InterviewStatus } from "@/src/modules/interview/types";
+import { InterviewStatus, InterviewMode } from "@prisma/client";
 import { CreateInterviewInput } from "@/src/features/interview/types/CreateInterviewInput";
 
 export function createInterview(input: CreateInterviewInput) {
@@ -8,5 +8,6 @@ export function createInterview(input: CreateInterviewInput) {
     currentPhase: "introduction",
     summary: "Interview has not started yet.",
     promptVersion: "v1",
+    mode: input.mode ?? InterviewMode.CANDIDATE,
   };
 }

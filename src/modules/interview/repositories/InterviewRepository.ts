@@ -23,6 +23,7 @@ export class InterviewRepository {
       },
       include: {
         problem: true,
+        template: true,
         transcript: {
           orderBy: {
             createdAt: "asc",
