@@ -4,6 +4,8 @@ import PageContainer from "@/src/components/layout/PageContainer";
 
 import Hero from "@/src/features/landing/components/Hero";
 import Features from "@/src/features/landing/components/Features";
+import SmartMentor from "@/src/features/landing/components/SmartMentor";
+import PersonalNotebooks from "@/src/features/landing/components/PersonalNotebooks";
 
 export default function Home() {
   return (
@@ -11,6 +13,10 @@ export default function Home() {
       <Navbar />
 
       <Hero />
+
+      <SmartMentor />
+
+      <PersonalNotebooks />
 
       <InterviewCatalog />
 

@@ -15,8 +15,21 @@
   --font-mono: var(--font-geist-mono);
 }
 
-/* Light Theme */
+/* Dark Theme (Default) */
 :root,
+[data-theme="dark"] {
+  --background: #09090b;
+  --foreground: #fafafa;
+  --muted: #18181b;
+  --muted-foreground: #a1a1aa;
+  --card: #18181b;
+  --card-foreground: #fafafa;
+  --border: #27272a;
+  --primary: #10b981;
+  --primary-foreground: #ffffff;
+}
+
+/* Light Theme */
 [data-theme="light"] {
   --background: #ffffff;
   --foreground: #3f3f46;
@@ -26,19 +39,6 @@
   --card-foreground: #3f3f46;
   --border: #e2e8f0;
   --primary: #2563eb;
-  --primary-foreground: #ffffff;
-}
-
-/* Dark Theme */
-[data-theme="dark"] {
-  --background: #18181b;
-  --foreground: #f4f4f5;
-  --muted: #27272a;
-  --muted-foreground: #a1a1aa;
-  --card: #18181b;
-  --card-foreground: #f4f4f5;
-  --border: #27272a;
-  --primary: #3b82f6;
   --primary-foreground: #ffffff;
 }
 
