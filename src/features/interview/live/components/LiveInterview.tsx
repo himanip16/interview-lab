@@ -4,11 +4,13 @@ import { useState } from 'react';
 import Chat from './Chat';
 import Sidebar from './Sidebar';
 import InterviewHeader from './InterviewHeader';
+import { useToast } from '../../../../components/ui/Toast';
+import { TranscriptMessage } from '../../types/TranscriptMessage';
 
 interface LiveInterviewProps {
   interviewId: string;
   duration: number;
-  initialMessages: any[];
+  initialMessages: TranscriptMessage[];
 }
 
 export default function LiveInterview({
@@ -19,12 +21,12 @@ export default function LiveInterview({
   const [messages, setMessages] = useState(initialMessages);
   const [isLoading, setIsLoading] = useState(false);
   const [summary, setSummary] = useState("Establishing connection...");
+  const { showToast } = useToast();
 
   const handleSendMessage = async (content: string) => {
     setIsLoading(true);
 
-    const userMsg = {
-      id: `temp-${Date.now()}`,
+    const userMsg: TranscriptMessage = {
       role: "user",
       content,
     };
@@ -47,13 +49,15 @@ export default function LiveInterview({
 
       const text = await response.text();
 
-console.log("Status:", response.status);
-console.log("Response:", text);
+      if (process.env.NODE_ENV === "development") {
+        console.log("Status:", response.status);
+        console.log("Response:", text);
+      }
 
-if (!response.ok) {
-  alert(text);
-  return;
-}
+      if (!response.ok) {
+        showToast(text, "error");
+        return;
+      }
 
 const data = JSON.parse(text);
 

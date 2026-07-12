@@ -54,7 +54,7 @@ export default async function ReportPage({ params }: Props) {
     (evaluation.evidence as unknown as EvidenceItem[]) ?? [];
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-12">
+    <div className="mx-auto max-w-5xl px-4 py-12 bg-background text-foreground">
       <h1 className="mb-8 text-4xl font-bold">
         Interview Performance Report
       </h1>
@@ -62,10 +62,10 @@ export default async function ReportPage({ params }: Props) {
       <div className="mb-12 grid gap-8 md:grid-cols-2">
         <ScoreCard score={evaluation.overallScore} />
 
-        <div className="rounded-xl border bg-white p-6 shadow-sm">
+        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
           <h3 className="mb-2 font-bold">Expert Feedback</h3>
 
-          <p className="leading-relaxed text-slate-600">
+          <p className="leading-relaxed text-muted-foreground">
             {evaluation.feedback}
           </p>
         </div>

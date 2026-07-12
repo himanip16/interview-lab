@@ -156,7 +156,12 @@ export default function ChatInput({
 
   return (
     <div className="border-t bg-white p-4">
-      <div className="mb-2 flex h-6 items-center px-2">
+      <div 
+        className="mb-2 flex h-6 items-center px-2"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
         {status === "recording" && (
           <div className="flex items-center gap-2 text-sm font-medium text-red-600">
             <div className="h-2 w-2 animate-pulse rounded-full bg-red-600" />

@@ -10,6 +10,7 @@ import CompanySelector from "@/src/features/interview/setup/components/CompanySe
 import DifficultySelector from "@/src/features/interview/setup/components/DifficultySelector";
 import DurationSelector from "@/src/features/interview/setup/components/DurationSelector";
 import SetupCard from "@/src/features/interview/setup/components/SetupCard";
+import { useToast } from "@/src/components/ui/Toast";
 
 export default function InterviewSetupPage() {
   const router = useRouter();
@@ -29,9 +30,11 @@ export default function InterviewSetupPage() {
 
   const [loading, setLoading] = useState(false);
 
+  const { showToast } = useToast();
+
   async function handleStartInterview() {
     if (!problemId) {
-      alert("No interview problem selected.");
+      showToast("No interview problem selected.", "error");
       return;
     }
 
@@ -46,7 +49,9 @@ export default function InterviewSetupPage() {
         problemId,
       };
 
-      console.log("Request payload:", payload);
+      if (process.env.NODE_ENV === "development") {
+        console.log("Request payload:", payload);
+      }
 
       const response = await fetch(
         "/api/interviews/start",
@@ -61,8 +66,10 @@ export default function InterviewSetupPage() {
 
       const data = await response.json();
 
-      console.log("Status:", response.status);
-      console.log("Response:", data);
+      if (process.env.NODE_ENV === "development") {
+        console.log("Status:", response.status);
+        console.log("Response:", data);
+      }
 
       if (!response.ok) {
         throw new Error(
@@ -74,10 +81,11 @@ export default function InterviewSetupPage() {
     } catch (error) {
       console.error(error);
 
-      alert(
+      showToast(
         error instanceof Error
           ? error.message
-          : "Unknown error"
+          : "Unknown error",
+        "error"
       );
     } finally {
       setLoading(false);
@@ -85,18 +93,18 @@ export default function InterviewSetupPage() {
   }
 
   return (
-    <main className="min-h-screen bg-zinc-950 px-6 py-12 text-white">
+    <main className="min-h-screen bg-background px-6 py-12 text-foreground">
       <SetupCard>
         <h1 className="text-4xl font-bold">
           Interview Setup
         </h1>
 
-        <p className="mt-3 text-zinc-400">
+        <p className="mt-3 text-muted-foreground">
           Configure your interview before starting.
         </p>
 
         <div className="mt-10">
-          <p className="text-sm uppercase tracking-wide text-zinc-500">
+          <p className="text-sm uppercase tracking-wide text-muted-foreground">
             Interview Type
           </p>
 
