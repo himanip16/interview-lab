@@ -60,6 +60,9 @@ model InterviewPhaseTemplate {
   // NOT show whiteboard even though the template supports it.
   showWhiteboard Boolean @default(false)
 
+  // NEW — separate dimension set for reverse mode
+  reverseEvaluationDimensions Json @default("[]")
+
   @@unique([templateId, phaseKey])
   @@index([templateId])
 }
@@ -93,6 +96,10 @@ model Interview {
   updatedAt     DateTime        @updatedAt
 
   problemId String
+
+  // NEW — interview mode
+  mode             InterviewMode @default(CANDIDATE)
+  candidatePersona Json?
 
   user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   template   InterviewTemplate @relation(fields: [templateId], references: [id])
@@ -316,6 +323,11 @@ enum ExperienceSource {
   ENGINEERBOOGIE
   GLASSDOOR
   USER_SUBMISSION
+}
+
+enum InterviewMode {
+  CANDIDATE
+  REVERSE
 }
 
 enum InterviewStatus {

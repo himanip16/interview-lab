@@ -115,14 +115,7 @@ export class EvidenceEvaluator {
 
     const transcriptSection = interview.transcript
       .map((message) => {
-        const elapsed = Math.max(
-          Math.floor(
-            (message.createdAt.getTime() -
-              startedAt.getTime()) /
-              1000
-          ),
-          0
-        );
+        const elapsed = message.elapsedSeconds ?? 0;
 
         return `[id=${message.id}] [t=${elapsed}s] ${message.role.toUpperCase()}: ${message.content}`;
       })
@@ -197,14 +190,7 @@ const parsed = await ValidatedJSONParser.parse(
               item.messageId
             )!;
 
-            const timestampSeconds = Math.max(
-              Math.floor(
-                (message.createdAt.getTime() -
-                  startedAt.getTime()) /
-                  1000
-              ),
-              0
-            );
+            const timestampSeconds = message.elapsedSeconds ?? 0;
 
             return {
               messageId: item.messageId,

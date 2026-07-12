@@ -224,6 +224,52 @@ const RUBRICS: Record<string, string> = {
     ],
     "only handles edge cases after being explicitly told to"
   ),
+  // Reverse-mode rubrics — evaluating the interviewer's technique
+  rapport_building: rubric(
+    [
+      "Opens with a clear, welcoming introduction",
+      "Sets expectations for the session",
+    ],
+    "jumps into technical questions with no framing"
+  ),
+  requirement_elicitation: rubric(
+    [
+      "Asks open-ended questions to surface functional/non-functional requirements",
+      "Doesn't spoon-feed the answer",
+    ],
+    "tells the candidate the requirements instead of drawing them out"
+  ),
+  probing_depth: rubric(
+    [
+      "Follows up on vague or surface-level answers",
+      "Pushes for specifics (numbers, tradeoffs, edge cases)",
+    ],
+    "accepts shallow answers without pushing further"
+  ),
+  technical_listening: rubric(
+    [
+      "Picks up on what the candidate actually said and builds the next question from it",
+    ],
+    "asks a pre-scripted next question ignoring the candidate's last answer"
+  ),
+  challenging_appropriately: rubric(
+    [
+      "Introduces realistic pressure (scale, failure, edge cases) at the right moments",
+    ],
+    "never challenges the candidate's design, or challenges too aggressively to be useful"
+  ),
+  time_management: rubric(
+    [
+      "Keeps the session moving, doesn't get stuck on one topic too long",
+    ],
+    "lets one phase consume the entire interview"
+  ),
+  summarizing_and_wrap_up: rubric(
+    [
+      "Closes with a clear summary and gives the candidate a chance to ask questions",
+    ],
+    "ends abruptly with no wrap-up"
+  ),
 };
 
 // ---------------------------------------------------------------------------
@@ -242,6 +288,7 @@ type PhaseSeed = {
   transitionThreshold: number;
   instructions: string;
   showWhiteboard?: boolean;
+  reverseEvaluationDimensions?: string[];
 };
 
 type TemplateSeed = {
@@ -268,6 +315,7 @@ const templates: TemplateSeed[] = [
         transitionThreshold: 0.7,
         instructions:
           "Introduce the problem briefly. Do not reveal requirements. Ask the candidate to begin by clarifying the problem. Move forward once the candidate demonstrates that they understand the problem and begins requirement discovery.",
+        reverseEvaluationDimensions: ["rapport_building"],
       },
       {
         phaseKey: "requirements",
@@ -287,6 +335,7 @@ const templates: TemplateSeed[] = [
         transitionThreshold: 0.75,
         instructions:
           "Evaluate requirement gathering. Answer requirement questions when directly asked. Do not volunteer every requirement. Probe missing functional requirements, non-functional requirements, scale, and constraints. Do not discuss architecture yet.",
+        reverseEvaluationDimensions: ["requirement_elicitation", "technical_listening"],
       },
       {
         phaseKey: "high_level_design",
@@ -303,6 +352,7 @@ const templates: TemplateSeed[] = [
         instructions:
           "Ask the candidate to propose a high-level architecture. Evaluate major components, service boundaries, data flow, and storage decisions. Challenge unclear architectural choices. Do not design the system for the candidate.",
         showWhiteboard: true,
+        reverseEvaluationDimensions: ["technical_listening", "time_management"],
       },
       {
         phaseKey: "deep_dive",
@@ -319,6 +369,7 @@ const templates: TemplateSeed[] = [
         instructions:
           "Choose important areas from the candidate's design for deeper discussion. Probe implementation details, data modeling, consistency, and tradeoffs. Prefer areas where the candidate's reasoning is incomplete or weak.",
         showWhiteboard: true,
+        reverseEvaluationDimensions: ["probing_depth", "challenging_appropriately"],
       },
       {
         phaseKey: "scalability",
@@ -335,6 +386,7 @@ const templates: TemplateSeed[] = [
         instructions:
           "Probe scalability and reliability. Ask about bottlenecks, failure scenarios, capacity pressure, and scaling strategies. Challenge assumptions using realistic production scenarios.",
         showWhiteboard: true,
+        reverseEvaluationDimensions: ["challenging_appropriately", "probing_depth"],
       },
       {
         phaseKey: "closing",
@@ -345,6 +397,7 @@ const templates: TemplateSeed[] = [
         transitionThreshold: 1,
         instructions:
           "Conclude the interview naturally. Ask the candidate to summarize their design and the most important tradeoffs. Do not begin another technical phase.",
+        reverseEvaluationDimensions: ["summarizing_and_wrap_up"],
       },
     ],
   },
@@ -363,6 +416,7 @@ const templates: TemplateSeed[] = [
         transitionThreshold: 0.7,
         instructions:
           "Introduce the object-oriented design problem. Ask the candidate to clarify the expected behaviour and scope.",
+        reverseEvaluationDimensions: ["rapport_building"],
       },
       {
         phaseKey: "requirements",
@@ -373,6 +427,7 @@ const templates: TemplateSeed[] = [
         transitionThreshold: 0.75,
         instructions:
           "Evaluate whether the candidate identifies important use cases, actors, constraints, and edge cases. Answer clarification questions. Do not propose classes or interfaces.",
+        reverseEvaluationDimensions: ["requirement_elicitation", "technical_listening"],
       },
       {
         phaseKey: "domain_modeling",
@@ -384,6 +439,7 @@ const templates: TemplateSeed[] = [
         instructions:
           "Ask the candidate to identify the core entities. Evaluate responsibilities and relationships. Challenge god objects, unclear ownership, and weak abstractions.",
         showWhiteboard: true,
+        reverseEvaluationDimensions: ["technical_listening", "time_management"],
       },
       {
         phaseKey: "class_design",
@@ -400,6 +456,7 @@ const templates: TemplateSeed[] = [
         instructions:
           "Probe concrete class and interface design. Evaluate method boundaries, encapsulation, and separation of concerns. Ask focused questions about design decisions.",
         showWhiteboard: true,
+        reverseEvaluationDimensions: ["probing_depth", "challenging_appropriately"],
       },
       {
         phaseKey: "extensibility",
@@ -420,6 +477,7 @@ const templates: TemplateSeed[] = [
         instructions:
           "Introduce realistic requirement changes. Evaluate whether the design is extensible and testable. Probe design patterns only when relevant. Do not force pattern usage.",
         showWhiteboard: true,
+        reverseEvaluationDimensions: ["challenging_appropriately", "probing_depth"],
       },
       {
         phaseKey: "closing",
@@ -430,6 +488,7 @@ const templates: TemplateSeed[] = [
         transitionThreshold: 1,
         instructions:
           "Ask the candidate to summarize their final design and major tradeoffs. Conclude the interview naturally.",
+        reverseEvaluationDimensions: ["summarizing_and_wrap_up"],
       },
     ],
   },
@@ -646,6 +705,9 @@ async function seedTemplates() {
       for (const dim of phase.evaluationDimensions) {
         dimensions.add(dim);
       }
+      for (const dim of phase.reverseEvaluationDimensions ?? []) {
+        dimensions.add(dim);
+      }
     }
 
     const saved = await prisma.interviewTemplate.upsert({
@@ -681,6 +743,8 @@ async function seedTemplates() {
           transitionThreshold: phase.transitionThreshold,
           instructions: phase.instructions,
           showWhiteboard: phase.showWhiteboard,
+          reverseEvaluationDimensions:
+            phase.reverseEvaluationDimensions as Prisma.InputJsonValue,
         },
         create: {
           templateId: saved.id,
@@ -693,6 +757,8 @@ async function seedTemplates() {
           transitionThreshold: phase.transitionThreshold,
           instructions: phase.instructions,
           showWhiteboard: phase.showWhiteboard,
+          reverseEvaluationDimensions:
+            phase.reverseEvaluationDimensions as Prisma.InputJsonValue,
         },
       });
     }

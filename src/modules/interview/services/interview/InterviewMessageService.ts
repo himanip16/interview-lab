@@ -95,6 +95,13 @@ export class InterviewMessageService {
       interview.startedAt ??
       interview.createdAt;
 
+    const elapsedSeconds = Math.max(
+      Math.floor(
+        (Date.now() - interviewStartedAt.getTime()) / 1000
+      ),
+      0
+    );
+
     /*
      * The schema currently has no phaseStartedAt field.
      *
@@ -159,6 +166,7 @@ export class InterviewMessageService {
       currentPhase: nextPhase,
       status,
       assistantMetadata: metadata,
+      elapsedSeconds,
     });
 
     return {
