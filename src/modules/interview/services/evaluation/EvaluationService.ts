@@ -8,6 +8,7 @@ import { EvaluatableInterview } from "../../evaluators/types";
 import { PromptLoader } from "../../prompt/PromptLoader";
 import { InterviewRepository } from "../../repositories/InterviewRepository";
 import { MasteryService } from "../mastery/MasteryService";
+import { deriveStudyPlan } from "../studyplan/StudyResources";
 
 export class EvaluationService {
   private readonly evaluator: EvidenceEvaluator;
@@ -60,10 +61,20 @@ export class EvaluationService {
       (dimension) =>
         dimension.evidence.map((item) => ({
           dimension: dimension.dimension,
-          conceptSlugs: [], // TODO: Extract from evaluator result when available
+          normalizedScore: dimension.score / 10, // 0-1 normalized score for per-interview concept mastery
           ...item,
         }))
     );
+
+    // Collect all concept slugs from evidence and missed concepts for study plan
+    const allConceptSlugs = [
+      ...new Set([
+        ...evidence.flatMap((e) => e.conceptSlugs),
+        ...result.missedConcepts,
+      ]),
+    ];
+
+    const studyPlan = deriveStudyPlan(allConceptSlugs);
 
     const repository = new InterviewRepository();
 
@@ -77,6 +88,10 @@ export class EvaluationService {
         metadata: {
           strengths: result.strengths,
           weaknesses: result.weaknesses,
+          missedConcepts: result.missedConcepts,
+          riskAssessment: result.riskAssessment,
+          hireRecommendation: result.hireRecommendation,
+          studyPlan,
         },
       }
     );
@@ -103,6 +118,8 @@ export class EvaluationService {
       timestampSeconds: number;
       quote: string;
       comment: string;
+      type: "strength" | "weakness";
+      normalizedScore: number;
       conceptSlugs: string[];
     }>
   ) {
@@ -130,6 +147,7 @@ export class EvaluationService {
           timestampSeconds: item.timestampSeconds,
           quote: item.quote,
           comment: item.comment,
+          normalizedScore: item.normalizedScore,
         },
       });
 

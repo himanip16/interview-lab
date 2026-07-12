@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { InterviewRepository } from "@/src/modules/interview/repositories/InterviewRepository";
+import { SkillGraphService } from "@/src/modules/interview/services/mastery/SkillGraphService";
 import logger from "@/src/shared/logger/logger";
 
 type Props = {
@@ -50,29 +51,75 @@ export async function GET(request: Request, { params }: Props) {
       );
     }
 
+    // Fetch per-interview concept scores
+    const skillGraphService = new SkillGraphService();
+    const conceptMastery = await skillGraphService.getInterviewConceptScores(
+      interview.evaluation.id
+    );
+
     // Extract dimension scores from the dynamic dimensionScores JSON
     const dimensionScores = interview.evaluation.dimensionScores as Array<{
       dimension: string;
       score: number;
       summary: string;
+      evidence: Array<{
+        messageId: string;
+        timestampSeconds: number;
+        quote: string;
+        comment: string;
+        type: "strength" | "weakness";
+        conceptSlugs: string[];
+      }>;
     }> || [];
 
-    const getScoreByDimension = (dimension: string): number => {
-      const found = dimensionScores.find((ds) => ds.dimension === dimension);
-      return found?.score ?? 0;
+    // Format helper: convert seconds to "MM:SS" string
+    const formatTimestamp = (seconds: number): string => {
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
     };
+
+    // Transform dimension scores to competency scores (convert 0-10 to 0-5 scale)
+    const competencyScores = dimensionScores.map((ds) => ({
+      dimension: ds.dimension,
+      score: Math.round(ds.score / 2), // Convert 0-10 to 0-5
+      summary: ds.summary,
+      evidence: ds.evidence.map((ev) => ({
+        ...ev,
+        timestamp: formatTimestamp(ev.timestampSeconds),
+      })),
+    }));
+
+    // Extract metadata fields
+    const metadata = interview.evaluation.metadata as {
+      strengths?: string[];
+      weaknesses?: string[];
+      missedConcepts?: string[];
+      riskAssessment?: string[];
+      hireRecommendation?: string;
+      studyPlan?: Array<{
+        topic: string;
+        advice: string;
+        resources: string[];
+      }>;
+    } || {};
 
     return NextResponse.json(
       {
         id: interview.evaluation.id,
         interviewId: interview.evaluation.interviewId,
         overallScore: interview.evaluation.overallScore,
-        communicationScore: getScoreByDimension("communication"),
-        architectureScore: getScoreByDimension("architecture"),
-        scalabilityScore: getScoreByDimension("scalability"),
-        tradeoffScore: getScoreByDimension("tradeoff"),
+        dimensionScores: competencyScores,
         feedback: interview.evaluation.feedback,
-        metadata: interview.evaluation.metadata,
+        metadata: {
+          strengths: metadata.strengths || [],
+          weaknesses: metadata.weaknesses || [],
+          missedConcepts: metadata.missedConcepts || [],
+          riskAssessment: metadata.riskAssessment || [],
+          hireRecommendation: metadata.hireRecommendation || "NO_HIRE",
+          studyPlan: metadata.studyPlan || [],
+        },
+        conceptMastery,
         createdAt: interview.evaluation.createdAt,
       },
       {

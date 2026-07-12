@@ -3,6 +3,8 @@ export interface EvidenceItem {
   timestampSeconds: number;
   quote: string;
   comment: string;
+  type: "strength" | "weakness";
+  conceptSlugs: string[];
 }
 
 export interface DimensionScore {
@@ -17,6 +19,9 @@ export interface EvaluationResult {
   dimensionScores: DimensionScore[];
   strengths: string[];
   weaknesses: string[];
+  missedConcepts: string[];
+  riskAssessment: string[];
+  hireRecommendation: "STRONG_HIRE" | "HIRE" | "NO_HIRE" | "STRONG_NO_HIRE";
   feedback: string;
 }
 

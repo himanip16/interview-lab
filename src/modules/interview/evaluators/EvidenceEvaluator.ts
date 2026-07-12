@@ -15,6 +15,7 @@ const EvidenceItemSchema = z.object({
   quote: z.string().min(1),
   comment: z.string().min(1),
   conceptSlugs: z.array(z.string()).default([]),
+  type: z.enum(["strength", "weakness"]),
 });
 
 const DimensionScoreSchema = z.object({
@@ -28,6 +29,9 @@ const EvaluationResponseSchema = z.object({
   dimensionScores: z.array(DimensionScoreSchema).min(1),
   strengths: z.array(z.string()).default([]),
   weaknesses: z.array(z.string()).default([]),
+  missedConcepts: z.array(z.string()).default([]),
+  riskAssessment: z.array(z.string()).default([]),
+  hireRecommendation: z.enum(["STRONG_HIRE", "HIRE", "NO_HIRE", "STRONG_NO_HIRE"]),
   feedback: z.string(),
 });
 
@@ -57,8 +61,9 @@ export const EVALUATION_JSON_SCHEMA = {
                   type: "array",
                   items: { type: "string" },
                 },
+                type: { type: "string", enum: ["strength", "weakness"] },
               },
-              required: ["messageId", "quote", "comment"],
+              required: ["messageId", "quote", "comment", "type"],
             },
           },
         },
@@ -67,9 +72,15 @@ export const EVALUATION_JSON_SCHEMA = {
     },
     strengths: { type: "array", items: { type: "string" } },
     weaknesses: { type: "array", items: { type: "string" } },
+    missedConcepts: { type: "array", items: { type: "string" } },
+    riskAssessment: { type: "array", items: { type: "string" } },
+    hireRecommendation: {
+      type: "string",
+      enum: ["STRONG_HIRE", "HIRE", "NO_HIRE", "STRONG_NO_HIRE"],
+    },
     feedback: { type: "string" },
   },
-  required: ["dimensionScores", "feedback"],
+  required: ["dimensionScores", "hireRecommendation", "feedback"],
 } as const;
 
 export class EvidenceEvaluator {
@@ -77,6 +88,32 @@ export class EvidenceEvaluator {
     private readonly ai = new AIService(),
     private readonly promptLoader = new PromptLoader()
   ) {}
+
+  /**
+   * Sanity-check the model's hire recommendation against the numeric overall score.
+   * If they disagree by more than one tier, trust the score over the free-text recommendation.
+   */
+  private reconcileHireRecommendation(
+    modelRecommendation: string,
+    overallScore: number
+  ): "STRONG_HIRE" | "HIRE" | "NO_HIRE" | "STRONG_NO_HIRE" {
+    const scoreImplied =
+      overallScore >= 80 ? "STRONG_HIRE" :
+      overallScore >= 60 ? "HIRE" :
+      overallScore >= 35 ? "NO_HIRE" :
+      "STRONG_NO_HIRE";
+
+    const tiers = ["STRONG_NO_HIRE", "NO_HIRE", "HIRE", "STRONG_HIRE"] as const;
+    const modelIdx = tiers.indexOf(modelRecommendation as any);
+    const scoreIdx = tiers.indexOf(scoreImplied);
+
+    // If model and score disagree by more than one tier, trust the score
+    if (Math.abs(modelIdx - scoreIdx) > 1) {
+      return scoreImplied;
+    }
+
+    return modelRecommendation as "STRONG_HIRE" | "HIRE" | "NO_HIRE" | "STRONG_NO_HIRE";
+  }
 
   async evaluate(
     interview: EvaluatableInterview
@@ -200,6 +237,7 @@ const parsed = await ValidatedJSONParser.parse(
                 MAX_QUOTE_WORDS
               ),
               comment: item.comment,
+              type: item.type,
               // Ground concepts against the known vocabulary — never trust
               // a slug the model invented.
               conceptSlugs: item.conceptSlugs.filter((slug) =>
@@ -219,11 +257,19 @@ const parsed = await ValidatedJSONParser.parse(
         10
     );
 
+    const reconciledRecommendation = this.reconcileHireRecommendation(
+      parsed.hireRecommendation,
+      overallScore
+    );
+
     return {
       overallScore,
       dimensionScores,
       strengths: parsed.strengths,
       weaknesses: parsed.weaknesses,
+      missedConcepts: parsed.missedConcepts,
+      riskAssessment: parsed.riskAssessment,
+      hireRecommendation: reconciledRecommendation,
       feedback: parsed.feedback,
     };
   }
@@ -296,12 +342,19 @@ For each dimension, provide:
   - quote: a short quote (${MAX_QUOTE_WORDS} words or fewer) copied VERBATIM from that exact message's content
   - comment: why this quote matters for this dimension
   - conceptSlugs: 0-3 slugs from the CONCEPT VOCABULARY that this specific quote demonstrates
+  - type: "strength" if this quote demonstrates competence, "weakness" if it demonstrates a gap
+
+Additionally return:
+- missedConcepts: important concepts for this problem that the candidate never addressed (free text, 0-5 items)
+- riskAssessment: concrete concerns an interviewer should flag before making a hire decision (0-4 items, empty array if none)
+- hireRecommendation: one of STRONG_HIRE, HIRE, NO_HIRE, STRONG_NO_HIRE — based on overall dimension scores and severity of weaknesses
 
 Rules:
 - Only cite messages with role USER (the candidate). Never cite your own INTERVIEWER lines as evidence.
 - Every quote must be copied exactly from the cited message. Do not paraphrase and call it a quote.
 - Only use conceptSlugs from the CONCEPT VOCABULARY above. Never invent a slug.
 - If a dimension has weak or no supporting evidence in the transcript, say so in the summary and score it low — do not invent evidence.
+- For hireRecommendation: be grounded in the numeric scores. STRONG_HIRE requires consistently high scores (8+), NO_HIRE requires consistently low scores (3-), and consider the severity of weaknesses.
 
 Return ONLY valid JSON with this exact shape:
 
@@ -312,12 +365,15 @@ Return ONLY valid JSON with this exact shape:
       "score": 0,
       "summary": "string",
       "evidence": [
-        { "messageId": "string", "quote": "string", "comment": "string", "conceptSlugs": ["string"] }
+        { "messageId": "string", "quote": "string", "comment": "string", "conceptSlugs": ["string"], "type": "strength" }
       ]
     }
   ],
   "strengths": ["string"],
   "weaknesses": ["string"],
+  "missedConcepts": ["string"],
+  "riskAssessment": ["string"],
+  "hireRecommendation": "STRONG_HIRE",
   "feedback": "2-4 sentence overall narrative feedback"
 }
 

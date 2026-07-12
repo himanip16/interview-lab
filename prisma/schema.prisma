@@ -256,6 +256,7 @@ model EvidenceItem {
   timestampSeconds Int
   quote            String
   comment          String
+  normalizedScore  Float      @default(0)
   createdAt        DateTime   @default(now())
 
   concepts EvidenceConcept[]

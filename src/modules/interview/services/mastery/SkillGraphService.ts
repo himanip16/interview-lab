@@ -93,4 +93,47 @@ export class SkillGraphService {
       totalConceptsTracked: masteries.length,
     };
   }
+
+  /**
+   * Compute per-interview concept scores (0-100) from EvidenceItem.normalizedScore.
+   * This is different from the dashboard's rolling mastery — this is interview-scoped,
+   * computed fresh from this evaluation's EvidenceConcept rows, not from the decayed
+   * rolling ConceptMastery table.
+   */
+  async getInterviewConceptScores(
+    evaluationId: string
+  ): Promise<Array<{ concept: string; score: number }>> {
+    const evidenceItems = await prisma.evidenceItem.findMany({
+      where: { evaluationId },
+      include: {
+        concepts: {
+          include: {
+            concept: true,
+          },
+        },
+      },
+    });
+
+    const byConceptSlug = new Map<string, number[]>();
+
+    for (const item of evidenceItems) {
+      for (const link of item.concepts) {
+        const scores = byConceptSlug.get(link.concept.slug) ?? [];
+        scores.push(item.normalizedScore);
+        byConceptSlug.set(link.concept.slug, scores);
+      }
+    }
+
+    const result: Array<{ concept: string; score: number }> = [];
+
+    for (const [conceptSlug, scores] of byConceptSlug.entries()) {
+      const avgScore = scores.reduce((sum, s) => sum + s, 0) / scores.length;
+      result.push({
+        concept: conceptSlug,
+        score: Math.round(avgScore * 100), // Convert 0-1 to 0-100
+      });
+    }
+
+    return result;
+  }
 }
