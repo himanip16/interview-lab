@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Button } from "@/src/components/ui/Button";
 
 type Problem = {
@@ -26,20 +26,34 @@ export default function TopicSelector({
 }: Props) {
   const [problems, setProblems] = useState<Problem[]>([]);
   const [loading, setLoading] = useState(true);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     async function fetchProblems() {
       try {
+        // Cancel previous request if still pending
+        if (abortControllerRef.current) {
+          abortControllerRef.current.abort();
+        }
+        
+        // Create new AbortController for this request
+        abortControllerRef.current = new AbortController();
+        
         const params = new URLSearchParams();
         if (difficulty) params.append("difficulty", difficulty);
         if (company) params.append("company", company);
 
         const response = await fetch(
-          `/api/problems${params.toString() ? `?${params.toString()}` : ""}`
+          `/api/problems${params.toString() ? `?${params.toString()}` : ""}`,
+          { signal: abortControllerRef.current.signal }
         );
         const data = await response.json();
         setProblems(data.problems || []);
       } catch (error) {
+        // Ignore abort errors (from cancelled requests)
+        if (error instanceof Error && error.name === 'AbortError') {
+          return;
+        }
         console.error("Failed to fetch problems:", error);
       } finally {
         setLoading(false);
@@ -48,6 +62,15 @@ export default function TopicSelector({
 
     fetchProblems();
   }, [difficulty, company]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   if (loading) {
     return (

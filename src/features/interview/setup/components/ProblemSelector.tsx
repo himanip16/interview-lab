@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Difficulty, ProblemCategory, InterviewStatus } from "@prisma/client";
 import { Button } from "@/src/components/ui/Button";
 
@@ -75,10 +75,20 @@ export default function ProblemSelector({
   const [page, setPage] = useState(1);
   const [limit] = useState(20);
   const [totalPages, setTotalPages] = useState(1);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   async function fetchProblems() {
     try {
       setLoading(true);
+      
+      // Cancel previous request if still pending
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      
+      // Create new AbortController for this request
+      abortControllerRef.current = new AbortController();
+      
       const params = new URLSearchParams();
       if (selectedType) params.append("interviewType", selectedType);
       if (selectedDifficulty !== "All") params.append("difficulty", selectedDifficulty);
@@ -90,13 +100,18 @@ export default function ProblemSelector({
       if (userId) params.append("userId", userId);
 
       const response = await fetch(
-        `/api/problems${params.toString() ? `?${params.toString()}` : ""}`
+        `/api/problems${params.toString() ? `?${params.toString()}` : ""}`,
+        { signal: abortControllerRef.current.signal }
       );
       const data = await response.json();
       
       setProblems(data.problems || []);
       setTotalPages(data.totalPages || 1);
     } catch (error) {
+      // Ignore abort errors (from cancelled requests)
+      if (error instanceof Error && error.name === 'AbortError') {
+        return;
+      }
       console.error("Failed to fetch problems:", error);
     } finally {
       setLoading(false);
@@ -104,13 +119,17 @@ export default function ProblemSelector({
   }
 
   useEffect(() => {
-    setPage(1);
     fetchProblems();
-  }, [selectedType, selectedDifficulty, selectedCategory, selectedSort]);
+  }, [page, selectedType, selectedDifficulty, selectedCategory, selectedSort]);
 
+  // Cleanup on unmount
   useEffect(() => {
-    fetchProblems();
-  }, [page]);
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   const categories = Array.from(
     new Set(problems.map((p) => p.category))
@@ -147,6 +166,7 @@ export default function ProblemSelector({
                 key={type}
                 onClick={() => {
                   setSelectedType(type);
+                  setPage(1);
                   setExpandedProblem(null);
                 }}
                 className={`whitespace-nowrap rounded px-4 py-2 font-mono text-sm font-medium transition ${
@@ -166,7 +186,10 @@ export default function ProblemSelector({
               <label className="text-sm font-medium text-foreground">Category:</label>
               <select
                 value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
+                onChange={(e) => {
+                  setSelectedCategory(e.target.value);
+                  setPage(1);
+                }}
                 className="rounded border border-border bg-card px-3 py-1.5 text-sm text-foreground"
               >
                 <option value="All">All Categories</option>
@@ -182,7 +205,10 @@ export default function ProblemSelector({
               <label className="text-sm font-medium text-foreground">Difficulty:</label>
               <select
                 value={selectedDifficulty}
-                onChange={(e) => setSelectedDifficulty(e.target.value as (typeof DIFFICULTIES)[number])}
+                onChange={(e) => {
+                  setSelectedDifficulty(e.target.value as (typeof DIFFICULTIES)[number]);
+                  setPage(1);
+                }}
                 className="rounded border border-border bg-card px-3 py-1.5 text-sm text-foreground"
               >
                 {DIFFICULTIES.map((diff) => (
@@ -197,7 +223,10 @@ export default function ProblemSelector({
               <label className="text-sm font-medium text-foreground">Sort by:</label>
               <select
                 value={selectedSort}
-                onChange={(e) => setSelectedSort(e.target.value as (typeof SORT_OPTIONS)[number])}
+                onChange={(e) => {
+                  setSelectedSort(e.target.value as (typeof SORT_OPTIONS)[number]);
+                  setPage(1);
+                }}
                 className="rounded border border-border bg-card px-3 py-1.5 text-sm text-foreground"
               >
                 <option value="interviewCount">Interview Count</option>
