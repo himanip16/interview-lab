@@ -5,6 +5,9 @@ export async function GET() {
   const session = await auth();
   
   return NextResponse.json({ 
-    user: session?.user || null 
+    user: session?.user ? {
+      id: session.user.id,
+      email: session.user.email,
+    } : null 
   });
 }

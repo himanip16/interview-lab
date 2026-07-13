@@ -1,41 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useSession, signOut } from "next-auth/react";
 import ThemeToggle from "@/src/components/ui/ThemeToggle";
 import { Button } from "@/src/components/ui/Button";
 
 export default function Navbar() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const { data: session, status } = useSession();
   const [showMenu, setShowMenu] = useState(false);
 
-  useEffect(() => {
-    async function checkAuth() {
-      try {
-        const response = await fetch("/api/auth/session");
-        if (response.ok) {
-          const data = await response.json();
-          setIsAuthenticated(!!data.user);
-          setUserEmail(data.user?.email || null);
-        }
-      } catch (error) {
-        console.error("Failed to check auth:", error);
-      }
-    }
-
-    checkAuth();
-  }, []);
+  const isAuthenticated = status === "authenticated";
+  const userEmail = session?.user?.email || null;
+  const userId = session?.user?.id || null;
 
   async function handleSignOut() {
-    try {
-      await fetch("/api/auth/signout", { method: "POST" });
-      setIsAuthenticated(false);
-      setUserEmail(null);
-      window.location.href = "/";
-    } catch (error) {
-      console.error("Failed to sign out:", error);
-    }
+    await signOut({ callbackUrl: "/" });
   }
 
   return (
@@ -81,6 +61,14 @@ export default function Navbar() {
                 <div className="px-4 py-2 text-xs text-muted-foreground border-b border-border">
                   {userEmail}
                 </div>
+                {userId && (
+                  <Link
+                    href={`/dashboard/${userId}`}
+                    className="block px-4 py-2 text-sm hover:bg-muted transition-colors"
+                  >
+                    Dashboard
+                  </Link>
+                )}
                 <button
                   onClick={handleSignOut}
                   className="w-full px-4 py-2 text-left text-sm hover:bg-muted transition-colors"

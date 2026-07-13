@@ -1,3 +1,5 @@
+"use client";
+
 import Navbar from "@/src/components/layout/Navbar";
 import PageContainer from "@/src/components/layout/PageContainer";
 import ProblemInventoryView from "@/src/features/interview/setup/components/ProblemInventoryView";
