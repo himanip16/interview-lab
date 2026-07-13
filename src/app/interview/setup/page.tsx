@@ -10,7 +10,7 @@ import CompanySelector from "@/src/features/interview/setup/components/CompanySe
 import DifficultySelector from "@/src/features/interview/setup/components/DifficultySelector";
 import DurationSelector from "@/src/features/interview/setup/components/DurationSelector";
 import InterviewTypeSelector from "@/src/features/interview/setup/components/InterviewTypeSelector";
-import TopicSelector from "@/src/features/interview/setup/components/TopicSelector";
+import ProblemSelector from "@/src/features/interview/setup/components/ProblemSelector";
 import SetupCard from "@/src/features/interview/setup/components/SetupCard";
 import { useToast } from "@/src/components/ui/Toast";
 import { Button } from "@/src/components/ui/Button";
@@ -23,6 +23,7 @@ export default function InterviewSetupPage() {
   const typeParam = searchParams.get("type");
 
   const [interviewType, setInterviewType] = useState(typeParam ?? "hld");
+  const [topic, setTopic] = useState("");
   const [difficulty, setDifficulty] = useState("Medium");
   const [duration, setDuration] = useState(45);
   const [company, setCompany] = useState("");
@@ -105,6 +106,7 @@ export default function InterviewSetupPage() {
         <InterviewTypeSelector
           value={interviewType}
           onChange={setInterviewType}
+          onTopicChange={setTopic}
         />
 
         <DifficultySelector
@@ -122,9 +124,10 @@ export default function InterviewSetupPage() {
           onChange={setCompany}
         />
 
-        <TopicSelector
+        <ProblemSelector
           value={problemId}
           onChange={setProblemId}
+          interviewType={interviewType}
           difficulty={difficulty}
           company={company}
         />
