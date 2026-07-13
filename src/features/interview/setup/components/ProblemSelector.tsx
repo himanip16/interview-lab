@@ -30,10 +30,12 @@ type Props = {
   company?: string;
   onSearch?: () => void;
   userId?: string | null;
+  hideSearchGate?: boolean;
 };
 
 const INTERVIEW_TYPES = ["hld", "lld", "dsa", "pr_review", "deep_dive", "tech_doc_review", "task_breakdown"] as const;
 const DIFFICULTIES = ["All", Difficulty.EASY, Difficulty.MEDIUM, Difficulty.HARD] as const;
+const SORT_OPTIONS = ["interviewCount", "title", "difficulty", "estimatedMinutes"] as const;
 
 const CATEGORY_LABELS: Record<ProblemCategory, string> = {
   SYSTEM_DESIGN: "System Design",
@@ -68,8 +70,11 @@ export default function ProblemSelector({
   const [selectedType, setSelectedType] = useState<(typeof INTERVIEW_TYPES)[number]>(interviewType as any);
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [selectedDifficulty, setSelectedDifficulty] = useState<(typeof DIFFICULTIES)[number]>(difficulty as any);
+  const [selectedSort, setSelectedSort] = useState<(typeof SORT_OPTIONS)[number]>("interviewCount");
   const [expandedProblem, setExpandedProblem] = useState<string | null>(null);
-  const [hasSearched, setHasSearched] = useState(false);
+  const [page, setPage] = useState(1);
+  const [limit] = useState(20);
+  const [totalPages, setTotalPages] = useState(1);
 
   async function fetchProblems() {
     try {
@@ -79,6 +84,7 @@ export default function ProblemSelector({
       if (selectedDifficulty !== "All") params.append("difficulty", selectedDifficulty);
       if (selectedCategory !== "All") params.append("category", selectedCategory);
       if (company) params.append("company", company);
+      params.append("sort", selectedSort);
 
       const response = await fetch(
         `/api/problems${params.toString() ? `?${params.toString()}` : ""}`
@@ -116,10 +122,8 @@ export default function ProblemSelector({
   }
 
   useEffect(() => {
-    if (hasSearched) {
-      fetchProblems();
-    }
-  }, [selectedType, selectedDifficulty, selectedCategory, hasSearched]);
+    fetchProblems();
+  }, [selectedType, selectedDifficulty, selectedCategory, selectedSort]);
 
   const categories = Array.from(
     new Set(problems.map((p) => p.category))
@@ -140,11 +144,6 @@ export default function ProblemSelector({
     }
   }
 
-  function handleSearch() {
-    setHasSearched(true);
-    onSearch?.();
-  }
-
   function formatDate(date: Date | null): string {
     if (!date) return "Never";
     return new Intl.DateTimeFormat("en-US", {
@@ -160,22 +159,7 @@ export default function ProblemSelector({
         Select a Problem
       </h3>
 
-      {!hasSearched ? (
-        <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Configure your filters and search to see available problems.
-          </p>
-          <Button
-            type="button"
-            variant="primary"
-            onClick={handleSearch}
-            className="w-full"
-          >
-            Search Problems
-          </Button>
-        </div>
-      ) : (
-        <>
+      <>
           {/* Interview Type Tabs */}
           <div className="flex overflow-x-auto rounded-lg border border-border bg-muted p-1 mb-4">
             {INTERVIEW_TYPES.map((type) => (
@@ -226,6 +210,20 @@ export default function ProblemSelector({
                     {diff}
                   </option>
                 ))}
+              </select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-foreground">Sort by:</label>
+              <select
+                value={selectedSort}
+                onChange={(e) => setSelectedSort(e.target.value as (typeof SORT_OPTIONS)[number])}
+                className="rounded border border-border bg-card px-3 py-1.5 text-sm text-foreground"
+              >
+                <option value="interviewCount">Interview Count</option>
+                <option value="title">Title</option>
+                <option value="difficulty">Difficulty</option>
+                <option value="estimatedMinutes">Estimated Time</option>
               </select>
             </div>
           </div>
@@ -361,7 +359,6 @@ export default function ProblemSelector({
             </div>
           )}
         </>
-      )}
     </div>
   );
 }

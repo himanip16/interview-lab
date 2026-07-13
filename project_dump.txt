@@ -87,7 +87,11 @@ PROJECT STRUCTURE
 │   │   │   ├── auth
 │   │   │   │   ├── [...nextauth]
 │   │   │   │   │   └── route.ts
-│   │   │   │   └── register
+│   │   │   │   ├── register
+│   │   │   │   │   └── route.ts
+│   │   │   │   ├── session
+│   │   │   │   │   └── route.ts
+│   │   │   │   └── signout
 │   │   │   │       └── route.ts
 │   │   │   ├── companies
 │   │   │   │   └── route.ts
@@ -108,6 +112,9 @@ PROJECT STRUCTURE
 │   │   │   ├── judge
 │   │   │   │   └── route.ts
 │   │   │   ├── problems
+│   │   │   │   ├── [id]
+│   │   │   │   │   └── history
+│   │   │   │   │       └── route.ts
 │   │   │   │   └── route.ts
 │   │   │   └── users
 │   │   │       └── [id]
@@ -119,7 +126,17 @@ PROJECT STRUCTURE
 │   │   │   └── [userId]
 │   │   │       └── page.tsx
 │   │   ├── diagram
-│   │   │   └── page.tsx
+│   │   │   ├── instagram
+│   │   │   │   └── page.tsx
+│   │   │   ├── netflix
+│   │   │   │   └── page.tsx
+│   │   │   ├── page.tsx
+│   │   │   ├── twitter
+│   │   │   │   └── page.tsx
+│   │   │   ├── uber
+│   │   │   │   └── page.tsx
+│   │   │   └── whatsapp
+│   │   │       └── page.tsx
 │   │   ├── globals.css
 │   │   ├── interview
 │   │   │   ├── live
@@ -148,6 +165,8 @@ PROJECT STRUCTURE
 │   │   ├── layout
 │   │   │   ├── Navbar.tsx
 │   │   │   └── PageContainer.tsx
+│   │   ├── providers
+│   │   │   └── AuthProvider.tsx
 │   │   ├── report
 │   │   ├── theme
 │   │   │   └── ThemeProvider.tsx
@@ -214,6 +233,7 @@ PROJECT STRUCTURE
 │   │   │   │   │   ├── DurationSelector.tsx
 │   │   │   │   │   ├── InterviewTypeSelector.tsx
 │   │   │   │   │   ├── ProblemInventoryView.tsx
+│   │   │   │   │   ├── ProblemSelector.tsx
 │   │   │   │   │   ├── SetupCard.tsx
 │   │   │   │   │   └── TopicSelector.tsx
 │   │   │   │   ├── hooks
@@ -349,7 +369,7 @@ PROJECT STRUCTURE
 ├── tsconfig.json
 └── tsconfig.tsbuildinfo
 
-139 directories, 209 files
+149 directories, 219 files
 
 FILE CONTENTS
 
@@ -2131,6 +2151,306 @@ const templates: TemplateSeed[] = [
       },
     ],
   },
+  {
+    slug: "pr_review",
+    name: "PR Review",
+    description: "Review a pull request with focus on code quality, design patterns, and maintainability.",
+    phases: [
+      {
+        phaseKey: "introduction",
+        order: 0,
+        goals: ["candidate_understands_pr_context"],
+        evaluationDimensions: ["communication"],
+        targetDurationRatio: 0.05,
+        transitionThreshold: 0.7,
+        instructions:
+          "Introduce the PR context briefly. Ask the candidate to begin by understanding the purpose and scope of the changes.",
+        reverseEvaluationDimensions: ["rapport_building"],
+      },
+      {
+        phaseKey: "context_understanding",
+        order: 1,
+        goals: ["pr_purpose", "affected_areas", "dependencies"],
+        evaluationDimensions: ["requirement_clarity", "communication"],
+        targetDurationRatio: 0.15,
+        transitionThreshold: 0.75,
+        instructions:
+          "Evaluate whether the candidate understands the PR's purpose, affected areas, and dependencies. Answer clarification questions about the codebase context.",
+        reverseEvaluationDimensions: ["requirement_elicitation", "technical_listening"],
+      },
+      {
+        phaseKey: "code_review",
+        order: 2,
+        goals: ["correctness", "code_quality", "design_patterns"],
+        evaluationDimensions: ["code_correctness", "code_quality", "design_patterns"],
+        targetDurationRatio: 0.35,
+        transitionThreshold: 0.75,
+        instructions:
+          "Ask the candidate to review the code changes. Evaluate their ability to identify bugs, code quality issues, and design pattern usage. Challenge missed issues.",
+        showWhiteboard: true,
+        reverseEvaluationDimensions: ["probing_depth", "technical_listening"],
+      },
+      {
+        phaseKey: "design_review",
+        order: 3,
+        goals: ["architecture_impact", "extensibility", "maintainability"],
+        evaluationDimensions: ["architecture", "maintainability", "tradeoffs"],
+        targetDurationRatio: 0.25,
+        transitionThreshold: 0.7,
+        instructions:
+          "Probe the architectural impact of the changes. Evaluate whether the candidate considers extensibility, maintainability, and design tradeoffs.",
+        showWhiteboard: true,
+        reverseEvaluationDimensions: ["probing_depth", "challenging_appropriately"],
+      },
+      {
+        phaseKey: "feedback_delivery",
+        order: 4,
+        goals: ["constructive_feedback", "actionable_suggestions"],
+        evaluationDimensions: ["communication", "tradeoffs"],
+        targetDurationRatio: 0.15,
+        transitionThreshold: 0.7,
+        instructions:
+          "Ask the candidate to provide feedback as if they were reviewing this PR. Evaluate the constructiveness and actionability of their feedback.",
+        reverseEvaluationDimensions: ["technical_listening", "time_management"],
+      },
+      {
+        phaseKey: "closing",
+        order: 5,
+        goals: ["review_summary"],
+        evaluationDimensions: ["communication"],
+        targetDurationRatio: 0.05,
+        transitionThreshold: 1,
+        instructions:
+          "Ask the candidate to summarize their review and the most important issues found. Conclude the interview naturally.",
+        reverseEvaluationDimensions: ["summarizing_and_wrap_up"],
+      },
+    ],
+  },
+  {
+    slug: "deep_dive",
+    name: "Deep Dive",
+    description: "Deep technical exploration of a specific system or technology.",
+    phases: [
+      {
+        phaseKey: "introduction",
+        order: 0,
+        goals: ["candidate_understands_topic"],
+        evaluationDimensions: ["communication"],
+        targetDurationRatio: 0.05,
+        transitionThreshold: 0.7,
+        instructions:
+          "Introduce the deep dive topic. Ask the candidate to begin by explaining their understanding of the system or technology.",
+        reverseEvaluationDimensions: ["rapport_building"],
+      },
+      {
+        phaseKey: "knowledge_assessment",
+        order: 1,
+        goals: ["core_concepts", "internals", "use_cases"],
+        evaluationDimensions: ["technical_depth", "technical_reasoning"],
+        targetDurationRatio: 0.2,
+        transitionThreshold: 0.75,
+        instructions:
+          "Assess the candidate's depth of knowledge. Probe core concepts, internal workings, and practical use cases. Challenge superficial answers.",
+        reverseEvaluationDimensions: ["probing_depth", "technical_listening"],
+      },
+      {
+        phaseKey: "architecture_exploration",
+        order: 2,
+        goals: ["system_components", "data_flow", "design_decisions"],
+        evaluationDimensions: ["architecture", "technical_reasoning"],
+        targetDurationRatio: 0.25,
+        transitionThreshold: 0.75,
+        instructions:
+          "Explore the architecture and design decisions. Evaluate understanding of component interactions, data flow, and key design choices.",
+        showWhiteboard: true,
+        reverseEvaluationDimensions: ["technical_listening", "challenging_appropriately"],
+      },
+      {
+        phaseKey: "implementation_details",
+        order: 3,
+        goals: ["implementation_approach", "performance_considerations", "edge_cases"],
+        evaluationDimensions: ["technical_depth", "tradeoffs"],
+        targetDurationRatio: 0.3,
+        transitionThreshold: 0.7,
+        instructions:
+          "Dive into implementation details. Probe performance considerations, edge cases, and practical implementation challenges.",
+        showWhiteboard: true,
+        reverseEvaluationDimensions: ["probing_depth", "challenging_appropriately"],
+      },
+      {
+        phaseKey: "scalability_reliability",
+        order: 4,
+        goals: ["scaling_challenges", "failure_modes", "operational_considerations"],
+        evaluationDimensions: ["scalability", "reliability"],
+        targetDurationRatio: 0.15,
+        transitionThreshold: 0.7,
+        instructions:
+          "Discuss scalability and reliability aspects. Ask about scaling challenges, failure modes, and operational considerations.",
+        reverseEvaluationDimensions: ["challenging_appropriately", "probing_depth"],
+      },
+      {
+        phaseKey: "closing",
+        order: 5,
+        goals: ["topic_summary", "key_takeaways"],
+        evaluationDimensions: ["communication"],
+        targetDurationRatio: 0.05,
+        transitionThreshold: 1,
+        instructions:
+          "Ask the candidate to summarize the key takeaways from the deep dive. Conclude the interview naturally.",
+        reverseEvaluationDimensions: ["summarizing_and_wrap_up"],
+      },
+    ],
+  },
+  {
+    slug: "tech_doc_review",
+    name: "Tech Doc Review",
+    description: "Review technical documentation with focus on clarity, completeness, and accuracy.",
+    phases: [
+      {
+        phaseKey: "introduction",
+        order: 0,
+        goals: ["candidate_understands_doc_context"],
+        evaluationDimensions: ["communication"],
+        targetDurationRatio: 0.05,
+        transitionThreshold: 0.7,
+        instructions:
+          "Introduce the technical document briefly. Ask the candidate to begin by understanding the purpose and audience of the documentation.",
+        reverseEvaluationDimensions: ["rapport_building"],
+      },
+      {
+        phaseKey: "context_understanding",
+        order: 1,
+        goals: ["doc_purpose", "target_audience", "scope"],
+        evaluationDimensions: ["requirement_clarity", "communication"],
+        targetDurationRatio: 0.15,
+        transitionThreshold: 0.75,
+        instructions:
+          "Evaluate whether the candidate understands the document's purpose, target audience, and scope. Answer clarification questions about the technical context.",
+        reverseEvaluationDimensions: ["requirement_elicitation", "technical_listening"],
+      },
+      {
+        phaseKey: "structure_review",
+        order: 2,
+        goals: ["organization", "flow", "navigation"],
+        evaluationDimensions: ["architecture", "technical_reasoning"],
+        targetDurationRatio: 0.2,
+        transitionThreshold: 0.75,
+        instructions:
+          "Ask the candidate to review the document structure. Evaluate organization, logical flow, and ease of navigation. Challenge structural issues.",
+        showWhiteboard: true,
+        reverseEvaluationDimensions: ["technical_listening", "time_management"],
+      },
+      {
+        phaseKey: "content_review",
+        order: 3,
+        goals: ["clarity", "completeness", "accuracy"],
+        evaluationDimensions: ["technical_depth", "communication"],
+        targetDurationRatio: 0.35,
+        transitionThreshold: 0.7,
+        instructions:
+          "Dive into content review. Evaluate clarity, completeness, and accuracy of technical information. Probe missing sections, unclear explanations, and potential errors.",
+        showWhiteboard: true,
+        reverseEvaluationDimensions: ["probing_depth", "challenging_appropriately"],
+      },
+      {
+        phaseKey: "improvement_suggestions",
+        order: 4,
+        goals: ["actionable_feedback", "priority_ranking"],
+        evaluationDimensions: ["tradeoffs", "communication"],
+        targetDurationRatio: 0.2,
+        transitionThreshold: 0.7,
+        instructions:
+          "Ask the candidate to provide improvement suggestions with priorities. Evaluate the actionability and impact of their recommendations.",
+        reverseEvaluationDimensions: ["technical_listening", "time_management"],
+      },
+      {
+        phaseKey: "closing",
+        order: 5,
+        goals: ["review_summary", "key_improvements"],
+        evaluationDimensions: ["communication"],
+        targetDurationRatio: 0.05,
+        transitionThreshold: 1,
+        instructions:
+          "Ask the candidate to summarize their review and the most important improvements. Conclude the interview naturally.",
+        reverseEvaluationDimensions: ["summarizing_and_wrap_up"],
+      },
+    ],
+  },
+  {
+    slug: "task_breakdown",
+    name: "Task Breakdown",
+    description: "Break down a large task into small, independent, executable subtasks.",
+    phases: [
+      {
+        phaseKey: "introduction",
+        order: 0,
+        goals: ["candidate_understands_task"],
+        evaluationDimensions: ["communication"],
+        targetDurationRatio: 0.05,
+        transitionThreshold: 0.7,
+        instructions:
+          "Introduce the large task briefly. Ask the candidate to begin by understanding the requirements and constraints.",
+        reverseEvaluationDimensions: ["rapport_building"],
+      },
+      {
+        phaseKey: "requirement_analysis",
+        order: 1,
+        goals: ["functional_requirements", "constraints", "success_criteria"],
+        evaluationDimensions: ["requirement_clarity", "scope_management"],
+        targetDurationRatio: 0.15,
+        transitionThreshold: 0.75,
+        instructions:
+          "Evaluate requirement gathering. Probe functional requirements, constraints, and success criteria. Ensure scope is well-defined.",
+        reverseEvaluationDimensions: ["requirement_elicitation", "technical_listening"],
+      },
+      {
+        phaseKey: "dependency_analysis",
+        order: 2,
+        goals: ["dependencies", "blocking_tasks", "parallel_opportunities"],
+        evaluationDimensions: ["architecture", "technical_reasoning"],
+        targetDurationRatio: 0.2,
+        transitionThreshold: 0.75,
+        instructions:
+          "Ask the candidate to analyze dependencies. Evaluate identification of blocking tasks and opportunities for parallel execution.",
+        showWhiteboard: true,
+        reverseEvaluationDimensions: ["technical_listening", "time_management"],
+      },
+      {
+        phaseKey: "task_decomposition",
+        order: 3,
+        goals: ["subtask_definition", "independence", "estimation"],
+        evaluationDimensions: ["technical_depth", "problem_solving"],
+        targetDurationRatio: 0.35,
+        transitionThreshold: 0.7,
+        instructions:
+          "Dive into task decomposition. Evaluate whether subtasks are small, independent, and properly estimated. Challenge overly large or dependent tasks.",
+        showWhiteboard: true,
+        reverseEvaluationDimensions: ["probing_depth", "challenging_appropriately"],
+      },
+      {
+        phaseKey: "execution_planning",
+        order: 4,
+        goals: ["sequencing", "risk_mitigation", "resource_allocation"],
+        evaluationDimensions: ["tradeoffs", "technical_reasoning"],
+        targetDurationRatio: 0.2,
+        transitionThreshold: 0.7,
+        instructions:
+          "Discuss execution planning. Evaluate task sequencing, risk mitigation strategies, and resource allocation decisions.",
+        reverseEvaluationDimensions: ["challenging_appropriately", "probing_depth"],
+      },
+      {
+        phaseKey: "closing",
+        order: 5,
+        goals: ["breakdown_summary", "critical_path"],
+        evaluationDimensions: ["communication"],
+        targetDurationRatio: 0.05,
+        transitionThreshold: 1,
+        instructions:
+          "Ask the candidate to summarize their breakdown and identify the critical path. Conclude the interview naturally.",
+        reverseEvaluationDimensions: ["summarizing_and_wrap_up"],
+      },
+    ],
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -2993,6 +3313,45 @@ export function useTheme() {
   return context;
 }
 ================================================
+FILE: ./src/app/diagram/uber/page.tsx
+================================================
+import SystemDiagram from "@/src/features/diagram/components/SystemDiagram";
+
+export default function UberDiagramPage() {
+  return (
+    <div className="h-screen">
+      <SystemDiagram systemType="uber" />
+    </div>
+  );
+}
+
+================================================
+FILE: ./src/app/diagram/twitter/page.tsx
+================================================
+import SystemDiagram from "@/src/features/diagram/components/SystemDiagram";
+
+export default function TwitterDiagramPage() {
+  return (
+    <div className="h-screen">
+      <SystemDiagram systemType="twitter" />
+    </div>
+  );
+}
+
+================================================
+FILE: ./src/app/diagram/netflix/page.tsx
+================================================
+import SystemDiagram from "@/src/features/diagram/components/SystemDiagram";
+
+export default function NetflixDiagramPage() {
+  return (
+    <div className="h-screen">
+      <SystemDiagram systemType="netflix" />
+    </div>
+  );
+}
+
+================================================
 FILE: ./src/app/diagram/page.tsx
 ================================================
 import SystemDiagram from "@/src/features/diagram/components/SystemDiagram";
@@ -3000,7 +3359,33 @@ import SystemDiagram from "@/src/features/diagram/components/SystemDiagram";
 export default function DiagramPage() {
   return (
     <div className="h-screen">
-      <SystemDiagram />
+      <SystemDiagram systemType="dropbox" />
+    </div>
+  );
+}
+
+================================================
+FILE: ./src/app/diagram/instagram/page.tsx
+================================================
+import SystemDiagram from "@/src/features/diagram/components/SystemDiagram";
+
+export default function InstagramDiagramPage() {
+  return (
+    <div className="h-screen">
+      <SystemDiagram systemType="instagram" />
+    </div>
+  );
+}
+
+================================================
+FILE: ./src/app/diagram/whatsapp/page.tsx
+================================================
+import SystemDiagram from "@/src/features/diagram/components/SystemDiagram";
+
+export default function WhatsAppDiagramPage() {
+  return (
+    <div className="h-screen">
+      <SystemDiagram systemType="whatsapp" />
     </div>
   );
 }
@@ -3008,6 +3393,8 @@ export default function DiagramPage() {
 ================================================
 FILE: ./src/app/problems/page.tsx
 ================================================
+"use client";
+
 import Navbar from "@/src/components/layout/Navbar";
 import PageContainer from "@/src/components/layout/PageContainer";
 import ProblemInventoryView from "@/src/features/interview/setup/components/ProblemInventoryView";
@@ -3088,21 +3475,23 @@ export default async function LibraryPage() {
       orderBy: { createdAt: "desc" },
       take: 30,
     }),
-    prisma.interview.findMany({
-      where: { userId, status: InterviewStatus.COMPLETED },
-      include: {
-        problem: { select: { title: true } },
-        template: { select: { name: true } },
-        evaluation: true,
-        transcript: {
-          orderBy: { createdAt: "asc" },
-          select: { id: true, role: true, content: true, elapsedSeconds: true },
-        },
-      },
-      // `completedAt` isn't currently set when an interview finishes, so
-      // order by `updatedAt` (which the finish flow does update) instead.
-      orderBy: { updatedAt: "desc" },
-    }),
+    userId
+      ? prisma.interview.findMany({
+          where: { userId, status: InterviewStatus.COMPLETED },
+          include: {
+            problem: { select: { title: true } },
+            template: { select: { name: true } },
+            evaluation: true,
+            transcript: {
+              orderBy: { createdAt: "asc" },
+              select: { id: true, role: true, content: true, elapsedSeconds: true },
+            },
+          },
+          // `completedAt` isn't currently set when an interview finishes, so
+          // order by `updatedAt` (which the finish flow does update) instead.
+          orderBy: { updatedAt: "desc" },
+        })
+      : Promise.resolve([]),
   ]);
 
   const experiences: ExperienceItem[] = experiencesRaw.map((exp) => ({
@@ -3389,7 +3778,7 @@ import CompanySelector from "@/src/features/interview/setup/components/CompanySe
 import DifficultySelector from "@/src/features/interview/setup/components/DifficultySelector";
 import DurationSelector from "@/src/features/interview/setup/components/DurationSelector";
 import InterviewTypeSelector from "@/src/features/interview/setup/components/InterviewTypeSelector";
-import TopicSelector from "@/src/features/interview/setup/components/TopicSelector";
+import ProblemSelector from "@/src/features/interview/setup/components/ProblemSelector";
 import SetupCard from "@/src/features/interview/setup/components/SetupCard";
 import { useToast } from "@/src/components/ui/Toast";
 import { Button } from "@/src/components/ui/Button";
@@ -3402,6 +3791,7 @@ export default function InterviewSetupPage() {
   const typeParam = searchParams.get("type");
 
   const [interviewType, setInterviewType] = useState(typeParam ?? "hld");
+  const [topic, setTopic] = useState("");
   const [difficulty, setDifficulty] = useState("Medium");
   const [duration, setDuration] = useState(45);
   const [company, setCompany] = useState("");
@@ -3484,6 +3874,7 @@ export default function InterviewSetupPage() {
         <InterviewTypeSelector
           value={interviewType}
           onChange={setInterviewType}
+          onTopicChange={setTopic}
         />
 
         <DifficultySelector
@@ -3501,9 +3892,10 @@ export default function InterviewSetupPage() {
           onChange={setCompany}
         />
 
-        <TopicSelector
+        <ProblemSelector
           value={problemId}
           onChange={setProblemId}
+          interviewType={interviewType}
           difficulty={difficulty}
           company={company}
         />
@@ -3645,6 +4037,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from "../components/ui/Toast";
 import { ThemeProvider } from "../contexts/ThemeContext";
+import AuthProvider from "../components/providers/AuthProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -3665,9 +4058,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
-        <ThemeProvider>
-          <ToastProvider>{children}</ToastProvider>
-        </ThemeProvider>
+        <AuthProvider>
+          <ThemeProvider>
+            <ToastProvider>{children}</ToastProvider>
+          </ThemeProvider>
+        </AuthProvider>
       </body>
     </html>
   );
@@ -3693,6 +4088,18 @@ export async function GET(request: Request) {
       { status: 500 }
     );
   }
+}
+
+================================================
+FILE: ./src/app/api/auth/signout/route.ts
+================================================
+import { NextResponse } from "next/server";
+import { signOut } from "@/src/modules/auth/auth";
+
+export async function POST() {
+  await signOut({ redirectTo: "/" });
+  
+  return NextResponse.json({ success: true });
 }
 
 ================================================
@@ -3756,6 +4163,23 @@ import { handlers } from "@/src/modules/auth/auth";
 
 export const { GET, POST } = handlers;
 ================================================
+FILE: ./src/app/api/auth/session/route.ts
+================================================
+import { NextResponse } from "next/server";
+import { auth } from "@/src/modules/auth/auth";
+
+export async function GET() {
+  const session = await auth();
+  
+  return NextResponse.json({ 
+    user: session?.user ? {
+      id: session.user.id,
+      email: session.user.email,
+    } : null 
+  });
+}
+
+================================================
 FILE: ./src/app/api/problems/route.ts
 ================================================
 import { NextResponse } from "next/server";
@@ -3805,6 +4229,57 @@ export async function GET(request: Request) {
 
     return NextResponse.json(
       { error: "Internal server error." },
+      { status: 500 }
+    );
+  }
+}
+
+================================================
+FILE: ./src/app/api/problems/[id]/history/route.ts
+================================================
+import { NextResponse } from "next/server";
+import { InterviewStatus } from "@prisma/client";
+
+import { prisma } from "@/shared/prisma/client";
+
+export async function GET(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get("userId");
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: "User ID is required" },
+        { status: 400 }
+      );
+    }
+
+    const interviews = await prisma.interview.findMany({
+      where: {
+        userId,
+        problemId: params.id,
+        status: InterviewStatus.COMPLETED,
+      },
+      orderBy: {
+        updatedAt: "desc",
+      },
+    });
+
+    const history = {
+      completed: interviews.length > 0,
+      timesCompleted: interviews.length,
+      lastCompletedAt: interviews.length > 0 ? interviews[0].updatedAt : null,
+    };
+
+    return NextResponse.json({ history }, { status: 200 });
+  } catch (error) {
+    console.error(error);
+
+    return NextResponse.json(
+      { error: "Internal server error" },
       { status: 500 }
     );
   }
@@ -3903,7 +4378,7 @@ import { NextResponse } from "next/server";
 import { Difficulty, InterviewMode } from "@prisma/client";
 
 import { prisma } from "@/shared/prisma/client";
-import { getCurrentUserId } from "@/src/modules/auth/getCurrentUserId";
+import { ensureGuestUser } from "@/src/modules/auth/getCurrentUserId";
 import { createInterview } from "@/src/modules/interview/services/interview/InterviewFactory";
 import { InterviewRepository } from "@/src/modules/interview/repositories/InterviewRepository";
 import { TranscriptService } from "@/src/modules/interview/services/TranscriptService";
@@ -3959,7 +4434,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const userId = await getCurrentUserId();
+    const userId = await ensureGuestUser();
 
     const interviewMode = mode === "REVERSE" ? InterviewMode.REVERSE : InterviewMode.CANDIDATE;
 
@@ -4069,7 +4544,7 @@ import { NextResponse } from "next/server";
 import { InterviewRepository } from "@/src/modules/interview/repositories/InterviewRepository";
 import { createInterview } from "@/src/modules/interview/services/interview/InterviewFactory";
 import { CreateInterviewInput } from "@/src/features/interview/types/CreateInterviewInput";
-import { getCurrentUserId } from "@/src/modules/auth/getCurrentUserId";
+import { ensureGuestUser } from "@/src/modules/auth/getCurrentUserId";
 import logger from "@/src/shared/logger/logger";
 
 export async function POST(request: Request) {
@@ -4091,7 +4566,7 @@ export async function POST(request: Request) {
 
     const interviewData = createInterview(body);
 
-    const userId = await getCurrentUserId();
+    const userId = await ensureGuestUser();
 
     const interview = await repository.create({
       difficulty: interviewData.difficulty,
@@ -5283,6 +5758,19 @@ interface DiagramComponent {
   details: ComponentDetail;
 }
 
+interface Connection {
+  from: string;
+  to: string;
+  label: string;
+}
+
+type SystemType = "dropbox" | "twitter" | "netflix" | "uber" | "instagram" | "whatsapp";
+
+interface SystemConfig {
+  components: DiagramComponent[];
+  connections: Connection[];
+}
+
 const dropboxComponents: DiagramComponent[] = [
   {
     id: "client",
@@ -5394,13 +5882,704 @@ const dropboxComponents: DiagramComponent[] = [
   }
 ];
 
-const connections = [
-  { from: "client", to: "gateway", label: "API Calls" },
-  { from: "gateway", to: "block-sync", label: "Stream Block" },
-  { from: "gateway", to: "metadata", label: "Update Metadata" },
-  { from: "block-sync", to: "s3", label: "Store/Retrieve" },
-  { from: "metadata", to: "metadata-db", label: "Query/Update" }
+const twitterComponents: DiagramComponent[] = [
+  {
+    id: "client",
+    name: "User Client",
+    type: "client",
+    x: 50,
+    y: 100,
+    width: 180,
+    height: 60,
+    details: {
+      id: "client",
+      name: "User Client",
+      type: "client",
+      roleAndDuty: "Mobile/web application for users to post tweets, view timelines, and interact with content.",
+      extremeDeepDive: "Implements optimistic UI for instant feedback. Uses WebSocket for real-time timeline updates. Implements local caching with SQLite for offline viewing. Handles image/video compression before upload. Implements rate limiting on client side to prevent abuse.",
+      failureScenarios: "Network failure - queues actions locally with retry on reconnect. API rate limit exceeded - shows user-friendly error with backoff timer. Media upload failure - automatic retry with compression fallback.",
+      designTradeoffs: "Real-time vs batch updates - chose real-time for engagement. Client-side vs server-side rendering - chose hybrid for performance. Native vs web app - chose responsive web for cross-platform."
+    }
+  },
+  {
+    id: "gateway",
+    name: "API Gateway",
+    type: "gateway",
+    x: 300,
+    y: 100,
+    width: 180,
+    height: 60,
+    details: {
+      id: "gateway",
+      name: "API Gateway",
+      type: "gateway",
+      roleAndDuty: "Entry point for all requests, handles authentication, rate limiting, and request routing.",
+      extremeDeepDive: "Uses OAuth 2.0 with JWT tokens. Implements per-endpoint rate limiting. Request validation and sanitization. Circuit breaker pattern for downstream services. Request/response compression with gzip. API versioning for backward compatibility.",
+      failureScenarios: "Gateway overload - auto-scaling with load shedding. Authentication service down - cached token validation with fallback. DDoS attack - IP-based rate limiting and CAPTCHA.",
+      designTradeoffs: "Centralized vs decentralized gateway - chose centralized for consistency. Synchronous vs async routing - chose async for high throughput. Stateful vs stateless - chose stateless for scalability."
+    }
+  },
+  {
+    id: "timeline",
+    name: "Timeline Service",
+    type: "service",
+    x: 300,
+    y: 250,
+    width: 180,
+    height: 60,
+    details: {
+      id: "timeline",
+      name: "Timeline Service",
+      type: "service",
+      roleAndDuty: "Generates home timelines using fanout-on-write strategy for efficient timeline delivery.",
+      extremeDeepDive: "Implements fanout-on-write: when user posts, distributes to followers' timelines. Uses Redis for timeline caching with TTL. Supports pagination with cursor-based navigation. Handles timeline regeneration for user edits/deletions. Implements timeline pre-computation for VIP users.",
+      failureScenarios: "Fanout queue backlog - worker pool scaling with priority queues. Redis cache miss - fallback to database query. Timeline inconsistency - eventual consistency with repair jobs.",
+      designTradeoffs: "Fanout-on-write vs fanout-on-read - chose write for read-heavy workload. Real-time vs delayed fanout - chose near real-time with batching. Full vs partial timeline - chose hybrid with pagination."
+    }
+  },
+  {
+    id: "tweet",
+    name: "Tweet Service",
+    type: "service",
+    x: 550,
+    y: 250,
+    width: 180,
+    height: 60,
+    details: {
+      id: "tweet",
+      name: "Tweet Service",
+      type: "service",
+      roleAndDuty: "Manages tweet CRUD operations, hashtags, mentions, and tweet metadata.",
+      extremeDeepDive: "Uses Cassandra for tweet storage with time-series partitioning. Implements tweet indexing for search using Elasticsearch. Handles hashtag extraction and trending calculation. Manages tweet deduplication and spam detection. Supports tweet editing with version history.",
+      failureScenarios: "Cassandra write failure - hinted handoff and retry. Search index lag - eventual consistency with catch-up jobs. Hashtag extraction failure - graceful degradation without trending.",
+      designTradeoffs: "Cassandra vs PostgreSQL - chose Cassandra for write scalability. Real-time search vs batch indexing - chose real-time with Elasticsearch. Strong vs eventual consistency - chose eventual for performance."
+    }
+  },
+  {
+    id: "notification",
+    name: "Notification Service",
+    type: "service",
+    x: 50,
+    y: 400,
+    width: 180,
+    height: 60,
+    details: {
+      id: "notification",
+      name: "Notification Service",
+      type: "service",
+      roleAndDuty: "Sends push notifications for mentions, likes, and follows using message queues.",
+      extremeDeepDive: "Uses Kafka for event streaming. Implements push notification batching for efficiency. Supports notification preferences and do-not-disturb. Handles device token management. Implements notification deduplication and rate limiting per user.",
+      failureScenarios: "Push provider down - message queuing with retry. Device token invalid - automatic cleanup. Notification queue backlog - worker scaling with priority.",
+      designTradeoffs: "Push vs pull notifications - chose push for immediacy. Real-time vs batch delivery - chose real-time with batching. Single vs multiple providers - chose multiple for reliability."
+    }
+  },
+  {
+    id: "timeline-cache",
+    name: "Timeline Cache",
+    type: "storage",
+    x: 300,
+    y: 400,
+    width: 180,
+    height: 60,
+    details: {
+      id: "timeline-cache",
+      name: "Timeline Cache",
+      type: "storage",
+      roleAndDuty: "Redis cluster caching pre-computed timelines for fast retrieval.",
+      extremeDeepDive: "Uses Redis Cluster with data sharding. Implements timeline TTL for automatic expiration. Supports pipeline operations for batch retrieval. Uses Redis persistence with RDB snapshots. Implements cache warming for active users.",
+      failureScenarios: "Redis node failure - automatic failover with replica promotion. Cache eviction - fallback to database query. Memory pressure - LRU eviction with monitoring.",
+      designTradeoffs: "Redis vs Memcached - chose Redis for persistence and data structures. Single instance vs cluster - chose cluster for scalability. In-memory vs disk persistence - chose hybrid for performance and durability."
+    }
+  },
+  {
+    id: "tweet-db",
+    name: "Tweet Database",
+    type: "storage",
+    x: 550,
+    y: 400,
+    width: 180,
+    height: 60,
+    details: {
+      id: "tweet-db",
+      name: "Tweet Database",
+      type: "storage",
+      roleAndDuty: "Cassandra cluster storing tweets with time-series partitioning for scalability.",
+      extremeDeepDive: "Uses Cassandra with time-based partitioning (YYYY-MM). Implements compaction strategies for storage efficiency. Supports multi-region replication for low latency reads. Uses lightweight transactions for conditional updates. Implements tombstone handling for deleted tweets.",
+      failureScenarios: "Node failure - replication factor ensures availability. Write latency - tunable consistency with quorum reads. Storage growth - automatic compaction and TTL.",
+      designTradeoffs: "Cassandra vs PostgreSQL - chose Cassandra for horizontal scaling. Strong vs eventual consistency - chose eventual for performance. Single vs multi-region - chose multi-region for latency."
+    }
+  }
 ];
+
+const netflixComponents: DiagramComponent[] = [
+  {
+    id: "client",
+    name: "Streaming Client",
+    type: "client",
+    x: 50,
+    y: 100,
+    width: 180,
+    height: 60,
+    details: {
+      id: "client",
+      name: "Streaming Client",
+      type: "client",
+      roleAndDuty: "Multi-platform app for video playback, browsing, and user interaction.",
+      extremeDeepDive: "Implements adaptive bitrate streaming (DASH/HLS). Uses DRM for content protection. Implements video pre-fetching and buffering. Supports offline viewing with encrypted downloads. Uses machine learning for UI personalization.",
+      failureScenarios: "Network degradation - automatic quality adjustment. Playback failure - retry with lower quality. DRM license failure - fallback to standard definition.",
+      designTradeoffs: "Native vs web player - chose hybrid for reach. Client-side vs server-side adaptation - chose client-side for responsiveness. Download vs streaming - chose both for flexibility."
+    }
+  },
+  {
+    id: "gateway",
+    name: "API Gateway",
+    type: "gateway",
+    x: 300,
+    y: 100,
+    width: 180,
+    height: 60,
+    details: {
+      id: "gateway",
+      name: "API Gateway",
+      type: "gateway",
+      roleAndDuty: "Routes requests to appropriate services, handles authentication and CDN integration.",
+      extremeDeepDive: "Implements geographic routing to nearest CDN. Uses JWT for authentication. Request/response caching at edge. Implements device detection for content optimization. Circuit breaker for downstream services.",
+      failureScenarios: "Gateway failure - multi-region deployment with DNS failover. CDN integration failure - direct to origin with retry. Authentication service down - cached token validation.",
+      designTradeoffs: "Edge vs centralized gateway - chose edge for low latency. Real-time vs cached routing - chose cached with invalidation. Single vs multiple CDNs - chose multiple for redundancy."
+    }
+  },
+  {
+    id: "recommendation",
+    name: "Recommendation Engine",
+    type: "service",
+    x: 300,
+    y: 250,
+    width: 180,
+    height: 60,
+    details: {
+      id: "recommendation",
+      name: "Recommendation Engine",
+      type: "service",
+      roleAndDuty: "ML-powered service generating personalized content recommendations.",
+      extremeDeepDive: "Uses collaborative filtering and content-based algorithms. Implements real-time model scoring with TensorFlow Serving. Supports A/B testing for algorithm improvements. Uses feature store for user behavior data. Implements cold-start handling for new users.",
+      failureScenarios: "Model scoring failure - fallback to popularity-based recommendations. Feature store down - cached features with graceful degradation. High latency - pre-computed recommendations with refresh.",
+      designTradeoffs: "Real-time vs batch recommendations - chose hybrid for freshness. Single vs multiple models - chose ensemble for accuracy. Centralized vs edge inference - chose centralized for model complexity."
+    }
+  },
+  {
+    id: "catalog",
+    name: "Catalog Service",
+    type: "service",
+    x: 550,
+    y: 250,
+    width: 180,
+    height: 60,
+    details: {
+      id: "catalog",
+      name: "Catalog Service",
+      type: "service",
+      roleAndDuty: "Manages content metadata, availability, and regional licensing.",
+      extremeDeepDive: "Uses Elasticsearch for content search and filtering. Implements regional availability tracking. Supports content versioning for multiple quality levels. Manages licensing windows and geo-blocking. Implements content caching at CDN edge.",
+      failureScenarios: "Search index lag - eventual consistency with rebuild. Content unavailability - graceful error with alternatives. License validation failure - fallback to available content.",
+      designTradeoffs: "Elasticsearch vs SQL - chose Elasticsearch for search capabilities. Real-time vs batch updates - chose real-time for accuracy. Centralized vs regional catalog - chose hybrid for latency."
+    }
+  },
+  {
+    id: "cdn",
+    name: "CDN Network",
+    type: "storage",
+    x: 300,
+    y: 400,
+    width: 180,
+    height: 60,
+    details: {
+      id: "cdn",
+      name: "CDN Network",
+      type: "storage",
+      roleAndDuty: "Global content delivery network for video streaming with edge caching.",
+      extremeDeepDive: "Uses multi-tier CDN with edge, regional, and origin layers. Implements adaptive bitrate caching. Supports live streaming with chunked transfer. Uses HTTP/2 and HTTP/3 for performance. Implements cache invalidation and purging.",
+      failureScenarios: "Edge node failure - automatic rerouting to nearest node. Cache miss - fetch from regional layer. Origin overload - throttling and queue management.",
+      designTradeoffs: "Single vs multiple CDN providers - chose multiple for redundancy. Push vs pull caching - chose pull for simplicity. Live vs VOD optimization - chose separate optimization."
+    }
+  },
+  {
+    id: "video-storage",
+    name: "Video Storage",
+    type: "storage",
+    x: 550,
+    y: 400,
+    width: 180,
+    height: 60,
+    details: {
+      id: "video-storage",
+      name: "Video Storage",
+      type: "storage",
+      roleAndDuty: "Object storage for video assets with multiple quality encodings.",
+      extremeDeepDive: "Uses S3 with intelligent tiering. Stores multiple encodings (4K, 1080p, 720p, etc.). Implements lifecycle policies for cost optimization. Uses glacier for archival. Supports partial content retrieval for adaptive streaming.",
+      failureScenarios: "Storage unavailability - multi-region replication. Encoding failure - fallback to lower quality. Cost overrun - automated lifecycle management.",
+      designTradeoffs: "S3 vs custom storage - chose S3 for managed service. Single vs multiple encodings - chose multiple for adaptive streaming. Hot vs cold storage - chose tiered for cost optimization."
+    }
+  }
+];
+
+const uberComponents: DiagramComponent[] = [
+  {
+    id: "rider",
+    name: "Rider App",
+    type: "client",
+    x: 50,
+    y: 50,
+    width: 180,
+    height: 60,
+    details: {
+      id: "rider",
+      name: "Rider App",
+      type: "client",
+      roleAndDuty: "Mobile app for riders to request rides, track drivers, and handle payments.",
+      extremeDeepDive: "Implements real-time location tracking with GPS. Uses WebSocket for driver location updates. Implements surge pricing display. Supports multiple payment methods with tokenization. Uses offline mode for basic functionality.",
+      failureScenarios: "GPS signal loss - last known location with network-based fallback. WebSocket disconnect - automatic reconnection with state sync. Payment failure - retry with alternative method.",
+      designTradeoffs: "Real-time vs polling - chose WebSocket for efficiency. Client-side vs server-side pricing - chose server-side for accuracy. Native vs hybrid app - chose native for performance."
+    }
+  },
+  {
+    id: "driver",
+    name: "Driver App",
+    type: "client",
+    x: 50,
+    y: 150,
+    width: 180,
+    height: 60,
+    details: {
+      id: "driver",
+      name: "Driver App",
+      type: "client",
+      roleAndDuty: "Mobile app for drivers to receive ride requests, navigation, and earnings management.",
+      extremeDeepDive: "Implements background location tracking. Uses push notifications for ride requests. Integrates with mapping APIs for navigation. Implements earnings calculation and tax reporting. Supports offline mode for navigation.",
+      failureScenarios: "Location tracking failure - manual check-in with GPS restart. Push notification failure - polling fallback. Navigation failure - offline maps with cached routes.",
+      designTradeoffs: "Background vs foreground tracking - chose background with OS permissions. Real-time vs batch earnings - chose real-time for transparency. Single vs multiple mapping providers - chose multiple for reliability."
+    }
+  },
+  {
+    id: "gateway",
+    name: "API Gateway",
+    type: "gateway",
+    x: 300,
+    y: 100,
+    width: 180,
+    height: 60,
+    details: {
+      id: "gateway",
+      name: "API Gateway",
+      type: "gateway",
+      roleAndDuty: "Routes requests, handles authentication, rate limiting, and protocol translation.",
+      extremeDeepDive: "Implements OAuth 2.0 with JWT tokens. Uses gRPC for internal service communication. Supports protocol translation (HTTP to gRPC). Implements request/response compression. Circuit breaker pattern for downstream services.",
+      failureScenarios: "Gateway overload - auto-scaling with load shedding. Authentication failure - cached token validation. Service discovery failure - static configuration fallback.",
+      designTradeoffs: "REST vs gRPC - chose gRPC for internal performance. Centralized vs decentralized gateway - chose centralized for consistency. Stateful vs stateless - chose stateless for scalability."
+    }
+  },
+  {
+    id: "dispatch",
+    name: "Dispatch Service",
+    type: "service",
+    x: 300,
+    y: 250,
+    width: 180,
+    height: 60,
+    details: {
+      id: "dispatch",
+      name: "Dispatch Service",
+      type: "service",
+      roleAndDuty: "Matches riders with drivers using real-time geospatial indexing.",
+      extremeDeepDive: "Uses geospatial indexing with S2 geometry library. Implements real-time matching with supply-demand balancing. Supports ETA calculation with traffic prediction. Handles surge pricing based on demand. Implements driver assignment optimization.",
+      failureScenarios: "Matching service down - fallback to nearest driver. Geospatial index lag - cached locations with refresh. ETA inaccuracy - machine learning model retraining.",
+      designTradeoffs: "Real-time vs batch matching - chose real-time for UX. Centralized vs distributed dispatch - chose regional dispatch for latency. Simple vs complex matching - chose hybrid for performance."
+    }
+  },
+  {
+    id: "pricing",
+    name: "Pricing Service",
+    type: "service",
+    x: 550,
+    y: 250,
+    width: 180,
+    height: 60,
+    details: {
+      id: "pricing",
+      name: "Pricing Service",
+      type: "service",
+      roleAndDuty: "Calculates dynamic pricing based on demand, supply, and external factors.",
+      extremeDeepDive: "Implements surge pricing algorithm with demand prediction. Uses machine learning for price optimization. Supports promotional pricing and discounts. Handles currency conversion for international markets. Implements price caching with TTL.",
+      failureScenarios: "Pricing calculation failure - fallback to base rates. ML model degradation - rule-based fallback. Currency service down - cached rates with manual refresh.",
+      designTradeoffs: "Dynamic vs static pricing - chose dynamic for supply-demand balance. Centralized vs decentralized pricing - chose regional for local factors. Real-time vs batch calculation - chose real-time with caching."
+    }
+  },
+  {
+    id: "location",
+    name: "Location Service",
+    type: "service",
+    x: 300,
+    y: 400,
+    width: 180,
+    height: 60,
+    details: {
+      id: "location",
+      name: "Location Service",
+      type: "service",
+      roleAndDuty: "Tracks and stores real-time locations of drivers and riders.",
+      extremeDeepDive: "Uses Redis Geo for real-time location storage. Implements location update batching for efficiency. Supports geofencing for pickup/dropoff zones. Handles location history for route optimization. Uses time-series database for analytics.",
+      failureScenarios: "Redis node failure - cluster with automatic failover. High write throughput - sharding by geographic region. Location accuracy - sensor fusion with GPS, WiFi, and cell towers.",
+      designTradeoffs: "Redis vs PostGIS - chose Redis for real-time performance. Real-time vs batch updates - chose real-time with batching. Single vs multiple data centers - chose regional for latency."
+    }
+  },
+  {
+    id: "payment",
+    name: "Payment Service",
+    type: "service",
+    x: 550,
+    y: 400,
+    width: 180,
+    height: 60,
+    details: {
+      id: "payment",
+      name: "Payment Service",
+      type: "service",
+      roleAndDuty: "Handles payment processing, refunds, and driver payouts.",
+      extremeDeepDive: "Integrates with multiple payment gateways (Stripe, Braintree). Implements payment tokenization for security. Supports split payments for promotions. Handles refund processing and disputes. Implements driver payout scheduling.",
+      failureScenarios: "Payment gateway failure - fallback to alternative provider. Payment processing timeout - retry with idempotency. Refund failure - manual processing with alerts.",
+      designTradeoffs: "Single vs multiple gateways - chose multiple for redundancy. Real-time vs batch processing - chose real-time for UX. Synchronous vs async processing - chose async with callbacks."
+    }
+  }
+];
+
+const instagramComponents: DiagramComponent[] = [
+  {
+    id: "client",
+    name: "Instagram App",
+    type: "client",
+    x: 50,
+    y: 100,
+    width: 180,
+    height: 60,
+    details: {
+      id: "client",
+      name: "Instagram App",
+      type: "client",
+      roleAndDuty: "Mobile app for photo/video sharing, stories, and social interaction.",
+      extremeDeepDive: "Implements image/video compression before upload. Uses WebSocket for real-time notifications. Supports offline media creation with queue. Implements local caching for feed. Uses machine learning for image enhancement.",
+      failureScenarios: "Upload failure - automatic retry with compression fallback. Network disconnection - queue actions locally. Media processing timeout - progress indicator with cancel option.",
+      designTradeoffs: "Client-side vs server-side compression - chose client-side for bandwidth. Real-time vs batch notifications - chose real-time for engagement. Native vs cross-platform - chose native for performance."
+    }
+  },
+  {
+    id: "gateway",
+    name: "API Gateway",
+    type: "gateway",
+    x: 300,
+    y: 100,
+    width: 180,
+    height: 60,
+    details: {
+      id: "gateway",
+      name: "API Gateway",
+      type: "gateway",
+      roleAndDuty: "Routes requests, handles authentication, rate limiting, and CDN integration.",
+      extremeDeepDive: "Implements OAuth 2.0 with JWT tokens. Uses GraphQL for flexible data fetching. Supports request/response compression. Implements API versioning. Circuit breaker for downstream services.",
+      failureScenarios: "Gateway overload - auto-scaling with load shedding. Authentication service down - cached token validation. GraphQL complexity - query depth limiting.",
+      designTradeoffs: "REST vs GraphQL - chose GraphQL for flexibility. Centralized vs decentralized gateway - chose centralized for consistency. Synchronous vs async - chose async for high throughput."
+    }
+  },
+  {
+    id: "feed",
+    name: "Feed Service",
+    type: "service",
+    x: 300,
+    y: 250,
+    width: 180,
+    height: 60,
+    details: {
+      id: "feed",
+      name: "Feed Service",
+      type: "service",
+      roleAndDuty: "Generates personalized feeds using ranking algorithms and fanout strategy.",
+      extremeDeepDive: "Implements feed ranking with machine learning models. Uses fanout-on-write for timeline generation. Supports pagination with cursor-based navigation. Handles feed regeneration for algorithm updates. Implements story ranking with time decay.",
+      failureScenarios: "Ranking service down - fallback to chronological feed. Fanout queue backlog - worker scaling with priority. Feed inconsistency - eventual consistency with repair jobs.",
+      designTradeoffs: "Fanout-on-write vs fanout-on-read - chose write for read-heavy workload. Real-time vs batch ranking - chose real-time with caching. Simple vs complex ranking - chose hybrid for performance."
+    }
+  },
+  {
+    id: "media",
+    name: "Media Service",
+    type: "service",
+    x: 550,
+    y: 250,
+    width: 180,
+    height: 60,
+    details: {
+      id: "media",
+      name: "Media Service",
+      type: "service",
+      roleAndDuty: "Handles media upload, processing, storage, and CDN distribution.",
+      extremeDeepDive: "Implements asynchronous media processing pipeline. Uses FFmpeg for video transcoding. Supports multiple quality variants. Implements image optimization and thumbnail generation. Uses message queues for processing tasks.",
+      failureScenarios: "Processing failure - retry with fallback quality. Storage quota exceeded - user notification with cleanup options. CDN integration failure - direct serving from origin.",
+      designTradeoffs: "Real-time vs async processing - chose async for scalability. Single vs multiple quality variants - chose multiple for adaptive delivery. Centralized vs distributed processing - chose distributed for throughput."
+    }
+  },
+  {
+    id: "story",
+    name: "Story Service",
+    type: "service",
+    x: 50,
+    y: 400,
+    width: 180,
+    height: 60,
+    details: {
+      id: "story",
+      name: "Story Service",
+      type: "service",
+      roleAndDuty: "Manages ephemeral story content with automatic expiration.",
+      extremeDeepDive: "Implements TTL-based story expiration. Uses Redis for story metadata caching. Supports story viewing analytics. Handles story highlights and archives. Implements story privacy and close friends lists.",
+      failureScenarios: "Expiration job failure - delayed cleanup with catch-up. Story view tracking failure - approximate counts with sampling. Redis cache miss - fallback to database.",
+      designTradeoffs: "TTL vs manual cleanup - chose TTL for simplicity. Real-time vs batch expiration - chose real-time with TTL. Centralized vs distributed storage - chose hybrid for performance."
+    }
+  },
+  {
+    id: "feed-cache",
+    name: "Feed Cache",
+    type: "storage",
+    x: 300,
+    y: 400,
+    width: 180,
+    height: 60,
+    details: {
+      id: "feed-cache",
+      name: "Feed Cache",
+      type: "storage",
+      roleAndDuty: "Redis cluster caching pre-computed feeds and story timelines.",
+      extremeDeepDive: "Uses Redis Cluster with data sharding. Implements feed TTL for automatic refresh. Supports pipeline operations for batch retrieval. Uses Redis persistence with AOF. Implements cache warming for active users.",
+      failureScenarios: "Redis node failure - automatic failover with replicas. Cache eviction - fallback to database generation. Memory pressure - LRU eviction with monitoring.",
+      designTradeoffs: "Redis vs Memcached - chose Redis for persistence. Single instance vs cluster - chose cluster for scalability. In-memory vs disk persistence - chose hybrid for performance."
+    }
+  },
+  {
+    id: "media-storage",
+    name: "Media Storage",
+    type: "storage",
+    x: 550,
+    y: 400,
+    width: 180,
+    height: 60,
+    details: {
+      id: "media-storage",
+      name: "Media Storage",
+      type: "storage",
+      roleAndDuty: "S3 storage for original and processed media with CDN integration.",
+      extremeDeepDive: "Uses S3 with intelligent tiering. Implements lifecycle policies for cost optimization. Supports multipart upload for large files. Uses S3 Cross-Region Replication. Integrates with CloudFront for CDN delivery.",
+      failureScenarios: "S3 outage - multi-region deployment with failover. Upload failure - automatic retry with resume. Cost overrun - automated lifecycle management.",
+      designTradeoffs: "S3 vs custom storage - chose S3 for managed service. Single vs multiple CDNs - chose CloudFront for integration. Hot vs cold storage - chose tiered for cost optimization."
+    }
+  }
+];
+
+const whatsappComponents: DiagramComponent[] = [
+  {
+    id: "client",
+    name: "WhatsApp Client",
+    type: "client",
+    x: 50,
+    y: 100,
+    width: 180,
+    height: 60,
+    details: {
+      id: "client",
+      name: "WhatsApp Client",
+      type: "client",
+      roleAndDuty: "Mobile app for messaging, voice/video calls, and media sharing.",
+      extremeDeepDive: "Implements Signal Protocol for end-to-end encryption. Uses WebSocket for real-time message delivery. Supports offline message queueing. Implements media compression before upload. Uses local database for message history.",
+      failureScenarios: "Network disconnection - message queue with exponential backoff. Encryption key exchange failure - fallback to unencrypted with warning. Media upload failure - retry with lower quality.",
+      designTradeoffs: "E2E encryption vs server-side - chose E2E for privacy. Real-time vs store-and-forward - chose hybrid for reliability. Single vs multiple devices - chose multi-device support."
+    }
+  },
+  {
+    id: "gateway",
+    name: "Connection Gateway",
+    type: "gateway",
+    x: 300,
+    y: 100,
+    width: 180,
+    height: 60,
+    details: {
+      id: "gateway",
+      name: "Connection Gateway",
+      type: "gateway",
+      roleAndDuty: "Handles WebSocket connections, authentication, and protocol translation.",
+      extremeDeepDive: "Implements long-lived WebSocket connection management. Uses phone number-based authentication. Supports protocol translation between client and internal services. Implements connection heartbeat and reconnection logic. Handles connection pooling and load balancing.",
+      failureScenarios: "WebSocket disconnect - automatic reconnection with state sync. Gateway overload - connection throttling with queue. Authentication failure - fallback to SMS verification.",
+      designTradeoffs: "WebSocket vs HTTP polling - chose WebSocket for real-time. Long-lived vs short-lived connections - chose long-lived for efficiency. Centralized vs distributed gateway - chose regional for latency."
+    }
+  },
+  {
+    id: "message",
+    name: "Message Service",
+    type: "service",
+    x: 300,
+    y: 250,
+    width: 180,
+    height: 60,
+    details: {
+      id: "message",
+      name: "Message Service",
+      type: "service",
+      roleAndDuty: "Handles message routing delivery, and read receipts.",
+      extremeDeepDive: "Uses message queues for reliable delivery. Implements message deduplication using message IDs. Supports read receipts and typing indicators. Handles message status tracking (sent, delivered, read). Implements message retry with exponential backoff.",
+      failureScenarios: "Message queue backlog - worker pool scaling. Delivery failure - retry with dead letter queue. Read receipt sync failure - eventual consistency.",
+      designTradeoffs: "Queue vs direct delivery - chose queue for reliability. Real-time vs batch processing - chose real-time with batching. Strong vs eventual consistency - chose eventual for performance."
+    }
+  },
+  {
+    id: "media",
+    name: "Media Service",
+    type: "service",
+    x: 550,
+    y: 250,
+    width: 180,
+    height: 60,
+    details: {
+      id: "media",
+      name: "Media Service",
+      type: "service",
+      roleAndDuty: "Handles media upload, compression, storage, and thumbnail generation.",
+      extremeDeepDive: "Implements asynchronous media processing pipeline. Uses FFmpeg for video compression and thumbnail generation. Supports multiple quality variants. Implements media encryption at rest. Uses message queues for processing tasks.",
+      failureScenarios: "Processing failure - retry with fallback quality. Storage quota exceeded - user notification with cleanup options. Encryption failure - fallback to unencrypted with warning.",
+      designTradeoffs: "Real-time vs async processing - chose async for scalability. Client-side vs server-side compression - chose hybrid for bandwidth. Single vs multiple quality variants - chose multiple for adaptive delivery."
+    }
+  },
+  {
+    id: "group",
+    name: "Group Service",
+    type: "service",
+    x: 50,
+    y: 400,
+    width: 180,
+    height: 60,
+    details: {
+      id: "group",
+      name: "Group Service",
+      type: "service",
+      roleAndDuty: "Manages group metadata, member lists, and group message routing.",
+      extremeDeepDive: "Implements group membership with role-based permissions. Supports group message fanout to members. Handles group admin and moderation features. Manages group avatar and metadata. Implements group message encryption key distribution.",
+      failureScenarios: "Fanout queue backlog - worker scaling with priority. Member sync failure - eventual consistency with repair. Key distribution failure - fallback to individual encryption.",
+      designTradeoffs: "Fanout-on-write vs fanout-on-read - chose write for real-time delivery. Centralized vs distributed group state - chose centralized for consistency. Real-time vs batch fanout - chose real-time with batching."
+    }
+  },
+  {
+    id: "message-store",
+    name: "Message Store",
+    type: "storage",
+    x: 300,
+    y: 400,
+    width: 180,
+    height: 60,
+    details: {
+      id: "message-store",
+      name: "Message Store",
+      type: "storage",
+      roleAndDuty: "Database storing encrypted messages with time-series partitioning.",
+      extremeDeepDive: "Uses MongoDB with time-based collections. Implements message TTL for automatic cleanup. Supports message indexing for search. Uses sharding by user ID for scalability. Implements message encryption at rest with customer-managed keys.",
+      failureScenarios: "Database node failure - replica set with automatic failover. Storage growth - automatic TTL and archiving. Query performance - index optimization and read replicas.",
+      designTradeoffs: "MongoDB vs PostgreSQL - chose MongoDB for flexible schema. Real-time vs batch indexing - chose real-time with Elasticsearch. Single vs multi-region - chose multi-region for latency."
+    }
+  },
+  {
+    id: "media-storage",
+    name: "Media Storage",
+    type: "storage",
+    x: 550,
+    y: 400,
+    width: 180,
+    height: 60,
+    details: {
+      id: "media-storage",
+      name: "Media Storage",
+      type: "storage",
+      roleAndDuty: "S3 storage for encrypted media with CDN integration.",
+      extremeDeepDive: "Uses S3 with server-side encryption. Implements lifecycle policies for cost optimization. Supports multipart upload for large files. Uses S3 Cross-Region Replication. Integrates with CloudFront for CDN delivery.",
+      failureScenarios: "S3 outage - multi-region deployment with failover. Upload failure - automatic retry with resume. Encryption failure - fallback to unencrypted with warning.",
+      designTradeoffs: "S3 vs custom storage - chose S3 for managed service. Single vs multiple CDNs - chose CloudFront for integration. Hot vs cold storage - chose tiered for cost optimization."
+    }
+  }
+];
+
+const systemConfigs: Record<SystemType, SystemConfig> = {
+  dropbox: {
+    components: dropboxComponents,
+    connections: [
+      { from: "client", to: "gateway", label: "API Calls" },
+      { from: "gateway", to: "block-sync", label: "Stream Block" },
+      { from: "gateway", to: "metadata", label: "Update Metadata" },
+      { from: "block-sync", to: "s3", label: "Store/Retrieve" },
+      { from: "metadata", to: "metadata-db", label: "Query/Update" }
+    ]
+  },
+  twitter: {
+    components: twitterComponents,
+    connections: [
+      { from: "client", to: "gateway", label: "API Calls" },
+      { from: "gateway", to: "timeline", label: "Get Timeline" },
+      { from: "gateway", to: "tweet", label: "Post Tweet" },
+      { from: "tweet", to: "timeline-cache", label: "Update Cache" },
+      { from: "tweet", to: "tweet-db", label: "Store Tweet" },
+      { from: "timeline", to: "timeline-cache", label: "Read/Write" },
+      { from: "tweet", to: "notification", label: "Trigger Event" }
+    ]
+  },
+  netflix: {
+    components: netflixComponents,
+    connections: [
+      { from: "client", to: "gateway", label: "API Calls" },
+      { from: "gateway", to: "recommendation", label: "Get Recommendations" },
+      { from: "gateway", to: "catalog", label: "Browse Catalog" },
+      { from: "catalog", to: "cdn", label: "Content URL" },
+      { from: "client", to: "cdn", label: "Stream Video" },
+      { from: "cdn", to: "video-storage", label: "Fetch Content" }
+    ]
+  },
+  uber: {
+    components: uberComponents,
+    connections: [
+      { from: "rider", to: "gateway", label: "Request Ride" },
+      { from: "driver", to: "gateway", label: "Update Location" },
+      { from: "gateway", to: "dispatch", label: "Match Request" },
+      { from: "gateway", to: "pricing", label: "Get Price" },
+      { from: "dispatch", to: "location", label: "Query Locations" },
+      { from: "dispatch", to: "pricing", label: "Apply Surge" },
+      { from: "gateway", to: "payment", label: "Process Payment" }
+    ]
+  },
+  instagram: {
+    components: instagramComponents,
+    connections: [
+      { from: "client", to: "gateway", label: "API Calls" },
+      { from: "gateway", to: "feed", label: "Get Feed" },
+      { from: "gateway", to: "media", label: "Upload Media" },
+      { from: "gateway", to: "story", label: "Post Story" },
+      { from: "feed", to: "feed-cache", label: "Read/Write" },
+      { from: "media", to: "media-storage", label: "Store/Retrieve" },
+      { from: "story", to: "feed-cache", label: "Update Timeline" }
+    ]
+  },
+  whatsapp: {
+    components: whatsappComponents,
+    connections: [
+      { from: "client", to: "gateway", label: "WebSocket Connect" },
+      { from: "gateway", to: "message", label: "Route Message" },
+      { from: "gateway", to: "media", label: "Upload Media" },
+      { from: "gateway", to: "group", label: "Group Operations" },
+      { from: "message", to: "message-store", label: "Store Message" },
+      { from: "media", to: "media-storage", label: "Store Media" },
+      { from: "group", to: "message", label: "Fanout Messages" }
+    ]
+  }
+};
 
 const typeColors = {
   client: { bg: "#1a1a2e", border: "#4a4a6a", dot: "#000000" },
@@ -5409,9 +6588,17 @@ const typeColors = {
   gateway: { bg: "#1f4068", border: "#162447", dot: "#0099cc" }
 };
 
-export default function SystemDiagram() {
+interface SystemDiagramProps {
+  systemType: SystemType;
+}
+
+export default function SystemDiagram({ systemType }: SystemDiagramProps) {
   const [selectedComponent, setSelectedComponent] = useState<ComponentDetail | null>(null);
   const [hoveredComponent, setHoveredComponent] = useState<string | null>(null);
+
+  const config = systemConfigs[systemType];
+  const components = config.components;
+  const connections = config.connections;
 
   const handleComponentClick = (component: DiagramComponent) => {
     setSelectedComponent(component.details);
@@ -5423,9 +6610,9 @@ export default function SystemDiagram() {
       <div className="flex-1 relative overflow-auto">
         <svg className="w-full h-full" style={{ minWidth: "800px", minHeight: "600px" }}>
           {/* Connections */}
-          {connections.map((conn, index) => {
-            const fromComp = dropboxComponents.find(c => c.id === conn.from);
-            const toComp = dropboxComponents.find(c => c.id === conn.to);
+          {connections.map((conn: Connection, index: number) => {
+            const fromComp = components.find(c => c.id === conn.from);
+            const toComp = components.find(c => c.id === conn.to);
             if (!fromComp || !toComp) return null;
 
             const fromX = fromComp.x + fromComp.width / 2;
@@ -5475,7 +6662,7 @@ export default function SystemDiagram() {
           </defs>
 
           {/* Components */}
-          {dropboxComponents.map((component) => (
+          {components.map((component) => (
             <g
               key={component.id}
               onClick={() => handleComponentClick(component)}
@@ -5921,7 +7108,7 @@ export default function LibraryView({ experiences: _experiences, completedInterv
                 together.
               </Text>
 
-              <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 <Link
                   href="/diagram"
                   className="rounded border border-border bg-muted p-4 text-left transition hover:border-foreground/40"
@@ -5934,6 +7121,81 @@ export default function LibraryView({ experiences: _experiences, completedInterv
                   </h4>
                   <p className="mt-1 line-clamp-1 text-[10px] text-muted-foreground">
                     Metadata sync, block-level storage, and S3-backed durability.
+                  </p>
+                </Link>
+
+                <Link
+                  href="/diagram/twitter"
+                  className="rounded border border-border bg-muted p-4 text-left transition hover:border-foreground/40"
+                >
+                  <span className="inline-block rounded bg-green-500/10 px-2 py-0.5 font-mono text-[9px] font-bold uppercase text-green-400">
+                    Hard HLD
+                  </span>
+                  <h4 className="mt-2 text-xs font-bold text-foreground">
+                    Design Twitter/X
+                  </h4>
+                  <p className="mt-1 line-clamp-1 text-[10px] text-muted-foreground">
+                    Timeline generation, fanout writes, and eventual consistency.
+                  </p>
+                </Link>
+
+                <Link
+                  href="/diagram/netflix"
+                  className="rounded border border-border bg-muted p-4 text-left transition hover:border-foreground/40"
+                >
+                  <span className="inline-block rounded bg-purple-500/10 px-2 py-0.5 font-mono text-[9px] font-bold uppercase text-purple-400">
+                    Hard HLD
+                  </span>
+                  <h4 className="mt-2 text-xs font-bold text-foreground">
+                    Design Netflix
+                  </h4>
+                  <p className="mt-1 line-clamp-1 text-[10px] text-muted-foreground">
+                    Video streaming, CDN distribution, and personalized recommendations.
+                  </p>
+                </Link>
+
+                <Link
+                  href="/diagram/uber"
+                  className="rounded border border-border bg-muted p-4 text-left transition hover:border-foreground/40"
+                >
+                  <span className="inline-block rounded bg-orange-500/10 px-2 py-0.5 font-mono text-[9px] font-bold uppercase text-orange-400">
+                    Medium HLD
+                  </span>
+                  <h4 className="mt-2 text-xs font-bold text-foreground">
+                    Design Uber
+                  </h4>
+                  <p className="mt-1 line-clamp-1 text-[10px] text-muted-foreground">
+                    Real-time matching, geospatial indexing, and surge pricing.
+                  </p>
+                </Link>
+
+                <Link
+                  href="/diagram/instagram"
+                  className="rounded border border-border bg-muted p-4 text-left transition hover:border-foreground/40"
+                >
+                  <span className="inline-block rounded bg-red-500/10 px-2 py-0.5 font-mono text-[9px] font-bold uppercase text-red-400">
+                    Hard HLD
+                  </span>
+                  <h4 className="mt-2 text-xs font-bold text-foreground">
+                    Design Instagram
+                  </h4>
+                  <p className="mt-1 line-clamp-1 text-[10px] text-muted-foreground">
+                    Photo upload, feed generation, and story expiration.
+                  </p>
+                </Link>
+
+                <Link
+                  href="/diagram/whatsapp"
+                  className="rounded border border-border bg-muted p-4 text-left transition hover:border-foreground/40"
+                >
+                  <span className="inline-block rounded bg-cyan-500/10 px-2 py-0.5 font-mono text-[9px] font-bold uppercase text-cyan-400">
+                    Medium HLD
+                  </span>
+                  <h4 className="mt-2 text-xs font-bold text-foreground">
+                    Design WhatsApp
+                  </h4>
+                  <p className="mt-1 line-clamp-1 text-[10px] text-muted-foreground">
+                    Real-time messaging, message queues, and end-to-end encryption.
                   </p>
                 </Link>
               </div>
@@ -6483,6 +7745,377 @@ export type Interview = {
   category: string;
 };
 ================================================
+FILE: ./src/features/interview/setup/components/ProblemSelector.tsx
+================================================
+"use client";
+
+import { useState, useEffect } from "react";
+import { Difficulty, ProblemCategory, InterviewStatus } from "@prisma/client";
+import { Button } from "@/src/components/ui/Button";
+
+type Problem = {
+  id: string;
+  slug: string;
+  title: string;
+  description: string | null;
+  category: ProblemCategory;
+  difficulty: Difficulty;
+  interviewType: string;
+  cruxOfProblem: string | null;
+  estimatedMinutes: number | null;
+  tags: string[];
+  completionHistory?: {
+    completed: boolean;
+    timesCompleted: number;
+    lastCompletedAt: Date | null;
+  };
+};
+
+type Props = {
+  value: string | null;
+  onChange: (value: string | null) => void;
+  interviewType?: string;
+  difficulty?: string;
+  company?: string;
+  onSearch?: () => void;
+  userId?: string | null;
+};
+
+const INTERVIEW_TYPES = ["hld", "lld", "dsa", "pr_review", "deep_dive", "tech_doc_review", "task_breakdown"] as const;
+const DIFFICULTIES = ["All", Difficulty.EASY, Difficulty.MEDIUM, Difficulty.HARD] as const;
+
+const CATEGORY_LABELS: Record<ProblemCategory, string> = {
+  SYSTEM_DESIGN: "System Design",
+  LOW_LEVEL_DESIGN: "Low Level Design",
+  DATABASES: "Databases",
+  BACKEND: "Backend",
+  DISTRIBUTED_SYSTEMS: "Distributed Systems",
+  JAVA: "Java",
+  KAFKA: "Kafka",
+  REDIS: "Redis",
+  OPERATING_SYSTEMS: "Operating Systems",
+  NETWORKING: "Networking",
+};
+
+const DIFFICULTY_COLORS: Record<Difficulty, string> = {
+  EASY: "border-green-800 text-green-400",
+  MEDIUM: "border-amber-800 text-amber-400",
+  HARD: "border-red-800 text-red-400",
+};
+
+export default function ProblemSelector({
+  value,
+  onChange,
+  interviewType = "hld",
+  difficulty = "Medium",
+  company = "",
+  onSearch,
+  userId,
+}: Props) {
+  const [problems, setProblems] = useState<Problem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [selectedType, setSelectedType] = useState<(typeof INTERVIEW_TYPES)[number]>(interviewType as any);
+  const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [selectedDifficulty, setSelectedDifficulty] = useState<(typeof DIFFICULTIES)[number]>(difficulty as any);
+  const [expandedProblem, setExpandedProblem] = useState<string | null>(null);
+  const [hasSearched, setHasSearched] = useState(false);
+
+  async function fetchProblems() {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams();
+      if (selectedType) params.append("interviewType", selectedType);
+      if (selectedDifficulty !== "All") params.append("difficulty", selectedDifficulty);
+      if (selectedCategory !== "All") params.append("category", selectedCategory);
+      if (company) params.append("company", company);
+
+      const response = await fetch(
+        `/api/problems${params.toString() ? `?${params.toString()}` : ""}`
+      );
+      const data = await response.json();
+      
+      // Add completion history if userId is provided
+      const problemsWithHistory = await Promise.all(
+        (data.problems || []).map(async (problem: Problem) => {
+          if (!userId) return problem;
+          
+          try {
+            const historyResponse = await fetch(`/api/problems/${problem.id}/history?userId=${userId}`);
+            const historyData = await historyResponse.json();
+            return {
+              ...problem,
+              completionHistory: historyData.history || {
+                completed: false,
+                timesCompleted: 0,
+                lastCompletedAt: null,
+              },
+            };
+          } catch {
+            return problem;
+          }
+        })
+      );
+      
+      setProblems(problemsWithHistory);
+    } catch (error) {
+      console.error("Failed to fetch problems:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (hasSearched) {
+      fetchProblems();
+    }
+  }, [selectedType, selectedDifficulty, selectedCategory, hasSearched]);
+
+  const categories = Array.from(
+    new Set(problems.map((p) => p.category))
+  ).sort();
+
+  const filteredProblems = problems.filter((problem) => {
+    if (problem.interviewType !== selectedType) return false;
+    if (selectedCategory !== "All" && problem.category !== selectedCategory) return false;
+    if (selectedDifficulty !== "All" && problem.difficulty !== selectedDifficulty) return false;
+    return true;
+  });
+
+  function handleProblemClick(problem: Problem) {
+    if (expandedProblem === problem.id) {
+      setExpandedProblem(null);
+    } else {
+      setExpandedProblem(problem.id);
+    }
+  }
+
+  function handleSearch() {
+    setHasSearched(true);
+    onSearch?.();
+  }
+
+  function formatDate(date: Date | null): string {
+    if (!date) return "Never";
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    }).format(new Date(date));
+  }
+
+  return (
+    <div className="mt-8">
+      <h3 className="mb-3 font-semibold text-foreground">
+        Select a Problem
+      </h3>
+
+      {!hasSearched ? (
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Configure your filters and search to see available problems.
+          </p>
+          <Button
+            type="button"
+            variant="primary"
+            onClick={handleSearch}
+            className="w-full"
+          >
+            Search Problems
+          </Button>
+        </div>
+      ) : (
+        <>
+          {/* Interview Type Tabs */}
+          <div className="flex overflow-x-auto rounded-lg border border-border bg-muted p-1 mb-4">
+            {INTERVIEW_TYPES.map((type) => (
+              <button
+                key={type}
+                onClick={() => {
+                  setSelectedType(type);
+                  setExpandedProblem(null);
+                }}
+                className={`whitespace-nowrap rounded px-4 py-2 font-mono text-sm font-medium transition ${
+                  selectedType === type
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {type.toUpperCase()}
+              </button>
+            ))}
+          </div>
+
+          {/* Filters */}
+          <div className="flex flex-wrap gap-4 mb-4">
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-foreground">Category:</label>
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="rounded border border-border bg-card px-3 py-1.5 text-sm text-foreground"
+              >
+                <option value="All">All Categories</option>
+                {categories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {CATEGORY_LABELS[cat as ProblemCategory] || cat}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-foreground">Difficulty:</label>
+              <select
+                value={selectedDifficulty}
+                onChange={(e) => setSelectedDifficulty(e.target.value as (typeof DIFFICULTIES)[number])}
+                className="rounded border border-border bg-card px-3 py-1.5 text-sm text-foreground"
+              >
+                {DIFFICULTIES.map((diff) => (
+                  <option key={diff} value={diff}>
+                    {diff}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Problem Count */}
+          <p className="text-sm text-muted-foreground mb-4">
+            {filteredProblems.length} problem{filteredProblems.length !== 1 ? "s" : ""} found
+          </p>
+
+          {/* Problem List */}
+          {loading ? (
+            <p className="text-sm text-muted-foreground">Loading problems...</p>
+          ) : filteredProblems.length === 0 ? (
+            <div className="rounded-lg border border-border bg-card p-8 text-center">
+              <p className="text-muted-foreground">No problems match your filters.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {filteredProblems.map((problem) => (
+                <div
+                  key={problem.id}
+                  className="overflow-hidden rounded-lg border border-border bg-card transition hover:border-foreground/40"
+                >
+                  {/* Problem Row */}
+                  <button
+                    onClick={() => handleProblemClick(problem)}
+                    className="w-full px-4 py-3 text-left"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3">
+                          <span className="text-lg font-semibold text-foreground">
+                            {problem.title}
+                          </span>
+                          <span
+                            className={`rounded border px-2 py-0.5 text-xs font-mono uppercase tracking-wider ${DIFFICULTY_COLORS[problem.difficulty]}`}
+                          >
+                            {problem.difficulty}
+                          </span>
+                          {problem.completionHistory?.completed && (
+                            <span className="rounded bg-green-500/10 px-2 py-0.5 text-xs font-mono uppercase tracking-wider text-green-400">
+                              Done
+                            </span>
+                          )}
+                        </div>
+
+                        {problem.cruxOfProblem && (
+                          <p className="mt-1 text-sm text-muted-foreground">
+                            {problem.cruxOfProblem}
+                          </p>
+                        )}
+
+                        {problem.tags && problem.tags.length > 0 && (
+                          <div className="mt-2 flex flex-wrap gap-1">
+                            {problem.tags.map((tag) => (
+                              <span
+                                key={tag}
+                                className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-4">
+                        {problem.estimatedMinutes && (
+                          <span className="text-sm font-mono text-muted-foreground">
+                            {problem.estimatedMinutes}min
+                          </span>
+                        )}
+                        {problem.completionHistory && (
+                          <div className="text-right">
+                            <div className="text-xs text-muted-foreground">
+                              {problem.completionHistory.timesCompleted}x done
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              Last: {formatDate(problem.completionHistory.lastCompletedAt)}
+                            </div>
+                          </div>
+                        )}
+                        <span className="text-muted-foreground">
+                          {expandedProblem === problem.id ? "▼" : "▶"}
+                        </span>
+                      </div>
+                    </div>
+                  </button>
+
+                  {/* Expanded Details */}
+                  {expandedProblem === problem.id && (
+                    <div className="border-t border-border bg-muted p-4">
+                      {problem.description && (
+                        <div className="mb-4">
+                          <h4 className="mb-2 text-sm font-semibold text-foreground">
+                            Description
+                          </h4>
+                          <p className="text-sm text-muted-foreground">
+                            {problem.description}
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="mb-4">
+                        <h4 className="mb-2 text-sm font-semibold text-foreground">
+                          Details
+                        </h4>
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div>
+                            <span className="text-muted-foreground">Category:</span>{" "}
+                            <span className="text-foreground">
+                              {CATEGORY_LABELS[problem.category] || problem.category}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Interview Type:</span>{" "}
+                            <span className="text-foreground uppercase">{problem.interviewType}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <Button
+                        variant="primary"
+                        onClick={() => onChange(problem.id)}
+                        className="w-full"
+                      >
+                        Select This Problem
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+================================================
 FILE: ./src/features/interview/setup/components/DurationSelector.tsx
 ================================================
 import { Button } from "@/src/components/ui/Button";
@@ -6616,278 +8249,25 @@ FILE: ./src/features/interview/setup/components/ProblemInventoryView.tsx
 ================================================
 "use client";
 
-import { useState, useEffect } from "react";
-import { Difficulty, ProblemCategory } from "@prisma/client";
-import { Button } from "@/src/components/ui/Button";
-
-type Problem = {
-  id: string;
-  slug: string;
-  title: string;
-  description: string | null;
-  category: ProblemCategory;
-  difficulty: Difficulty;
-  interviewType: string;
-  cruxOfProblem: string | null;
-  estimatedMinutes: number | null;
-  tags: string[];
-};
+import ProblemSelector from "@/src/features/interview/setup/components/ProblemSelector";
 
 type Props = {
   onSelectProblem?: (problemId: string) => void;
+  userId?: string | null;
 };
 
-const INTERVIEW_TYPES = ["hld", "lld", "dsa"] as const;
-const DIFFICULTIES = ["All", Difficulty.EASY, Difficulty.MEDIUM, Difficulty.HARD] as const;
-
-const CATEGORY_LABELS: Record<ProblemCategory, string> = {
-  SYSTEM_DESIGN: "System Design",
-  LOW_LEVEL_DESIGN: "Low Level Design",
-  DATABASES: "Databases",
-  BACKEND: "Backend",
-  DISTRIBUTED_SYSTEMS: "Distributed Systems",
-  JAVA: "Java",
-  KAFKA: "Kafka",
-  REDIS: "Redis",
-  OPERATING_SYSTEMS: "Operating Systems",
-  NETWORKING: "Networking",
-};
-
-const DIFFICULTY_COLORS: Record<Difficulty, string> = {
-  EASY: "border-green-800 text-green-400",
-  MEDIUM: "border-amber-800 text-amber-400",
-  HARD: "border-red-800 text-red-400",
-};
-
-export default function ProblemInventoryView({ onSelectProblem }: Props) {
-  const [problems, setProblems] = useState<Problem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedType, setSelectedType] = useState<(typeof INTERVIEW_TYPES)[number]>("hld");
-  const [selectedCategory, setSelectedCategory] = useState<string>("All");
-  const [selectedDifficulty, setSelectedDifficulty] = useState<(typeof DIFFICULTIES)[number]>("All");
-  const [expandedProblem, setExpandedProblem] = useState<string | null>(null);
-
-  useEffect(() => {
-    async function fetchProblems() {
-      try {
-        const response = await fetch("/api/problems");
-        const data = await response.json();
-        setProblems(data.problems || []);
-      } catch (error) {
-        console.error("Failed to fetch problems:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchProblems();
-  }, []);
-
-  const categories = Array.from(
-    new Set(problems.map((p) => p.category))
-  ).sort();
-
-  const filteredProblems = problems.filter((problem) => {
-    if (problem.interviewType !== selectedType) return false;
-    if (selectedCategory !== "All" && problem.category !== selectedCategory) return false;
-    if (selectedDifficulty !== "All" && problem.difficulty !== selectedDifficulty) return false;
-    return true;
-  });
-
-  function handleProblemClick(problem: Problem) {
-    if (expandedProblem === problem.id) {
-      setExpandedProblem(null);
-    } else {
-      setExpandedProblem(problem.id);
-    }
-  }
-
-  function handleSelectProblem(problemId: string) {
-    if (onSelectProblem) {
-      onSelectProblem(problemId);
-    }
-  }
-
-  if (loading) {
-    return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <p className="text-muted-foreground">Loading problems...</p>
-      </div>
-    );
-  }
-
+export default function ProblemInventoryView({ onSelectProblem, userId }: Props) {
   return (
-    <div className="space-y-6">
-      {/* Interview Type Tabs */}
-      <div className="flex overflow-x-auto rounded-lg border border-border bg-muted p-1">
-        {INTERVIEW_TYPES.map((type) => (
-          <button
-            key={type}
-            onClick={() => {
-              setSelectedType(type);
-              setExpandedProblem(null);
-            }}
-            className={`whitespace-nowrap rounded px-4 py-2 font-mono text-sm font-medium transition ${
-              selectedType === type
-                ? "bg-card text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {type.toUpperCase()}
-          </button>
-        ))}
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-wrap gap-4">
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-foreground">Category:</label>
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="rounded border border-border bg-card px-3 py-1.5 text-sm text-foreground"
-          >
-            <option value="All">All Categories</option>
-            {categories.map((cat) => (
-              <option key={cat} value={cat}>
-                {CATEGORY_LABELS[cat as ProblemCategory] || cat}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-foreground">Difficulty:</label>
-          <select
-            value={selectedDifficulty}
-            onChange={(e) => setSelectedDifficulty(e.target.value as (typeof DIFFICULTIES)[number])}
-            className="rounded border border-border bg-card px-3 py-1.5 text-sm text-foreground"
-          >
-            {DIFFICULTIES.map((diff) => (
-              <option key={diff} value={diff}>
-                {diff}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* Problem Count */}
-      <p className="text-sm text-muted-foreground">
-        {filteredProblems.length} problem{filteredProblems.length !== 1 ? "s" : ""} found
-      </p>
-
-      {/* Problem List */}
-      <div className="space-y-3">
-        {filteredProblems.length === 0 ? (
-          <div className="rounded-lg border border-border bg-card p-8 text-center">
-            <p className="text-muted-foreground">No problems match your filters.</p>
-          </div>
-        ) : (
-          filteredProblems.map((problem) => (
-            <div
-              key={problem.id}
-              className="overflow-hidden rounded-lg border border-border bg-card transition hover:border-foreground/40"
-            >
-              {/* Problem Row */}
-              <button
-                onClick={() => handleProblemClick(problem)}
-                className="w-full px-4 py-3 text-left"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3">
-                      <span className="text-lg font-semibold text-foreground">
-                        {problem.title}
-                      </span>
-                      <span
-                        className={`rounded border px-2 py-0.5 text-xs font-mono uppercase tracking-wider ${DIFFICULTY_COLORS[problem.difficulty]}`}
-                      >
-                        {problem.difficulty}
-                      </span>
-                    </div>
-
-                    {problem.cruxOfProblem && (
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        {problem.cruxOfProblem}
-                      </p>
-                    )}
-
-                    {problem.tags && problem.tags.length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-1">
-                        {problem.tags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-4">
-                    {problem.estimatedMinutes && (
-                      <span className="text-sm font-mono text-muted-foreground">
-                        {problem.estimatedMinutes}min
-                      </span>
-                    )}
-                    <span className="text-muted-foreground">
-                      {expandedProblem === problem.id ? "▼" : "▶"}
-                    </span>
-                  </div>
-                </div>
-              </button>
-
-              {/* Expanded Details */}
-              {expandedProblem === problem.id && (
-                <div className="border-t border-border bg-muted p-4">
-                  {problem.description && (
-                    <div className="mb-4">
-                      <h4 className="mb-2 text-sm font-semibold text-foreground">
-                        Description
-                      </h4>
-                      <p className="text-sm text-muted-foreground">
-                        {problem.description}
-                      </p>
-                    </div>
-                  )}
-
-                  <div className="mb-4">
-                    <h4 className="mb-2 text-sm font-semibold text-foreground">
-                      Details
-                    </h4>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div>
-                        <span className="text-muted-foreground">Category:</span>{" "}
-                        <span className="text-foreground">
-                          {CATEGORY_LABELS[problem.category] || problem.category}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Interview Type:</span>{" "}
-                        <span className="text-foreground uppercase">{problem.interviewType}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {onSelectProblem && (
-                    <Button
-                      variant="primary"
-                      onClick={() => handleSelectProblem(problem.id)}
-                      className="w-full"
-                    >
-                      Select This Problem
-                    </Button>
-                  )}
-                </div>
-              )}
-            </div>
-          ))
-        )}
-      </div>
-    </div>
+    <ProblemSelector
+      value={null}
+      onChange={(problemId) => {
+        if (onSelectProblem && problemId) {
+          onSelectProblem(problemId);
+        }
+      }}
+      onSearch={() => {}}
+      userId={userId}
+    />
   );
 }
 
@@ -7015,14 +8395,28 @@ type InterviewTemplate = {
 type Props = {
   value: string;
   onChange: (value: string) => void;
+  onTopicChange?: (topic: string) => void;
 };
+
+const DEEP_DIVE_TOPICS = [
+  "Distributed Systems",
+  "Databases",
+  "Caching",
+  "Message Queues",
+  "Microservices",
+  "API Design",
+  "System Reliability",
+  "Performance Optimization",
+];
 
 export default function InterviewTypeSelector({
   value,
   onChange,
+  onTopicChange,
 }: Props) {
   const [templates, setTemplates] = useState<InterviewTemplate[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedTopic, setSelectedTopic] = useState<string>("");
 
   useEffect(() => {
     async function fetchTemplates() {
@@ -7039,6 +8433,18 @@ export default function InterviewTypeSelector({
 
     fetchTemplates();
   }, []);
+
+  useEffect(() => {
+    if (value !== "deep_dive") {
+      setSelectedTopic("");
+      onTopicChange?.("");
+    }
+  }, [value, onTopicChange]);
+
+  function handleTopicChange(topic: string) {
+    setSelectedTopic(topic);
+    onTopicChange?.(topic);
+  }
 
   if (loading) {
     return (
@@ -7064,26 +8470,47 @@ export default function InterviewTypeSelector({
       ) : (
         <div className="grid grid-cols-1 gap-4">
           {templates.map((template) => (
-            <Button
-              key={template.id}
-              type="button"
-              variant={value === template.slug ? "primary" : "outline"}
-              aria-pressed={value === template.slug}
-              onClick={() => onChange(template.slug)}
-              className="h-auto w-full justify-start p-5 text-left"
-            >
-              <div>
-                <h3 className="font-semibold">
-                  {template.name}
-                </h3>
+            <div key={template.id}>
+              <Button
+                type="button"
+                variant={value === template.slug ? "primary" : "outline"}
+                aria-pressed={value === template.slug}
+                onClick={() => onChange(template.slug)}
+                className="h-auto w-full justify-start p-5 text-left"
+              >
+                <div>
+                  <h3 className="font-semibold">
+                    {template.name}
+                  </h3>
 
-                {template.description && (
-                  <p className="mt-1 text-sm opacity-80">
-                    {template.description}
-                  </p>
-                )}
-              </div>
-            </Button>
+                  {template.description && (
+                    <p className="mt-1 text-sm opacity-80">
+                      {template.description}
+                    </p>
+                  )}
+                </div>
+              </Button>
+
+              {value === "deep_dive" && template.slug === "deep_dive" && (
+                <div className="mt-3 pl-4">
+                  <label className="text-sm font-medium text-foreground mb-2 block">
+                    Select Topic:
+                  </label>
+                  <select
+                    value={selectedTopic}
+                    onChange={(e) => handleTopicChange(e.target.value)}
+                    className="w-full rounded border border-border bg-card px-3 py-2 text-sm text-foreground"
+                  >
+                    <option value="">Choose a topic...</option>
+                    {DEEP_DIVE_TOPICS.map((topic) => (
+                      <option key={topic} value={topic}>
+                        {topic}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
           ))}
         </div>
       )}
@@ -8674,10 +10101,26 @@ export const Input = ({ className = "", ...props }: React.InputHTMLAttributes<HT
 ================================================
 FILE: ./src/components/layout/Navbar.tsx
 ================================================
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
+import { useSession, signOut } from "next-auth/react";
 import ThemeToggle from "@/src/components/ui/ThemeToggle";
+import { Button } from "@/src/components/ui/Button";
 
 export default function Navbar() {
+  const { data: session, status } = useSession();
+  const [showMenu, setShowMenu] = useState(false);
+
+  const isAuthenticated = status === "authenticated";
+  const userEmail = session?.user?.email || null;
+  const userId = session?.user?.id || null;
+
+  async function handleSignOut() {
+    await signOut({ callbackUrl: "/" });
+  }
+
   return (
     <nav className="flex items-center justify-between py-6 border-b border-border">
 
@@ -8697,6 +10140,62 @@ export default function Navbar() {
         >
           Interviews
         </Link>
+
+        <Link 
+          href="/library"
+          className="hover:text-foreground transition-colors"
+        >
+          Library
+        </Link>
+
+        {isAuthenticated ? (
+          <div className="relative">
+            <button
+              onClick={() => setShowMenu(!showMenu)}
+              className="flex items-center gap-2 hover:text-foreground transition-colors"
+            >
+              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-semibold">
+                {userEmail?.[0]?.toUpperCase() || "U"}
+              </div>
+            </button>
+
+            {showMenu && (
+              <div className="absolute right-0 mt-2 w-48 rounded-lg border border-border bg-card shadow-lg py-2">
+                <div className="px-4 py-2 text-xs text-muted-foreground border-b border-border">
+                  {userEmail}
+                </div>
+                {userId && (
+                  <Link
+                    href={`/dashboard/${userId}`}
+                    className="block px-4 py-2 text-sm hover:bg-muted transition-colors"
+                  >
+                    Dashboard
+                  </Link>
+                )}
+                <button
+                  onClick={handleSignOut}
+                  className="w-full px-4 py-2 text-left text-sm hover:bg-muted transition-colors"
+                >
+                  Sign Out
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="flex gap-4 items-center">
+            <Link 
+              href="/login"
+              className="hover:text-foreground transition-colors"
+            >
+              Log In
+            </Link>
+            <Link href="/register">
+              <Button variant="primary">
+                Register
+              </Button>
+            </Link>
+          </div>
+        )}
 
         <ThemeToggle />
 
@@ -8721,6 +10220,17 @@ export default function PageContainer({
     </main>
   );
 }
+================================================
+FILE: ./src/components/providers/AuthProvider.tsx
+================================================
+"use client";
+
+import { SessionProvider } from "next-auth/react";
+
+export default function AuthProvider({ children }: { children: React.ReactNode }) {
+  return <SessionProvider>{children}</SessionProvider>;
+}
+
 ================================================
 FILE: ./src/components/catalog/InterviewCard.tsx
 ================================================
@@ -8918,7 +10428,7 @@ import { auth } from "./auth";
 const GUEST_COOKIE = "guest_user_id";
 const GUEST_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 30; // 30 days
 
-export async function getCurrentUserId(): Promise<string> {
+export async function getCurrentUserId(): Promise<string | null> {
   const session = await auth();
 
   if (session?.user?.id) {
@@ -8934,8 +10444,27 @@ export async function getCurrentUserId(): Promise<string> {
     });
 
     if (guest) return guest.id;
-    // Cookie pointed at a user that no longer exists — fall through and
-    // provision a fresh one below.
+  }
+
+  return null;
+}
+
+export async function ensureGuestUser(): Promise<string> {
+  const session = await auth();
+
+  if (session?.user?.id) {
+    return session.user.id;
+  }
+
+  const cookieStore = await cookies();
+  const existingGuestId = cookieStore.get(GUEST_COOKIE)?.value;
+
+  if (existingGuestId) {
+    const guest = await prisma.user.findUnique({
+      where: { id: existingGuestId },
+    });
+
+    if (guest) return guest.id;
   }
 
   const guest = await prisma.user.create({
