@@ -1,7 +1,8 @@
 // src/features/library/components/LibraryView.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   Difficulty,
@@ -119,11 +120,20 @@ function formatTimestamp(seconds: number): string {
 }
 
 export default function LibraryView({ experiences, completedInterviews }: Props) {
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<Tab>("experiences");
   const [selectedExperience, setSelectedExperience] =
     useState<ExperienceItem | null>(null);
   const [selectedInterview, setSelectedInterview] =
     useState<CompletedInterviewItem | null>(null);
+
+  // Initialize tab from URL parameter
+  useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    if (tabParam === "experiences" || tabParam === "transcripts" || tabParam === "diagrams") {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
 
   function switchTab(tab: Tab) {
     setActiveTab(tab);

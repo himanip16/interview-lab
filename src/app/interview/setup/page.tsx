@@ -9,6 +9,8 @@ import {
 import CompanySelector from "@/src/features/interview/setup/components/CompanySelector";
 import DifficultySelector from "@/src/features/interview/setup/components/DifficultySelector";
 import DurationSelector from "@/src/features/interview/setup/components/DurationSelector";
+import InterviewTypeSelector from "@/src/features/interview/setup/components/InterviewTypeSelector";
+import TopicSelector from "@/src/features/interview/setup/components/TopicSelector";
 import SetupCard from "@/src/features/interview/setup/components/SetupCard";
 import { useToast } from "@/src/components/ui/Toast";
 import { Button } from "@/src/components/ui/Button";
@@ -17,25 +19,21 @@ export default function InterviewSetupPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const problemId = searchParams.get("problemId");
-  const interviewType =
-    searchParams.get("type") ?? "hld";
+  const problemIdParam = searchParams.get("problemId");
+  const typeParam = searchParams.get("type");
 
-  const [difficulty, setDifficulty] =
-    useState("Medium");
-
+  const [interviewType, setInterviewType] = useState(typeParam ?? "hld");
+  const [difficulty, setDifficulty] = useState("Medium");
   const [duration, setDuration] = useState(45);
-
-  const [company, setCompany] =
-    useState("Google");
-
+  const [company, setCompany] = useState("");
+  const [problemId, setProblemId] = useState<string | null>(problemIdParam);
   const [loading, setLoading] = useState(false);
 
   const { showToast } = useToast();
 
   async function handleStartInterview() {
     if (!problemId) {
-      showToast("No interview problem selected.", "error");
+      showToast("Please select a problem to start the interview.", "error");
       return;
     }
 
@@ -46,7 +44,7 @@ export default function InterviewSetupPage() {
         type: interviewType,
         difficulty,
         duration,
-        company,
+        company: company || "General",
         problemId,
       };
 
@@ -104,15 +102,10 @@ export default function InterviewSetupPage() {
           Configure your interview before starting.
         </p>
 
-        <div className="mt-10">
-          <p className="text-sm uppercase tracking-wide text-muted-foreground">
-            Interview Type
-          </p>
-
-          <h2 className="mt-2 text-2xl font-semibold capitalize text-foreground">
-            {interviewType}
-          </h2>
-        </div>
+        <InterviewTypeSelector
+          value={interviewType}
+          onChange={setInterviewType}
+        />
 
         <DifficultySelector
           value={difficulty}
@@ -127,6 +120,13 @@ export default function InterviewSetupPage() {
         <CompanySelector
           value={company}
           onChange={setCompany}
+        />
+
+        <TopicSelector
+          value={problemId}
+          onChange={setProblemId}
+          difficulty={difficulty}
+          company={company}
         />
 
         <Button

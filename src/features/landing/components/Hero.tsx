@@ -24,17 +24,24 @@ export default function Hero() {
 
         <div className="mt-10 flex gap-4">
           <Link
-            href="/#interviews"
+            href="/library"
             className="rounded-lg bg-primary px-6 py-3 font-medium text-primary-foreground hover:opacity-90 transition-opacity"
           >
-            Start Interview
+            Learn
           </Link>
 
           <Link
-            href="/#interviews"
+            href="/interview/setup"
             className="rounded-lg border border-border px-6 py-3 text-muted-foreground hover:border-foreground hover:text-foreground transition-colors"
           >
-            Browse Interviews
+            Take a Test
+          </Link>
+
+          <Link
+            href="/library?tab=experiences"
+            className="rounded-lg border border-border px-6 py-3 text-muted-foreground hover:border-foreground hover:text-foreground transition-colors"
+          >
+            Browse Interview Library
           </Link>
         </div>
       </div>
