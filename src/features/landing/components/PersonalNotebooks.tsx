@@ -46,7 +46,7 @@ export default function PersonalNotebooks() {
       case 'LOW_LEVEL_DESIGN':
         return 'lld';
       default:
-        return 'hld';
+        return 'dsa';
     }
   };
 
@@ -67,7 +67,7 @@ export default function PersonalNotebooks() {
       case 'LOW_LEVEL_DESIGN':
         return 'LLD';
       default:
-        return 'HLD';
+        return 'DSA';
     }
   };
 

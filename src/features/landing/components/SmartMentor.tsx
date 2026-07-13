@@ -23,8 +23,8 @@ export default function SmartMentor() {
   useEffect(() => {
     async function fetchRecommendation() {
       try {
-        // For now, use a demo user ID. In production, this should come from auth
-        const response = await fetch('/api/users/demo-user/recommendations?limit=1');
+        // Fetch recommendations for the current authenticated user
+        const response = await fetch('/api/recommendations?limit=1');
         if (!response.ok) {
           throw new Error('Failed to fetch recommendations');
         }

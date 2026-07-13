@@ -7,15 +7,13 @@ import { InterviewStatus } from "@prisma/client";
 
 
 export async function POST(
-  req: Request
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const body = await req.json();
+    const { id } = await params;
 
-    const { interviewId } = body;
-
-
-    if (!interviewId) {
+    if (!id) {
       return NextResponse.json(
         {
           error: "Missing interview id",
@@ -32,7 +30,7 @@ export async function POST(
 
 
     const exists =
-      await repository.exists(interviewId);
+      await repository.exists(id);
 
 
     if (!exists) {
@@ -48,7 +46,7 @@ export async function POST(
 
 
     await repository.updateProgress(
-      interviewId,
+      id,
       {
         status: InterviewStatus.COMPLETED,
       }
@@ -61,7 +59,7 @@ export async function POST(
 
     const evaluation =
       await evaluationService.evaluateInterview(
-        interviewId
+        id
       );
 
 

@@ -29,7 +29,6 @@ export default function Timer({ durationInMinutes, interviewId }: TimerProps) {
   const handleFinish = async () => {
     await fetch(`/api/interviews/${interviewId}/finish`, {
       method: 'POST',
-      body: JSON.stringify({ interviewId }),
     });
     router.push(`/interview/report/${interviewId}`);
   };
