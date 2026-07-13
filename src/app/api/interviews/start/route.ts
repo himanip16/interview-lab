@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { Difficulty, InterviewMode } from "@prisma/client";
 
 import { prisma } from "@/shared/prisma/client";
-import { getCurrentUserId } from "@/src/modules/auth/getCurrentUserId";
+import { ensureGuestUser } from "@/src/modules/auth/getCurrentUserId";
 import { createInterview } from "@/src/modules/interview/services/interview/InterviewFactory";
 import { InterviewRepository } from "@/src/modules/interview/repositories/InterviewRepository";
 import { TranscriptService } from "@/src/modules/interview/services/TranscriptService";
@@ -58,7 +58,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const userId = await getCurrentUserId();
+    const userId = await ensureGuestUser();
 
     const interviewMode = mode === "REVERSE" ? InterviewMode.REVERSE : InterviewMode.CANDIDATE;
 

@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { InterviewRepository } from "@/src/modules/interview/repositories/InterviewRepository";
 import { createInterview } from "@/src/modules/interview/services/interview/InterviewFactory";
 import { CreateInterviewInput } from "@/src/features/interview/types/CreateInterviewInput";
-import { getCurrentUserId } from "@/src/modules/auth/getCurrentUserId";
+import { ensureGuestUser } from "@/src/modules/auth/getCurrentUserId";
 import logger from "@/src/shared/logger/logger";
 
 export async function POST(request: Request) {
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
 
     const interviewData = createInterview(body);
 
-    const userId = await getCurrentUserId();
+    const userId = await ensureGuestUser();
 
     const interview = await repository.create({
       difficulty: interviewData.difficulty,

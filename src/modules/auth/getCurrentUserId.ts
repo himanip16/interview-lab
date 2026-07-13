@@ -8,7 +8,7 @@ import { auth } from "./auth";
 const GUEST_COOKIE = "guest_user_id";
 const GUEST_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 30; // 30 days
 
-export async function getCurrentUserId(): Promise<string> {
+export async function getCurrentUserId(): Promise<string | null> {
   const session = await auth();
 
   if (session?.user?.id) {
@@ -24,8 +24,27 @@ export async function getCurrentUserId(): Promise<string> {
     });
 
     if (guest) return guest.id;
-    // Cookie pointed at a user that no longer exists — fall through and
-    // provision a fresh one below.
+  }
+
+  return null;
+}
+
+export async function ensureGuestUser(): Promise<string> {
+  const session = await auth();
+
+  if (session?.user?.id) {
+    return session.user.id;
+  }
+
+  const cookieStore = await cookies();
+  const existingGuestId = cookieStore.get(GUEST_COOKIE)?.value;
+
+  if (existingGuestId) {
+    const guest = await prisma.user.findUnique({
+      where: { id: existingGuestId },
+    });
+
+    if (guest) return guest.id;
   }
 
   const guest = await prisma.user.create({

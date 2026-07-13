@@ -317,7 +317,7 @@ export default function LibraryView({ experiences: _experiences, completedInterv
                 together.
               </Text>
 
-              <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 <Link
                   href="/diagram"
                   className="rounded border border-border bg-muted p-4 text-left transition hover:border-foreground/40"
@@ -330,6 +330,81 @@ export default function LibraryView({ experiences: _experiences, completedInterv
                   </h4>
                   <p className="mt-1 line-clamp-1 text-[10px] text-muted-foreground">
                     Metadata sync, block-level storage, and S3-backed durability.
+                  </p>
+                </Link>
+
+                <Link
+                  href="/diagram/twitter"
+                  className="rounded border border-border bg-muted p-4 text-left transition hover:border-foreground/40"
+                >
+                  <span className="inline-block rounded bg-green-500/10 px-2 py-0.5 font-mono text-[9px] font-bold uppercase text-green-400">
+                    Hard HLD
+                  </span>
+                  <h4 className="mt-2 text-xs font-bold text-foreground">
+                    Design Twitter/X
+                  </h4>
+                  <p className="mt-1 line-clamp-1 text-[10px] text-muted-foreground">
+                    Timeline generation, fanout writes, and eventual consistency.
+                  </p>
+                </Link>
+
+                <Link
+                  href="/diagram/netflix"
+                  className="rounded border border-border bg-muted p-4 text-left transition hover:border-foreground/40"
+                >
+                  <span className="inline-block rounded bg-purple-500/10 px-2 py-0.5 font-mono text-[9px] font-bold uppercase text-purple-400">
+                    Hard HLD
+                  </span>
+                  <h4 className="mt-2 text-xs font-bold text-foreground">
+                    Design Netflix
+                  </h4>
+                  <p className="mt-1 line-clamp-1 text-[10px] text-muted-foreground">
+                    Video streaming, CDN distribution, and personalized recommendations.
+                  </p>
+                </Link>
+
+                <Link
+                  href="/diagram/uber"
+                  className="rounded border border-border bg-muted p-4 text-left transition hover:border-foreground/40"
+                >
+                  <span className="inline-block rounded bg-orange-500/10 px-2 py-0.5 font-mono text-[9px] font-bold uppercase text-orange-400">
+                    Medium HLD
+                  </span>
+                  <h4 className="mt-2 text-xs font-bold text-foreground">
+                    Design Uber
+                  </h4>
+                  <p className="mt-1 line-clamp-1 text-[10px] text-muted-foreground">
+                    Real-time matching, geospatial indexing, and surge pricing.
+                  </p>
+                </Link>
+
+                <Link
+                  href="/diagram/instagram"
+                  className="rounded border border-border bg-muted p-4 text-left transition hover:border-foreground/40"
+                >
+                  <span className="inline-block rounded bg-red-500/10 px-2 py-0.5 font-mono text-[9px] font-bold uppercase text-red-400">
+                    Hard HLD
+                  </span>
+                  <h4 className="mt-2 text-xs font-bold text-foreground">
+                    Design Instagram
+                  </h4>
+                  <p className="mt-1 line-clamp-1 text-[10px] text-muted-foreground">
+                    Photo upload, feed generation, and story expiration.
+                  </p>
+                </Link>
+
+                <Link
+                  href="/diagram/whatsapp"
+                  className="rounded border border-border bg-muted p-4 text-left transition hover:border-foreground/40"
+                >
+                  <span className="inline-block rounded bg-cyan-500/10 px-2 py-0.5 font-mono text-[9px] font-bold uppercase text-cyan-400">
+                    Medium HLD
+                  </span>
+                  <h4 className="mt-2 text-xs font-bold text-foreground">
+                    Design WhatsApp
+                  </h4>
+                  <p className="mt-1 line-clamp-1 text-[10px] text-muted-foreground">
+                    Real-time messaging, message queues, and end-to-end encryption.
                   </p>
                 </Link>
               </div>

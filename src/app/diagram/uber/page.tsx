@@ -1,9 +1,9 @@
 import SystemDiagram from "@/src/features/diagram/components/SystemDiagram";
 
-export default function DiagramPage() {
+export default function UberDiagramPage() {
   return (
     <div className="h-screen">
-      <SystemDiagram systemType="dropbox" />
+      <SystemDiagram systemType="uber" />
     </div>
   );
 }

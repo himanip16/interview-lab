@@ -1,9 +1,9 @@
 import SystemDiagram from "@/src/features/diagram/components/SystemDiagram";
 
-export default function DiagramPage() {
+export default function TwitterDiagramPage() {
   return (
     <div className="h-screen">
-      <SystemDiagram systemType="dropbox" />
+      <SystemDiagram systemType="twitter" />
     </div>
   );
 }

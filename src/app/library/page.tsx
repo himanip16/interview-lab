@@ -47,21 +47,23 @@ export default async function LibraryPage() {
       orderBy: { createdAt: "desc" },
       take: 30,
     }),
-    prisma.interview.findMany({
-      where: { userId, status: InterviewStatus.COMPLETED },
-      include: {
-        problem: { select: { title: true } },
-        template: { select: { name: true } },
-        evaluation: true,
-        transcript: {
-          orderBy: { createdAt: "asc" },
-          select: { id: true, role: true, content: true, elapsedSeconds: true },
-        },
-      },
-      // `completedAt` isn't currently set when an interview finishes, so
-      // order by `updatedAt` (which the finish flow does update) instead.
-      orderBy: { updatedAt: "desc" },
-    }),
+    userId
+      ? prisma.interview.findMany({
+          where: { userId, status: InterviewStatus.COMPLETED },
+          include: {
+            problem: { select: { title: true } },
+            template: { select: { name: true } },
+            evaluation: true,
+            transcript: {
+              orderBy: { createdAt: "asc" },
+              select: { id: true, role: true, content: true, elapsedSeconds: true },
+            },
+          },
+          // `completedAt` isn't currently set when an interview finishes, so
+          // order by `updatedAt` (which the finish flow does update) instead.
+          orderBy: { updatedAt: "desc" },
+        })
+      : Promise.resolve([]),
   ]);
 
   const experiences: ExperienceItem[] = experiencesRaw.map((exp) => ({
