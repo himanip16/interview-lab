@@ -14,8 +14,9 @@ import ProblemSelector from "@/src/features/interview/setup/components/ProblemSe
 import SetupCard from "@/src/features/interview/setup/components/SetupCard";
 import { useToast } from "@/src/components/ui/Toast";
 import { Button } from "@/src/components/ui/Button";
-import { INTERVIEW_TYPES, SETUP_DIFFICULTIES, type InterviewType, type SetupDifficulty, DIFFICULTY_MAP } from "@/src/features/interview/setup/types/setup";
+import { INTERVIEW_TYPES, SETUP_DIFFICULTIES, type InterviewType, type SetupDifficulty, DIFFICULTY_MAP, DEFAULT_COMPANY, parseInterviewType } from "@/src/features/interview/setup/types/setup";
 import { startInterview } from "@/src/features/interview/services/interviewApi";
+import { logger } from "@/src/lib/logger";
 
 export default function InterviewSetupPage() {
   const router = useRouter();
@@ -25,7 +26,7 @@ export default function InterviewSetupPage() {
   const typeParam = searchParams.get("type");
 
   const [interviewType, setInterviewType] = useState<InterviewType>(
-    (typeParam && INTERVIEW_TYPES.includes(typeParam as InterviewType)) ? typeParam as InterviewType : "hld"
+    parseInterviewType(typeParam)
   );
   const [difficulty, setDifficulty] = useState<SetupDifficulty>("Medium");
   const [duration, setDuration] = useState(45);
@@ -33,21 +34,15 @@ export default function InterviewSetupPage() {
   const [problemId, setProblemId] = useState<string | null>(problemIdParam);
   const [loading, setLoading] = useState(false);
 
-  // Sync interviewType with URL param when it changes
-  useEffect(() => {
-    if (typeParam && INTERVIEW_TYPES.includes(typeParam as InterviewType)) {
-      setInterviewType(typeParam as InterviewType);
-    }
-  }, [typeParam]);
-
-  // Sync problemId with URL param when it changes
-  useEffect(() => {
-    setProblemId(problemIdParam);
-  }, [problemIdParam]);
+  // Clear problemId when filters change to prevent stale selection
+  function handleFilterChange() {
+    setProblemId(null);
+  }
 
   const { showToast } = useToast();
 
   async function handleStartInterview() {
+    if (loading) return;
     if (!problemId) {
       showToast("Please select a problem to start the interview.", "error");
       return;
@@ -60,7 +55,7 @@ export default function InterviewSetupPage() {
         type: interviewType,
         difficulty: DIFFICULTY_MAP[difficulty],
         duration,
-        company: company || "General",
+        company: company || DEFAULT_COMPANY,
         problemId,
       };
 
@@ -76,7 +71,7 @@ export default function InterviewSetupPage() {
 
       router.push(`/interview/live/${id}`);
     } catch (error) {
-      console.error(error);
+      logger.error("Failed to start interview", error);
 
       showToast(
         error instanceof Error
@@ -102,12 +97,18 @@ export default function InterviewSetupPage() {
 
         <InterviewTypeSelector
           value={interviewType}
-          onChange={setInterviewType}
+          onChange={(value) => {
+            setInterviewType(value);
+            handleFilterChange();
+          }}
         />
 
         <DifficultySelector
           value={difficulty}
-          onChange={setDifficulty}
+          onChange={(value) => {
+            setDifficulty(value);
+            handleFilterChange();
+          }}
         />
 
         <DurationSelector
@@ -117,12 +118,18 @@ export default function InterviewSetupPage() {
 
         <CompanySelector
           value={company}
-          onChange={setCompany}
+          onChange={(value) => {
+            setCompany(value);
+            handleFilterChange();
+          }}
         />
 
         <ProblemSelector
           value={problemId}
           onChange={setProblemId}
+          interviewType={interviewType}
+          difficulty={difficulty}
+          company={company}
         />
 
         <Button

@@ -6,30 +6,46 @@ import ProblemFilters from "./ProblemFilters";
 import ProblemList from "./ProblemList";
 import Pagination from "./Pagination";
 import ErrorBanner from "./ErrorBanner";
-import { useProblems, type FilterState } from "./useProblems";
+import { useProblems, type FilterState, INTERVIEW_TYPES, DIFFICULTIES } from "./useProblems";
 import type { Problem } from "./problemSchema";
+import { type InterviewType, type SetupDifficulty, DIFFICULTY_MAP } from "../types/setup";
 
 type Props = {
   value: string | null;
   onChange: (value: string | null) => void;
   userId?: string | null;
+  interviewType?: InterviewType;
+  difficulty?: SetupDifficulty;
+  company?: string;
 };
 
 export default function ProblemSelector({
   value,
   onChange,
   userId,
+  interviewType = "hld",
+  difficulty = "Medium",
+  company = "",
 }: Props) {
   const [filters, setFilters] = useState<FilterState>({
-    selectedType: "hld",
+    selectedType: interviewType,
     selectedCategory: "All",
-    selectedDifficulty: "All",
+    selectedDifficulty: DIFFICULTY_MAP[difficulty],
     selectedSort: "interviewCount",
     page: 1,
   });
   const [expandedProblem, setExpandedProblem] = useState<string | null>(null);
 
   const { problems, loading, error, totalPages, fetchProblems } = useProblems(userId || null);
+
+  // Update filters when parent props change
+  useEffect(() => {
+    setFilters((prev) => ({
+      ...prev,
+      selectedType: interviewType,
+      selectedDifficulty: DIFFICULTY_MAP[difficulty],
+    }));
+  }, [interviewType, difficulty]);
 
   // Fetch problems when filters change
   useEffect(() => {

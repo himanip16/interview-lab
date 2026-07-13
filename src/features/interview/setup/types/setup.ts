@@ -11,3 +11,12 @@ export const DIFFICULTY_MAP: Record<SetupDifficulty, Difficulty> = {
   Medium: Difficulty.MEDIUM,
   Hard: Difficulty.HARD,
 };
+
+export const DEFAULT_COMPANY = "General";
+
+export function parseInterviewType(value: string | null): InterviewType {
+  if (value && INTERVIEW_TYPES.includes(value as InterviewType)) {
+    return value as InterviewType;
+  }
+  return "hld";
+}

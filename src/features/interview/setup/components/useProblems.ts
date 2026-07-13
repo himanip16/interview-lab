@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { ProblemsResponseSchema, type Problem } from "./problemSchema";
+import { logger } from "@/src/lib/logger";
 
 const INTERVIEW_TYPES = ["hld", "lld", "dsa", "pr_review", "deep_dive", "tech_doc_review", "task_breakdown"] as const;
 const DIFFICULTIES = ["All", "EASY", "MEDIUM", "HARD"] as const;
@@ -76,7 +77,7 @@ export function useProblems(userId: string | null) {
         if (requestId === requestIdRef.current) {
           const errorMessage = error instanceof Error ? error.message : "Failed to fetch problems";
           setError(errorMessage);
-          console.error("Failed to fetch problems:", error);
+          logger.error("Failed to fetch problems", error);
         }
       } finally {
         // Only update loading state if this is the most recent request
