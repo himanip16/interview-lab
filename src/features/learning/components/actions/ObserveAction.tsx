@@ -4,7 +4,7 @@ import { Action, ObserveActionContent } from "../../types/learning";
 
 interface ObserveActionProps {
   action: Action;
-  onComplete: () => void;
+  onComplete: (response?: unknown) => void;
 }
 
 export function ObserveAction({ action, onComplete }: ObserveActionProps) {
@@ -18,7 +18,7 @@ export function ObserveAction({ action, onComplete }: ObserveActionProps) {
   };
 
   const handleContinue = () => {
-    onComplete();
+    onComplete({ revealed: true });
   };
 
   return (

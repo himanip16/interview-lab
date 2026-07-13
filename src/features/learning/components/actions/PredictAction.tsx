@@ -4,7 +4,7 @@ import { Action, PredictActionContent } from "../../types/learning";
 
 interface PredictActionProps {
   action: Action;
-  onComplete: () => void;
+  onComplete: (response?: unknown) => void;
 }
 
 export function PredictAction({ action, onComplete }: PredictActionProps) {
@@ -23,7 +23,7 @@ export function PredictAction({ action, onComplete }: PredictActionProps) {
   };
 
   const handleContinue = () => {
-    onComplete();
+    onComplete({ prediction });
   };
 
   return (

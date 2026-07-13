@@ -4,7 +4,7 @@ import { Action, FixActionContent } from "../../types/learning";
 
 interface FixActionProps {
   action: Action;
-  onComplete: () => void;
+  onComplete: (response?: unknown) => void;
 }
 
 export function FixAction({ action, onComplete }: FixActionProps) {
@@ -23,7 +23,7 @@ export function FixAction({ action, onComplete }: FixActionProps) {
   };
 
   const handleContinue = () => {
-    onComplete();
+    onComplete({ answer });
   };
 
   return (

@@ -4,7 +4,7 @@ import { Action, JudgeActionContent } from "../../types/learning";
 
 interface JudgeActionProps {
   action: Action;
-  onComplete: () => void;
+  onComplete: (response?: unknown) => void;
 }
 
 export function JudgeAction({ action, onComplete }: JudgeActionProps) {
@@ -22,7 +22,7 @@ export function JudgeAction({ action, onComplete }: JudgeActionProps) {
   };
 
   const handleContinue = () => {
-    onComplete();
+    onComplete({ selectedOption, isCorrect });
   };
 
   const isCorrect = selectedOption === correctOptionId;

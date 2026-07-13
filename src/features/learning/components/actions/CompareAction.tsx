@@ -4,7 +4,7 @@ import { Action, CompareActionContent } from "../../types/learning";
 
 interface CompareActionProps {
   action: Action;
-  onComplete: () => void;
+  onComplete: (response?: unknown) => void;
 }
 
 export function CompareAction({ action, onComplete }: CompareActionProps) {
@@ -23,7 +23,7 @@ export function CompareAction({ action, onComplete }: CompareActionProps) {
   };
 
   const handleContinue = () => {
-    onComplete();
+    onComplete({ selectedChoice, isCorrect });
   };
 
   const isCorrect = selectedChoice === correctChoice;

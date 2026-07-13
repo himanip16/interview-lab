@@ -9,7 +9,7 @@ export async function POST(
 ) {
   try {
     const body = await request.json();
-    const { response } = body;
+    const { response, score, feedback } = body;
 
     if (response === undefined) {
       return NextResponse.json(
@@ -39,12 +39,23 @@ export async function POST(
 
     const userId = await ensureGuestUser();
 
+    // Calculate score from response if not provided
+    let calculatedScore = score;
+    if (calculatedScore === undefined && typeof response === 'object' && response !== null) {
+      // For judge/compare actions, derive score from isCorrect field
+      if ('isCorrect' in response && typeof response.isCorrect === 'boolean') {
+        calculatedScore = response.isCorrect ? 1.0 : 0.0;
+      }
+    }
+
     const attempt = await prisma.userLearningAttempt.create({
       data: {
         user: { connect: { id: userId } },
         action: { connect: { id: action.id } },
-        status: "STARTED",
+        status: "COMPLETED",
         response,
+        score: calculatedScore,
+        feedback,
       },
     });
 

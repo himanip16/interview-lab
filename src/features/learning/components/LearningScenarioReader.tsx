@@ -12,6 +12,7 @@ import { LearningActionType } from "@prisma/client";
 
 interface LearningScenarioReaderProps {
   scenario: Scenario;
+  userId?: string;
 }
 
 interface ConversationMessage {
@@ -19,7 +20,7 @@ interface ConversationMessage {
   content: string;
 }
 
-export function LearningScenarioReader({ scenario }: LearningScenarioReaderProps) {
+export function LearningScenarioReader({ scenario, userId }: LearningScenarioReaderProps) {
   const [currentSegmentIndex, setCurrentSegmentIndex] = useState(0);
   const [completedActions, setCompletedActions] = useState<Set<string>>(new Set());
 
@@ -29,7 +30,19 @@ export function LearningScenarioReader({ scenario }: LearningScenarioReaderProps
     completedActions.has(action.id)
   );
 
-  const handleActionComplete = (actionId: string) => {
+  const handleActionComplete = async (actionId: string, response?: unknown) => {
+    // Persist attempt to database if userId is available
+    if (userId && response !== undefined) {
+      try {
+        await fetch(`/api/learning-actions/${actionId}/attempt`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ response }),
+        });
+      } catch (error) {
+        console.error("Failed to persist learning attempt:", error);
+      }
+    }
     setCompletedActions((prev) => new Set(prev).add(actionId));
   };
 
@@ -57,7 +70,7 @@ export function LearningScenarioReader({ scenario }: LearningScenarioReaderProps
       <ActionComponent
         key={action.id}
         action={action}
-        onComplete={() => handleActionComplete(action.id)}
+        onComplete={(response?: unknown) => handleActionComplete(action.id, response)}
       />
     );
   };
