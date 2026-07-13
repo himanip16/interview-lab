@@ -73,14 +73,14 @@ export default function PersonalNotebooks() {
 
   if (loading) {
     return (
-      <section className="py-16">
-        <div className="mb-8">
+      <section className="py-20">
+        <div className="mb-6">
           <Heading level="h2" className="mb-2">
             System Design Library
           </Heading>
           <Text variant="muted">Master distributed system architectures</Text>
         </div>
-        <div className="flex items-center justify-center py-8">
+        <div className="flex items-center justify-center py-12">
           <Text variant="muted">Loading problems...</Text>
         </div>
       </section>
@@ -88,15 +88,15 @@ export default function PersonalNotebooks() {
   }
 
   return (
-    <section className="py-16">
-      <div className="mb-8">
+    <section className="py-20">
+      <div className="mb-6">
         <Heading level="h2" className="mb-2">
           System Design Library
         </Heading>
         <Text variant="muted">Master distributed system architectures</Text>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {problems.map((problem) => (
           <Link
             key={problem.id}
@@ -104,7 +104,7 @@ export default function PersonalNotebooks() {
           >
             <Card className="hover:border-border transition-colors cursor-pointer group h-full">
               <div className="flex items-center gap-2 mb-3">
-                <span className="px-2 py-1 bg-muted text-muted-foreground text-xs font-mono rounded">
+                <span className="px-2 py-1 bg-muted text-muted-foreground text-xs font-mono rounded-lg">
                   {getTypeLabel(problem.category)}
                 </span>
               </div>

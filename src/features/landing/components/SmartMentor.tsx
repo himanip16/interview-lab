@@ -62,21 +62,21 @@ export default function SmartMentor() {
   };
 
   return (
-    <section className="py-16">
-      <div className="mb-8">
+    <section className="py-20">
+      <div className="mb-6">
         <Heading level="h2" className="mb-2">
           Smart Recommendation
         </Heading>
         <Text variant="muted">What should I practice next?</Text>
       </div>
 
-      <Card rounded="2xl" padding="8">
+      <Card rounded="xl" padding="8">
         {loading ? (
-          <div className="flex items-center justify-center py-8">
+          <div className="flex items-center justify-center py-12">
             <Text variant="muted">Loading recommendations...</Text>
           </div>
         ) : error ? (
-          <div className="flex items-center justify-center py-8">
+          <div className="flex items-center justify-center py-12">
             <Text variant="muted">{error}</Text>
           </div>
         ) : recommendation ? (
@@ -90,14 +90,14 @@ export default function SmartMentor() {
                   Based on your skill graph
                 </Text>
               </div>
-              <span className="px-3 py-1 bg-emerald-500/10 text-emerald-400 text-xs font-mono rounded-full border border-emerald-500/20">
+              <span className="px-3 py-1 bg-primary/10 text-primary text-xs font-mono rounded-full border border-primary/20">
                 {getDifficultyLabel(recommendation.difficulty)} • {getDuration(recommendation.difficulty)}
               </span>
             </div>
 
             <div className="flex flex-wrap gap-2 mb-6">
               {recommendation.reasons.map((reason, index) => (
-                <span key={index} className="px-3 py-1 bg-muted text-foreground text-sm rounded-md">
+                <span key={index} className="px-3 py-1 bg-muted text-foreground text-sm rounded-lg">
                   {reason}
                 </span>
               ))}
@@ -105,7 +105,7 @@ export default function SmartMentor() {
 
             <Link
               href={`/interview/setup?problemId=${recommendation.problemId}`}
-              className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-opacity"
+              className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-xl font-medium hover:opacity-90 transition-opacity"
             >
               Start Practice
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -114,7 +114,7 @@ export default function SmartMentor() {
             </Link>
           </>
         ) : (
-          <div className="flex items-center justify-center py-8">
+          <div className="flex items-center justify-center py-12">
             <Text variant="muted">No recommendations available. Complete some interviews to get personalized suggestions!</Text>
           </div>
         )}

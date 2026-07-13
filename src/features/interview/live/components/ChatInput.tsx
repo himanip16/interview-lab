@@ -155,9 +155,9 @@ export default function ChatInput({
   };
 
   return (
-    <div className="border-t bg-white p-4">
-      <div 
-        className="mb-2 flex h-6 items-center px-2"
+    <div className="border-t border-border bg-card p-6">
+      <div
+        className="mb-3 flex h-6 items-center px-2"
         role="status"
         aria-live="polite"
         aria-atomic="true"
@@ -170,7 +170,7 @@ export default function ChatInput({
         )}
 
         {status === "transcribing" && (
-          <div className="flex items-center gap-2 text-sm text-blue-600">
+          <div className="flex items-center gap-2 text-sm text-primary">
             <Loader2
               size={14}
               className="animate-spin"
@@ -180,7 +180,7 @@ export default function ChatInput({
         )}
 
         {status === "success" && (
-          <div className="flex items-center gap-2 text-sm text-green-600">
+          <div className="flex items-center gap-2 text-sm text-primary">
             <CheckCircle2 size={14} />
             Transcript ready. Review and press Send.
           </div>
@@ -194,10 +194,10 @@ export default function ChatInput({
           disabled={
             disabled || status === "transcribing"
           }
-          className={`flex items-center gap-2 rounded-full border px-4 py-2 transition ${
+          className={`flex items-center gap-2 rounded-full border px-4 py-2 transition shrink-0 ${
             status === "recording"
               ? "border-red-300 bg-red-50 text-red-600"
-              : "border-slate-300 bg-white hover:bg-slate-50"
+              : "border-border bg-background hover:bg-muted"
           } disabled:cursor-not-allowed disabled:opacity-50`}
         >
           {status === "recording" ? (
@@ -233,14 +233,14 @@ export default function ChatInput({
               handleSend();
             }
           }}
-          className="max-h-40 min-h-[44px] flex-1 resize-none rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500 disabled:bg-slate-100"
+          className="max-h-40 min-h-[44px] min-w-[200px] flex-1 resize-none rounded-xl border border-border px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary disabled:bg-muted disabled:text-muted-foreground"
         />
 
         <button
           type="button"
           onClick={handleSend}
           disabled={disabled || isEmpty}
-          className="flex items-center gap-2 rounded-full bg-blue-600 px-5 py-3 font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+          className="flex items-center gap-2 rounded-full bg-primary px-5 py-3 font-medium text-primary-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground shrink-0"
         >
           Send
           <SendHorizontal size={18} />

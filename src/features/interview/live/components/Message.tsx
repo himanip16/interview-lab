@@ -12,7 +12,7 @@ const Message: React.FC<MessageProps> = ({ message }) => {
   return (
     <div className={`flex ${isAI ? 'justify-start' : 'justify-end'} mb-4`}>
       <div
-        className={`max-w-[80%] rounded-lg p-4 ${
+        className={`max-w-[80%] rounded-xl p-4 ${
           isAI
             ? 'bg-muted text-foreground border border-border shadow-sm'
             : 'bg-primary text-primary-foreground shadow-md'

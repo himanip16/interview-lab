@@ -24,7 +24,7 @@ export default function Chat({ messages, onSendMessage, isLoading }: ChatProps) 
     <div className="flex flex-col h-full bg-background">
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto p-6 space-y-6"
+        className="flex-1 overflow-y-auto p-6 space-y-4"
         aria-live="polite"
         aria-atomic="false"
       >
@@ -39,7 +39,7 @@ export default function Chat({ messages, onSendMessage, isLoading }: ChatProps) 
           </div>
         )}
       </div>
-      <div className="p-4 border-t border-border bg-card">
+      <div className="p-6 border-t border-border bg-card">
         <ChatInput onSendMessage={onSendMessage} disabled={isLoading} />
       </div>
     </div>
