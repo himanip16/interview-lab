@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Mic,
   MicOff,
@@ -8,6 +8,10 @@ import {
   Loader2,
   CheckCircle2,
 } from "lucide-react";
+
+const SUCCESS_TIMEOUT_MS = 2500;
+const DEFAULT_LANGUAGE = "en-US";
+const TEXTArea_MIN_HEIGHT = 44;
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
@@ -17,8 +21,11 @@ interface ChatInputProps {
 type RecordingStatus =
   | "idle"
   | "recording"
-  | "transcribing"
-  | "success";
+  | "processing"
+  | "success"
+  | "error"
+  | "unsupported"
+  | "permissionDenied";
 
 interface SpeechRecognitionAlternative {
   transcript: string;
@@ -93,6 +100,12 @@ export default function ChatInput({
 
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const recognitionIdRef = useRef(0);
+
+  const speechSupported =
+    typeof window !== "undefined" &&
+    ("SpeechRecognition" in window ||
+     "webkitSpeechRecognition" in window);
 
   const isEmpty = message.trim().length === 0;
 
@@ -101,72 +114,75 @@ export default function ChatInput({
 
     const timer = setTimeout(() => {
       setStatus("idle");
-    }, 2500);
+    }, SUCCESS_TIMEOUT_MS);
 
     return () => clearTimeout(timer);
   }, [status]);
 
   useEffect(() => {
-    const SpeechRecognition =
-      window.SpeechRecognition ||
-      window.webkitSpeechRecognition;
-
-    if (!SpeechRecognition) {
-      console.error(
-        "Speech Recognition is not supported in this browser."
-      );
+    if (!speechSupported) {
+      setStatus("unsupported");
       return;
     }
 
-    const recognition = new SpeechRecognition();
+    const SpeechRecognitionConstructor =
+      window.SpeechRecognition ||
+      window.webkitSpeechRecognition;
+
+    if (!SpeechRecognitionConstructor) {
+      setStatus("unsupported");
+      return;
+    }
+
+    const recognition = new SpeechRecognitionConstructor();
+    const currentId = ++recognitionIdRef.current;
 
     recognition.continuous = false;
     recognition.interimResults = false;
-    recognition.lang = "en-US";
+    recognition.lang = DEFAULT_LANGUAGE;
 
     recognition.onstart = () => {
+      if (recognitionIdRef.current !== currentId) return;
       setStatus("recording");
     };
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
-      setStatus("transcribing");
+      if (recognitionIdRef.current !== currentId) return;
+      setStatus("processing");
 
       const transcript =
         event.results[0][0].transcript ?? "";
 
       setMessage(transcript);
 
-      setStatus("success");
+      // Small delay to ensure processing state is visible
+      setTimeout(() => {
+        if (recognitionIdRef.current === currentId) {
+          setStatus("success");
+        }
+      }, 100);
     };
 
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-      console.log("SpeechRecognition:", event.error);
-
+      if (recognitionIdRef.current !== currentId) return;
       switch (event.error) {
         case "no-speech":
           // User clicked record but didn't say anything.
           break;
 
-        case "audio-capture":
-          console.error("No microphone detected.");
-          break;
-
         case "not-allowed":
-          console.error("Microphone permission denied.");
+          setStatus("permissionDenied");
           break;
 
+        case "audio-capture":
         case "network":
-          console.error("Speech recognition network error.");
-          break;
-
         default:
-          console.error(event.error);
+          setStatus("error");
       }
-
-      setStatus("idle");
     };
 
     recognition.onend = () => {
+      if (recognitionIdRef.current !== currentId) return;
       setStatus((current) =>
         current === "recording" ? "idle" : current
       );
@@ -188,7 +204,7 @@ export default function ChatInput({
     textarea.style.height = `${textarea.scrollHeight}px`;
   }, [message]);
 
-  const handleSend = () => {
+  const handleSend = useCallback(() => {
     const text = message.trim();
 
     if (!text || disabled) return;
@@ -197,85 +213,40 @@ export default function ChatInput({
 
     setMessage("");
     setStatus("idle");
-  };
+  }, [message, disabled, onSendMessage]);
 
-  const toggleListening = () => {
-    if (disabled || status === "transcribing") return;
+  const toggleListening = useCallback(() => {
+    if (disabled || !speechSupported) return;
+
+    if (status === "error" || status === "permissionDenied") {
+      setStatus("idle");
+      return;
+    }
+
+    if (status === "processing") return;
+
+    if (!recognitionRef.current) {
+      return;
+    }
 
     if (status === "recording") {
-      recognitionRef.current?.stop();
+      recognitionRef.current.stop();
       return;
     }
 
-    const SpeechRecognition =
-      window.SpeechRecognition ||
-      window.webkitSpeechRecognition;
+    recognitionRef.current.start();
+  }, [disabled, speechSupported, status]);
 
-    if (!SpeechRecognition) {
-      console.error(
-        "Speech Recognition is not supported in this browser."
-      );
-      return;
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
     }
+  }, [handleSend]);
 
-    const recognition = new SpeechRecognition();
-
-    recognitionRef.current = recognition;
-
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.lang = "en-US";
-
-    recognition.onstart = () => {
-      setStatus("recording");
-    };
-
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
-      setStatus("transcribing");
-
-      const transcript =
-        event.results[0][0].transcript ?? "";
-
-      setMessage(transcript);
-
-      setStatus("success");
-    };
-
-    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-  console.log("SpeechRecognition:", event.error);
-
-  switch (event.error) {
-    case "no-speech":
-      // User clicked record but didn't say anything.
-      break;
-
-    case "audio-capture":
-      console.error("No microphone detected.");
-      break;
-
-    case "not-allowed":
-      console.error("Microphone permission denied.");
-      break;
-
-    case "network":
-      console.error("Speech recognition network error.");
-      break;
-
-    default:
-      console.error(event.error);
-  }
-
-  setStatus("idle");
-};
-
-    recognition.onend = () => {
-      setStatus((current) =>
-        current === "recording" ? "idle" : current
-      );
-    };
-
-    recognition.start();
-  };
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setMessage(e.target.value);
+  }, []);
 
   return (
     <div className="border-t border-border bg-card p-6">
@@ -292,13 +263,13 @@ export default function ChatInput({
           </div>
         )}
 
-        {status === "transcribing" && (
+        {status === "processing" && (
           <div className="flex items-center gap-2 text-sm text-primary">
             <Loader2
               size={14}
               className="animate-spin"
             />
-            Transcribing...
+            Processing...
           </div>
         )}
 
@@ -308,6 +279,24 @@ export default function ChatInput({
             Transcript ready. Review and press Send.
           </div>
         )}
+
+        {status === "error" && (
+          <div className="flex items-center gap-2 text-sm text-destructive">
+            Recording failed. Please try again.
+          </div>
+        )}
+
+        {status === "permissionDenied" && (
+          <div className="flex items-center gap-2 text-sm text-destructive">
+            Microphone access denied. Check browser permissions.
+          </div>
+        )}
+
+        {status === "unsupported" && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            Speech recognition not supported in this browser.
+          </div>
+        )}
       </div>
 
       <div className="flex items-end gap-3">
@@ -315,7 +304,7 @@ export default function ChatInput({
           type="button"
           onClick={toggleListening}
           disabled={
-            disabled || status === "transcribing"
+            disabled || status === "processing" || !speechSupported
           }
           className={`flex items-center gap-2 rounded-full border px-4 py-2 transition shrink-0 ${
             status === "recording"
@@ -340,9 +329,11 @@ export default function ChatInput({
           ref={textareaRef}
           rows={1}
           value={message}
-          disabled={disabled}
+          disabled={disabled || status === "recording"}
           placeholder={
-            disabled
+            status === "recording"
+              ? "Recording..."
+              : disabled
               ? "AI is thinking..."
               : "Explain your design..."
           }
@@ -356,7 +347,8 @@ export default function ChatInput({
               handleSend();
             }
           }}
-          className="max-h-40 min-h-[44px] min-w-[200px] flex-1 resize-none rounded-xl border border-border px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary disabled:bg-muted disabled:text-muted-foreground"
+          style={{ minHeight: `${TEXTArea_MIN_HEIGHT}px` }}
+          className="max-h-40 min-w-[200px] flex-1 resize-none rounded-xl border border-border px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary disabled:bg-muted disabled:text-muted-foreground"
         />
 
         <button
