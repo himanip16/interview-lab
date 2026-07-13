@@ -38,11 +38,11 @@ export default function Navbar() {
           Interviews
         </Link>
 
-        <Link 
-          href="/library"
+        <Link
+          href="/learn"
           className="hover:text-foreground transition-colors"
         >
-          Library
+          Learn
         </Link>
 
         {isAuthenticated ? (

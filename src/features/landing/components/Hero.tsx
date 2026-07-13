@@ -24,7 +24,7 @@ export default function Hero() {
 
         <div className="mt-10 flex gap-4">
           <Link
-            href="/library"
+            href="/learn"
             className="rounded-lg bg-primary px-6 py-3 font-medium text-primary-foreground hover:opacity-90 transition-opacity"
           >
             Learn

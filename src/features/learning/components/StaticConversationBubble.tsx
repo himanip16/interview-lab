@@ -1,5 +1,5 @@
 interface ConversationMessage {
-  role: "assistant" | "user";
+  role: "interviewer" | "candidate" | "assistant" | "user";
   content: string;
 }
 
@@ -8,7 +8,7 @@ interface StaticConversationBubbleProps {
 }
 
 export function StaticConversationBubble({ message }: StaticConversationBubbleProps) {
-  const isAI = message.role === "assistant";
+  const isAI = message.role === "interviewer" || message.role === "assistant";
 
   return (
     <div className={`flex ${isAI ? 'justify-start' : 'justify-end'} mb-4`}>

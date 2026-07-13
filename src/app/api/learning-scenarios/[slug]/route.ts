@@ -4,12 +4,14 @@ import { prisma } from "@/shared/prisma/client";
 
 export async function GET(
   request: Request,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
+  const { slug } = await params;
+  
   try {
     const scenario = await prisma.learningScenario.findUnique({
       where: {
-        slug: params.slug,
+        slug: slug,
         isActive: true,
       },
       include: {
