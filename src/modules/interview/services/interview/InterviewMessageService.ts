@@ -18,6 +18,7 @@ export interface ProcessInterviewMessageResult {
   transitioned: boolean;
   confidence: number;
   completed: boolean;
+  summary: string;
 }
 
 export class InterviewMessageService {
@@ -183,6 +184,7 @@ export class InterviewMessageService {
       confidence,
       completed:
         result.transition.completed,
+      summary: interview.summary,
     };
   }
 

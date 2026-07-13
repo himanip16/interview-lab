@@ -62,12 +62,12 @@ export default function LiveInterview({
 
 const data = JSON.parse(text);
 
-      if (data.aiMessage) {
-        setMessages((prev) => [...prev, data.aiMessage]);
+      if (data.reply) {
+        setMessages((prev) => [...prev, { role: "assistant", content: data.reply }]);
       }
 
-      if (data.newSummary) {
-        setSummary(data.newSummary);
+      if (data.summary) {
+        setSummary(data.summary);
         setIsSummaryLoading(false);
       }
     } catch (error) {

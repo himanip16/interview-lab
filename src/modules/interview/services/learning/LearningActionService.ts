@@ -45,7 +45,7 @@ export class LearningActionService {
     }
 
     for (const weak of weakConcepts) {
-      const segment = await prisma.scenarioSegment.findFirst({
+      const segment = await prisma.learningSegment.findFirst({
         where: {
           scenario: { isActive: true },
           concepts: { some: { conceptId: weak.conceptId } },
@@ -56,11 +56,12 @@ export class LearningActionService {
         include: {
           scenario: { select: { id: true, title: true } },
           actions: {
-            orderBy: { order: "asc" },
+            where: { isActive: true },
+            orderBy: { createdAt: "asc" },
             include: {
               attempts: {
                 where: { userId },
-                orderBy: { createdAt: "desc" },
+                orderBy: { startedAt: "desc" },
                 take: 1,
               },
             },
@@ -76,13 +77,13 @@ export class LearningActionService {
       return {
         actionId: chosen.id,
         type: chosen.type,
-        prompt: chosen.prompt,
-        reflection: chosen.reflection,
-        payload: chosen.payload,
+        prompt: chosen.instructions ?? "",
+        reflection: JSON.stringify(chosen.content),
+        payload: chosen.content,
         segment: {
           id: segment.id,
-          title: segment.title,
-          dialogue: segment.dialogue,
+          title: segment.takeaway ?? `Segment ${segment.order}`,
+          dialogue: segment.conversation,
         },
         scenario: segment.scenario,
         targetConcept: weak.concept,
@@ -96,14 +97,17 @@ export class LearningActionService {
     userId: string;
     actionId: string;
     response: unknown;
-    correct?: boolean;
+    score?: number;
+    feedback?: string;
   }) {
-    return prisma.learningActionAttempt.create({
+    return prisma.userLearningAttempt.create({
       data: {
         userId: params.userId,
         actionId: params.actionId,
         response: params.response as object,
-        correct: params.correct ?? null,
+        status: "COMPLETED",
+        score: params.score,
+        feedback: params.feedback,
       },
     });
   }
