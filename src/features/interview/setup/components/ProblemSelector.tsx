@@ -73,7 +73,7 @@ export default function ProblemSelector({
   value,
   onChange,
   interviewType = "hld",
-  difficulty = "MEDIUM",
+  difficulty = "All",
   company = "",
   onSearch,
   userId,

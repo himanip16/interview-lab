@@ -56,7 +56,10 @@ export async function GET(request: Request) {
         break;
     }
 
-    const [problems, total] = await Promise.all([
+    let problems, total;
+    let fallbackUsed = false;
+
+    [problems, total] = await Promise.all([
       prisma.problem.findMany({
         where,
         include: {
@@ -72,6 +75,75 @@ export async function GET(request: Request) {
       }),
       prisma.problem.count({ where }),
     ]);
+
+    // If strict filtering returns no results, try fallback strategies
+    if (problems.length === 0 && page === 1) {
+      // Fallback 1: Remove company filter (most restrictive)
+      if (where.companies) {
+        const { companies: _, ...fallbackWhere } = where;
+        [problems, total] = await Promise.all([
+          prisma.problem.findMany({
+            where: fallbackWhere,
+            include: {
+              companies: {
+                include: {
+                  company: true,
+                },
+              },
+            },
+            orderBy,
+            skip: (page - 1) * limit,
+            take: limit,
+          }),
+          prisma.problem.count({ where: fallbackWhere }),
+        ]);
+        fallbackUsed = true;
+      }
+
+      // Fallback 2: Remove category filter if still no results
+      if (problems.length === 0 && where.category) {
+        const { category: _, companies: __, ...fallbackWhere } = where;
+        [problems, total] = await Promise.all([
+          prisma.problem.findMany({
+            where: fallbackWhere,
+            include: {
+              companies: {
+                include: {
+                  company: true,
+                },
+              },
+            },
+            orderBy,
+            skip: (page - 1) * limit,
+            take: limit,
+          }),
+          prisma.problem.count({ where: fallbackWhere }),
+        ]);
+        fallbackUsed = true;
+      }
+
+      // Fallback 3: Only use interview type if still no results
+      if (problems.length === 0 && where.interviewType) {
+        const { interviewType, ...fallbackWhere } = where;
+        [problems, total] = await Promise.all([
+          prisma.problem.findMany({
+            where: fallbackWhere,
+            include: {
+              companies: {
+                include: {
+                  company: true,
+                },
+              },
+            },
+            orderBy,
+            skip: (page - 1) * limit,
+            take: limit,
+          }),
+          prisma.problem.count({ where: fallbackWhere }),
+        ]);
+        fallbackUsed = true;
+      }
+    }
 
     // Add completion history if userId is provided
     let problemsWithHistory = problems;
