@@ -396,6 +396,35 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ---------------------------------------------------------------------------
+// JSON SCHEMA VERSIONING STRATEGY
+// ---------------------------------------------------------------------------
+// Schema versioning is embedded within JSON documents (e.g., {"schemaVersion": 2})
+// rather than as separate database columns. This allows:
+//
+// 1. Schema version = "How should this JSON be interpreted?"
+// 2. Content version = "How many times was this content edited?"
+//
+// VERSIONED JSON (author-controlled, evolves independently):
+// - LearningAction.content (crosses authoring <-> runtime boundary)
+// - PracticeActivity.content (crosses authoring <-> runtime boundary)
+// - InterviewPhaseTemplate.evaluationDimensions (template structure)
+// - InterviewPhaseTemplate.goals (template structure)
+//
+// NOT VERSIONED (snapshots, implementation details):
+// - codeState, whiteboardState (frozen application state)
+// - candidatePersona (configuration snapshot)
+// - metadata (arbitrary metadata)
+//
+// ADAPTER PATTERN (not migrations):
+// When schema evolves, add adapters to read old versions instead of
+// migrating historical data. Services only deal with canonical domain model.
+//
+// VALIDATION ON WRITE:
+// All AI-generated JSON is validated against schema before persistence
+// using JSON Schema/Zod to ensure contract compliance.
+// ---------------------------------------------------------------------------
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -443,8 +472,8 @@ model InterviewPhaseTemplate {
   phaseKey String
   order    Int
 
-  goals                Json
-  evaluationDimensions Json
+  goals                Json // Schema version embedded: {"schemaVersion": 1, ...}
+  evaluationDimensions Json // Schema version embedded: {"schemaVersion": 1, ...}
   targetDurationRatio  Float
   transitionThreshold  Float
   instructions         String
@@ -454,7 +483,7 @@ model InterviewPhaseTemplate {
   showWhiteboard Boolean @default(false)
 
   // NEW — separate dimension set for reverse mode
-  reverseEvaluationDimensions Json @default("[]")
+  reverseEvaluationDimensions Json @default("[]") // Schema version embedded
 
   @@unique([templateId, phaseKey])
   @@index([templateId])
@@ -493,17 +522,17 @@ model Interview {
 
   // NEW — interview mode
   mode             InterviewMode @default(CANDIDATE)
-  candidatePersona Json?
+  candidatePersona Json? // Configuration snapshot, no versioning needed
 
   // NEW — code editor state (deprioritized, not wired into prompts/evaluator yet)
-  codeState Json?
+  codeState Json? // Frozen application state, no versioning needed
 
   user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   template   InterviewTemplate @relation(fields: [templateId], references: [id])
   evaluation Evaluation?
   problem    Problem           @relation(fields: [problemId], references: [id])
   transcript Message[]
-  whiteboardState Json?
+  whiteboardState Json? // Frozen application state, no versioning needed
   @@index([templateId])
   @@index([userId])
 }
@@ -513,7 +542,7 @@ model Message {
   interviewId String
   role        MessageRole
   content     String
-  metadata    Json?
+  metadata    Json? // Arbitrary metadata, no versioning needed
 
   // NEW — written at persist time, not reconstructed later
   elapsedSeconds Int     @default(0)
@@ -608,13 +637,15 @@ model Evaluation {
   overallScore Int
 
   // DimensionScore[]: { dimension, score, summary, evidence: EvidenceItem[] }
-  dimensionScores Json
+  // TODO: Normalize to EvaluationDimensionScore table for analytics
+  dimensionScores Json // Schema version embedded: {"schemaVersion": 1, ...}
 
   // Flattened EvidenceItem[]: { dimension, messageId, timestampSeconds, quote, comment }
-  evidence Json
+  // CACHE: EvidenceItem table is source of truth. This is denormalized for report performance.
+  evidence Json // Schema version embedded: {"schemaVersion": 1, ...}
 
   feedback  String
-  metadata  Json?
+  metadata  Json? // Arbitrary metadata, no versioning needed
   createdAt DateTime @default(now())
 
   interview     Interview      @relation(fields: [interviewId], references: [id], onDelete: Cascade)
@@ -720,7 +751,7 @@ model LearningScenario {
   description String?
 
   // e.g. "Design a Payment System"
-  context Json?
+  context Json? // Arbitrary metadata, no versioning needed
 
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
@@ -736,7 +767,7 @@ model LearningSegment {
   scenario LearningScenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
 
   order        Int
-  conversation Json
+  conversation Json // Schema version embedded: {"schemaVersion": 1, ...}
   takeaway     String?
 
   actions  LearningAction[]
@@ -771,8 +802,7 @@ model LearningAction {
 
   title        String
   instructions String?
-  content      Json
-  contentVersion Int @default(1)
+  content      Json // Schema version embedded: {"schemaVersion": 1, ...}
 
   isActive Boolean @default(true)
 
@@ -812,8 +842,7 @@ model UserLearningAttempt {
 
   status LearningAttemptStatus @default(STARTED)
 
-  response        Json?
-  responseVersion Int          @default(1)
+  response        Json? // Schema version embedded if response format evolves
 
   score    Float?
   feedback String?
@@ -919,8 +948,7 @@ model PracticeActivity {
 
   estimatedMinutes Int?
 
-  content        Json
-  contentVersion Int @default(1)
+  content        Json // Schema version embedded: {"schemaVersion": 1, ...}
 
   isPublished Boolean @default(false)
 
@@ -961,8 +989,7 @@ model PracticeAttempt {
 
   status PracticeAttemptStatus @default(STARTED)
 
-  response        Json?
-  responseVersion Int @default(1)
+  response        Json? // Schema version embedded if response format evolves
 
   score    Float?
   feedback String?
@@ -4185,13 +4212,19 @@ FILE: ./src/app/api/problems/route.ts
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/shared/prisma/client";
-import { Difficulty } from "@prisma/client";
+import { Difficulty, InterviewStatus } from "@prisma/client";
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const difficulty = searchParams.get("difficulty");
     const company = searchParams.get("company");
+    const interviewType = searchParams.get("interviewType");
+    const category = searchParams.get("category");
+    const sort = searchParams.get("sort") || "interviewCount";
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "20");
+    const userId = searchParams.get("userId");
 
     const where: any = {};
     
@@ -4209,21 +4242,91 @@ export async function GET(request: Request) {
       };
     }
 
-    const problems = await prisma.problem.findMany({
-      where,
-      include: {
-        companies: {
-          include: {
-            company: true,
+    if (interviewType) {
+      where.interviewType = interviewType;
+    }
+
+    if (category && category !== "All") {
+      where.category = category;
+    }
+
+    const orderBy: any = {};
+    switch (sort) {
+      case "title":
+        orderBy.title = "asc";
+        break;
+      case "difficulty":
+        orderBy.difficulty = "asc";
+        break;
+      case "estimatedMinutes":
+        orderBy.estimatedMinutes = "asc";
+        break;
+      case "interviewCount":
+      default:
+        orderBy.interviewCount = "desc";
+        break;
+    }
+
+    const [problems, total] = await Promise.all([
+      prisma.problem.findMany({
+        where,
+        include: {
+          companies: {
+            include: {
+              company: true,
+            },
           },
         },
-      },
-      orderBy: {
-        interviewCount: "desc",
-      },
-    });
+        orderBy,
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.problem.count({ where }),
+    ]);
 
-    return NextResponse.json({ problems }, { status: 200 });
+    // Add completion history if userId is provided
+    let problemsWithHistory = problems;
+    if (userId) {
+      const problemIds = problems.map((p) => p.id);
+      const interviews = await prisma.interview.findMany({
+        where: {
+          userId,
+          problemId: { in: problemIds },
+          status: InterviewStatus.COMPLETED,
+        },
+        orderBy: {
+          updatedAt: "desc",
+        },
+      });
+
+      const historyMap = new Map<string, { completed: boolean; timesCompleted: number; lastCompletedAt: Date | null }>();
+      interviews.forEach((interview) => {
+        const existing = historyMap.get(interview.problemId);
+        if (existing) {
+          existing.timesCompleted += 1;
+        } else {
+          historyMap.set(interview.problemId, {
+            completed: true,
+            timesCompleted: 1,
+            lastCompletedAt: interview.updatedAt,
+          });
+        }
+      });
+
+      problemsWithHistory = problems.map((problem) => ({
+        ...problem,
+        completionHistory: historyMap.get(problem.id) || {
+          completed: false,
+          timesCompleted: 0,
+          lastCompletedAt: null,
+        },
+      }));
+    }
+
+    return NextResponse.json(
+      { problems: problemsWithHistory, total, page, limit, totalPages: Math.ceil(total / limit) },
+      { status: 200 }
+    );
   } catch (error) {
     console.error(error);
 
@@ -7749,7 +7852,7 @@ FILE: ./src/features/interview/setup/components/ProblemSelector.tsx
 ================================================
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Difficulty, ProblemCategory, InterviewStatus } from "@prisma/client";
 import { Button } from "@/src/components/ui/Button";
 
@@ -7774,15 +7877,17 @@ type Problem = {
 type Props = {
   value: string | null;
   onChange: (value: string | null) => void;
-  interviewType?: string;
-  difficulty?: string;
+  interviewType?: (typeof INTERVIEW_TYPES)[number];
+  difficulty?: (typeof DIFFICULTIES)[number];
   company?: string;
   onSearch?: () => void;
   userId?: string | null;
+  hideSearchGate?: boolean;
 };
 
 const INTERVIEW_TYPES = ["hld", "lld", "dsa", "pr_review", "deep_dive", "tech_doc_review", "task_breakdown"] as const;
 const DIFFICULTIES = ["All", Difficulty.EASY, Difficulty.MEDIUM, Difficulty.HARD] as const;
+const SORT_OPTIONS = ["interviewCount", "title", "difficulty", "estimatedMinutes"] as const;
 
 const CATEGORY_LABELS: Record<ProblemCategory, string> = {
   SYSTEM_DESIGN: "System Design",
@@ -7797,6 +7902,19 @@ const CATEGORY_LABELS: Record<ProblemCategory, string> = {
   NETWORKING: "Networking",
 };
 
+const ALL_CATEGORIES: ProblemCategory[] = [
+  ProblemCategory.SYSTEM_DESIGN,
+  ProblemCategory.LOW_LEVEL_DESIGN,
+  ProblemCategory.DATABASES,
+  ProblemCategory.BACKEND,
+  ProblemCategory.DISTRIBUTED_SYSTEMS,
+  ProblemCategory.JAVA,
+  ProblemCategory.KAFKA,
+  ProblemCategory.REDIS,
+  ProblemCategory.OPERATING_SYSTEMS,
+  ProblemCategory.NETWORKING,
+];
+
 const DIFFICULTY_COLORS: Record<Difficulty, string> = {
   EASY: "border-green-800 text-green-400",
   MEDIUM: "border-amber-800 text-amber-400",
@@ -7807,57 +7925,67 @@ export default function ProblemSelector({
   value,
   onChange,
   interviewType = "hld",
-  difficulty = "Medium",
+  difficulty = "MEDIUM",
   company = "",
   onSearch,
   userId,
 }: Props) {
   const [problems, setProblems] = useState<Problem[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedType, setSelectedType] = useState<(typeof INTERVIEW_TYPES)[number]>(interviewType as any);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedType, setSelectedType] = useState<(typeof INTERVIEW_TYPES)[number]>(interviewType);
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
-  const [selectedDifficulty, setSelectedDifficulty] = useState<(typeof DIFFICULTIES)[number]>(difficulty as any);
+  const [selectedDifficulty, setSelectedDifficulty] = useState<(typeof DIFFICULTIES)[number]>(difficulty);
+  const [selectedSort, setSelectedSort] = useState<(typeof SORT_OPTIONS)[number]>("interviewCount");
   const [expandedProblem, setExpandedProblem] = useState<string | null>(null);
-  const [hasSearched, setHasSearched] = useState(false);
+  const [page, setPage] = useState(1);
+  const [limit] = useState(20);
+  const [totalPages, setTotalPages] = useState(1);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   async function fetchProblems() {
     try {
       setLoading(true);
+      setError(null);
+      
+      // Cancel previous request if still pending
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      
+      // Create new AbortController for this request
+      abortControllerRef.current = new AbortController();
+      
       const params = new URLSearchParams();
       if (selectedType) params.append("interviewType", selectedType);
       if (selectedDifficulty !== "All") params.append("difficulty", selectedDifficulty);
       if (selectedCategory !== "All") params.append("category", selectedCategory);
       if (company) params.append("company", company);
+      params.append("sort", selectedSort);
+      params.append("page", page.toString());
+      params.append("limit", limit.toString());
+      if (userId) params.append("userId", userId);
 
       const response = await fetch(
-        `/api/problems${params.toString() ? `?${params.toString()}` : ""}`
+        `/api/problems${params.toString() ? `?${params.toString()}` : ""}`,
+        { signal: abortControllerRef.current.signal }
       );
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch problems: ${response.statusText}`);
+      }
+      
       const data = await response.json();
       
-      // Add completion history if userId is provided
-      const problemsWithHistory = await Promise.all(
-        (data.problems || []).map(async (problem: Problem) => {
-          if (!userId) return problem;
-          
-          try {
-            const historyResponse = await fetch(`/api/problems/${problem.id}/history?userId=${userId}`);
-            const historyData = await historyResponse.json();
-            return {
-              ...problem,
-              completionHistory: historyData.history || {
-                completed: false,
-                timesCompleted: 0,
-                lastCompletedAt: null,
-              },
-            };
-          } catch {
-            return problem;
-          }
-        })
-      );
-      
-      setProblems(problemsWithHistory);
+      setProblems(data.problems || []);
+      setTotalPages(data.totalPages || 1);
     } catch (error) {
+      // Ignore abort errors (from cancelled requests)
+      if (error instanceof Error && error.name === 'AbortError') {
+        return;
+      }
+      const errorMessage = error instanceof Error ? error.message : "Failed to fetch problems";
+      setError(errorMessage);
       console.error("Failed to fetch problems:", error);
     } finally {
       setLoading(false);
@@ -7865,21 +7993,17 @@ export default function ProblemSelector({
   }
 
   useEffect(() => {
-    if (hasSearched) {
-      fetchProblems();
-    }
-  }, [selectedType, selectedDifficulty, selectedCategory, hasSearched]);
+    fetchProblems();
+  }, [page, selectedType, selectedDifficulty, selectedCategory, selectedSort]);
 
-  const categories = Array.from(
-    new Set(problems.map((p) => p.category))
-  ).sort();
-
-  const filteredProblems = problems.filter((problem) => {
-    if (problem.interviewType !== selectedType) return false;
-    if (selectedCategory !== "All" && problem.category !== selectedCategory) return false;
-    if (selectedDifficulty !== "All" && problem.difficulty !== selectedDifficulty) return false;
-    return true;
-  });
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   function handleProblemClick(problem: Problem) {
     if (expandedProblem === problem.id) {
@@ -7887,11 +8011,6 @@ export default function ProblemSelector({
     } else {
       setExpandedProblem(problem.id);
     }
-  }
-
-  function handleSearch() {
-    setHasSearched(true);
-    onSearch?.();
   }
 
   function formatDate(date: Date | null): string {
@@ -7909,22 +8028,7 @@ export default function ProblemSelector({
         Select a Problem
       </h3>
 
-      {!hasSearched ? (
-        <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Configure your filters and search to see available problems.
-          </p>
-          <Button
-            type="button"
-            variant="primary"
-            onClick={handleSearch}
-            className="w-full"
-          >
-            Search Problems
-          </Button>
-        </div>
-      ) : (
-        <>
+      <>
           {/* Interview Type Tabs */}
           <div className="flex overflow-x-auto rounded-lg border border-border bg-muted p-1 mb-4">
             {INTERVIEW_TYPES.map((type) => (
@@ -7932,6 +8036,7 @@ export default function ProblemSelector({
                 key={type}
                 onClick={() => {
                   setSelectedType(type);
+                  setPage(1);
                   setExpandedProblem(null);
                 }}
                 className={`whitespace-nowrap rounded px-4 py-2 font-mono text-sm font-medium transition ${
@@ -7951,13 +8056,16 @@ export default function ProblemSelector({
               <label className="text-sm font-medium text-foreground">Category:</label>
               <select
                 value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
+                onChange={(e) => {
+                  setSelectedCategory(e.target.value);
+                  setPage(1);
+                }}
                 className="rounded border border-border bg-card px-3 py-1.5 text-sm text-foreground"
               >
                 <option value="All">All Categories</option>
-                {categories.map((cat) => (
+                {ALL_CATEGORIES.map((cat) => (
                   <option key={cat} value={cat}>
-                    {CATEGORY_LABELS[cat as ProblemCategory] || cat}
+                    {CATEGORY_LABELS[cat] || cat}
                   </option>
                 ))}
               </select>
@@ -7967,7 +8075,10 @@ export default function ProblemSelector({
               <label className="text-sm font-medium text-foreground">Difficulty:</label>
               <select
                 value={selectedDifficulty}
-                onChange={(e) => setSelectedDifficulty(e.target.value as (typeof DIFFICULTIES)[number])}
+                onChange={(e) => {
+                  setSelectedDifficulty(e.target.value as (typeof DIFFICULTIES)[number]);
+                  setPage(1);
+                }}
                 className="rounded border border-border bg-card px-3 py-1.5 text-sm text-foreground"
               >
                 {DIFFICULTIES.map((diff) => (
@@ -7977,23 +8088,78 @@ export default function ProblemSelector({
                 ))}
               </select>
             </div>
+
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-foreground">Sort by:</label>
+              <select
+                value={selectedSort}
+                onChange={(e) => {
+                  setSelectedSort(e.target.value as (typeof SORT_OPTIONS)[number]);
+                  setPage(1);
+                }}
+                className="rounded border border-border bg-card px-3 py-1.5 text-sm text-foreground"
+              >
+                <option value="interviewCount">Interview Count</option>
+                <option value="title">Title</option>
+                <option value="difficulty">Difficulty</option>
+                <option value="estimatedMinutes">Estimated Time</option>
+              </select>
+            </div>
           </div>
+
+          {/* Error Banner */}
+          {error && (
+            <div className="mb-4 rounded-lg border border-red-800 bg-red-500/10 p-4">
+              <p className="text-sm text-red-400">
+                {error}
+              </p>
+              <button
+                onClick={() => fetchProblems()}
+                className="mt-2 text-sm text-red-400 underline hover:text-red-300"
+              >
+                Try again
+              </button>
+            </div>
+          )}
 
           {/* Problem Count */}
           <p className="text-sm text-muted-foreground mb-4">
-            {filteredProblems.length} problem{filteredProblems.length !== 1 ? "s" : ""} found
+            {problems.length} problem{problems.length !== 1 ? "s" : ""} found
           </p>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="rounded border border-border bg-card px-3 py-1.5 text-sm text-foreground disabled:opacity-50 disabled:cursor-not-allowed hover:border-foreground/40"
+              >
+                Previous
+              </button>
+              <span className="text-sm text-muted-foreground">
+                Page {page} of {totalPages}
+              </span>
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="rounded border border-border bg-card px-3 py-1.5 text-sm text-foreground disabled:opacity-50 disabled:cursor-not-allowed hover:border-foreground/40"
+              >
+                Next
+              </button>
+            </div>
+          )}
 
           {/* Problem List */}
           {loading ? (
             <p className="text-sm text-muted-foreground">Loading problems...</p>
-          ) : filteredProblems.length === 0 ? (
+          ) : problems.length === 0 ? (
             <div className="rounded-lg border border-border bg-card p-8 text-center">
               <p className="text-muted-foreground">No problems match your filters.</p>
             </div>
           ) : (
             <div className="space-y-3">
-              {filteredProblems.map((problem) => (
+              {problems.map((problem: Problem) => (
                 <div
                   key={problem.id}
                   className="overflow-hidden rounded-lg border border-border bg-card transition hover:border-foreground/40"
@@ -8110,7 +8276,6 @@ export default function ProblemSelector({
             </div>
           )}
         </>
-      )}
     </div>
   );
 }
@@ -8276,7 +8441,7 @@ FILE: ./src/features/interview/setup/components/TopicSelector.tsx
 ================================================
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Button } from "@/src/components/ui/Button";
 
 type Problem = {
@@ -8302,28 +8467,61 @@ export default function TopicSelector({
 }: Props) {
   const [problems, setProblems] = useState<Problem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  async function fetchProblems() {
+    try {
+      setError(null);
+      
+      // Cancel previous request if still pending
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      
+      // Create new AbortController for this request
+      abortControllerRef.current = new AbortController();
+      
+      const params = new URLSearchParams();
+      if (difficulty) params.append("difficulty", difficulty);
+      if (company) params.append("company", company);
+
+      const response = await fetch(
+        `/api/problems${params.toString() ? `?${params.toString()}` : ""}`,
+        { signal: abortControllerRef.current.signal }
+      );
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch problems: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      setProblems(data.problems || []);
+    } catch (error) {
+      // Ignore abort errors (from cancelled requests)
+      if (error instanceof Error && error.name === 'AbortError') {
+        return;
+      }
+      const errorMessage = error instanceof Error ? error.message : "Failed to fetch problems";
+      setError(errorMessage);
+      console.error("Failed to fetch problems:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
-    async function fetchProblems() {
-      try {
-        const params = new URLSearchParams();
-        if (difficulty) params.append("difficulty", difficulty);
-        if (company) params.append("company", company);
-
-        const response = await fetch(
-          `/api/problems${params.toString() ? `?${params.toString()}` : ""}`
-        );
-        const data = await response.json();
-        setProblems(data.problems || []);
-      } catch (error) {
-        console.error("Failed to fetch problems:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
     fetchProblems();
   }, [difficulty, company]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   if (loading) {
     return (
@@ -8341,6 +8539,24 @@ export default function TopicSelector({
       <h3 className="mb-3 font-semibold text-foreground">
         Select a Problem
       </h3>
+
+      {error && (
+        <div className="mb-4 rounded-lg border border-red-800 bg-red-500/10 p-4">
+          <p className="text-sm text-red-400">
+            {error}
+          </p>
+          <button
+            onClick={() => {
+              setError(null);
+              setLoading(true);
+              fetchProblems();
+            }}
+            className="mt-2 text-sm text-red-400 underline hover:text-red-300"
+          >
+            Try again
+          </button>
+        </div>
+      )}
 
       {problems.length === 0 ? (
         <p className="text-sm text-muted-foreground">
