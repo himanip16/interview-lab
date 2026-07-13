@@ -7,6 +7,35 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ---------------------------------------------------------------------------
+// JSON SCHEMA VERSIONING STRATEGY
+// ---------------------------------------------------------------------------
+// Schema versioning is embedded within JSON documents (e.g., {"schemaVersion": 2})
+// rather than as separate database columns. This allows:
+//
+// 1. Schema version = "How should this JSON be interpreted?"
+// 2. Content version = "How many times was this content edited?"
+//
+// VERSIONED JSON (author-controlled, evolves independently):
+// - LearningAction.content (crosses authoring <-> runtime boundary)
+// - PracticeActivity.content (crosses authoring <-> runtime boundary)
+// - InterviewPhaseTemplate.evaluationDimensions (template structure)
+// - InterviewPhaseTemplate.goals (template structure)
+//
+// NOT VERSIONED (snapshots, implementation details):
+// - codeState, whiteboardState (frozen application state)
+// - candidatePersona (configuration snapshot)
+// - metadata (arbitrary metadata)
+//
+// ADAPTER PATTERN (not migrations):
+// When schema evolves, add adapters to read old versions instead of
+// migrating historical data. Services only deal with canonical domain model.
+//
+// VALIDATION ON WRITE:
+// All AI-generated JSON is validated against schema before persistence
+// using JSON Schema/Zod to ensure contract compliance.
+// ---------------------------------------------------------------------------
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -54,8 +83,8 @@ model InterviewPhaseTemplate {
   phaseKey String
   order    Int
 
-  goals                Json
-  evaluationDimensions Json
+  goals                Json // Schema version embedded: {"schemaVersion": 1, ...}
+  evaluationDimensions Json // Schema version embedded: {"schemaVersion": 1, ...}
   targetDurationRatio  Float
   transitionThreshold  Float
   instructions         String
@@ -65,7 +94,7 @@ model InterviewPhaseTemplate {
   showWhiteboard Boolean @default(false)
 
   // NEW — separate dimension set for reverse mode
-  reverseEvaluationDimensions Json @default("[]")
+  reverseEvaluationDimensions Json @default("[]") // Schema version embedded
 
   @@unique([templateId, phaseKey])
   @@index([templateId])
@@ -104,17 +133,17 @@ model Interview {
 
   // NEW — interview mode
   mode             InterviewMode @default(CANDIDATE)
-  candidatePersona Json?
+  candidatePersona Json? // Configuration snapshot, no versioning needed
 
   // NEW — code editor state (deprioritized, not wired into prompts/evaluator yet)
-  codeState Json?
+  codeState Json? // Frozen application state, no versioning needed
 
   user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   template   InterviewTemplate @relation(fields: [templateId], references: [id])
   evaluation Evaluation?
   problem    Problem           @relation(fields: [problemId], references: [id])
   transcript Message[]
-  whiteboardState Json?
+  whiteboardState Json? // Frozen application state, no versioning needed
   @@index([templateId])
   @@index([userId])
 }
@@ -124,7 +153,7 @@ model Message {
   interviewId String
   role        MessageRole
   content     String
-  metadata    Json?
+  metadata    Json? // Arbitrary metadata, no versioning needed
 
   // NEW — written at persist time, not reconstructed later
   elapsedSeconds Int     @default(0)
@@ -219,13 +248,15 @@ model Evaluation {
   overallScore Int
 
   // DimensionScore[]: { dimension, score, summary, evidence: EvidenceItem[] }
-  dimensionScores Json
+  // TODO: Normalize to EvaluationDimensionScore table for analytics
+  dimensionScores Json // Schema version embedded: {"schemaVersion": 1, ...}
 
   // Flattened EvidenceItem[]: { dimension, messageId, timestampSeconds, quote, comment }
-  evidence Json
+  // CACHE: EvidenceItem table is source of truth. This is denormalized for report performance.
+  evidence Json // Schema version embedded: {"schemaVersion": 1, ...}
 
   feedback  String
-  metadata  Json?
+  metadata  Json? // Arbitrary metadata, no versioning needed
   createdAt DateTime @default(now())
 
   interview     Interview      @relation(fields: [interviewId], references: [id], onDelete: Cascade)
@@ -331,7 +362,7 @@ model LearningScenario {
   description String?
 
   // e.g. "Design a Payment System"
-  context Json?
+  context Json? // Arbitrary metadata, no versioning needed
 
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
@@ -347,7 +378,7 @@ model LearningSegment {
   scenario LearningScenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
 
   order        Int
-  conversation Json
+  conversation Json // Schema version embedded: {"schemaVersion": 1, ...}
   takeaway     String?
 
   actions  LearningAction[]
@@ -382,8 +413,7 @@ model LearningAction {
 
   title        String
   instructions String?
-  content      Json
-  contentVersion Int @default(1)
+  content      Json // Schema version embedded: {"schemaVersion": 1, ...}
 
   isActive Boolean @default(true)
 
@@ -423,8 +453,7 @@ model UserLearningAttempt {
 
   status LearningAttemptStatus @default(STARTED)
 
-  response        Json?
-  responseVersion Int          @default(1)
+  response        Json? // Schema version embedded if response format evolves
 
   score    Float?
   feedback String?
@@ -530,8 +559,7 @@ model PracticeActivity {
 
   estimatedMinutes Int?
 
-  content        Json
-  contentVersion Int @default(1)
+  content        Json // Schema version embedded: {"schemaVersion": 1, ...}
 
   isPublished Boolean @default(false)
 
@@ -572,8 +600,7 @@ model PracticeAttempt {
 
   status PracticeAttemptStatus @default(STARTED)
 
-  response        Json?
-  responseVersion Int @default(1)
+  response        Json? // Schema version embedded if response format evolves
 
   score    Float?
   feedback String?
