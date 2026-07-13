@@ -30,12 +30,7 @@ export default function Hero() {
             Learn
           </Link>
 
-          <Link
-            href="/interview/setup"
-            className="rounded-lg border border-border px-6 py-3 text-muted-foreground hover:border-foreground hover:text-foreground transition-colors"
-          >
-            Take a Test
-          </Link>
+        
 
           <Link
             href="/problems"
