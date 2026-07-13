@@ -8,12 +8,12 @@ interface ObserveActionProps {
 }
 
 export function ObserveAction({ action, onComplete }: ObserveActionProps) {
-  const [isRead, setIsRead] = useState(false);
+  const [isRevealed, setIsRevealed] = useState(false);
 
   const content = action.content as ObserveActionContent;
 
-  const handleMarkAsRead = () => {
-    setIsRead(true);
+  const handleReveal = () => {
+    setIsRevealed(true);
   };
 
   const handleContinue = () => {
@@ -27,24 +27,25 @@ export function ObserveAction({ action, onComplete }: ObserveActionProps) {
         <p className="text-sm text-muted-foreground mb-4">{action.instructions}</p>
       )}
       
-      <div className="prose prose-sm dark:prose-invert max-w-none mb-4">
-        <p>{content.reflection}</p>
-      </div>
-
-      {!isRead ? (
+      {!isRevealed ? (
         <button
-          onClick={handleMarkAsRead}
+          onClick={handleReveal}
           className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors"
         >
-          Mark as Read
+          Reveal Reflection
         </button>
       ) : (
-        <button
-          onClick={handleContinue}
-          className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors"
-        >
-          Continue
-        </button>
+        <div className="space-y-4">
+          <div className="prose prose-sm dark:prose-invert max-w-none">
+            <p>{content.reflection}</p>
+          </div>
+          <button
+            onClick={handleContinue}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors"
+          >
+            Continue
+          </button>
+        </div>
       )}
     </div>
   );

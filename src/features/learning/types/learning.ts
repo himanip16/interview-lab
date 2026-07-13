@@ -1,47 +1,41 @@
 import { LearningActionType } from "@prisma/client";
 
 export interface ObserveActionContent {
-  schemaVersion: number;
+  schemaVersion?: number;
   reflection: string;
 }
 
 export interface JudgeActionContent {
-  schemaVersion: number;
-  question: string;
+  schemaVersion?: number;
+  reflection: string;
   options: Array<{
     id: string;
     text: string;
-    isCorrect: boolean;
   }>;
-  reflection: string;
+  correctOptionId: string;
 }
 
 export interface FixActionContent {
-  schemaVersion: number;
-  question: string;
-  flawedAnswer: string;
+  schemaVersion?: number;
   reflection: string;
+  interviewerQuestion: string;
+  flawedAnswer: string;
+  evaluationFocus?: string;
 }
 
 export interface PredictActionContent {
-  schemaVersion: number;
+  schemaVersion?: number;
+  reflection: string;
   question: string;
   revealExplanation: string;
 }
 
 export interface CompareActionContent {
-  schemaVersion: number;
-  question: string;
-  candidateA: {
-    name: string;
-    answer: string;
-  };
-  candidateB: {
-    name: string;
-    answer: string;
-  };
-  correctChoice: "A" | "B";
+  schemaVersion?: number;
   reflection: string;
+  candidateA: string;
+  candidateB: string;
+  correctChoice: "A" | "B";
 }
 
 export type LearningActionContent =
