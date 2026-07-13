@@ -10,17 +10,17 @@ export default function InterviewHeader({
   interviewId,
 }: InterviewHeaderProps) {
   return (
-    <header className="h-16 border-b border-zinc-800 flex items-center justify-between px-6 bg-zinc-900">
+    <header className="h-20 border-b border-border flex items-center justify-between px-6 bg-card">
       <div className="flex items-center gap-2">
-        <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse" />
-        <span className="font-semibold text-white">
+        <div className="w-3 h-3 rounded-full bg-primary animate-pulse" />
+        <span className="font-semibold text-foreground">
           Live Interview Session
         </span>
       </div>
 
       <div className="flex items-center gap-6">
         <div className="flex flex-col items-end">
-          <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">
+          <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">
             Time Remaining
           </span>
 

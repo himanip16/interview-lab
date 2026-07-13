@@ -17,7 +17,7 @@ export default function DifficultySelector({
 }: Props) {
   return (
     <div className="mt-8">
-      <h3 className="mb-3 font-semibold text-white">
+      <h3 className="mb-3 font-semibold text-foreground">
         Difficulty
       </h3>
 

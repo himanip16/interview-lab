@@ -5,11 +5,11 @@ export default function Features() {
   return (
     <section className="py-20">
 
-      <h2 className="text-4xl font-bold">
+      <h2 className="text-4xl font-bold text-foreground">
         Why AI Interview?
       </h2>
 
-      <p className="mt-3 text-zinc-400">
+      <p className="mt-3 text-muted-foreground">
         Practice interviews designed to feel like real technical interviews.
       </p>
 

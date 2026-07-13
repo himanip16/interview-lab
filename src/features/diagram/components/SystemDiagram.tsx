@@ -158,7 +158,7 @@ export default function SystemDiagram() {
   };
 
   return (
-    <div className="flex h-screen bg-zinc-900">
+    <div className="flex h-screen bg-background">
       {/* Diagram Area */}
       <div className="flex-1 relative overflow-auto">
         <svg className="w-full h-full" style={{ minWidth: "800px", minHeight: "600px" }}>
@@ -255,39 +255,39 @@ export default function SystemDiagram() {
         </svg>
 
         {/* Legend */}
-        <div className="absolute bottom-4 left-4 bg-zinc-800 p-4 rounded-lg border border-zinc-700">
-          <h4 className="text-white font-semibold mb-2 text-sm">Legend</h4>
+        <div className="absolute bottom-4 left-4 bg-card p-4 rounded-lg border border-border">
+          <h4 className="text-foreground font-semibold mb-2 text-sm">Legend</h4>
           <div className="space-y-2 text-xs">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-black" />
-              <span className="text-zinc-300">Actor / Entry</span>
+              <span className="text-muted-foreground">Actor / Entry</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-blue-600" />
-              <span className="text-zinc-300">Active Logic</span>
+              <span className="text-muted-foreground">Active Logic</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-red-600" />
-              <span className="text-zinc-300">Storage Layer</span>
+              <span className="text-muted-foreground">Storage Layer</span>
             </div>
           </div>
         </div>
 
         {/* Hint */}
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-zinc-800 px-4 py-2 rounded-lg border border-zinc-700">
-          <p className="text-zinc-400 text-xs">Click any component to inspect its architecture in detail</p>
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-card px-4 py-2 rounded-lg border border-border">
+          <p className="text-muted-foreground text-xs">Click any component to inspect its architecture in detail</p>
         </div>
       </div>
 
       {/* Inspection Panel */}
       {selectedComponent && (
-        <div className="w-96 bg-zinc-800 border-l border-zinc-700 overflow-y-auto">
+        <div className="w-96 bg-card border-l border-border overflow-y-auto">
           <div className="p-6">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-white">{selectedComponent.name}</h2>
+              <h2 className="text-xl font-bold text-foreground">{selectedComponent.name}</h2>
               <button
                 onClick={() => setSelectedComponent(null)}
-                className="text-zinc-400 hover:text-white"
+                className="text-muted-foreground hover:text-foreground"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -297,37 +297,37 @@ export default function SystemDiagram() {
 
             <div className="space-y-6">
               <div>
-                <h3 className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-2">
+                <h3 className="text-xs font-bold text-primary uppercase tracking-widest mb-2">
                   Role & Duty
                 </h3>
-                <p className="text-zinc-300 text-sm leading-relaxed">
+                <p className="text-muted-foreground text-sm leading-relaxed">
                   {selectedComponent.roleAndDuty}
                 </p>
               </div>
 
               <div>
-                <h3 className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-2">
+                <h3 className="text-xs font-bold text-primary uppercase tracking-widest mb-2">
                   Extreme Deep-Dive Details
                 </h3>
-                <p className="text-zinc-300 text-sm leading-relaxed">
+                <p className="text-muted-foreground text-sm leading-relaxed">
                   {selectedComponent.extremeDeepDive}
                 </p>
               </div>
 
               <div>
-                <h3 className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-2">
+                <h3 className="text-xs font-bold text-primary uppercase tracking-widest mb-2">
                   Failure Scenarios & Mitigation
                 </h3>
-                <p className="text-zinc-300 text-sm leading-relaxed">
+                <p className="text-muted-foreground text-sm leading-relaxed">
                   {selectedComponent.failureScenarios}
                 </p>
               </div>
 
               <div>
-                <h3 className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-2">
+                <h3 className="text-xs font-bold text-primary uppercase tracking-widest mb-2">
                   Design Tradeoffs & Constraints
                 </h3>
-                <p className="text-zinc-300 text-sm leading-relaxed">
+                <p className="text-muted-foreground text-sm leading-relaxed">
                   {selectedComponent.designTradeoffs}
                 </p>
               </div>

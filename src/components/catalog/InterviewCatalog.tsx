@@ -34,6 +34,7 @@ export default async function InterviewCatalog() {
                   : problem.difficulty === "HARD"
                     ? "Hard"
                     : "Medium",
+              category: problem.category,
             }}
           />
         ))}

@@ -1,5 +1,5 @@
 // components/interview/live/MessageList.tsx
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { Message as MessageType } from '@/src/features/interview/types/message';
 import Message from './Message';
 
@@ -8,26 +8,14 @@ interface MessageListProps {
 }
 
 const MessageList: React.FC<MessageListProps> = ({ messages }) => {
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  // Auto-scroll to bottom when new messages arrive
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages]);
-
   return (
-    <div 
-      ref={scrollRef}
-      className="p-4 space-y-4 bg-gray-50"
-    >
+    <div className="space-y-4 min-h-full">
       {messages.map((msg, index) => (
         <Message key={msg.id || index} message={msg} />
       ))}
       
       {messages.length === 0 && (
-        <div className="flex items-center justify-center h-full text-gray-400">
+        <div className="flex items-center justify-center min-h-[200px] text-muted-foreground">
           <p>No messages yet. The interviewer will start shortly.</p>
         </div>
       )}
@@ -35,4 +23,4 @@ const MessageList: React.FC<MessageListProps> = ({ messages }) => {
   );
 };
 
-export default MessageList; // This "export" makes it a module
+export default MessageList;

@@ -4,4 +4,5 @@ export type Interview = {
   description: string;
   duration: number;
   difficulty: "Easy" | "Medium" | "Hard";
+  category: string;
 };

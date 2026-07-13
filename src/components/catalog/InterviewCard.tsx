@@ -13,6 +13,26 @@ type Props = {
 export default function InterviewCard({
   interview,
 }: Props) {
+  const getInterviewType = (category: string): string => {
+    switch (category) {
+      case 'SYSTEM_DESIGN':
+      case 'DISTRIBUTED_SYSTEMS':
+        return 'hld';
+      case 'LOW_LEVEL_DESIGN':
+        return 'lld';
+      case 'DATABASES':
+      case 'BACKEND':
+      case 'JAVA':
+      case 'KAFKA':
+      case 'REDIS':
+      case 'OPERATING_SYSTEMS':
+      case 'NETWORKING':
+        return 'dsa';
+      default:
+        return 'hld';
+    }
+  };
+
   return (
     <Card className="shadow-sm transition hover:border-border/80">
       <Heading level="h3">
@@ -30,7 +50,7 @@ export default function InterviewCard({
         </Text>
 
         <Link
-          href={`/interview/setup?problemId=${interview.id}&type=hld`}
+          href={`/interview/setup?problemId=${interview.id}&type=${getInterviewType(interview.category)}`}
         >
           <Button variant="primary" className="px-4 py-2 text-sm">
             Start →

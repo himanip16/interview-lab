@@ -20,7 +20,8 @@ export default function LiveInterview({
 }: LiveInterviewProps) {
   const [messages, setMessages] = useState(initialMessages);
   const [isLoading, setIsLoading] = useState(false);
-  const [summary, setSummary] = useState("Establishing connection...");
+  const [summary, setSummary] = useState<string | null>(null);
+  const [isSummaryLoading, setIsSummaryLoading] = useState(true);
   const { showToast } = useToast();
 
   const handleSendMessage = async (content: string) => {
@@ -67,6 +68,7 @@ const data = JSON.parse(text);
 
       if (data.newSummary) {
         setSummary(data.newSummary);
+        setIsSummaryLoading(false);
       }
     } catch (error) {
       console.error(error);
@@ -90,7 +92,7 @@ const data = JSON.parse(text);
         />
       </div>
 
-      <Sidebar summary={summary} />
+      <Sidebar summary={summary} isSummaryLoading={isSummaryLoading} />
     </div>
   );
 }
