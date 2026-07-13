@@ -17,6 +17,7 @@ import { Button } from "@/src/components/ui/Button";
 import OverallScoreCard from "@/src/features/interview/report/components/OverallScoreCard";
 import WhatHappenedCard from "@/src/features/interview/report/components/WhatHappenedCard";
 import EvidenceTimeline from "@/src/features/interview/report/components/EvidenceTimeline";
+import ProblemInventoryView from "@/src/features/interview/setup/components/ProblemInventoryView";
 
 // ---------------------------------------------------------------------------
 // Types — plain shapes matching the Prisma `include`s built in page.tsx.
@@ -96,7 +97,7 @@ type Props = {
   completedInterviews: CompletedInterviewItem[];
 };
 
-type Tab = "experiences" | "transcripts" | "diagrams";
+type Tab = "problems" | "transcripts" | "diagrams";
 
 const DIFFICULTY_STYLES: Record<Difficulty, string> = {
   EASY: "border-green-800 text-green-400",
@@ -119,25 +120,22 @@ function formatTimestamp(seconds: number): string {
     .padStart(2, "0")}`;
 }
 
-export default function LibraryView({ experiences, completedInterviews }: Props) {
+export default function LibraryView({ experiences: _experiences, completedInterviews }: Props) {
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState<Tab>("experiences");
-  const [selectedExperience, setSelectedExperience] =
-    useState<ExperienceItem | null>(null);
+  const [activeTab, setActiveTab] = useState<Tab>("problems");
   const [selectedInterview, setSelectedInterview] =
     useState<CompletedInterviewItem | null>(null);
 
   // Initialize tab from URL parameter
   useEffect(() => {
     const tabParam = searchParams.get("tab");
-    if (tabParam === "experiences" || tabParam === "transcripts" || tabParam === "diagrams") {
-      setActiveTab(tabParam);
+    if (tabParam === "problems" || tabParam === "transcripts" || tabParam === "diagrams") {
+      setActiveTab(tabParam as Tab);
     }
   }, [searchParams]);
 
   function switchTab(tab: Tab) {
     setActiveTab(tab);
-    setSelectedExperience(null);
     setSelectedInterview(null);
   }
 
@@ -157,7 +155,7 @@ export default function LibraryView({ experiences, completedInterviews }: Props)
         <div className="flex overflow-x-auto rounded-md border border-border bg-muted p-0.5">
           {(
             [
-              ["experiences", "Interview Experiences"],
+              ["problems", "Problem Library"],
               ["transcripts", "Completed Interviews"],
               ["diagrams", "Interactive Diagrams"],
             ] as [Tab, string][]
@@ -176,88 +174,6 @@ export default function LibraryView({ experiences, completedInterviews }: Props)
           ))}
         </div>
       </div>
-
-      {/* ---------------------------------------------------------------- */}
-      {/* Experience detail                                                 */}
-      {/* ---------------------------------------------------------------- */}
-      {selectedExperience && (
-        <div className="mx-auto mt-8 max-w-3xl space-y-6">
-          <button
-            onClick={() => setSelectedExperience(null)}
-            className="font-mono text-xs text-muted-foreground hover:text-foreground"
-          >
-            ← Back to experiences
-          </button>
-
-          <div className="overflow-hidden rounded-lg border border-border bg-card">
-            <div className="flex flex-col gap-4 bg-muted p-6 md:flex-row md:items-start md:justify-between">
-              <div>
-                <span className="block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                  {selectedExperience.company.name}
-                  {selectedExperience.role ? ` • ${selectedExperience.role}` : ""}
-                  {selectedExperience.level ? ` • ${selectedExperience.level}` : ""}
-                </span>
-                <h2 className="mt-1 text-xl font-bold text-foreground">
-                  {selectedExperience.problem.title}
-                </h2>
-              </div>
-
-              <span className="font-mono text-xs text-muted-foreground">
-                {SOURCE_LABELS[selectedExperience.source]}
-                {selectedExperience.year ? ` • ${selectedExperience.year}` : ""}
-              </span>
-            </div>
-
-            <div className="space-y-6 p-8">
-              {selectedExperience.problem.description && (
-                <div className="grid grid-cols-1 gap-2 border-b border-border pb-6 md:grid-cols-4">
-                  <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground md:col-span-1">
-                    Problem
-                  </span>
-                  <p className="text-sm leading-relaxed text-foreground md:col-span-3">
-                    {selectedExperience.problem.description}
-                  </p>
-                </div>
-              )}
-
-              {selectedExperience.notes && (
-                <div className="grid grid-cols-1 gap-2 border-b border-border pb-6 md:grid-cols-4">
-                  <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground md:col-span-1">
-                    Notes
-                  </span>
-                  <p className="text-sm leading-relaxed text-foreground md:col-span-3">
-                    {selectedExperience.notes}
-                  </p>
-                </div>
-              )}
-
-              <div className="grid grid-cols-1 gap-2 md:grid-cols-4">
-                <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground md:col-span-1">
-                  Source
-                </span>
-                <a
-                  href={selectedExperience.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-sm text-primary hover:opacity-80 md:col-span-3"
-                >
-                  {selectedExperience.url}
-                </a>
-              </div>
-
-              <div className="flex justify-end pt-2">
-                <Link
-                  href={`/interview/setup?problemId=${selectedExperience.problem.id}&type=hld`}
-                >
-                  <Button variant="primary" className="text-sm">
-                    Practice this problem →
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ---------------------------------------------------------------- */}
       {/* Transcript detail                                                 */}
@@ -341,52 +257,12 @@ export default function LibraryView({ experiences, completedInterviews }: Props)
       {/* ---------------------------------------------------------------- */}
       {/* List views                                                        */}
       {/* ---------------------------------------------------------------- */}
-      {!selectedExperience && !selectedInterview && (
+      {!selectedInterview && (
         <div className="mt-8 space-y-6">
-          {activeTab === "experiences" && (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              {experiences.length > 0 ? (
-                experiences.map((exp) => (
-                  <button
-                    key={exp.id}
-                    onClick={() => setSelectedExperience(exp)}
-                    className="flex h-[180px] flex-col justify-between rounded-lg border border-border bg-card p-6 text-left transition hover:border-foreground/40"
-                  >
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between font-mono text-[10px] text-muted-foreground">
-                        <span>
-                          {exp.company.name}
-                          {exp.level ? ` • ${exp.level}` : ""}
-                        </span>
-                        <span
-                          className={`rounded border px-2 py-0.5 uppercase tracking-wider ${DIFFICULTY_STYLES[exp.problem.difficulty]}`}
-                        >
-                          {exp.problem.difficulty}
-                        </span>
-                      </div>
-                      <h3 className="text-base font-semibold text-foreground">
-                        {exp.problem.title}
-                      </h3>
-                    </div>
-
-                    <div className="flex items-center justify-between border-t border-border pt-3 text-xs text-muted-foreground">
-                      <span className="max-w-[60%] truncate">
-                        {SOURCE_LABELS[exp.source]}
-                      </span>
-                      <span className="font-mono font-bold text-foreground">
-                        Read entry →
-                      </span>
-                    </div>
-                  </button>
-                ))
-              ) : (
-                <div className="col-span-full rounded-lg border border-border bg-card p-12 text-center">
-                  <Text variant="muted">
-                    No interview experiences logged yet.
-                  </Text>
-                </div>
-              )}
-            </div>
+          {activeTab === "problems" && (
+            <ProblemInventoryView onSelectProblem={(problemId) => {
+              window.location.href = `/interview/setup?problemId=${problemId}`;
+            }} />
           )}
 
           {activeTab === "transcripts" && (

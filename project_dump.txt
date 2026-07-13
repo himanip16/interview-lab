@@ -52,6 +52,8 @@ PROJECT STRUCTURE
 │   │   │   └── migration.sql
 │   │   ├── 20260713103252_add_phase_started_at
 │   │   │   └── migration.sql
+│   │   ├── 20260713125116_add_problem_metadata
+│   │   │   └── migration.sql
 │   │   └── migration_lock.toml
 │   ├── schema.prisma
 │   └── seed.ts
@@ -133,6 +135,8 @@ PROJECT STRUCTURE
 │   │   │   └── page.tsx
 │   │   ├── login
 │   │   │   └── page.tsx
+│   │   ├── problems
+│   │   │   └── page.tsx
 │   │   └── register
 │   │       └── page.tsx
 │   ├── components
@@ -209,6 +213,7 @@ PROJECT STRUCTURE
 │   │   │   │   │   ├── DifficultySelector.tsx
 │   │   │   │   │   ├── DurationSelector.tsx
 │   │   │   │   │   ├── InterviewTypeSelector.tsx
+│   │   │   │   │   ├── ProblemInventoryView.tsx
 │   │   │   │   │   ├── SetupCard.tsx
 │   │   │   │   │   └── TopicSelector.tsx
 │   │   │   │   ├── hooks
@@ -344,7 +349,7 @@ PROJECT STRUCTURE
 ├── tsconfig.json
 └── tsconfig.tsbuildinfo
 
-137 directories, 206 files
+139 directories, 209 files
 
 FILE CONTENTS
 
@@ -503,20 +508,23 @@ model Message {
 }
 
 model Problem {
-  id             String                @id @default(cuid())
-  slug           String                @unique
-  title          String
-  description    String?
-  category       ProblemCategory
-  difficulty     Difficulty
-  interviewCount Int                   @default(0)
-  createdAt      DateTime              @default(now())
-  updatedAt      DateTime              @updatedAt
-  interviews     Interview[]
-  experiences    InterviewExperience[]
-  companies      ProblemCompany[]
-  tags           ProblemTag[]
-  concepts       ProblemConcept[]
+  id               String                @id @default(cuid())
+  slug             String                @unique
+  title            String
+  description      String?
+  category         ProblemCategory
+  difficulty       Difficulty
+  interviewCount   Int                   @default(0)
+  cruxOfProblem    String?
+  estimatedMinutes Int?
+  interviewType    String?
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  interviews       Interview[]
+  experiences      InterviewExperience[]
+  companies        ProblemCompany[]
+  tags             ProblemTag[]
+  concepts         ProblemConcept[]
 }
 
 model Company {
@@ -1011,16 +1019,107 @@ import {
 const prisma = new PrismaClient();
 
 // ---------------------------------------------------------------------------
-// Problems (unchanged)
+// Problems - Expanded to 50+ focused problems by interview type
 // ---------------------------------------------------------------------------
 
-const problems = [
+type ProblemSeed = {
+  slug: string;
+  title: string;
+  description: string;
+  category: ProblemCategory;
+  difficulty: Difficulty;
+  interviewType: string;
+  cruxOfProblem?: string;
+  estimatedMinutes?: number;
+  concepts?: string[];
+  tags?: string[];
+};
+
+const problems: ProblemSeed[] = [
+  // HLD - High-Level Design Problems
+  {
+    slug: "real-time-dashboard",
+    title: "Design a Real-Time Analytics Dashboard",
+    description: "Build a system that displays live metrics with sub-second updates for thousands of concurrent users.",
+    category: ProblemCategory.SYSTEM_DESIGN,
+    difficulty: Difficulty.HARD,
+    interviewType: "hld",
+    cruxOfProblem: "WebSocket scaling + efficient aggregation",
+    estimatedMinutes: 45,
+    concepts: ["websockets", "redis", "time-series"],
+    tags: ["real-time", "analytics", "high-concurrency"],
+  },
+  {
+    slug: "recommendation-service",
+    title: "Design a Recommendation Service",
+    description: "Build a service that suggests personalized content to millions of users with low latency.",
+    category: ProblemCategory.SYSTEM_DESIGN,
+    difficulty: Difficulty.HARD,
+    interviewType: "hld",
+    cruxOfProblem: "Collaborative filtering + real-time ranking",
+    estimatedMinutes: 45,
+    concepts: ["machine-learning", "caching-strategy", "database-sharding"],
+    tags: ["recommendations", "personalization", "ml"],
+  },
+  {
+    slug: "analytics-pipeline",
+    title: "Design an Analytics Pipeline",
+    description: "Build a system that processes billions of events daily and generates aggregated reports.",
+    category: ProblemCategory.DISTRIBUTED_SYSTEMS,
+    difficulty: Difficulty.HARD,
+    interviewType: "hld",
+    cruxOfProblem: "Event batching + time-window aggregation",
+    estimatedMinutes: 60,
+    concepts: ["message-queues", "data-consistency", "batch-processing"],
+    tags: ["analytics", "big-data", "aggregation"],
+  },
+  {
+    slug: "notification-system",
+    title: "Design a Notification System",
+    description: "Build a system that delivers push notifications to millions of devices reliably.",
+    category: ProblemCategory.DISTRIBUTED_SYSTEMS,
+    difficulty: Difficulty.HARD,
+    interviewType: "hld",
+    cruxOfProblem: "Queue-based delivery + deduplication",
+    estimatedMinutes: 45,
+    concepts: ["message-queues", "rate-limiting-algorithms", "data-consistency"],
+    tags: ["notifications", "push", "reliability"],
+  },
+  {
+    slug: "feed-ranking",
+    title: "Design a Feed Ranking System",
+    description: "Build a system that ranks and personalizes social media feeds for millions of users.",
+    category: ProblemCategory.SYSTEM_DESIGN,
+    difficulty: Difficulty.HARD,
+    interviewType: "hld",
+    cruxOfProblem: "Ranking algorithms + personalized scoring",
+    estimatedMinutes: 45,
+    concepts: ["caching-strategy", "database-sharding", "machine-learning"],
+    tags: ["social", "ranking", "personalization"],
+  },
+  {
+    slug: "click-tracking",
+    title: "Design a Click Tracking System",
+    description: "Build a system that tracks and aggregates millions of click events in real-time.",
+    category: ProblemCategory.DISTRIBUTED_SYSTEMS,
+    difficulty: Difficulty.HARD,
+    interviewType: "hld",
+    cruxOfProblem: "High-volume ingestion + real-time aggregation",
+    estimatedMinutes: 45,
+    concepts: ["message-queues", "time-series", "database-sharding"],
+    tags: ["analytics", "high-volume", "real-time"],
+  },
   {
     slug: "url-shortener",
     title: "Design a URL Shortener",
     description: "Design a scalable URL shortening service like TinyURL.",
     category: ProblemCategory.SYSTEM_DESIGN,
     difficulty: Difficulty.MEDIUM,
+    interviewType: "hld",
+    cruxOfProblem: "Unique ID generation + redirect performance",
+    estimatedMinutes: 30,
+    concepts: ["database-sharding", "caching-strategy", "api-design"],
+    tags: ["storage", "redirection", "scalability"],
   },
   {
     slug: "rate-limiter",
@@ -1028,6 +1127,11 @@ const problems = [
     description: "Design a distributed rate limiting system.",
     category: ProblemCategory.SYSTEM_DESIGN,
     difficulty: Difficulty.MEDIUM,
+    interviewType: "hld",
+    cruxOfProblem: "Distributed state + sliding window",
+    estimatedMinutes: 30,
+    concepts: ["rate-limiting-algorithms", "consistent-hashing", "redis"],
+    tags: ["rate-limiting", "distributed", "throttling"],
   },
   {
     slug: "news-feed",
@@ -1035,6 +1139,11 @@ const problems = [
     description: "Design a scalable social media news feed.",
     category: ProblemCategory.SYSTEM_DESIGN,
     difficulty: Difficulty.HARD,
+    interviewType: "hld",
+    cruxOfProblem: "Fanout on write vs read + timeline pagination",
+    estimatedMinutes: 45,
+    concepts: ["caching-strategy", "message-queues", "database-sharding"],
+    tags: ["social", "feed", "scalability"],
   },
   {
     slug: "chat-system",
@@ -1042,6 +1151,11 @@ const problems = [
     description: "Design a real-time messaging platform.",
     category: ProblemCategory.SYSTEM_DESIGN,
     difficulty: Difficulty.HARD,
+    interviewType: "hld",
+    cruxOfProblem: "Message ordering + presence + delivery guarantees",
+    estimatedMinutes: 45,
+    concepts: ["websockets", "message-queues", "data-consistency"],
+    tags: ["messaging", "real-time", "communication"],
   },
   {
     slug: "file-storage",
@@ -1049,6 +1163,11 @@ const problems = [
     description: "Design a distributed cloud file storage system.",
     category: ProblemCategory.DISTRIBUTED_SYSTEMS,
     difficulty: Difficulty.HARD,
+    interviewType: "hld",
+    cruxOfProblem: "Block-level storage + consistency + durability",
+    estimatedMinutes: 60,
+    concepts: ["database-sharding", "cdn", "data-consistency"],
+    tags: ["storage", "cloud", "distributed"],
   },
   {
     slug: "design-uber",
@@ -1056,6 +1175,11 @@ const problems = [
     description: "Design a large-scale ride sharing platform.",
     category: ProblemCategory.SYSTEM_DESIGN,
     difficulty: Difficulty.HARD,
+    interviewType: "hld",
+    cruxOfProblem: "Real-time matching + location indexing + ETA calculation",
+    estimatedMinutes: 60,
+    concepts: ["consistent-hashing", "data-consistency", "load-balancing"],
+    tags: ["ride-sharing", "location", "real-time"],
   },
   {
     slug: "design-youtube",
@@ -1063,6 +1187,459 @@ const problems = [
     description: "Design a global video streaming platform.",
     category: ProblemCategory.SYSTEM_DESIGN,
     difficulty: Difficulty.HARD,
+    interviewType: "hld",
+    cruxOfProblem: "Video upload + transcoding + CDN distribution",
+    estimatedMinutes: 60,
+    concepts: ["cdn", "database-sharding", "caching-strategy"],
+    tags: ["streaming", "video", "cdn"],
+  },
+
+  // LLD - Low-Level Design Problems
+  {
+    slug: "post-comment-threading",
+    title: "Design Post/Comment Threading",
+    description: "Design a system for nested comments with efficient retrieval and pagination.",
+    category: ProblemCategory.LOW_LEVEL_DESIGN,
+    difficulty: Difficulty.MEDIUM,
+    interviewType: "lld",
+    cruxOfProblem: "Tree traversal + pagination + N+1 prevention",
+    estimatedMinutes: 30,
+    concepts: ["object-modeling", "database-indexing", "encapsulation"],
+    tags: ["social", "comments", "threading"],
+  },
+  {
+    slug: "like-reaction-system",
+    title: "Design a Like/Reaction System",
+    description: "Design a system for handling likes and reactions on posts with real-time counts.",
+    category: ProblemCategory.LOW_LEVEL_DESIGN,
+    difficulty: Difficulty.MEDIUM,
+    interviewType: "lld",
+    cruxOfProblem: "Efficient counting + denormalization + consistency",
+    estimatedMinutes: 30,
+    concepts: ["caching-strategy", "denormalization", "redis"],
+    tags: ["social", "reactions", "counting"],
+  },
+  {
+    slug: "user-authentication",
+    title: "Design User Authentication",
+    description: "Design a secure user authentication system with sessions and tokens.",
+    category: ProblemCategory.LOW_LEVEL_DESIGN,
+    difficulty: Difficulty.MEDIUM,
+    interviewType: "lld",
+    cruxOfProblem: "Session management + token security + password hashing",
+    estimatedMinutes: 30,
+    concepts: ["encapsulation", "design-patterns", "api-design"],
+    tags: ["security", "auth", "sessions"],
+  },
+  {
+    slug: "video-upload-pipeline",
+    title: "Design a Video Upload Pipeline",
+    description: "Design a system for uploading and processing large video files.",
+    category: ProblemCategory.LOW_LEVEL_DESIGN,
+    difficulty: Difficulty.HARD,
+    interviewType: "lld",
+    cruxOfProblem: "Multipart upload + state machine + error handling",
+    estimatedMinutes: 45,
+    concepts: ["design-patterns", "state-machine", "error-handling"],
+    tags: ["video", "upload", "processing"],
+  },
+  {
+    slug: "search-indexing",
+    title: "Design Search Indexing",
+    description: "Design an inverted index system for full-text search with ranking.",
+    category: ProblemCategory.LOW_LEVEL_DESIGN,
+    difficulty: Difficulty.HARD,
+    interviewType: "lld",
+    cruxOfProblem: "Inverted index + ranking + relevance scoring",
+    estimatedMinutes: 45,
+    concepts: ["database-indexing", "algorithms", "data-structures"],
+    tags: ["search", "indexing", "ranking"],
+  },
+  {
+    slug: "permissions-access-control",
+    title: "Design Permissions & Access Control",
+    description: "Design a flexible permission system for role-based access control.",
+    category: ProblemCategory.LOW_LEVEL_DESIGN,
+    difficulty: Difficulty.MEDIUM,
+    interviewType: "lld",
+    cruxOfProblem: "Role hierarchy + permission inheritance + performance",
+    estimatedMinutes: 30,
+    concepts: ["design-patterns", "object-modeling", "encapsulation"],
+    tags: ["security", "permissions", "rbac"],
+  },
+  {
+    slug: "shopping-cart",
+    title: "Design a Shopping Cart",
+    description: "Design a shopping cart system that handles persistence and concurrency.",
+    category: ProblemCategory.LOW_LEVEL_DESIGN,
+    difficulty: Difficulty.EASY,
+    interviewType: "lld",
+    cruxOfProblem: "Cart persistence + price consistency + session handling",
+    estimatedMinutes: 30,
+    concepts: ["object-modeling", "encapsulation", "design-patterns"],
+    tags: ["e-commerce", "cart", "persistence"],
+  },
+  {
+    slug: "booking-system",
+    title: "Design a Booking System",
+    description: "Design a system for booking appointments with availability management.",
+    category: ProblemCategory.LOW_LEVEL_DESIGN,
+    difficulty: Difficulty.MEDIUM,
+    interviewType: "lld",
+    cruxOfProblem: "Availability checking + concurrency + double-booking prevention",
+    estimatedMinutes: 30,
+    concepts: ["design-patterns", "data-consistency", "encapsulation"],
+    tags: ["booking", "scheduling", "availability"],
+  },
+  {
+    slug: "file-versioning",
+    title: "Design File Versioning",
+    description: "Design a system for tracking and managing different versions of files.",
+    category: ProblemCategory.LOW_LEVEL_DESIGN,
+    difficulty: Difficulty.MEDIUM,
+    interviewType: "lld",
+    cruxOfProblem: "Version storage + diff generation + rollback",
+    estimatedMinutes: 30,
+    concepts: ["object-modeling", "design-patterns", "data-structures"],
+    tags: ["versioning", "files", "storage"],
+  },
+  {
+    slug: "cache-invalidation",
+    title: "Design Cache Invalidation",
+    description: "Design a cache invalidation strategy for a distributed system.",
+    category: ProblemCategory.LOW_LEVEL_DESIGN,
+    difficulty: Difficulty.HARD,
+    interviewType: "lld",
+    cruxOfProblem: "Invalidation propagation + consistency + performance",
+    estimatedMinutes: 45,
+    concepts: ["caching-strategy", "design-patterns", "data-consistency"],
+    tags: ["caching", "invalidation", "consistency"],
+  },
+  {
+    slug: "event-sourcing",
+    title: "Design Event Sourcing",
+    description: "Design an event-sourced system for audit trails and replay.",
+    category: ProblemCategory.LOW_LEVEL_DESIGN,
+    difficulty: Difficulty.HARD,
+    interviewType: "lld",
+    cruxOfProblem: "Event storage + snapshotting + replay performance",
+    estimatedMinutes: 45,
+    concepts: ["design-patterns", "message-queues", "data-consistency"],
+    tags: ["event-sourcing", "audit", "replay"],
+  },
+  {
+    slug: "api-rate-limiter",
+    title: "Design API Rate Limiter",
+    description: "Design a rate limiter for API endpoints with different tiers.",
+    category: ProblemCategory.LOW_LEVEL_DESIGN,
+    difficulty: Difficulty.MEDIUM,
+    interviewType: "lld",
+    cruxOfProblem: "Token bucket + sliding window + distributed coordination",
+    estimatedMinutes: 30,
+    concepts: ["rate-limiting-algorithms", "design-patterns", "encapsulation"],
+    tags: ["rate-limiting", "api", "throttling"],
+  },
+  {
+    slug: "retry-mechanism",
+    title: "Design a Retry Mechanism",
+    description: "Design a retry mechanism for handling transient failures.",
+    category: ProblemCategory.LOW_LEVEL_DESIGN,
+    difficulty: Difficulty.MEDIUM,
+    interviewType: "lld",
+    cruxOfProblem: "Exponential backoff + idempotency + dead letter queue",
+    estimatedMinutes: 30,
+    concepts: ["design-patterns", "error-handling", "message-queues"],
+    tags: ["retry", "resilience", "error-handling"],
+  },
+
+  // DSA - Data Structures & Algorithms Problems
+  {
+    slug: "binary-search-variations",
+    title: "Binary Search Variations",
+    description: "Implement various binary search patterns including finding first/last occurrence and search in rotated arrays.",
+    category: ProblemCategory.JAVA,
+    difficulty: Difficulty.MEDIUM,
+    interviewType: "dsa",
+    cruxOfProblem: "Search space reduction + boundary conditions",
+    estimatedMinutes: 30,
+    concepts: ["algorithms", "complexity-analysis", "edge-case-handling"],
+    tags: ["binary-search", "algorithms", "searching"],
+  },
+  {
+    slug: "graph-traversals",
+    title: "Graph Traversals",
+    description: "Implement BFS and DFS for various graph problems including shortest path and cycle detection.",
+    category: ProblemCategory.JAVA,
+    difficulty: Difficulty.MEDIUM,
+    interviewType: "dsa",
+    cruxOfProblem: "Traversal order + visited tracking + cycle detection",
+    estimatedMinutes: 45,
+    concepts: ["algorithms", "data-structures", "complexity-analysis"],
+    tags: ["graph", "bfs", "dfs"],
+  },
+  {
+    slug: "dynamic-programming-patterns",
+    title: "Dynamic Programming Patterns",
+    description: "Solve DP problems using memoization and tabulation for knapsack, LCS, and palindrome problems.",
+    category: ProblemCategory.JAVA,
+    difficulty: Difficulty.HARD,
+    interviewType: "dsa",
+    cruxOfProblem: "State definition + recurrence relation + optimal substructure",
+    estimatedMinutes: 60,
+    concepts: ["algorithms", "complexity-analysis", "problem-solving"],
+    tags: ["dynamic-programming", "optimization", "algorithms"],
+  },
+  {
+    slug: "two-pointers",
+    title: "Two Pointers Technique",
+    description: "Solve array problems using two pointers for sorting, searching, and partitioning.",
+    category: ProblemCategory.JAVA,
+    difficulty: Difficulty.EASY,
+    interviewType: "dsa",
+    cruxOfProblem: "Pointer movement + termination conditions",
+    estimatedMinutes: 30,
+    concepts: ["algorithms", "edge-case-handling", "complexity-analysis"],
+    tags: ["two-pointers", "arrays", "algorithms"],
+  },
+  {
+    slug: "sliding-window",
+    title: "Sliding Window",
+    description: "Solve subarray problems using fixed and variable size sliding windows.",
+    category: ProblemCategory.JAVA,
+    difficulty: Difficulty.MEDIUM,
+    interviewType: "dsa",
+    cruxOfProblem: "Window expansion + contraction + state maintenance",
+    estimatedMinutes: 30,
+    concepts: ["algorithms", "complexity-analysis", "edge-case-handling"],
+    tags: ["sliding-window", "arrays", "subarrays"],
+  },
+  {
+    slug: "heap-priority-queue",
+    title: "Heap and Priority Queue",
+    description: "Solve problems using heaps for top-k elements, merge k-sorted lists, and task scheduling.",
+    category: ProblemCategory.JAVA,
+    difficulty: Difficulty.MEDIUM,
+    interviewType: "dsa",
+    cruxOfProblem: "Heap property + efficient insertion/extraction",
+    estimatedMinutes: 45,
+    concepts: ["data-structures", "algorithms", "complexity-analysis"],
+    tags: ["heap", "priority-queue", "data-structures"],
+  },
+  {
+    slug: "trie-prefix-tree",
+    title: "Trie Prefix Tree",
+    description: "Implement a trie for autocomplete, spell checking, and word search problems.",
+    category: ProblemCategory.JAVA,
+    difficulty: Difficulty.MEDIUM,
+    interviewType: "dsa",
+    cruxOfProblem: "Trie node structure + prefix traversal + memory optimization",
+    estimatedMinutes: 30,
+    concepts: ["data-structures", "algorithms", "string-manipulation"],
+    tags: ["trie", "prefix", "strings"],
+  },
+  {
+    slug: "union-find",
+    title: "Union Find (Disjoint Set)",
+    description: "Implement union-find for connectivity problems, cycle detection, and Kruskal's algorithm.",
+    category: ProblemCategory.JAVA,
+    difficulty: Difficulty.MEDIUM,
+    interviewType: "dsa",
+    cruxOfProblem: "Path compression + union by rank + time complexity",
+    estimatedMinutes: 30,
+    concepts: ["data-structures", "algorithms", "graph"],
+    tags: ["union-find", "disjoint-set", "graph"],
+  },
+  {
+    slug: "backtracking",
+    title: "Backtracking Patterns",
+    description: "Solve permutation, combination, and constraint satisfaction problems using backtracking.",
+    category: ProblemCategory.JAVA,
+    difficulty: Difficulty.HARD,
+    interviewType: "dsa",
+    cruxOfProblem: "State space exploration + pruning + base cases",
+    estimatedMinutes: 45,
+    concepts: ["algorithms", "problem-solving", "complexity-analysis"],
+    tags: ["backtracking", "recursion", "combinatorics"],
+  },
+  {
+    slug: "greedy-algorithms",
+    title: "Greedy Algorithms",
+    description: "Solve interval scheduling, Huffman coding, and activity selection using greedy approaches.",
+    category: ProblemCategory.JAVA,
+    difficulty: Difficulty.MEDIUM,
+    interviewType: "dsa",
+    cruxOfProblem: "Greedy choice property + optimal substructure",
+    estimatedMinutes: 30,
+    concepts: ["algorithms", "problem-solving", "complexity-analysis"],
+    tags: ["greedy", "optimization", "algorithms"],
+  },
+  {
+    slug: "linked-lists",
+    title: "Linked List Manipulation",
+    description: "Solve problems involving linked list reversal, cycle detection, and intersection.",
+    category: ProblemCategory.JAVA,
+    difficulty: Difficulty.EASY,
+    interviewType: "dsa",
+    cruxOfProblem: "Pointer manipulation + cycle detection + dummy nodes",
+    estimatedMinutes: 30,
+    concepts: ["data-structures", "pointers", "edge-case-handling"],
+    tags: ["linked-list", "pointers", "data-structures"],
+  },
+  {
+    slug: "stack-queue",
+    title: "Stack and Queue Applications",
+    description: "Solve problems using stacks for parentheses matching and queues for level-order traversal.",
+    category: ProblemCategory.JAVA,
+    difficulty: Difficulty.EASY,
+    interviewType: "dsa",
+    cruxOfProblem: "LIFO/FIFO semantics + appropriate data structure choice",
+    estimatedMinutes: 30,
+    concepts: ["data-structures", "algorithms", "problem-solving"],
+    tags: ["stack", "queue", "data-structures"],
+  },
+  {
+    slug: "hash-maps",
+    title: "Hash Map Applications",
+    description: "Solve problems using hash maps for counting, frequency analysis, and two-sum variants.",
+    category: ProblemCategory.JAVA,
+    difficulty: Difficulty.EASY,
+    interviewType: "dsa",
+    cruxOfProblem: "Hash function + collision handling + O(1) operations",
+    estimatedMinutes: 30,
+    concepts: ["data-structures", "algorithms", "complexity-analysis"],
+    tags: ["hash-map", "hashing", "data-structures"],
+  },
+  {
+    slug: "tree-traversals",
+    title: "Tree Traversals",
+    description: "Implement inorder, preorder, postorder traversals and solve tree problems recursively.",
+    category: ProblemCategory.JAVA,
+    difficulty: Difficulty.MEDIUM,
+    interviewType: "dsa",
+    cruxOfProblem: "Recursive vs iterative + traversal order + base cases",
+    estimatedMinutes: 30,
+    concepts: ["data-structures", "recursion", "algorithms"],
+    tags: ["tree", "traversal", "recursion"],
+  },
+  {
+    slug: "binary-search-tree",
+    title: "Binary Search Tree Operations",
+    description: "Implement BST operations including insertion, deletion, search, and validation.",
+    category: ProblemCategory.JAVA,
+    difficulty: Difficulty.MEDIUM,
+    interviewType: "dsa",
+    cruxOfProblem: "BST property + rebalancing + edge cases",
+    estimatedMinutes: 45,
+    concepts: ["data-structures", "algorithms", "recursion"],
+    tags: ["bst", "binary-search-tree", "data-structures"],
+  },
+  {
+    slug: "string-algorithms",
+    title: "String Algorithms",
+    description: "Solve string problems including KMP pattern matching, longest substring, and anagrams.",
+    category: ProblemCategory.JAVA,
+    difficulty: Difficulty.MEDIUM,
+    interviewType: "dsa",
+    cruxOfProblem: "Pattern matching + substring search + character counting",
+    estimatedMinutes: 45,
+    concepts: ["algorithms", "strings", "complexity-analysis"],
+    tags: ["strings", "pattern-matching", "algorithms"],
+  },
+  {
+    slug: "bit-manipulation",
+    title: "Bit Manipulation",
+    description: "Solve problems using bit operations for XOR, bit counting, and single number detection.",
+    category: ProblemCategory.JAVA,
+    difficulty: Difficulty.MEDIUM,
+    interviewType: "dsa",
+    cruxOfProblem: "Bitwise operations + bit masks + optimization",
+    estimatedMinutes: 30,
+    concepts: ["algorithms", "bit-manipulation", "optimization"],
+    tags: ["bits", "bitwise", "optimization"],
+  },
+  {
+    slug: "interval-problems",
+    title: "Interval Problems",
+    description: "Solve interval merging, overlapping, and scheduling problems efficiently.",
+    category: ProblemCategory.JAVA,
+    difficulty: Difficulty.MEDIUM,
+    interviewType: "dsa",
+    cruxOfProblem: "Sorting + sweeping + interval comparison",
+    estimatedMinutes: 30,
+    concepts: ["algorithms", "sorting", "problem-solving"],
+    tags: ["intervals", "sorting", "scheduling"],
+  },
+  {
+    slug: "matrix-problems",
+    title: "Matrix Problems",
+    description: "Solve matrix rotation, search in 2D matrix, and dynamic programming on grids.",
+    category: ProblemCategory.JAVA,
+    difficulty: Difficulty.MEDIUM,
+    interviewType: "dsa",
+    cruxOfProblem: "2D traversal + boundary handling + optimization",
+    estimatedMinutes: 45,
+    concepts: ["algorithms", "data-structures", "problem-solving"],
+    tags: ["matrix", "2d", "grid"],
+  },
+  {
+    slug: "design-linked-list",
+    title: "Design Linked List",
+    description: "Design and implement a linked list with operations from scratch.",
+    category: ProblemCategory.JAVA,
+    difficulty: Difficulty.EASY,
+    interviewType: "dsa",
+    cruxOfProblem: "Node structure + pointer management + edge cases",
+    estimatedMinutes: 30,
+    concepts: ["data-structures", "pointers", "implementation"],
+    tags: ["linked-list", "implementation", "data-structures"],
+  },
+  {
+    slug: "design-stack",
+    title: "Design Stack",
+    description: "Design a stack using arrays and linked lists with O(1) operations.",
+    category: ProblemCategory.JAVA,
+    difficulty: Difficulty.EASY,
+    interviewType: "dsa",
+    cruxOfProblem: "LIFO semantics + dynamic resizing + error handling",
+    estimatedMinutes: 30,
+    concepts: ["data-structures", "implementation", "algorithms"],
+    tags: ["stack", "implementation", "data-structures"],
+  },
+  {
+    slug: "design-queue",
+    title: "Design Queue",
+    description: "Design a queue using arrays and linked lists with O(1) operations.",
+    category: ProblemCategory.JAVA,
+    difficulty: Difficulty.EASY,
+    interviewType: "dsa",
+    cruxOfProblem: "FIFO semantics + circular buffer + error handling",
+    estimatedMinutes: 30,
+    concepts: ["data-structures", "implementation", "algorithms"],
+    tags: ["queue", "implementation", "data-structures"],
+  },
+  {
+    slug: "lru-cache",
+    title: "Design LRU Cache",
+    description: "Design an LRU cache with get and put operations in O(1) time.",
+    category: ProblemCategory.JAVA,
+    difficulty: Difficulty.MEDIUM,
+    interviewType: "dsa",
+    cruxOfProblem: "Hash map + doubly linked list + eviction policy",
+    estimatedMinutes: 45,
+    concepts: ["data-structures", "design-patterns", "algorithms"],
+    tags: ["cache", "lru", "data-structures"],
+  },
+  {
+    slug: "design-hashmap",
+    title: "Design Hash Map",
+    description: "Design a hash map from scratch with collision resolution.",
+    category: ProblemCategory.JAVA,
+    difficulty: Difficulty.MEDIUM,
+    interviewType: "dsa",
+    cruxOfProblem: "Hash function + collision resolution + resizing",
+    estimatedMinutes: 45,
+    concepts: ["data-structures", "algorithms", "implementation"],
+    tags: ["hash-map", "implementation", "data-structures"],
   },
 ];
 
@@ -2033,8 +2610,25 @@ async function main() {
   for (const problem of problems) {
     await prisma.problem.upsert({
       where: { slug: problem.slug },
-      update: problem,
-      create: problem,
+      update: {
+        title: problem.title,
+        description: problem.description,
+        category: problem.category,
+        difficulty: problem.difficulty,
+        interviewType: problem.interviewType,
+        cruxOfProblem: problem.cruxOfProblem,
+        estimatedMinutes: problem.estimatedMinutes,
+      },
+      create: {
+        slug: problem.slug,
+        title: problem.title,
+        description: problem.description,
+        category: problem.category,
+        difficulty: problem.difficulty,
+        interviewType: problem.interviewType,
+        cruxOfProblem: problem.cruxOfProblem,
+        estimatedMinutes: problem.estimatedMinutes,
+      },
     });
   }
 
@@ -2412,6 +3006,37 @@ export default function DiagramPage() {
 }
 
 ================================================
+FILE: ./src/app/problems/page.tsx
+================================================
+import Navbar from "@/src/components/layout/Navbar";
+import PageContainer from "@/src/components/layout/PageContainer";
+import ProblemInventoryView from "@/src/features/interview/setup/components/ProblemInventoryView";
+
+export default function ProblemsPage() {
+  return (
+    <PageContainer>
+      <Navbar />
+
+      <section className="py-20">
+        <h1 className="text-4xl font-bold">
+          Problem Library
+        </h1>
+
+        <p className="mt-3 text-zinc-400">
+          Browse and select from our collection of interview problems.
+        </p>
+
+        <div className="mt-10">
+          <ProblemInventoryView onSelectProblem={(problemId) => {
+            window.location.href = `/interview/setup?problemId=${problemId}`;
+          }} />
+        </div>
+      </section>
+    </PageContainer>
+  );
+}
+
+================================================
 FILE: ./src/app/library/page.tsx
 ================================================
 import { InterviewStatus } from "@prisma/client";
@@ -2550,7 +3175,6 @@ export default function MarketingLayout({
 ================================================
 FILE: ./src/app/(marketing)/page.tsx
 ================================================
-import InterviewCatalog from "@/src/components/catalog/InterviewCatalog";
 import Navbar from "@/src/components/layout/Navbar";
 import PageContainer from "@/src/components/layout/PageContainer";
 
@@ -2569,8 +3193,6 @@ export default function Home() {
       <SmartMentor />
 
       <PersonalNotebooks />
-
-      <InterviewCatalog />
 
       <SampleFeedback />
     </PageContainer>
@@ -4084,7 +4706,7 @@ export default function Hero() {
           </Link>
 
           <Link
-            href="/library?tab=experiences"
+            href="/problems"
             className="rounded-lg border border-border px-6 py-3 text-muted-foreground hover:border-foreground hover:text-foreground transition-colors"
           >
             Browse Interview Library
@@ -4999,6 +5621,7 @@ import { Button } from "@/src/components/ui/Button";
 import OverallScoreCard from "@/src/features/interview/report/components/OverallScoreCard";
 import WhatHappenedCard from "@/src/features/interview/report/components/WhatHappenedCard";
 import EvidenceTimeline from "@/src/features/interview/report/components/EvidenceTimeline";
+import ProblemInventoryView from "@/src/features/interview/setup/components/ProblemInventoryView";
 
 // ---------------------------------------------------------------------------
 // Types — plain shapes matching the Prisma `include`s built in page.tsx.
@@ -5078,7 +5701,7 @@ type Props = {
   completedInterviews: CompletedInterviewItem[];
 };
 
-type Tab = "experiences" | "transcripts" | "diagrams";
+type Tab = "problems" | "transcripts" | "diagrams";
 
 const DIFFICULTY_STYLES: Record<Difficulty, string> = {
   EASY: "border-green-800 text-green-400",
@@ -5101,25 +5724,22 @@ function formatTimestamp(seconds: number): string {
     .padStart(2, "0")}`;
 }
 
-export default function LibraryView({ experiences, completedInterviews }: Props) {
+export default function LibraryView({ experiences: _experiences, completedInterviews }: Props) {
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState<Tab>("experiences");
-  const [selectedExperience, setSelectedExperience] =
-    useState<ExperienceItem | null>(null);
+  const [activeTab, setActiveTab] = useState<Tab>("problems");
   const [selectedInterview, setSelectedInterview] =
     useState<CompletedInterviewItem | null>(null);
 
   // Initialize tab from URL parameter
   useEffect(() => {
     const tabParam = searchParams.get("tab");
-    if (tabParam === "experiences" || tabParam === "transcripts" || tabParam === "diagrams") {
-      setActiveTab(tabParam);
+    if (tabParam === "problems" || tabParam === "transcripts" || tabParam === "diagrams") {
+      setActiveTab(tabParam as Tab);
     }
   }, [searchParams]);
 
   function switchTab(tab: Tab) {
     setActiveTab(tab);
-    setSelectedExperience(null);
     setSelectedInterview(null);
   }
 
@@ -5139,7 +5759,7 @@ export default function LibraryView({ experiences, completedInterviews }: Props)
         <div className="flex overflow-x-auto rounded-md border border-border bg-muted p-0.5">
           {(
             [
-              ["experiences", "Interview Experiences"],
+              ["problems", "Problem Library"],
               ["transcripts", "Completed Interviews"],
               ["diagrams", "Interactive Diagrams"],
             ] as [Tab, string][]
@@ -5158,88 +5778,6 @@ export default function LibraryView({ experiences, completedInterviews }: Props)
           ))}
         </div>
       </div>
-
-      {/* ---------------------------------------------------------------- */}
-      {/* Experience detail                                                 */}
-      {/* ---------------------------------------------------------------- */}
-      {selectedExperience && (
-        <div className="mx-auto mt-8 max-w-3xl space-y-6">
-          <button
-            onClick={() => setSelectedExperience(null)}
-            className="font-mono text-xs text-muted-foreground hover:text-foreground"
-          >
-            ← Back to experiences
-          </button>
-
-          <div className="overflow-hidden rounded-lg border border-border bg-card">
-            <div className="flex flex-col gap-4 bg-muted p-6 md:flex-row md:items-start md:justify-between">
-              <div>
-                <span className="block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                  {selectedExperience.company.name}
-                  {selectedExperience.role ? ` • ${selectedExperience.role}` : ""}
-                  {selectedExperience.level ? ` • ${selectedExperience.level}` : ""}
-                </span>
-                <h2 className="mt-1 text-xl font-bold text-foreground">
-                  {selectedExperience.problem.title}
-                </h2>
-              </div>
-
-              <span className="font-mono text-xs text-muted-foreground">
-                {SOURCE_LABELS[selectedExperience.source]}
-                {selectedExperience.year ? ` • ${selectedExperience.year}` : ""}
-              </span>
-            </div>
-
-            <div className="space-y-6 p-8">
-              {selectedExperience.problem.description && (
-                <div className="grid grid-cols-1 gap-2 border-b border-border pb-6 md:grid-cols-4">
-                  <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground md:col-span-1">
-                    Problem
-                  </span>
-                  <p className="text-sm leading-relaxed text-foreground md:col-span-3">
-                    {selectedExperience.problem.description}
-                  </p>
-                </div>
-              )}
-
-              {selectedExperience.notes && (
-                <div className="grid grid-cols-1 gap-2 border-b border-border pb-6 md:grid-cols-4">
-                  <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground md:col-span-1">
-                    Notes
-                  </span>
-                  <p className="text-sm leading-relaxed text-foreground md:col-span-3">
-                    {selectedExperience.notes}
-                  </p>
-                </div>
-              )}
-
-              <div className="grid grid-cols-1 gap-2 md:grid-cols-4">
-                <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground md:col-span-1">
-                  Source
-                </span>
-                <a
-                  href={selectedExperience.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-sm text-primary hover:opacity-80 md:col-span-3"
-                >
-                  {selectedExperience.url}
-                </a>
-              </div>
-
-              <div className="flex justify-end pt-2">
-                <Link
-                  href={`/interview/setup?problemId=${selectedExperience.problem.id}&type=hld`}
-                >
-                  <Button variant="primary" className="text-sm">
-                    Practice this problem →
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ---------------------------------------------------------------- */}
       {/* Transcript detail                                                 */}
@@ -5323,52 +5861,12 @@ export default function LibraryView({ experiences, completedInterviews }: Props)
       {/* ---------------------------------------------------------------- */}
       {/* List views                                                        */}
       {/* ---------------------------------------------------------------- */}
-      {!selectedExperience && !selectedInterview && (
+      {!selectedInterview && (
         <div className="mt-8 space-y-6">
-          {activeTab === "experiences" && (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              {experiences.length > 0 ? (
-                experiences.map((exp) => (
-                  <button
-                    key={exp.id}
-                    onClick={() => setSelectedExperience(exp)}
-                    className="flex h-[180px] flex-col justify-between rounded-lg border border-border bg-card p-6 text-left transition hover:border-foreground/40"
-                  >
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between font-mono text-[10px] text-muted-foreground">
-                        <span>
-                          {exp.company.name}
-                          {exp.level ? ` • ${exp.level}` : ""}
-                        </span>
-                        <span
-                          className={`rounded border px-2 py-0.5 uppercase tracking-wider ${DIFFICULTY_STYLES[exp.problem.difficulty]}`}
-                        >
-                          {exp.problem.difficulty}
-                        </span>
-                      </div>
-                      <h3 className="text-base font-semibold text-foreground">
-                        {exp.problem.title}
-                      </h3>
-                    </div>
-
-                    <div className="flex items-center justify-between border-t border-border pt-3 text-xs text-muted-foreground">
-                      <span className="max-w-[60%] truncate">
-                        {SOURCE_LABELS[exp.source]}
-                      </span>
-                      <span className="font-mono font-bold text-foreground">
-                        Read entry →
-                      </span>
-                    </div>
-                  </button>
-                ))
-              ) : (
-                <div className="col-span-full rounded-lg border border-border bg-card p-12 text-center">
-                  <Text variant="muted">
-                    No interview experiences logged yet.
-                  </Text>
-                </div>
-              )}
-            </div>
+          {activeTab === "problems" && (
+            <ProblemInventoryView onSelectProblem={(problemId) => {
+              window.location.href = `/interview/setup?problemId=${problemId}`;
+            }} />
           )}
 
           {activeTab === "transcripts" && (
@@ -6113,6 +6611,286 @@ export default function CompanySelector({
     </div>
   );
 }
+================================================
+FILE: ./src/features/interview/setup/components/ProblemInventoryView.tsx
+================================================
+"use client";
+
+import { useState, useEffect } from "react";
+import { Difficulty, ProblemCategory } from "@prisma/client";
+import { Button } from "@/src/components/ui/Button";
+
+type Problem = {
+  id: string;
+  slug: string;
+  title: string;
+  description: string | null;
+  category: ProblemCategory;
+  difficulty: Difficulty;
+  interviewType: string;
+  cruxOfProblem: string | null;
+  estimatedMinutes: number | null;
+  tags: string[];
+};
+
+type Props = {
+  onSelectProblem?: (problemId: string) => void;
+};
+
+const INTERVIEW_TYPES = ["hld", "lld", "dsa"] as const;
+const DIFFICULTIES = ["All", Difficulty.EASY, Difficulty.MEDIUM, Difficulty.HARD] as const;
+
+const CATEGORY_LABELS: Record<ProblemCategory, string> = {
+  SYSTEM_DESIGN: "System Design",
+  LOW_LEVEL_DESIGN: "Low Level Design",
+  DATABASES: "Databases",
+  BACKEND: "Backend",
+  DISTRIBUTED_SYSTEMS: "Distributed Systems",
+  JAVA: "Java",
+  KAFKA: "Kafka",
+  REDIS: "Redis",
+  OPERATING_SYSTEMS: "Operating Systems",
+  NETWORKING: "Networking",
+};
+
+const DIFFICULTY_COLORS: Record<Difficulty, string> = {
+  EASY: "border-green-800 text-green-400",
+  MEDIUM: "border-amber-800 text-amber-400",
+  HARD: "border-red-800 text-red-400",
+};
+
+export default function ProblemInventoryView({ onSelectProblem }: Props) {
+  const [problems, setProblems] = useState<Problem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedType, setSelectedType] = useState<(typeof INTERVIEW_TYPES)[number]>("hld");
+  const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [selectedDifficulty, setSelectedDifficulty] = useState<(typeof DIFFICULTIES)[number]>("All");
+  const [expandedProblem, setExpandedProblem] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchProblems() {
+      try {
+        const response = await fetch("/api/problems");
+        const data = await response.json();
+        setProblems(data.problems || []);
+      } catch (error) {
+        console.error("Failed to fetch problems:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchProblems();
+  }, []);
+
+  const categories = Array.from(
+    new Set(problems.map((p) => p.category))
+  ).sort();
+
+  const filteredProblems = problems.filter((problem) => {
+    if (problem.interviewType !== selectedType) return false;
+    if (selectedCategory !== "All" && problem.category !== selectedCategory) return false;
+    if (selectedDifficulty !== "All" && problem.difficulty !== selectedDifficulty) return false;
+    return true;
+  });
+
+  function handleProblemClick(problem: Problem) {
+    if (expandedProblem === problem.id) {
+      setExpandedProblem(null);
+    } else {
+      setExpandedProblem(problem.id);
+    }
+  }
+
+  function handleSelectProblem(problemId: string) {
+    if (onSelectProblem) {
+      onSelectProblem(problemId);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <p className="text-muted-foreground">Loading problems...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Interview Type Tabs */}
+      <div className="flex overflow-x-auto rounded-lg border border-border bg-muted p-1">
+        {INTERVIEW_TYPES.map((type) => (
+          <button
+            key={type}
+            onClick={() => {
+              setSelectedType(type);
+              setExpandedProblem(null);
+            }}
+            className={`whitespace-nowrap rounded px-4 py-2 font-mono text-sm font-medium transition ${
+              selectedType === type
+                ? "bg-card text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {type.toUpperCase()}
+          </button>
+        ))}
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-wrap gap-4">
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium text-foreground">Category:</label>
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="rounded border border-border bg-card px-3 py-1.5 text-sm text-foreground"
+          >
+            <option value="All">All Categories</option>
+            {categories.map((cat) => (
+              <option key={cat} value={cat}>
+                {CATEGORY_LABELS[cat as ProblemCategory] || cat}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium text-foreground">Difficulty:</label>
+          <select
+            value={selectedDifficulty}
+            onChange={(e) => setSelectedDifficulty(e.target.value as (typeof DIFFICULTIES)[number])}
+            className="rounded border border-border bg-card px-3 py-1.5 text-sm text-foreground"
+          >
+            {DIFFICULTIES.map((diff) => (
+              <option key={diff} value={diff}>
+                {diff}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Problem Count */}
+      <p className="text-sm text-muted-foreground">
+        {filteredProblems.length} problem{filteredProblems.length !== 1 ? "s" : ""} found
+      </p>
+
+      {/* Problem List */}
+      <div className="space-y-3">
+        {filteredProblems.length === 0 ? (
+          <div className="rounded-lg border border-border bg-card p-8 text-center">
+            <p className="text-muted-foreground">No problems match your filters.</p>
+          </div>
+        ) : (
+          filteredProblems.map((problem) => (
+            <div
+              key={problem.id}
+              className="overflow-hidden rounded-lg border border-border bg-card transition hover:border-foreground/40"
+            >
+              {/* Problem Row */}
+              <button
+                onClick={() => handleProblemClick(problem)}
+                className="w-full px-4 py-3 text-left"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg font-semibold text-foreground">
+                        {problem.title}
+                      </span>
+                      <span
+                        className={`rounded border px-2 py-0.5 text-xs font-mono uppercase tracking-wider ${DIFFICULTY_COLORS[problem.difficulty]}`}
+                      >
+                        {problem.difficulty}
+                      </span>
+                    </div>
+
+                    {problem.cruxOfProblem && (
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {problem.cruxOfProblem}
+                      </p>
+                    )}
+
+                    {problem.tags && problem.tags.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {problem.tags.map((tag) => (
+                          <span
+                            key={tag}
+                            className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-4">
+                    {problem.estimatedMinutes && (
+                      <span className="text-sm font-mono text-muted-foreground">
+                        {problem.estimatedMinutes}min
+                      </span>
+                    )}
+                    <span className="text-muted-foreground">
+                      {expandedProblem === problem.id ? "▼" : "▶"}
+                    </span>
+                  </div>
+                </div>
+              </button>
+
+              {/* Expanded Details */}
+              {expandedProblem === problem.id && (
+                <div className="border-t border-border bg-muted p-4">
+                  {problem.description && (
+                    <div className="mb-4">
+                      <h4 className="mb-2 text-sm font-semibold text-foreground">
+                        Description
+                      </h4>
+                      <p className="text-sm text-muted-foreground">
+                        {problem.description}
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="mb-4">
+                    <h4 className="mb-2 text-sm font-semibold text-foreground">
+                      Details
+                    </h4>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Category:</span>{" "}
+                        <span className="text-foreground">
+                          {CATEGORY_LABELS[problem.category] || problem.category}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Interview Type:</span>{" "}
+                        <span className="text-foreground uppercase">{problem.interviewType}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {onSelectProblem && (
+                    <Button
+                      variant="primary"
+                      onClick={() => handleSelectProblem(problem.id)}
+                      className="w-full"
+                    >
+                      Select This Problem
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
 ================================================
 FILE: ./src/features/interview/setup/components/TopicSelector.tsx
 ================================================

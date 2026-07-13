@@ -38,7 +38,7 @@ export default function Hero() {
           </Link>
 
           <Link
-            href="/library?tab=experiences"
+            href="/problems"
             className="rounded-lg border border-border px-6 py-3 text-muted-foreground hover:border-foreground hover:text-foreground transition-colors"
           >
             Browse Interview Library

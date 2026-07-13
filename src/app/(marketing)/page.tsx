@@ -1,4 +1,3 @@
-import InterviewCatalog from "@/src/components/catalog/InterviewCatalog";
 import Navbar from "@/src/components/layout/Navbar";
 import PageContainer from "@/src/components/layout/PageContainer";
 
@@ -17,8 +16,6 @@ export default function Home() {
       <SmartMentor />
 
       <PersonalNotebooks />
-
-      <InterviewCatalog />
 
       <SampleFeedback />
     </PageContainer>

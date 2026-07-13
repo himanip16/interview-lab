@@ -139,20 +139,23 @@ model Message {
 }
 
 model Problem {
-  id             String                @id @default(cuid())
-  slug           String                @unique
-  title          String
-  description    String?
-  category       ProblemCategory
-  difficulty     Difficulty
-  interviewCount Int                   @default(0)
-  createdAt      DateTime              @default(now())
-  updatedAt      DateTime              @updatedAt
-  interviews     Interview[]
-  experiences    InterviewExperience[]
-  companies      ProblemCompany[]
-  tags           ProblemTag[]
-  concepts       ProblemConcept[]
+  id               String                @id @default(cuid())
+  slug             String                @unique
+  title            String
+  description      String?
+  category         ProblemCategory
+  difficulty       Difficulty
+  interviewCount   Int                   @default(0)
+  cruxOfProblem    String?
+  estimatedMinutes Int?
+  interviewType    String?
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  interviews       Interview[]
+  experiences      InterviewExperience[]
+  companies        ProblemCompany[]
+  tags             ProblemTag[]
+  concepts         ProblemConcept[]
 }
 
 model Company {
