@@ -69,6 +69,7 @@ export async function POST(request: Request) {
       company,
       problemId: problem.id,
       mode: interviewMode,
+      topic,
     });
 
     const persona = interviewMode === InterviewMode.REVERSE ? pickPersona(interviewDifficulty) : null;

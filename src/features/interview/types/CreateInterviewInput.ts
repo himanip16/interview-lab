@@ -7,4 +7,5 @@ export interface CreateInterviewInput {
   company: string;
   problemId: string;
   mode?: InterviewMode;
+  topic?: string;
 }
