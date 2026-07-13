@@ -18,7 +18,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    const { type, difficulty, duration, company, problemId, mode } = body;
+    const { type, difficulty, duration, company, problemId, mode, topic } = body;
 
     if (!type || !difficulty || !duration || !company || !problemId) {
       return NextResponse.json(

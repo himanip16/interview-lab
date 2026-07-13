@@ -49,6 +49,7 @@ export async function POST(
       id,
       {
         status: InterviewStatus.COMPLETED,
+        completedAt: new Date(),
       }
     );
 

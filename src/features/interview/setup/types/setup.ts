@@ -29,6 +29,7 @@ export const interviewSetupSchema = z.object({
   duration: z.number().int().positive().max(180), // Max 3 hours
   company: z.string().min(1, "Company is required").max(100),
   problemId: z.string().min(1, "Please select a problem"),
+  topic: z.string().optional(),
 });
 
 export type InterviewSetupForm = z.infer<typeof interviewSetupSchema>;

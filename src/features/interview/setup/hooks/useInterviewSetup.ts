@@ -21,6 +21,7 @@ interface UseInterviewSetupOptions {
   initialDuration?: number;
   initialCompany?: string;
   initialProblemId?: string | null;
+  initialTopic?: string;
 }
 
 interface UseInterviewSetupReturn {
@@ -55,6 +56,7 @@ export function useInterviewSetup({
   initialDuration = 45,
   initialCompany = "",
   initialProblemId = null,
+  initialTopic = "",
 }: UseInterviewSetupOptions = {}): UseInterviewSetupReturn {
   const router = useRouter();
   const { showToast } = useToast();
@@ -65,6 +67,7 @@ export function useInterviewSetup({
     duration: initialDuration,
     company: initialCompany || DEFAULT_COMPANY,
     problemId: initialProblemId || "",
+    topic: initialTopic,
   });
   const [loading, setLoading] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -96,6 +99,7 @@ export function useInterviewSetup({
       duration: form.duration,
       company: form.company,
       problemId: form.problemId,
+      topic: form.topic,
     };
   }, [form]);
 

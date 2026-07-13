@@ -28,7 +28,10 @@ export default async function DashboardPage({ params }: Props) {
       prisma.interview.findMany({
         where: { userId, status: InterviewStatus.COMPLETED },
         include: { template: true, evaluation: true },
-        orderBy: { completedAt: "desc" },
+        orderBy: [
+          { completedAt: { sort: "desc", nulls: "last" } },
+          { updatedAt: "desc" },
+        ],
       }),
       prisma.problem.findMany({
         orderBy: { interviewCount: "desc" },

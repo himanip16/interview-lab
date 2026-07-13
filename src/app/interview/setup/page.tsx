@@ -67,6 +67,11 @@ export default function InterviewSetupPage() {
     [updateField]
   );
 
+  const handleTopicChange = useCallback(
+    (value: string) => updateField("topic", value, false),
+    [updateField]
+  );
+
   // Memoize ProblemSelector props to prevent unnecessary rerenders
   const problemSelectorProps = useMemo(
     () => ({
@@ -99,6 +104,7 @@ export default function InterviewSetupPage() {
         <InterviewTypeSelector
           value={form.interviewType}
           onChange={handleInterviewTypeChange}
+          onTopicChange={handleTopicChange}
         />
 
         <DifficultySelector
