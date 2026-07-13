@@ -1,15 +1,12 @@
 import { Button } from "@/src/components/ui/Button";
+import { SETUP_DIFFICULTIES, type SetupDifficulty } from "../types/setup";
 
 type Props = {
-  value: string;
-  onChange: (value: string) => void;
+  value: SetupDifficulty;
+  onChange: (value: SetupDifficulty) => void;
 };
 
-const DIFFICULTY_OPTIONS = [
-  "Easy",
-  "Medium",
-  "Hard",
-] as const;
+const DIFFICULTY_OPTIONS = SETUP_DIFFICULTIES;
 
 export default function DifficultySelector({
   value,
@@ -28,7 +25,7 @@ export default function DifficultySelector({
             type="button"
             variant={value === option ? "primary" : "outline"}
             aria-pressed={value === option}
-            onClick={() => onChange(option)}
+            onClick={() => onChange(option as SetupDifficulty)}
           >
             {option}
           </Button>

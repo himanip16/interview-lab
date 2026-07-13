@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/src/components/ui/Button";
+import { type InterviewType } from "../types/setup";
 
 type InterviewTemplate = {
   id: string;
@@ -11,8 +12,8 @@ type InterviewTemplate = {
 };
 
 type Props = {
-  value: string;
-  onChange: (value: string) => void;
+  value: InterviewType;
+  onChange: (value: InterviewType) => void;
   onTopicChange?: (topic: string) => void;
 };
 
@@ -93,7 +94,7 @@ export default function InterviewTypeSelector({
                 type="button"
                 variant={value === template.slug ? "primary" : "outline"}
                 aria-pressed={value === template.slug}
-                onClick={() => onChange(template.slug)}
+                onClick={() => onChange(template.slug as InterviewType)}
                 className="h-auto w-full justify-start p-5 text-left"
               >
                 <div>

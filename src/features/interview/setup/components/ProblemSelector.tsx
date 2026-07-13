@@ -5,6 +5,7 @@ import { Button } from "@/src/components/ui/Button";
 import ProblemFilters from "./ProblemFilters";
 import ProblemList from "./ProblemList";
 import Pagination from "./Pagination";
+import ErrorBanner from "./ErrorBanner";
 import { useProblems, type FilterState } from "./useProblems";
 import type { Problem } from "./problemSchema";
 
@@ -35,6 +36,13 @@ export default function ProblemSelector({
     fetchProblems(filters);
   }, [filters, fetchProblems]);
 
+  // Clamp page when totalPages changes
+  useEffect(() => {
+    if (filters.page > totalPages) {
+      handleFiltersChange({ page: Math.max(1, totalPages) });
+    }
+  }, [totalPages, filters.page]);
+
   function handleFiltersChange(newFilters: Partial<FilterState>) {
     setFilters((prev) => ({ ...prev, ...newFilters }));
     setExpandedProblem(null);
@@ -60,20 +68,7 @@ export default function ProblemSelector({
 
       <ProblemFilters filters={filters} onFiltersChange={handleFiltersChange} />
 
-      {/* Error Banner */}
-      {error && (
-        <div className="mb-4 rounded-lg border border-red-800 bg-red-500/10 p-4">
-          <p className="text-sm text-red-400">
-            {error}
-          </p>
-          <button
-            onClick={() => fetchProblems(filters)}
-            className="mt-2 text-sm text-red-400 underline hover:text-red-300"
-          >
-            Try again
-          </button>
-        </div>
-      )}
+      {error && <ErrorBanner error={error} onRetry={() => fetchProblems(filters)} />}
 
       {/* Problem Count */}
       <p className="text-sm text-muted-foreground mb-4">
@@ -87,16 +82,21 @@ export default function ProblemSelector({
       />
 
       {/* Problem List */}
-      {loading ? (
+      {loading && problems.length === 0 ? (
         <p className="text-sm text-muted-foreground">Loading problems...</p>
       ) : (
-        <ProblemList
-          problems={problems}
-          selectedValue={value}
-          expandedProblem={expandedProblem}
-          onProblemClick={handleProblemClick}
-          onSelectProblem={handleSelectProblem}
-        />
+        <>
+          {loading && (
+            <p className="text-sm text-muted-foreground mb-4">Loading...</p>
+          )}
+          <ProblemList
+            problems={problems}
+            selectedValue={value}
+            expandedProblem={expandedProblem}
+            onProblemClick={handleProblemClick}
+            onSelectProblem={handleSelectProblem}
+          />
+        </>
       )}
     </div>
   );

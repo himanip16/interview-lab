@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   useRouter,
   useSearchParams,
@@ -14,6 +14,8 @@ import ProblemSelector from "@/src/features/interview/setup/components/ProblemSe
 import SetupCard from "@/src/features/interview/setup/components/SetupCard";
 import { useToast } from "@/src/components/ui/Toast";
 import { Button } from "@/src/components/ui/Button";
+import { INTERVIEW_TYPES, SETUP_DIFFICULTIES, type InterviewType, type SetupDifficulty, DIFFICULTY_MAP } from "@/src/features/interview/setup/types/setup";
+import { StartInterviewResponseSchema } from "@/src/features/interview/setup/types/interview";
 
 export default function InterviewSetupPage() {
   const router = useRouter();
@@ -22,13 +24,26 @@ export default function InterviewSetupPage() {
   const problemIdParam = searchParams.get("problemId");
   const typeParam = searchParams.get("type");
 
-  const [interviewType, setInterviewType] = useState(typeParam ?? "hld");
-  const [topic, setTopic] = useState("");
-  const [difficulty, setDifficulty] = useState("Medium");
+  const [interviewType, setInterviewType] = useState<InterviewType>(
+    (typeParam && INTERVIEW_TYPES.includes(typeParam as InterviewType)) ? typeParam as InterviewType : "hld"
+  );
+  const [difficulty, setDifficulty] = useState<SetupDifficulty>("Medium");
   const [duration, setDuration] = useState(45);
   const [company, setCompany] = useState("");
   const [problemId, setProblemId] = useState<string | null>(problemIdParam);
   const [loading, setLoading] = useState(false);
+
+  // Sync interviewType with URL param when it changes
+  useEffect(() => {
+    if (typeParam && INTERVIEW_TYPES.includes(typeParam as InterviewType)) {
+      setInterviewType(typeParam as InterviewType);
+    }
+  }, [typeParam]);
+
+  // Sync problemId with URL param when it changes
+  useEffect(() => {
+    setProblemId(problemIdParam);
+  }, [problemIdParam]);
 
   const { showToast } = useToast();
 
@@ -43,7 +58,7 @@ export default function InterviewSetupPage() {
 
       const payload = {
         type: interviewType,
-        difficulty,
+        difficulty: DIFFICULTY_MAP[difficulty],
         duration,
         company: company || "General",
         problemId,
@@ -66,6 +81,9 @@ export default function InterviewSetupPage() {
 
       const data = await response.json();
 
+      // Validate response with Zod
+      const validatedData = StartInterviewResponseSchema.parse(data);
+
       if (process.env.NODE_ENV === "development") {
         console.log("Status:", response.status);
         console.log("Response:", data);
@@ -77,7 +95,7 @@ export default function InterviewSetupPage() {
         );
       }
 
-      router.push(`/interview/live/${data.id}`);
+      router.push(`/interview/live/${validatedData.id}`);
     } catch (error) {
       console.error(error);
 
@@ -106,7 +124,6 @@ export default function InterviewSetupPage() {
         <InterviewTypeSelector
           value={interviewType}
           onChange={setInterviewType}
-          onTopicChange={setTopic}
         />
 
         <DifficultySelector
@@ -127,9 +144,6 @@ export default function InterviewSetupPage() {
         <ProblemSelector
           value={problemId}
           onChange={setProblemId}
-          interviewType={interviewType}
-          difficulty={difficulty}
-          company={company}
         />
 
         <Button
