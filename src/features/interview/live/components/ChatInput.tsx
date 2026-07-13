@@ -20,10 +20,66 @@ type RecordingStatus =
   | "transcribing"
   | "success";
 
+interface SpeechRecognitionAlternative {
+  transcript: string;
+  confidence: number;
+}
+
+interface SpeechRecognitionResult {
+  length: number;
+  item(index: number): SpeechRecognitionAlternative;
+  [index: number]: SpeechRecognitionAlternative;
+  isFinal: boolean;
+}
+
+interface SpeechRecognitionResultList {
+  length: number;
+  item(index: number): SpeechRecognitionResult;
+  [index: number]: SpeechRecognitionResult;
+}
+
+interface SpeechRecognitionEvent extends Event {
+  resultIndex: number;
+  results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  error: "no-speech" | "audio-capture" | "not-allowed" | "network" | "aborted" | "language-not-supported" | "service-not-allowed";
+  message: string;
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  grammars?: any;
+  interimResults: boolean;
+  lang: string;
+  maxAlternatives: number;
+  serviceURI: string;
+
+  onstart: ((this: SpeechRecognition, ev: Event) => any) | null;
+  onend: ((this: SpeechRecognition, ev: Event) => any) | null;
+  onerror: ((this: SpeechRecognition, ev: SpeechRecognitionErrorEvent) => any) | null;
+  onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => any) | null;
+  onnomatch: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => any) | null;
+  onsoundstart: ((this: SpeechRecognition, ev: Event) => any) | null;
+  onsoundend: ((this: SpeechRecognition, ev: Event) => any) | null;
+  onspeechstart: ((this: SpeechRecognition, ev: Event) => any) | null;
+  onspeechend: ((this: SpeechRecognition, ev: Event) => any) | null;
+
+  start(): void;
+  stop(): void;
+  abort(): void;
+}
+
+interface SpeechRecognitionConstructor {
+  prototype: SpeechRecognition;
+  new (): SpeechRecognition;
+}
+
 declare global {
   interface Window {
-    SpeechRecognition: any;
-    webkitSpeechRecognition: any;
+    SpeechRecognition: SpeechRecognitionConstructor | undefined;
+    webkitSpeechRecognition: SpeechRecognitionConstructor | undefined;
   }
 }
 
@@ -35,7 +91,7 @@ export default function ChatInput({
   const [status, setStatus] =
     useState<RecordingStatus>("idle");
 
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const isEmpty = message.trim().length === 0;
@@ -51,8 +107,75 @@ export default function ChatInput({
   }, [status]);
 
   useEffect(() => {
+    const SpeechRecognition =
+      window.SpeechRecognition ||
+      window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      console.error(
+        "Speech Recognition is not supported in this browser."
+      );
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = "en-US";
+
+    recognition.onstart = () => {
+      setStatus("recording");
+    };
+
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      setStatus("transcribing");
+
+      const transcript =
+        event.results[0][0].transcript ?? "";
+
+      setMessage(transcript);
+
+      setStatus("success");
+    };
+
+    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+      console.log("SpeechRecognition:", event.error);
+
+      switch (event.error) {
+        case "no-speech":
+          // User clicked record but didn't say anything.
+          break;
+
+        case "audio-capture":
+          console.error("No microphone detected.");
+          break;
+
+        case "not-allowed":
+          console.error("Microphone permission denied.");
+          break;
+
+        case "network":
+          console.error("Speech recognition network error.");
+          break;
+
+        default:
+          console.error(event.error);
+      }
+
+      setStatus("idle");
+    };
+
+    recognition.onend = () => {
+      setStatus((current) =>
+        current === "recording" ? "idle" : current
+      );
+    };
+
+    recognitionRef.current = recognition;
+
     return () => {
-      recognitionRef.current?.stop?.();
+      recognition.stop();
     };
   }, []);
 
@@ -107,7 +230,7 @@ export default function ChatInput({
       setStatus("recording");
     };
 
-    recognition.onresult = (event: any) => {
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
       setStatus("transcribing");
 
       const transcript =
@@ -118,7 +241,7 @@ export default function ChatInput({
       setStatus("success");
     };
 
-    recognition.onerror = (event: any) => {
+    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
   console.log("SpeechRecognition:", event.error);
 
   switch (event.error) {
