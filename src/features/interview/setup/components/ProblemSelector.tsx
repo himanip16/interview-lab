@@ -85,35 +85,17 @@ export default function ProblemSelector({
       if (selectedCategory !== "All") params.append("category", selectedCategory);
       if (company) params.append("company", company);
       params.append("sort", selectedSort);
+      params.append("page", page.toString());
+      params.append("limit", limit.toString());
+      if (userId) params.append("userId", userId);
 
       const response = await fetch(
         `/api/problems${params.toString() ? `?${params.toString()}` : ""}`
       );
       const data = await response.json();
       
-      // Add completion history if userId is provided
-      const problemsWithHistory = await Promise.all(
-        (data.problems || []).map(async (problem: Problem) => {
-          if (!userId) return problem;
-          
-          try {
-            const historyResponse = await fetch(`/api/problems/${problem.id}/history?userId=${userId}`);
-            const historyData = await historyResponse.json();
-            return {
-              ...problem,
-              completionHistory: historyData.history || {
-                completed: false,
-                timesCompleted: 0,
-                lastCompletedAt: null,
-              },
-            };
-          } catch {
-            return problem;
-          }
-        })
-      );
-      
-      setProblems(problemsWithHistory);
+      setProblems(data.problems || []);
+      setTotalPages(data.totalPages || 1);
     } catch (error) {
       console.error("Failed to fetch problems:", error);
     } finally {
@@ -122,19 +104,17 @@ export default function ProblemSelector({
   }
 
   useEffect(() => {
+    setPage(1);
     fetchProblems();
   }, [selectedType, selectedDifficulty, selectedCategory, selectedSort]);
+
+  useEffect(() => {
+    fetchProblems();
+  }, [page]);
 
   const categories = Array.from(
     new Set(problems.map((p) => p.category))
   ).sort();
-
-  const filteredProblems = problems.filter((problem) => {
-    if (problem.interviewType !== selectedType) return false;
-    if (selectedCategory !== "All" && problem.category !== selectedCategory) return false;
-    if (selectedDifficulty !== "All" && problem.difficulty !== selectedDifficulty) return false;
-    return true;
-  });
 
   function handleProblemClick(problem: Problem) {
     if (expandedProblem === problem.id) {
@@ -230,19 +210,42 @@ export default function ProblemSelector({
 
           {/* Problem Count */}
           <p className="text-sm text-muted-foreground mb-4">
-            {filteredProblems.length} problem{filteredProblems.length !== 1 ? "s" : ""} found
+            {problems.length} problem{problems.length !== 1 ? "s" : ""} found
           </p>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="rounded border border-border bg-card px-3 py-1.5 text-sm text-foreground disabled:opacity-50 disabled:cursor-not-allowed hover:border-foreground/40"
+              >
+                Previous
+              </button>
+              <span className="text-sm text-muted-foreground">
+                Page {page} of {totalPages}
+              </span>
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="rounded border border-border bg-card px-3 py-1.5 text-sm text-foreground disabled:opacity-50 disabled:cursor-not-allowed hover:border-foreground/40"
+              >
+                Next
+              </button>
+            </div>
+          )}
 
           {/* Problem List */}
           {loading ? (
             <p className="text-sm text-muted-foreground">Loading problems...</p>
-          ) : filteredProblems.length === 0 ? (
+          ) : problems.length === 0 ? (
             <div className="rounded-lg border border-border bg-card p-8 text-center">
               <p className="text-muted-foreground">No problems match your filters.</p>
             </div>
           ) : (
             <div className="space-y-3">
-              {filteredProblems.map((problem) => (
+              {problems.map((problem: Problem) => (
                 <div
                   key={problem.id}
                   className="overflow-hidden rounded-lg border border-border bg-card transition hover:border-foreground/40"

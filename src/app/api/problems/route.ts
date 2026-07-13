@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/shared/prisma/client";
-import { Difficulty } from "@prisma/client";
+import { Difficulty, InterviewStatus } from "@prisma/client";
 
 export async function GET(request: Request) {
   try {
@@ -13,6 +13,7 @@ export async function GET(request: Request) {
     const sort = searchParams.get("sort") || "interviewCount";
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "20");
+    const userId = searchParams.get("userId");
 
     const where: any = {};
     
@@ -72,8 +73,47 @@ export async function GET(request: Request) {
       prisma.problem.count({ where }),
     ]);
 
+    // Add completion history if userId is provided
+    let problemsWithHistory = problems;
+    if (userId) {
+      const problemIds = problems.map((p) => p.id);
+      const interviews = await prisma.interview.findMany({
+        where: {
+          userId,
+          problemId: { in: problemIds },
+          status: InterviewStatus.COMPLETED,
+        },
+        orderBy: {
+          updatedAt: "desc",
+        },
+      });
+
+      const historyMap = new Map<string, { completed: boolean; timesCompleted: number; lastCompletedAt: Date | null }>();
+      interviews.forEach((interview) => {
+        const existing = historyMap.get(interview.problemId);
+        if (existing) {
+          existing.timesCompleted += 1;
+        } else {
+          historyMap.set(interview.problemId, {
+            completed: true,
+            timesCompleted: 1,
+            lastCompletedAt: interview.updatedAt,
+          });
+        }
+      });
+
+      problemsWithHistory = problems.map((problem) => ({
+        ...problem,
+        completionHistory: historyMap.get(problem.id) || {
+          completed: false,
+          timesCompleted: 0,
+          lastCompletedAt: null,
+        },
+      }));
+    }
+
     return NextResponse.json(
-      { problems, total, page, limit, totalPages: Math.ceil(total / limit) },
+      { problems: problemsWithHistory, total, page, limit, totalPages: Math.ceil(total / limit) },
       { status: 200 }
     );
   } catch (error) {
