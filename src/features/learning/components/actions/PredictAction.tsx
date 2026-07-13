@@ -12,6 +12,9 @@ export function PredictAction({ action, onComplete }: PredictActionProps) {
   const [showExplanation, setShowExplanation] = useState(false);
 
   const content = action.content as PredictActionContent;
+  const question = content?.question || "No question available.";
+  const revealExplanation = content?.revealExplanation || "No explanation available.";
+  const reflection = content?.reflection;
 
   const handleSubmit = () => {
     if (prediction.trim()) {
@@ -29,9 +32,9 @@ export function PredictAction({ action, onComplete }: PredictActionProps) {
       {action.instructions && (
         <p className="text-sm text-muted-foreground mb-4">{action.instructions}</p>
       )}
-      
+
       <div className="prose prose-sm dark:prose-invert max-w-none mb-6">
-        <p>{content.question}</p>
+        <p>{question}</p>
       </div>
 
       {!showExplanation ? (
@@ -59,8 +62,14 @@ export function PredictAction({ action, onComplete }: PredictActionProps) {
           </div>
 
           <div className="prose prose-sm dark:prose-invert max-w-none">
-            <p>{content.revealExplanation}</p>
+            <p>{revealExplanation}</p>
           </div>
+
+          {reflection && (
+            <div className="prose prose-sm dark:prose-invert max-w-none">
+              <p>{reflection}</p>
+            </div>
+          )}
 
           <button
             onClick={handleContinue}

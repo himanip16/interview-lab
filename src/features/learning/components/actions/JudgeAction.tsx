@@ -12,6 +12,9 @@ export function JudgeAction({ action, onComplete }: JudgeActionProps) {
   const [showReflection, setShowReflection] = useState(false);
 
   const content = action.content as JudgeActionContent;
+  const options = content?.options || [];
+  const correctOptionId = content?.correctOptionId;
+  const reflection = content?.reflection || "No reflection available.";
 
   const handleSelect = (optionId: string) => {
     setSelectedOption(optionId);
@@ -22,7 +25,8 @@ export function JudgeAction({ action, onComplete }: JudgeActionProps) {
     onComplete();
   };
 
-  const selectedOptionData = content.options.find((opt) => opt.id === selectedOption);
+  const isCorrect = selectedOption === correctOptionId;
+  const selectedOptionData = options.find((opt) => opt.id === selectedOption);
 
   return (
     <div className="border border-border rounded-lg p-6 bg-card">
@@ -30,14 +34,10 @@ export function JudgeAction({ action, onComplete }: JudgeActionProps) {
       {action.instructions && (
         <p className="text-sm text-muted-foreground mb-4">{action.instructions}</p>
       )}
-      
-      <div className="prose prose-sm dark:prose-invert max-w-none mb-6">
-        <p>{content.question}</p>
-      </div>
 
       {!showReflection ? (
         <div className="space-y-2">
-          {content.options.map((option) => (
+          {options.map((option) => (
             <button
               key={option.id}
               onClick={() => handleSelect(option.id)}
@@ -51,19 +51,19 @@ export function JudgeAction({ action, onComplete }: JudgeActionProps) {
         <div className="space-y-4">
           <div
             className={`p-4 rounded ${
-              selectedOptionData?.isCorrect
+              isCorrect
                 ? "bg-green-950 border border-green-800"
                 : "bg-red-950 border border-red-800"
             }`}
           >
             <p className="font-semibold mb-2">
-              {selectedOptionData?.isCorrect ? "✓ Correct" : "✗ Incorrect"}
+              {isCorrect ? "✓ Correct" : "✗ Incorrect"}
             </p>
             <p className="text-sm">{selectedOptionData?.text}</p>
           </div>
 
           <div className="prose prose-sm dark:prose-invert max-w-none">
-            <p>{content.reflection}</p>
+            <p>{reflection}</p>
           </div>
 
           <button

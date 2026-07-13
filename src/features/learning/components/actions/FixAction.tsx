@@ -12,6 +12,9 @@ export function FixAction({ action, onComplete }: FixActionProps) {
   const [showReflection, setShowReflection] = useState(false);
 
   const content = action.content as FixActionContent;
+  const interviewerQuestion = content?.interviewerQuestion || "No question available.";
+  const flawedAnswer = content?.flawedAnswer || "No flawed answer available.";
+  const reflection = content?.reflection || "No reflection available.";
 
   const handleSubmit = () => {
     if (answer.trim()) {
@@ -29,14 +32,14 @@ export function FixAction({ action, onComplete }: FixActionProps) {
       {action.instructions && (
         <p className="text-sm text-muted-foreground mb-4">{action.instructions}</p>
       )}
-      
+
       <div className="prose prose-sm dark:prose-invert max-w-none mb-6">
-        <p>{content.question}</p>
+        <p>{interviewerQuestion}</p>
       </div>
 
       <div className="mb-6 p-4 bg-muted rounded border border-border">
         <p className="text-sm font-semibold mb-2">Flawed Answer:</p>
-        <p className="text-sm">{content.flawedAnswer}</p>
+        <p className="text-sm">{flawedAnswer}</p>
       </div>
 
       {!showReflection ? (
@@ -59,7 +62,7 @@ export function FixAction({ action, onComplete }: FixActionProps) {
       ) : (
         <div className="space-y-4">
           <div className="prose prose-sm dark:prose-invert max-w-none">
-            <p>{content.reflection}</p>
+            <p>{reflection}</p>
           </div>
 
           <button

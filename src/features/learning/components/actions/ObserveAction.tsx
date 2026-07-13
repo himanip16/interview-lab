@@ -11,6 +11,7 @@ export function ObserveAction({ action, onComplete }: ObserveActionProps) {
   const [isRevealed, setIsRevealed] = useState(false);
 
   const content = action.content as ObserveActionContent;
+  const reflection = content?.reflection || "No reflection available.";
 
   const handleReveal = () => {
     setIsRevealed(true);
@@ -37,7 +38,7 @@ export function ObserveAction({ action, onComplete }: ObserveActionProps) {
       ) : (
         <div className="space-y-4">
           <div className="prose prose-sm dark:prose-invert max-w-none">
-            <p>{content.reflection}</p>
+            <p>{reflection}</p>
           </div>
           <button
             onClick={handleContinue}

@@ -12,6 +12,10 @@ export function CompareAction({ action, onComplete }: CompareActionProps) {
   const [showReflection, setShowReflection] = useState(false);
 
   const content = action.content as CompareActionContent;
+  const candidateA = content?.candidateA || "Candidate A not available.";
+  const candidateB = content?.candidateB || "Candidate B not available.";
+  const correctChoice = content?.correctChoice;
+  const reflection = content?.reflection || "No reflection available.";
 
   const handleSelect = (choice: "A" | "B") => {
     setSelectedChoice(choice);
@@ -22,7 +26,7 @@ export function CompareAction({ action, onComplete }: CompareActionProps) {
     onComplete();
   };
 
-  const isCorrect = selectedChoice === content.correctChoice;
+  const isCorrect = selectedChoice === correctChoice;
 
   return (
     <div className="border border-border rounded-lg p-6 bg-card">
@@ -30,10 +34,6 @@ export function CompareAction({ action, onComplete }: CompareActionProps) {
       {action.instructions && (
         <p className="text-sm text-muted-foreground mb-4">{action.instructions}</p>
       )}
-      
-      <div className="prose prose-sm dark:prose-invert max-w-none mb-6">
-        <p>{content.question}</p>
-      </div>
 
       {!showReflection ? (
         <div className="grid grid-cols-2 gap-4">
@@ -41,15 +41,15 @@ export function CompareAction({ action, onComplete }: CompareActionProps) {
             onClick={() => handleSelect("A")}
             className="p-4 border border-border rounded hover:bg-accent transition-colors text-left"
           >
-            <p className="font-semibold mb-2">{content.candidateA.name}</p>
-            <p className="text-sm">{content.candidateA.answer}</p>
+            <p className="font-semibold mb-2">Candidate A</p>
+            <p className="text-sm">{candidateA}</p>
           </button>
           <button
             onClick={() => handleSelect("B")}
             className="p-4 border border-border rounded hover:bg-accent transition-colors text-left"
           >
-            <p className="font-semibold mb-2">{content.candidateB.name}</p>
-            <p className="text-sm">{content.candidateB.answer}</p>
+            <p className="font-semibold mb-2">Candidate B</p>
+            <p className="text-sm">{candidateB}</p>
           </button>
         </div>
       ) : (
@@ -65,12 +65,12 @@ export function CompareAction({ action, onComplete }: CompareActionProps) {
               {isCorrect ? "✓ Correct" : "✗ Incorrect"}
             </p>
             <p className="text-sm">
-              You chose: {selectedChoice === "A" ? content.candidateA.name : content.candidateB.name}
+              You chose: {selectedChoice === "A" ? "Candidate A" : "Candidate B"}
             </p>
           </div>
 
           <div className="prose prose-sm dark:prose-invert max-w-none">
-            <p>{content.reflection}</p>
+            <p>{reflection}</p>
           </div>
 
           <button
