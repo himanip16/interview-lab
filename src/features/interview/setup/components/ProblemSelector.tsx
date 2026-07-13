@@ -25,8 +25,8 @@ type Problem = {
 type Props = {
   value: string | null;
   onChange: (value: string | null) => void;
-  interviewType?: string;
-  difficulty?: string;
+  interviewType?: (typeof INTERVIEW_TYPES)[number];
+  difficulty?: (typeof DIFFICULTIES)[number];
   company?: string;
   onSearch?: () => void;
   userId?: string | null;
@@ -50,6 +50,19 @@ const CATEGORY_LABELS: Record<ProblemCategory, string> = {
   NETWORKING: "Networking",
 };
 
+const ALL_CATEGORIES: ProblemCategory[] = [
+  ProblemCategory.SYSTEM_DESIGN,
+  ProblemCategory.LOW_LEVEL_DESIGN,
+  ProblemCategory.DATABASES,
+  ProblemCategory.BACKEND,
+  ProblemCategory.DISTRIBUTED_SYSTEMS,
+  ProblemCategory.JAVA,
+  ProblemCategory.KAFKA,
+  ProblemCategory.REDIS,
+  ProblemCategory.OPERATING_SYSTEMS,
+  ProblemCategory.NETWORKING,
+];
+
 const DIFFICULTY_COLORS: Record<Difficulty, string> = {
   EASY: "border-green-800 text-green-400",
   MEDIUM: "border-amber-800 text-amber-400",
@@ -60,16 +73,17 @@ export default function ProblemSelector({
   value,
   onChange,
   interviewType = "hld",
-  difficulty = "Medium",
+  difficulty = "MEDIUM",
   company = "",
   onSearch,
   userId,
 }: Props) {
   const [problems, setProblems] = useState<Problem[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedType, setSelectedType] = useState<(typeof INTERVIEW_TYPES)[number]>(interviewType as any);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedType, setSelectedType] = useState<(typeof INTERVIEW_TYPES)[number]>(interviewType);
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
-  const [selectedDifficulty, setSelectedDifficulty] = useState<(typeof DIFFICULTIES)[number]>(difficulty as any);
+  const [selectedDifficulty, setSelectedDifficulty] = useState<(typeof DIFFICULTIES)[number]>(difficulty);
   const [selectedSort, setSelectedSort] = useState<(typeof SORT_OPTIONS)[number]>("interviewCount");
   const [expandedProblem, setExpandedProblem] = useState<string | null>(null);
   const [page, setPage] = useState(1);
@@ -80,6 +94,7 @@ export default function ProblemSelector({
   async function fetchProblems() {
     try {
       setLoading(true);
+      setError(null);
       
       // Cancel previous request if still pending
       if (abortControllerRef.current) {
@@ -103,6 +118,11 @@ export default function ProblemSelector({
         `/api/problems${params.toString() ? `?${params.toString()}` : ""}`,
         { signal: abortControllerRef.current.signal }
       );
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch problems: ${response.statusText}`);
+      }
+      
       const data = await response.json();
       
       setProblems(data.problems || []);
@@ -112,6 +132,8 @@ export default function ProblemSelector({
       if (error instanceof Error && error.name === 'AbortError') {
         return;
       }
+      const errorMessage = error instanceof Error ? error.message : "Failed to fetch problems";
+      setError(errorMessage);
       console.error("Failed to fetch problems:", error);
     } finally {
       setLoading(false);
@@ -130,10 +152,6 @@ export default function ProblemSelector({
       }
     };
   }, []);
-
-  const categories = Array.from(
-    new Set(problems.map((p) => p.category))
-  ).sort();
 
   function handleProblemClick(problem: Problem) {
     if (expandedProblem === problem.id) {
@@ -193,9 +211,9 @@ export default function ProblemSelector({
                 className="rounded border border-border bg-card px-3 py-1.5 text-sm text-foreground"
               >
                 <option value="All">All Categories</option>
-                {categories.map((cat) => (
+                {ALL_CATEGORIES.map((cat) => (
                   <option key={cat} value={cat}>
-                    {CATEGORY_LABELS[cat as ProblemCategory] || cat}
+                    {CATEGORY_LABELS[cat] || cat}
                   </option>
                 ))}
               </select>
@@ -236,6 +254,21 @@ export default function ProblemSelector({
               </select>
             </div>
           </div>
+
+          {/* Error Banner */}
+          {error && (
+            <div className="mb-4 rounded-lg border border-red-800 bg-red-500/10 p-4">
+              <p className="text-sm text-red-400">
+                {error}
+              </p>
+              <button
+                onClick={() => fetchProblems()}
+                className="mt-2 text-sm text-red-400 underline hover:text-red-300"
+              >
+                Try again
+              </button>
+            </div>
+          )}
 
           {/* Problem Count */}
           <p className="text-sm text-muted-foreground mb-4">
