@@ -142,7 +142,7 @@ export default function ProblemSelector({
 
   useEffect(() => {
     fetchProblems();
-  }, [page, selectedType, selectedDifficulty, selectedCategory, selectedSort]);
+  }, [page, selectedType, selectedDifficulty, selectedCategory, selectedSort, company]);
 
   // Cleanup on unmount
   useEffect(() => {
