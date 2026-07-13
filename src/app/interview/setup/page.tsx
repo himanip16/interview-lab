@@ -15,7 +15,7 @@ import SetupCard from "@/src/features/interview/setup/components/SetupCard";
 import { useToast } from "@/src/components/ui/Toast";
 import { Button } from "@/src/components/ui/Button";
 import { INTERVIEW_TYPES, SETUP_DIFFICULTIES, type InterviewType, type SetupDifficulty, DIFFICULTY_MAP } from "@/src/features/interview/setup/types/setup";
-import { StartInterviewResponseSchema } from "@/src/features/interview/setup/types/interview";
+import { startInterview } from "@/src/features/interview/services/interviewApi";
 
 export default function InterviewSetupPage() {
   const router = useRouter();
@@ -68,34 +68,13 @@ export default function InterviewSetupPage() {
         console.log("Request payload:", payload);
       }
 
-      const response = await fetch(
-        "/api/interviews/start",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        }
-      );
-
-      const data = await response.json();
-
-      // Validate response with Zod
-      const validatedData = StartInterviewResponseSchema.parse(data);
+      const { id } = await startInterview(payload);
 
       if (process.env.NODE_ENV === "development") {
-        console.log("Status:", response.status);
-        console.log("Response:", data);
+        console.log("Interview started with ID:", id);
       }
 
-      if (!response.ok) {
-        throw new Error(
-          data.error ?? "Failed to start interview"
-        );
-      }
-
-      router.push(`/interview/live/${validatedData.id}`);
+      router.push(`/interview/live/${id}`);
     } catch (error) {
       console.error(error);
 
