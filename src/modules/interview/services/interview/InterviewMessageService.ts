@@ -102,13 +102,8 @@ export class InterviewMessageService {
       0
     );
 
-    /*
-     * The schema currently has no phaseStartedAt field.
-     *
-     * Until that is persisted, createdAt/startedAt is only a fallback.
-     * See note below — phase timing should eventually be stored in DB.
-     */
     const phaseStartedAt =
+      interview.phaseStartedAt ??
       interviewStartedAt;
 
     const result =
@@ -170,6 +165,14 @@ export class InterviewMessageService {
       assistantMetadata: metadata,
       elapsedSeconds,
     });
+
+    // Update phaseStartedAt when phase transitions
+    if (result.transition.shouldTransition) {
+      await this.repository.updateProgress(interview.id, {
+        currentPhase: nextPhase,
+        phaseStartedAt: new Date(),
+      });
+    }
 
     return {
       reply: result.reply,

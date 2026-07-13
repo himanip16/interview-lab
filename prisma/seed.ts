@@ -3,6 +3,7 @@ import {
   Prisma,
   PrismaClient,
   ProblemCategory,
+  LearningActionType,
 } from "@prisma/client";
 
 const prisma = new PrismaClient();
@@ -804,20 +805,16 @@ async function seedTemplates() {
 // doc: one scenario, three segments, and one action of each type, wired to
 // whichever segment its concept actually belongs to.
 
-import { LearningActionType, Prisma } from "@prisma/client";
-import { prisma } from "../shared/prisma/client"; // adjust import to your actual seed.ts prisma instance
-
 type SegmentSeed = {
   order: number;
-  title: string;
-  dialogue: { role: "interviewer" | "candidate"; content: string }[];
+  conversation: { role: "interviewer" | "candidate"; content: string }[];
+  takeaway?: string;
   conceptSlugs: string[]; // must already exist via seedConcepts()
   actions: {
     type: LearningActionType;
-    order: number;
-    prompt: string;
-    reflection: string;
-    payload: Prisma.InputJsonValue;
+    title: string;
+    instructions?: string;
+    content: Prisma.InputJsonValue;
   }[];
 };
 
@@ -829,8 +826,7 @@ const PAYMENT_SCENARIO = {
   segments: [
     {
       order: 1,
-      title: "Payment succeeds, but the event is lost",
-      dialogue: [
+      conversation: [
         {
           role: "interviewer",
           content:
@@ -854,22 +850,23 @@ const PAYMENT_SCENARIO = {
             "I'd persist the payment result, then publish through an outbox. The consumer must also be idempotent.",
         },
       ],
+      takeaway: "Separate payment state from event delivery; use outbox pattern with idempotent consumers.",
       conceptSlugs: ["data-consistency", "message-queues"],
       actions: [
         {
-          type: LearningActionType.WATCH,
-          order: 0,
-          prompt: "Watch how someone else handles it.",
-          reflection:
-            "Notice what they did? The candidate separated whether the action happened from whether the system observed it. In your interview, you combined these two concerns.",
-          payload: {},
+          type: LearningActionType.OBSERVE,
+          title: "Observe the pattern",
+          instructions: "Watch how someone else handles it.",
+          content: {
+            reflection:
+              "Notice what they did? The candidate separated whether the action happened from whether the system observed it. In your interview, you combined these two concerns.",
+          },
         },
       ],
     },
     {
       order: 2,
-      title: "Client retries the payment request",
-      dialogue: [
+      conversation: [
         {
           role: "interviewer",
           content: "The client times out and retries the same payment request. What could go wrong?",
@@ -880,15 +877,16 @@ const PAYMENT_SCENARIO = {
             "If we're not careful, we'd charge the customer twice — the retry looks like a brand new request unless we can recognize it as the same one.",
         },
       ],
+      takeaway: "Client retries can cause duplicate charges without idempotency keys.",
       conceptSlugs: ["rate-limiting-algorithms"],
       actions: [
         {
           type: LearningActionType.FIX,
-          order: 0,
-          prompt: "Fix this answer.",
-          reflection:
-            "Better. You correctly questioned the delivery guarantee. One thing is still missing: what happens between the database commit and publishing the event?",
-          payload: {
+          title: "Fix the answer",
+          instructions: "Fix this answer.",
+          content: {
+            reflection:
+              "Better. You correctly questioned the delivery guarantee. One thing is still missing: what happens between the database commit and publishing the event?",
             interviewerQuestion: "How do you maintain consistency between services?",
             flawedAnswer:
               "I'd use Kafka because Kafka guarantees message delivery and makes the system eventually consistent.",
@@ -900,23 +898,23 @@ const PAYMENT_SCENARIO = {
     },
     {
       order: 3,
-      title: "Kafka consumer crashes before publishing",
-      dialogue: [
+      conversation: [
         {
           role: "interviewer",
           content:
             "The database write succeeds. The service crashes before publishing to Kafka. What does the system believe happened?",
         },
       ],
+      takeaway: "Database write succeeded but event never published - system drifts out of sync.",
       conceptSlugs: ["message-queues", "consistent-hashing"],
       actions: [
         {
           type: LearningActionType.PREDICT,
-          order: 0,
-          prompt: "What breaks first?",
-          reflection:
-            "The order was persisted, but downstream services never learn about it until the outbox relay catches up — the system silently drifts out of sync in the meantime.",
-          payload: {
+          title: "Predict the failure",
+          instructions: "What breaks first?",
+          content: {
+            reflection:
+              "The order was persisted, but downstream services never learn about it until the outbox relay catches up — the system silently drifts out of sync in the meantime.",
             question:
               "Order Service → Database → Kafka → Inventory Service. The database write succeeds. The service crashes before publishing to Kafka. What does the system believe happened?",
             revealExplanation:
@@ -925,11 +923,11 @@ const PAYMENT_SCENARIO = {
         },
         {
           type: LearningActionType.JUDGE,
-          order: 1,
-          prompt: "Your turn to interview. A candidate is designing a chat system.",
-          reflection:
-            "Exactly. The interesting boundary is between the database write and event publication — that's the failure mode you missed in your own interview.",
-          payload: {
+          title: "Judge the answer",
+          instructions: "Your turn to interview. A candidate is designing a chat system.",
+          content: {
+            reflection:
+              "Exactly. The interesting boundary is between the database write and event publication — that's the failure mode you missed in your own interview.",
             options: [
               { id: "a", text: "Why Kafka instead of RabbitMQ?" },
               { id: "b", text: "What happens if the database write succeeds but publishing fails?" },
@@ -941,11 +939,11 @@ const PAYMENT_SCENARIO = {
         },
         {
           type: LearningActionType.COMPARE,
-          order: 2,
-          prompt: "Who handled this better?",
-          reflection:
-            "Candidate B — not because they used a more advanced term, but because they scoped the consistency decision instead of applying one model to the entire system.",
-          payload: {
+          title: "Compare approaches",
+          instructions: "Who handled this better?",
+          content: {
+            reflection:
+              "Candidate B — not because they used a more advanced term, but because they scoped the consistency decision instead of applying one model to the entire system.",
             candidateA:
               "I'd use eventual consistency because availability is more important here.",
             candidateB:
@@ -974,17 +972,17 @@ export async function seedLearningScenarios() {
   });
 
   for (const segmentSeed of PAYMENT_SCENARIO.segments) {
-    const segment = await prisma.scenarioSegment.upsert({
+    const segment = await prisma.learningSegment.upsert({
       where: { scenarioId_order: { scenarioId: scenario.id, order: segmentSeed.order } },
       update: {
-        title: segmentSeed.title,
-        dialogue: segmentSeed.dialogue as Prisma.InputJsonValue,
+        conversation: segmentSeed.conversation as Prisma.InputJsonValue,
+        takeaway: segmentSeed.takeaway,
       },
       create: {
         scenarioId: scenario.id,
         order: segmentSeed.order,
-        title: segmentSeed.title,
-        dialogue: segmentSeed.dialogue as Prisma.InputJsonValue,
+        conversation: segmentSeed.conversation as Prisma.InputJsonValue,
+        takeaway: segmentSeed.takeaway,
       },
     });
 
@@ -992,29 +990,28 @@ export async function seedLearningScenarios() {
       const concept = await prisma.concept.findUnique({ where: { slug } });
 
       if (!concept) {
-        console.warn(`Skipping unknown concept slug "${slug}" for segment "${segmentSeed.title}".`);
+        console.warn(`Skipping unknown concept slug "${slug}" for segment order ${segmentSeed.order}.`);
         continue;
       }
 
-      await prisma.scenarioSegmentConcept.upsert({
-        where: { segmentId_conceptId: { segmentId: segment.id, conceptId: concept.id } },
+      await prisma.learningSegmentConcept.upsert({
+        where: { scenarioId_segmentId_conceptId: { scenarioId: scenario.id, segmentId: segment.id, conceptId: concept.id } },
         update: {},
-        create: { segmentId: segment.id, conceptId: concept.id },
+        create: { scenarioId: scenario.id, segmentId: segment.id, conceptId: concept.id },
       });
     }
 
     for (const actionSeed of segmentSeed.actions) {
       const existing = await prisma.learningAction.findFirst({
-        where: { segmentId: segment.id, order: actionSeed.order },
+        where: { segmentId: segment.id, title: actionSeed.title },
       });
 
       const data = {
         segmentId: segment.id,
         type: actionSeed.type,
-        order: actionSeed.order,
-        prompt: actionSeed.prompt,
-        reflection: actionSeed.reflection,
-        payload: actionSeed.payload,
+        title: actionSeed.title,
+        instructions: actionSeed.instructions,
+        content: actionSeed.content as Prisma.InputJsonValue,
       };
 
       if (existing) {
@@ -1045,6 +1042,7 @@ async function main() {
 
   const conceptIdBySlug = await seedConcepts();
   await seedProblemConcepts(conceptIdBySlug);
+  await seedLearningScenarios();
 }
 main()
   .catch((error) => {

@@ -52,6 +52,7 @@ export class InterviewRepository {
     updates: {
       status?: InterviewStatus;
       currentPhase?: string;
+      phaseStartedAt?: Date;
     }
   ) {
     return prisma.interview.update({

@@ -1,6 +1,7 @@
 import { env } from "@/src/shared/config/env";
 
 import { OllamaProvider, ChatMessage } from "./OllamaProvider";
+import { OpenAIProvider } from "./OpenAIProvider";
 
 export type { ChatMessage };
 
@@ -12,7 +13,18 @@ export interface FallbackGenerateOptions {
 }
 
 export class FallbackAIProvider {
-  private readonly provider = new OllamaProvider(env.OLLAMA_BASE_URL);
+  private readonly provider: OllamaProvider | OpenAIProvider;
+
+  constructor() {
+    if (env.AI_PROVIDER === "openai") {
+      if (!env.OPENAI_API_KEY) {
+        throw new Error("OPENAI_API_KEY is required when AI_PROVIDER is 'openai'");
+      }
+      this.provider = new OpenAIProvider(env.OPENAI_API_KEY);
+    } else {
+      this.provider = new OllamaProvider(env.OLLAMA_BASE_URL);
+    }
+  }
 
   async generateResponse(
     messages: ChatMessage[],

@@ -15,9 +15,12 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  interviews      Interview[]
-  masteries       ConceptMastery[]
-  learningAttempts UserLearningAttempt[]
+  interviews              Interview[]
+  masteries               ConceptMastery[]
+  learningAttempts        UserLearningAttempt[]
+  practiceAttempts        PracticeAttempt[]
+  practiceRecommendations PracticeRecommendation[]
+  learningRecommendations LearningRecommendation[]
 }
 
 // ---------------------------------------------------------------------------
@@ -88,13 +91,14 @@ model Interview {
   duration      Int
   company       String
   status        InterviewStatus
-  currentPhase  String
-  summary       String          @default("Interview has not started yet.")
-  promptVersion String          @default("v1")
-  startedAt     DateTime?
-  completedAt   DateTime?
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  currentPhase   String
+  phaseStartedAt DateTime?
+  summary        String          @default("Interview has not started yet.")
+  promptVersion  String          @default("v1")
+  startedAt      DateTime?
+  completedAt    DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 
   problemId String
 
@@ -250,6 +254,10 @@ model Concept {
   problems      ProblemConcept[]
 
   learningSegments LearningSegmentConcept[]
+  learningActionConcepts LearningActionConcept[]
+  learningRecommendations LearningRecommendation[]
+  practiceActivityConcepts PracticeActivityConcept[]
+  practiceRecommendationItems PracticeRecommendationItem[]
 }
 
 model EvidenceItem {
@@ -333,11 +341,7 @@ model LearningSegment {
   id         String @id @default(cuid())
   scenarioId String
 
-  scenario LearningScenario @relation(
-    fields: [scenarioId],
-    references: [id],
-    onDelete: Cascade
-  )
+  scenario LearningScenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
 
   order        Int
   conversation Json
@@ -357,17 +361,9 @@ model LearningSegmentConcept {
 
   weight Float @default(1.0)
 
-  segment LearningSegment @relation(
-    fields: [scenarioId, segmentId],
-    references: [scenarioId, id],
-    onDelete: Cascade
-  )
+  segment LearningSegment @relation(fields: [segmentId], references: [id], onDelete: Cascade)
 
-  concept Concept @relation(
-    fields: [conceptId],
-    references: [id],
-    onDelete: Cascade
-  )
+  concept Concept @relation(fields: [conceptId], references: [id], onDelete: Cascade)
 
   @@id([scenarioId, segmentId, conceptId])
   @@index([conceptId])
@@ -377,11 +373,7 @@ model LearningAction {
   id        String @id @default(cuid())
   segmentId String
 
-  segment LearningSegment @relation(
-    fields: [segmentId],
-    references: [id],
-    onDelete: Cascade
-  )
+  segment LearningSegment @relation(fields: [segmentId], references: [id], onDelete: Cascade)
 
   type LearningActionType
 
@@ -396,6 +388,8 @@ model LearningAction {
   updatedAt DateTime @updatedAt
 
   attempts UserLearningAttempt[]
+  concepts LearningActionConcept[]
+  recommendationItems LearningRecommendation[]
 
   @@index([segmentId])
   @@index([type, isActive])
@@ -407,17 +401,9 @@ model LearningActionConcept {
 
   weight Float @default(1.0)
 
-  action LearningAction @relation(
-    fields: [actionId],
-    references: [id],
-    onDelete: Cascade
-  )
+  action LearningAction @relation(fields: [actionId], references: [id], onDelete: Cascade)
 
-  concept Concept @relation(
-    fields: [conceptId],
-    references: [id],
-    onDelete: Cascade
-  )
+  concept Concept @relation(fields: [conceptId], references: [id], onDelete: Cascade)
 
   @@id([actionId, conceptId])
   @@index([conceptId])
@@ -428,17 +414,9 @@ model UserLearningAttempt {
   userId   String
   actionId String
 
-  user User @relation(
-    fields: [userId],
-    references: [id],
-    onDelete: Cascade
-  )
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  action LearningAction @relation(
-    fields: [actionId],
-    references: [id],
-    onDelete: Cascade
-  )
+  action LearningAction @relation(fields: [actionId], references: [id], onDelete: Cascade)
 
   status LearningAttemptStatus @default(STARTED)
 
@@ -462,23 +440,11 @@ model LearningRecommendation {
   actionId String
   conceptId String
 
-  user User @relation(
-    fields: [userId],
-    references: [id],
-    onDelete: Cascade
-  )
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  action LearningAction @relation(
-    fields: [actionId],
-    references: [id],
-    onDelete: Cascade
-  )
+  action LearningAction @relation(fields: [actionId], references: [id], onDelete: Cascade)
 
-  concept Concept @relation(
-    fields: [conceptId],
-    references: [id],
-    onDelete: Cascade
-  )
+  concept Concept @relation(fields: [conceptId], references: [id], onDelete: Cascade)
 
   masteryScore      Float
   masteryConfidence Float
@@ -584,17 +550,9 @@ model PracticeActivityConcept {
 
   weight Float @default(1.0)
 
-  activity PracticeActivity @relation(
-    fields: [activityId],
-    references: [id],
-    onDelete: Cascade
-  )
+  activity PracticeActivity @relation(fields: [activityId], references: [id], onDelete: Cascade)
 
-  concept Concept @relation(
-    fields: [conceptId],
-    references: [id],
-    onDelete: Cascade
-  )
+  concept Concept @relation(fields: [conceptId], references: [id], onDelete: Cascade)
 
   @@id([activityId, conceptId])
   @@index([conceptId])
@@ -605,17 +563,9 @@ model PracticeAttempt {
   userId     String
   activityId String
 
-  user User @relation(
-    fields: [userId],
-    references: [id],
-    onDelete: Cascade
-  )
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  activity PracticeActivity @relation(
-    fields: [activityId],
-    references: [id],
-    onDelete: Restrict
-  )
+  activity PracticeActivity @relation(fields: [activityId], references: [id], onDelete: Restrict)
 
   status PracticeAttemptStatus @default(STARTED)
 
@@ -636,11 +586,7 @@ model PracticeRecommendation {
   id     String @id @default(cuid())
   userId String
 
-  user User @relation(
-    fields: [userId],
-    references: [id],
-    onDelete: Cascade
-  )
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   reason String?
 
@@ -660,23 +606,11 @@ model PracticeRecommendationItem {
 
   targetConceptId String?
 
-  recommendation PracticeRecommendation @relation(
-    fields: [recommendationId],
-    references: [id],
-    onDelete: Cascade
-  )
+  recommendation PracticeRecommendation @relation(fields: [recommendationId], references: [id], onDelete: Cascade)
 
-  activity PracticeActivity @relation(
-    fields: [activityId],
-    references: [id],
-    onDelete: Restrict
-  )
+  activity PracticeActivity @relation(fields: [activityId], references: [id], onDelete: Restrict)
 
-  targetConcept Concept? @relation(
-    fields: [targetConceptId],
-    references: [id],
-    onDelete: SetNull
-  )
+  targetConcept Concept? @relation(fields: [targetConceptId], references: [id], onDelete: SetNull)
 
   reason String?
 

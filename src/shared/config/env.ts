@@ -30,9 +30,12 @@ const envSchema = z.object({
     .string()
     .optional(),
 
-  OPENAI_MODEL: z
-    .string()
-    .default("gpt-5.5"),
+  // Per-task model routing for OpenAI
+  OPENAI_MODEL_INTERVIEWER: z.string().default("gpt-4o"),
+  OPENAI_MODEL_SUMMARY: z.string().default("gpt-4o"),
+  OPENAI_MODEL_EVALUATION: z.string().default("gpt-4o"),
+  OPENAI_MODEL_REPAIR: z.string().default("gpt-4o"),
+  OPENAI_FALLBACK_MODEL: z.string().default("gpt-4o-mini"),
 
   LOG_LEVEL: z
     .enum([

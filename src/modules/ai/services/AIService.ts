@@ -20,23 +20,23 @@ interface TaskConfig {
 // names map to specific models — providers below know nothing about tasks.
 const TASK_CONFIG: Record<AITask, TaskConfig> = {
   interviewer: {
-    model: env.OLLAMA_MODEL_INTERVIEWER,
-    fallbackModel: env.OLLAMA_FALLBACK_MODEL,
+    model: env.AI_PROVIDER === "openai" ? env.OPENAI_MODEL_INTERVIEWER : env.OLLAMA_MODEL_INTERVIEWER,
+    fallbackModel: env.AI_PROVIDER === "openai" ? env.OPENAI_FALLBACK_MODEL : env.OLLAMA_FALLBACK_MODEL,
     temperature: 0.3,
   },
   summary: {
-    model: env.OLLAMA_MODEL_SUMMARY,
-    fallbackModel: env.OLLAMA_FALLBACK_MODEL,
+    model: env.AI_PROVIDER === "openai" ? env.OPENAI_MODEL_SUMMARY : env.OLLAMA_MODEL_SUMMARY,
+    fallbackModel: env.AI_PROVIDER === "openai" ? env.OPENAI_FALLBACK_MODEL : env.OLLAMA_FALLBACK_MODEL,
     temperature: 0.2,
   },
   evaluation: {
-    model: env.OLLAMA_MODEL_EVALUATION,
-    fallbackModel: env.OLLAMA_FALLBACK_MODEL,
+    model: env.AI_PROVIDER === "openai" ? env.OPENAI_MODEL_EVALUATION : env.OLLAMA_MODEL_EVALUATION,
+    fallbackModel: env.AI_PROVIDER === "openai" ? env.OPENAI_FALLBACK_MODEL : env.OLLAMA_FALLBACK_MODEL,
     temperature: 0,
   },
   repair: {
-    model: env.OLLAMA_MODEL_REPAIR,
-    fallbackModel: env.OLLAMA_FALLBACK_MODEL,
+    model: env.AI_PROVIDER === "openai" ? env.OPENAI_MODEL_REPAIR : env.OLLAMA_MODEL_REPAIR,
+    fallbackModel: env.AI_PROVIDER === "openai" ? env.OPENAI_FALLBACK_MODEL : env.OLLAMA_FALLBACK_MODEL,
     temperature: 0,
   },
 };

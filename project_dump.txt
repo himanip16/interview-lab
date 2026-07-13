@@ -152,6 +152,7 @@ PROJECT STRUCTURE
 │   ├── features
 │   │   ├── dashboard
 │   │   │   └── components
+│   │   │       ├── DashboardView.tsx
 │   │   │       ├── NextRecommendedInterview.tsx
 │   │   │       └── SkillGraphView.tsx
 │   │   ├── diagram
@@ -218,6 +219,10 @@ PROJECT STRUCTURE
 │   │   │   │   ├── PersonalNotebooks.tsx
 │   │   │   │   └── SmartMentor.tsx
 │   │   │   └── index.ts
+│   │   ├── library
+│   │   │   ├── components
+│   │   │   │   └── LibraryView.tsx
+│   │   │   └── page.tsx
 │   │   └── shared
 │   ├── lib
 │   │   └── utils.ts
@@ -305,6 +310,8 @@ PROJECT STRUCTURE
 │   │       │   ├── interview
 │   │       │   │   ├── InterviewFactory.ts
 │   │       │   │   └── InterviewMessageService.ts
+│   │       │   ├── learning
+│   │       │   │   └── LearningActionService.ts
 │   │       │   ├── mastery
 │   │       │   │   ├── MasteryService.ts
 │   │       │   │   └── SkillGraphService.ts
@@ -328,7 +335,7 @@ PROJECT STRUCTURE
 ├── tsconfig.json
 └── tsconfig.tsbuildinfo
 
-129 directories, 198 files
+132 directories, 202 files
 
 FILE CONTENTS
 
@@ -358,13 +365,14 @@ datasource db {
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
-  passwordHash String?  // null for guest users
+  passwordHash String?
   isGuest      Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  interviews Interview[]
-  masteries  ConceptMastery[]
+  interviews      Interview[]
+  masteries       ConceptMastery[]
+  learningAttempts UserLearningAttempt[]
 }
 
 // ---------------------------------------------------------------------------
@@ -584,7 +592,7 @@ model Concept {
   slug        String  @unique
   name        String
   description String?
-  category    String // free text, e.g. "scalability", "data_modeling" — seeded like rubric dimensions
+  category    String
 
   parentId String?
   parent   Concept?  @relation("ConceptHierarchy", fields: [parentId], references: [id])
@@ -595,6 +603,8 @@ model Concept {
   evidenceLinks EvidenceConcept[]
   masteries     ConceptMastery[]
   problems      ProblemConcept[]
+
+  learningSegments LearningSegmentConcept[]
 }
 
 model EvidenceItem {
@@ -657,6 +667,201 @@ model ProblemConcept {
   @@id([problemId, conceptId])
 }
 
+
+model LearningScenario {
+  id          String  @id @default(cuid())
+  slug        String  @unique
+  title       String
+  description String?
+
+  // e.g. "Design a Payment System"
+  context Json?
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  segments LearningSegment[]
+}
+
+model LearningSegment {
+  id         String @id @default(cuid())
+  scenarioId String
+
+  scenario LearningScenario @relation(
+    fields: [scenarioId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  order        Int
+  conversation Json
+  takeaway     String?
+
+  actions  LearningAction[]
+  concepts LearningSegmentConcept[]
+
+  @@unique([scenarioId, order])
+  @@index([scenarioId])
+}
+
+model LearningSegmentConcept {
+  scenarioId String
+  segmentId  String
+  conceptId  String
+
+  weight Float @default(1.0)
+
+  segment LearningSegment @relation(
+    fields: [scenarioId, segmentId],
+    references: [scenarioId, id],
+    onDelete: Cascade
+  )
+
+  concept Concept @relation(
+    fields: [conceptId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  @@id([scenarioId, segmentId, conceptId])
+  @@index([conceptId])
+}
+
+model LearningAction {
+  id        String @id @default(cuid())
+  segmentId String
+
+  segment LearningSegment @relation(
+    fields: [segmentId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  type LearningActionType
+
+  title        String
+  instructions String?
+  content      Json
+  contentVersion Int @default(1)
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  attempts UserLearningAttempt[]
+
+  @@index([segmentId])
+  @@index([type, isActive])
+}
+
+model LearningActionConcept {
+  actionId  String
+  conceptId String
+
+  weight Float @default(1.0)
+
+  action LearningAction @relation(
+    fields: [actionId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  concept Concept @relation(
+    fields: [conceptId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  @@id([actionId, conceptId])
+  @@index([conceptId])
+}
+
+model UserLearningAttempt {
+  id       String @id @default(cuid())
+  userId   String
+  actionId String
+
+  user User @relation(
+    fields: [userId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  action LearningAction @relation(
+    fields: [actionId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  status LearningAttemptStatus @default(STARTED)
+
+  response        Json?
+  responseVersion Int          @default(1)
+
+  score    Float?
+  feedback String?
+
+  startedAt   DateTime @default(now())
+  completedAt DateTime?
+
+  @@index([userId, completedAt])
+  @@index([userId, actionId])
+  @@index([actionId])
+}
+
+model LearningRecommendation {
+  id       String @id @default(cuid())
+  userId   String
+  actionId String
+  conceptId String
+
+  user User @relation(
+    fields: [userId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  action LearningAction @relation(
+    fields: [actionId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  concept Concept @relation(
+    fields: [conceptId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  masteryScore      Float
+  masteryConfidence Float
+
+  reason String
+
+  createdAt DateTime @default(now())
+  dismissedAt DateTime?
+  consumedAt  DateTime?
+
+  @@index([userId, createdAt])
+  @@index([userId, consumedAt])
+}
+
+enum LearningAttemptStatus {
+  STARTED
+  COMPLETED
+  ABANDONED
+}
+
+enum LearningActionType {
+  OBSERVE
+  JUDGE
+  FIX
+  PREDICT
+  COMPARE
+}
+
 enum ProblemCategory {
   SYSTEM_DESIGN
   LOW_LEVEL_DESIGN
@@ -697,6 +902,157 @@ enum Difficulty {
 enum MessageRole {
   assistant
   user
+}
+
+model PracticeActivity {
+  id          String @id @default(cuid())
+  slug        String @unique
+  title       String
+  description String?
+
+  type PracticeActivityType
+
+  difficulty Difficulty
+
+  estimatedMinutes Int?
+
+  content        Json
+  contentVersion Int @default(1)
+
+  isPublished Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  concepts PracticeActivityConcept[]
+  attempts PracticeAttempt[]
+
+  recommendationItems PracticeRecommendationItem[]
+
+  @@index([type, isPublished])
+  @@index([difficulty, isPublished])
+}
+
+model PracticeActivityConcept {
+  activityId String
+  conceptId  String
+
+  weight Float @default(1.0)
+
+  activity PracticeActivity @relation(
+    fields: [activityId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  concept Concept @relation(
+    fields: [conceptId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  @@id([activityId, conceptId])
+  @@index([conceptId])
+}
+
+model PracticeAttempt {
+  id         String @id @default(cuid())
+  userId     String
+  activityId String
+
+  user User @relation(
+    fields: [userId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  activity PracticeActivity @relation(
+    fields: [activityId],
+    references: [id],
+    onDelete: Restrict
+  )
+
+  status PracticeAttemptStatus @default(STARTED)
+
+  response        Json?
+  responseVersion Int @default(1)
+
+  score    Float?
+  feedback String?
+
+  startedAt   DateTime @default(now())
+  completedAt DateTime?
+
+  @@index([userId, completedAt])
+  @@index([userId, activityId])
+}
+
+model PracticeRecommendation {
+  id     String @id @default(cuid())
+  userId String
+
+  user User @relation(
+    fields: [userId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  reason String?
+
+  createdAt DateTime @default(now())
+  expiresAt DateTime?
+
+  items PracticeRecommendationItem[]
+
+  @@index([userId, createdAt])
+}
+
+model PracticeRecommendationItem {
+  recommendationId String
+  activityId       String
+
+  rank Int
+
+  targetConceptId String?
+
+  recommendation PracticeRecommendation @relation(
+    fields: [recommendationId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  activity PracticeActivity @relation(
+    fields: [activityId],
+    references: [id],
+    onDelete: Restrict
+  )
+
+  targetConcept Concept? @relation(
+    fields: [targetConceptId],
+    references: [id],
+    onDelete: SetNull
+  )
+
+  reason String?
+
+  @@id([recommendationId, activityId])
+  @@index([activityId])
+  @@index([targetConceptId])
+}
+
+enum PracticeActivityType {
+  MOCK_INTERVIEW
+  BUG_HUNT
+  JUDGE
+  FIX
+  PREDICT
+  COMPARE
+}
+
+enum PracticeAttemptStatus {
+  STARTED
+  COMPLETED
+  ABANDONED
 }
 ================================================
 FILE: ./prisma/seed.ts
@@ -1499,6 +1855,240 @@ async function seedTemplates() {
 }
 
 
+// Additions for prisma/seed.ts — call seedLearningScenarios() from main(),
+// after seedConcepts()/seedProblemConcepts() since segments reference concept
+// slugs that must already exist.
+//
+// This seeds exactly the "Design a Payment System" example from the design
+// doc: one scenario, three segments, and one action of each type, wired to
+// whichever segment its concept actually belongs to.
+
+import { LearningActionType, Prisma } from "@prisma/client";
+import { prisma } from "../shared/prisma/client"; // adjust import to your actual seed.ts prisma instance
+
+type SegmentSeed = {
+  order: number;
+  title: string;
+  dialogue: { role: "interviewer" | "candidate"; content: string }[];
+  conceptSlugs: string[]; // must already exist via seedConcepts()
+  actions: {
+    type: LearningActionType;
+    order: number;
+    prompt: string;
+    reflection: string;
+    payload: Prisma.InputJsonValue;
+  }[];
+};
+
+const PAYMENT_SCENARIO = {
+  slug: "design-a-payment-system",
+  title: "Design a Payment System",
+  description:
+    "A candidate reasons through what happens when a payment succeeds but the system never observes it.",
+  segments: [
+    {
+      order: 1,
+      title: "Payment succeeds, but the event is lost",
+      dialogue: [
+        {
+          role: "interviewer",
+          content:
+            "Let's say the payment succeeded, but our order service never received the event. What happens?",
+        },
+        {
+          role: "candidate",
+          content:
+            "I wouldn't retry the payment itself. I'd first separate payment state from event delivery.",
+        },
+        { role: "interviewer", content: "Why?" },
+        {
+          role: "candidate",
+          content:
+            "Because the external side effect may already have happened. My uncertainty is whether our system observed it — not whether the charge occurred.",
+        },
+        { role: "interviewer", content: "Okay. So how do you recover?" },
+        {
+          role: "candidate",
+          content:
+            "I'd persist the payment result, then publish through an outbox. The consumer must also be idempotent.",
+        },
+      ],
+      conceptSlugs: ["data-consistency", "message-queues"],
+      actions: [
+        {
+          type: LearningActionType.WATCH,
+          order: 0,
+          prompt: "Watch how someone else handles it.",
+          reflection:
+            "Notice what they did? The candidate separated whether the action happened from whether the system observed it. In your interview, you combined these two concerns.",
+          payload: {},
+        },
+      ],
+    },
+    {
+      order: 2,
+      title: "Client retries the payment request",
+      dialogue: [
+        {
+          role: "interviewer",
+          content: "The client times out and retries the same payment request. What could go wrong?",
+        },
+        {
+          role: "candidate",
+          content:
+            "If we're not careful, we'd charge the customer twice — the retry looks like a brand new request unless we can recognize it as the same one.",
+        },
+      ],
+      conceptSlugs: ["rate-limiting-algorithms"],
+      actions: [
+        {
+          type: LearningActionType.FIX,
+          order: 0,
+          prompt: "Fix this answer.",
+          reflection:
+            "Better. You correctly questioned the delivery guarantee. One thing is still missing: what happens between the database commit and publishing the event?",
+          payload: {
+            interviewerQuestion: "How do you maintain consistency between services?",
+            flawedAnswer:
+              "I'd use Kafka because Kafka guarantees message delivery and makes the system eventually consistent.",
+            evaluationFocus:
+              "Whether the fix identifies the gap between the database write and the event publish, not just naming a technology.",
+          },
+        },
+      ],
+    },
+    {
+      order: 3,
+      title: "Kafka consumer crashes before publishing",
+      dialogue: [
+        {
+          role: "interviewer",
+          content:
+            "The database write succeeds. The service crashes before publishing to Kafka. What does the system believe happened?",
+        },
+      ],
+      conceptSlugs: ["message-queues", "consistent-hashing"],
+      actions: [
+        {
+          type: LearningActionType.PREDICT,
+          order: 0,
+          prompt: "What breaks first?",
+          reflection:
+            "The order was persisted, but downstream services never learn about it until the outbox relay catches up — the system silently drifts out of sync in the meantime.",
+          payload: {
+            question:
+              "Order Service → Database → Kafka → Inventory Service. The database write succeeds. The service crashes before publishing to Kafka. What does the system believe happened?",
+            revealExplanation:
+              "The Inventory Service has no idea the order exists yet. Without an outbox pattern, this gap is invisible until someone notices inventory never decremented.",
+          },
+        },
+        {
+          type: LearningActionType.JUDGE,
+          order: 1,
+          prompt: "Your turn to interview. A candidate is designing a chat system.",
+          reflection:
+            "Exactly. The interesting boundary is between the database write and event publication — that's the failure mode you missed in your own interview.",
+          payload: {
+            options: [
+              { id: "a", text: "Why Kafka instead of RabbitMQ?" },
+              { id: "b", text: "What happens if the database write succeeds but publishing fails?" },
+              { id: "c", text: "How many Kafka partitions would you use?" },
+              { id: "d", text: "Would you use WebSockets?" },
+            ],
+            correctOptionId: "b",
+          },
+        },
+        {
+          type: LearningActionType.COMPARE,
+          order: 2,
+          prompt: "Who handled this better?",
+          reflection:
+            "Candidate B — not because they used a more advanced term, but because they scoped the consistency decision instead of applying one model to the entire system.",
+          payload: {
+            candidateA:
+              "I'd use eventual consistency because availability is more important here.",
+            candidateB:
+              "I think eventual consistency is acceptable for the read model, but I wouldn't apply that assumption to payment state — those have different failure costs.",
+            correctChoice: "B",
+          },
+        },
+      ],
+    },
+  ] satisfies SegmentSeed[],
+};
+
+export async function seedLearningScenarios() {
+  const scenario = await prisma.learningScenario.upsert({
+    where: { slug: PAYMENT_SCENARIO.slug },
+    update: {
+      title: PAYMENT_SCENARIO.title,
+      description: PAYMENT_SCENARIO.description,
+      isActive: true,
+    },
+    create: {
+      slug: PAYMENT_SCENARIO.slug,
+      title: PAYMENT_SCENARIO.title,
+      description: PAYMENT_SCENARIO.description,
+    },
+  });
+
+  for (const segmentSeed of PAYMENT_SCENARIO.segments) {
+    const segment = await prisma.scenarioSegment.upsert({
+      where: { scenarioId_order: { scenarioId: scenario.id, order: segmentSeed.order } },
+      update: {
+        title: segmentSeed.title,
+        dialogue: segmentSeed.dialogue as Prisma.InputJsonValue,
+      },
+      create: {
+        scenarioId: scenario.id,
+        order: segmentSeed.order,
+        title: segmentSeed.title,
+        dialogue: segmentSeed.dialogue as Prisma.InputJsonValue,
+      },
+    });
+
+    for (const slug of segmentSeed.conceptSlugs) {
+      const concept = await prisma.concept.findUnique({ where: { slug } });
+
+      if (!concept) {
+        console.warn(`Skipping unknown concept slug "${slug}" for segment "${segmentSeed.title}".`);
+        continue;
+      }
+
+      await prisma.scenarioSegmentConcept.upsert({
+        where: { segmentId_conceptId: { segmentId: segment.id, conceptId: concept.id } },
+        update: {},
+        create: { segmentId: segment.id, conceptId: concept.id },
+      });
+    }
+
+    for (const actionSeed of segmentSeed.actions) {
+      const existing = await prisma.learningAction.findFirst({
+        where: { segmentId: segment.id, order: actionSeed.order },
+      });
+
+      const data = {
+        segmentId: segment.id,
+        type: actionSeed.type,
+        order: actionSeed.order,
+        prompt: actionSeed.prompt,
+        reflection: actionSeed.reflection,
+        payload: actionSeed.payload,
+      };
+
+      if (existing) {
+        await prisma.learningAction.update({ where: { id: existing.id }, data });
+      } else {
+        await prisma.learningAction.create({ data });
+      }
+    }
+  }
+
+  console.log(
+    `Seeded learning scenario "${scenario.slug}" (${PAYMENT_SCENARIO.segments.length} segments).`
+  );
+}
+
 async function main() {
   for (const problem of problems) {
     await prisma.problem.upsert({
@@ -1925,13 +2515,14 @@ export default function Home() {
 ================================================
 FILE: ./src/app/dashboard/[userId]/page.tsx
 ================================================
+// src/app/dashboard/[userId]/page.tsx
 import { notFound } from "next/navigation";
+import { InterviewStatus } from "@prisma/client";
 
 import { prisma } from "@/shared/prisma/client";
 import { SkillGraphService } from "@/src/modules/interview/services/mastery/SkillGraphService";
 import { RecommendationService } from "@/src/modules/interview/services/recommendation/RecommendationService";
-import SkillGraphView from "@/src/features/dashboard/components/SkillGraphView";
-import NextRecommendedInterview from "@/src/features/dashboard/components/NextRecommendedInterview";
+import DashboardView from "@/src/features/dashboard/components/DashboardView";
 
 type Props = {
   params: Promise<{ userId: string }>;
@@ -1947,23 +2538,67 @@ export default async function DashboardPage({ params }: Props) {
   const skillGraphService = new SkillGraphService();
   const recommendationService = new RecommendationService();
 
-  const [skillGraph, recommendation] = await Promise.all([
-    skillGraphService.getSkillGraph(userId),
-    recommendationService.nextRecommended(userId),
-  ]);
+  const [skillGraph, recommendation, completedInterviews, exploreProblems] =
+    await Promise.all([
+      skillGraphService.getSkillGraph(userId),
+      recommendationService.nextRecommended(userId),
+      prisma.interview.findMany({
+        where: { userId, status: InterviewStatus.COMPLETED },
+        include: { template: true, evaluation: true },
+        orderBy: { completedAt: "desc" },
+      }),
+      prisma.problem.findMany({
+        orderBy: { interviewCount: "desc" },
+        take: 4,
+      }),
+    ]);
+
+  // Group completed-interview scores by template slug (hld / lld / dsa) so
+  // we can show a 0-5 star rating per interview type, same idea as the
+  // per-concept mastery bars but at the template level.
+  const scoresByTemplate: Record<string, number[]> = {};
+
+  for (const interview of completedInterviews) {
+    if (!interview.evaluation) continue;
+
+    const slug = interview.template.slug;
+    (scoresByTemplate[slug] ??= []).push(interview.evaluation.overallScore);
+  }
+
+  const categoryRatings = Object.fromEntries(
+    Object.entries(scoresByTemplate).map(([slug, scores]) => [
+      slug,
+      Math.round(
+        (scores.reduce((sum, score) => sum + score, 0) / scores.length) / 20
+      ), // 0-100 score -> 0-5 stars
+    ])
+  );
+
+  const hasData = completedInterviews.length > 0;
+
+  const overallReadiness = hasData
+    ? Math.round(
+        completedInterviews.reduce(
+          (sum, interview) => sum + (interview.evaluation?.overallScore ?? 0),
+          0
+        ) / completedInterviews.length
+      )
+    : null;
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-12 text-foreground">
-      <h1 className="text-4xl font-bold text-white">Your Dashboard</h1>
-
-      <div className="mt-8">
-        <NextRecommendedInterview recommendation={recommendation} />
-      </div>
-
-      <div className="mt-8">
-        <SkillGraphView skillGraph={skillGraph} />
-      </div>
-    </main>
+    <DashboardView
+      hasData={hasData}
+      overallReadiness={overallReadiness}
+      categoryRatings={categoryRatings}
+      skillGraph={skillGraph}
+      recommendation={recommendation}
+      exploreProblems={exploreProblems.map((problem) => ({
+        id: problem.id,
+        title: problem.title,
+        difficulty: problem.difficulty,
+        description: problem.description,
+      }))}
+    />
   );
 }
 ================================================
@@ -3971,6 +4606,588 @@ export default function SystemDiagram() {
 }
 
 ================================================
+FILE: ./src/features/library/components/LibraryView.tsx
+================================================
+// src/features/library/components/LibraryView.tsx
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import {
+  Difficulty,
+  ExperienceSource,
+  InterviewMode,
+} from "@prisma/client";
+
+import Heading from "@/src/components/ui/Heading";
+import Text from "@/src/components/ui/Text";
+import { Button } from "@/src/components/ui/Button";
+
+import OverallScoreCard from "@/src/features/interview/report/components/OverallScoreCard";
+import WhatHappenedCard from "@/src/features/interview/report/components/WhatHappenedCard";
+import EvidenceTimeline from "@/src/features/interview/report/components/EvidenceTimeline";
+
+// ---------------------------------------------------------------------------
+// Types — plain shapes matching the Prisma `include`s built in page.tsx.
+// Kept local rather than importing Prisma payload generics to keep this
+// component decoupled from the query shape.
+// ---------------------------------------------------------------------------
+
+export type ExperienceItem = {
+  id: string;
+  role: string | null;
+  level: string | null;
+  year: number | null;
+  source: ExperienceSource;
+  url: string;
+  notes: string | null;
+  problem: {
+    id: string;
+    title: string;
+    description: string | null;
+    difficulty: Difficulty;
+  };
+  company: {
+    name: string;
+  };
+};
+
+export type TranscriptMessage = {
+  id: string;
+  role: "assistant" | "user";
+  content: string;
+  elapsedSeconds: number;
+};
+
+type DimensionScore = {
+  dimension: string;
+  score: number;
+  summary: string;
+};
+
+type EvidenceEntry = {
+  dimension: string;
+  timestampSeconds: number;
+  quote: string;
+  comment: string;
+};
+
+type EvaluationMetadata = {
+  strengths?: string[];
+  weaknesses?: string[];
+};
+
+export type CompletedInterviewItem = {
+  id: string;
+  mode: InterviewMode;
+  difficulty: Difficulty;
+  duration: number;
+  company: string;
+  displayDate: string; // pre-formatted on the server — avoids hydration mismatches
+  problem: {
+    title: string;
+  };
+  template: {
+    name: string;
+  };
+  transcript: TranscriptMessage[];
+  evaluation: {
+    overallScore: number;
+    feedback: string;
+    dimensionScores: DimensionScore[];
+    evidence: EvidenceEntry[];
+    metadata: EvaluationMetadata;
+  } | null;
+};
+
+type Props = {
+  experiences: ExperienceItem[];
+  completedInterviews: CompletedInterviewItem[];
+};
+
+type Tab = "experiences" | "transcripts" | "diagrams";
+
+const DIFFICULTY_STYLES: Record<Difficulty, string> = {
+  EASY: "border-green-800 text-green-400",
+  MEDIUM: "border-amber-800 text-amber-400",
+  HARD: "border-red-800 text-red-400",
+};
+
+const SOURCE_LABELS: Record<ExperienceSource, string> = {
+  LEETCODE: "LeetCode",
+  ENGINEERBOOGIE: "EngineerBoogie",
+  GLASSDOOR: "Glassdoor",
+  USER_SUBMISSION: "Community Submission",
+};
+
+function formatTimestamp(seconds: number): string {
+  const minutes = Math.floor(seconds / 60);
+  const remaining = Math.floor(seconds % 60);
+  return `${minutes.toString().padStart(2, "0")}:${remaining
+    .toString()
+    .padStart(2, "0")}`;
+}
+
+export default function LibraryView({ experiences, completedInterviews }: Props) {
+  const [activeTab, setActiveTab] = useState<Tab>("experiences");
+  const [selectedExperience, setSelectedExperience] =
+    useState<ExperienceItem | null>(null);
+  const [selectedInterview, setSelectedInterview] =
+    useState<CompletedInterviewItem | null>(null);
+
+  function switchTab(tab: Tab) {
+    setActiveTab(tab);
+    setSelectedExperience(null);
+    setSelectedInterview(null);
+  }
+
+  return (
+    <main className="mx-auto max-w-5xl px-6 py-12 text-foreground">
+      {/* Header */}
+      <div className="flex flex-col gap-4 border-b border-border pb-6 md:flex-row md:items-end md:justify-between">
+        <div>
+          <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+            Knowledge Base
+          </span>
+          <h1 className="mt-1 text-3xl font-bold tracking-tight text-foreground">
+            Personal Library
+          </h1>
+        </div>
+
+        <div className="flex overflow-x-auto rounded-md border border-border bg-muted p-0.5">
+          {(
+            [
+              ["experiences", "Interview Experiences"],
+              ["transcripts", "Completed Interviews"],
+              ["diagrams", "Interactive Diagrams"],
+            ] as [Tab, string][]
+          ).map(([tab, label]) => (
+            <button
+              key={tab}
+              onClick={() => switchTab(tab)}
+              className={`whitespace-nowrap rounded px-4 py-1.5 font-mono text-xs transition ${
+                activeTab === tab
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ---------------------------------------------------------------- */}
+      {/* Experience detail                                                 */}
+      {/* ---------------------------------------------------------------- */}
+      {selectedExperience && (
+        <div className="mx-auto mt-8 max-w-3xl space-y-6">
+          <button
+            onClick={() => setSelectedExperience(null)}
+            className="font-mono text-xs text-muted-foreground hover:text-foreground"
+          >
+            ← Back to experiences
+          </button>
+
+          <div className="overflow-hidden rounded-lg border border-border bg-card">
+            <div className="flex flex-col gap-4 bg-muted p-6 md:flex-row md:items-start md:justify-between">
+              <div>
+                <span className="block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                  {selectedExperience.company.name}
+                  {selectedExperience.role ? ` • ${selectedExperience.role}` : ""}
+                  {selectedExperience.level ? ` • ${selectedExperience.level}` : ""}
+                </span>
+                <h2 className="mt-1 text-xl font-bold text-foreground">
+                  {selectedExperience.problem.title}
+                </h2>
+              </div>
+
+              <span className="font-mono text-xs text-muted-foreground">
+                {SOURCE_LABELS[selectedExperience.source]}
+                {selectedExperience.year ? ` • ${selectedExperience.year}` : ""}
+              </span>
+            </div>
+
+            <div className="space-y-6 p-8">
+              {selectedExperience.problem.description && (
+                <div className="grid grid-cols-1 gap-2 border-b border-border pb-6 md:grid-cols-4">
+                  <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground md:col-span-1">
+                    Problem
+                  </span>
+                  <p className="text-sm leading-relaxed text-foreground md:col-span-3">
+                    {selectedExperience.problem.description}
+                  </p>
+                </div>
+              )}
+
+              {selectedExperience.notes && (
+                <div className="grid grid-cols-1 gap-2 border-b border-border pb-6 md:grid-cols-4">
+                  <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground md:col-span-1">
+                    Notes
+                  </span>
+                  <p className="text-sm leading-relaxed text-foreground md:col-span-3">
+                    {selectedExperience.notes}
+                  </p>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 gap-2 md:grid-cols-4">
+                <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground md:col-span-1">
+                  Source
+                </span>
+                <a
+                  href={selectedExperience.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-sm text-primary hover:opacity-80 md:col-span-3"
+                >
+                  {selectedExperience.url}
+                </a>
+              </div>
+
+              <div className="flex justify-end pt-2">
+                <Link
+                  href={`/interview/setup?problemId=${selectedExperience.problem.id}&type=hld`}
+                >
+                  <Button variant="primary" className="text-sm">
+                    Practice this problem →
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ---------------------------------------------------------------- */}
+      {/* Transcript detail                                                 */}
+      {/* ---------------------------------------------------------------- */}
+      {selectedInterview && (
+        <div className="mt-8 space-y-6">
+          <button
+            onClick={() => setSelectedInterview(null)}
+            className="font-mono text-xs text-muted-foreground hover:text-foreground"
+          >
+            ← Back to completed interviews
+          </button>
+
+          <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
+            {/* Transcript */}
+            <div className="space-y-4 lg:col-span-2">
+              <div className="rounded-lg border border-border bg-card p-6">
+                <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+                  Live conversation log
+                </span>
+                <h3 className="mt-1 text-base font-bold text-foreground">
+                  {selectedInterview.problem.title} Transcript
+                </h3>
+
+                <div className="mt-6 max-h-[480px] space-y-4 divide-y divide-border overflow-y-auto pr-2">
+                  {selectedInterview.transcript.map((message, idx) => (
+                    <div key={message.id ?? idx} className="pt-4 first:pt-0">
+                      <div className="mb-1 flex items-baseline justify-between">
+                        <span
+                          className={`font-mono text-[10px] font-bold uppercase tracking-wide ${
+                            message.role === "assistant"
+                              ? "text-muted-foreground"
+                              : "text-foreground"
+                          }`}
+                        >
+                          {message.role === "assistant" ? "Interviewer" : "Candidate"}
+                        </span>
+                        <span className="font-mono text-[10px] text-muted-foreground">
+                          {formatTimestamp(message.elapsedSeconds)}
+                        </span>
+                      </div>
+                      <p className="text-sm leading-relaxed text-foreground">
+                        {message.content}
+                      </p>
+                    </div>
+                  ))}
+
+                  {selectedInterview.transcript.length === 0 && (
+                    <Text variant="muted">No messages recorded for this session.</Text>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Evaluation */}
+            <div className="space-y-4">
+              {selectedInterview.evaluation ? (
+                <>
+                  <OverallScoreCard score={selectedInterview.evaluation.overallScore} />
+                  <WhatHappenedCard
+                    observations={[]}
+                    strengths={selectedInterview.evaluation.metadata.strengths ?? []}
+                    weaknesses={selectedInterview.evaluation.metadata.weaknesses ?? []}
+                  />
+                </>
+              ) : (
+                <div className="rounded-lg border border-border bg-card p-6 text-center">
+                  <Text variant="muted">Evaluation still generating — check back shortly.</Text>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {selectedInterview.evaluation &&
+            selectedInterview.evaluation.evidence.length > 0 && (
+              <EvidenceTimeline evidence={selectedInterview.evaluation.evidence} />
+            )}
+        </div>
+      )}
+
+      {/* ---------------------------------------------------------------- */}
+      {/* List views                                                        */}
+      {/* ---------------------------------------------------------------- */}
+      {!selectedExperience && !selectedInterview && (
+        <div className="mt-8 space-y-6">
+          {activeTab === "experiences" && (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              {experiences.length > 0 ? (
+                experiences.map((exp) => (
+                  <button
+                    key={exp.id}
+                    onClick={() => setSelectedExperience(exp)}
+                    className="flex h-[180px] flex-col justify-between rounded-lg border border-border bg-card p-6 text-left transition hover:border-foreground/40"
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between font-mono text-[10px] text-muted-foreground">
+                        <span>
+                          {exp.company.name}
+                          {exp.level ? ` • ${exp.level}` : ""}
+                        </span>
+                        <span
+                          className={`rounded border px-2 py-0.5 uppercase tracking-wider ${DIFFICULTY_STYLES[exp.problem.difficulty]}`}
+                        >
+                          {exp.problem.difficulty}
+                        </span>
+                      </div>
+                      <h3 className="text-base font-semibold text-foreground">
+                        {exp.problem.title}
+                      </h3>
+                    </div>
+
+                    <div className="flex items-center justify-between border-t border-border pt-3 text-xs text-muted-foreground">
+                      <span className="max-w-[60%] truncate">
+                        {SOURCE_LABELS[exp.source]}
+                      </span>
+                      <span className="font-mono font-bold text-foreground">
+                        Read entry →
+                      </span>
+                    </div>
+                  </button>
+                ))
+              ) : (
+                <div className="col-span-full rounded-lg border border-border bg-card p-12 text-center">
+                  <Text variant="muted">
+                    No interview experiences logged yet.
+                  </Text>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === "transcripts" && (
+            <div className="space-y-4">
+              {completedInterviews.length > 0 ? (
+                completedInterviews.map((session) => (
+                  <button
+                    key={session.id}
+                    onClick={() => setSelectedInterview(session)}
+                    className="flex w-full items-center justify-between rounded-lg border border-border bg-card p-5 text-left transition hover:border-foreground/40"
+                  >
+                    <div>
+                      <h3 className="text-sm font-bold text-foreground">
+                        {session.problem.title} Transcript
+                      </h3>
+                      <span className="font-mono text-xs text-muted-foreground">
+                        {session.template.name} •{" "}
+                        {session.mode === "REVERSE" ? "Reverse mode" : "Candidate mode"} •{" "}
+                        {session.transcript.length} exchanges • {session.displayDate}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                      {session.evaluation && (
+                        <div className="rounded border border-border bg-muted px-2.5 py-1">
+                          <span className="font-mono text-xs font-bold text-foreground">
+                            {session.evaluation.overallScore}/100
+                          </span>
+                        </div>
+                      )}
+                      <span className="text-muted-foreground">→</span>
+                    </div>
+                  </button>
+                ))
+              ) : (
+                <div className="rounded-lg border border-border bg-card p-12 text-center">
+                  <Text variant="muted">
+                    No session transcripts yet. Start a practice interview to
+                    generate an evaluation log.
+                  </Text>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === "diagrams" && (
+            <div className="rounded-lg border border-border bg-card p-6">
+              <Heading level="h4">System Design Blueprints</Heading>
+              <Text variant="small" className="mt-2">
+                Explore an interactive, clickable architecture diagram to see
+                how each component's role, failure modes, and tradeoffs fit
+                together.
+              </Text>
+
+              <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <Link
+                  href="/diagram"
+                  className="rounded border border-border bg-muted p-4 text-left transition hover:border-foreground/40"
+                >
+                  <span className="inline-block rounded bg-blue-500/10 px-2 py-0.5 font-mono text-[9px] font-bold uppercase text-blue-400">
+                    Medium HLD
+                  </span>
+                  <h4 className="mt-2 text-xs font-bold text-foreground">
+                    Design Dropbox
+                  </h4>
+                  <p className="mt-1 line-clamp-1 text-[10px] text-muted-foreground">
+                    Metadata sync, block-level storage, and S3-backed durability.
+                  </p>
+                </Link>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </main>
+  );
+}
+================================================
+FILE: ./src/features/library/page.tsx
+================================================
+// src/app/library/page.tsx
+import { InterviewStatus } from "@prisma/client";
+
+import { prisma } from "@/shared/prisma/client";
+import { getCurrentUserId } from "@/src/modules/auth/getCurrentUserId";
+import LibraryView, {
+  type CompletedInterviewItem,
+  type ExperienceItem,
+} from "@/src/features/library/components/LibraryView";
+
+type DimensionScore = {
+  dimension: string;
+  score: number;
+  summary: string;
+};
+
+type EvidenceEntry = {
+  dimension: string;
+  timestampSeconds: number;
+  quote: string;
+  comment: string;
+};
+
+type EvaluationMetadata = {
+  strengths?: string[];
+  weaknesses?: string[];
+};
+
+function formatDisplayDate(date: Date): string {
+  return new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  }).format(date);
+}
+
+export default async function LibraryPage() {
+  const userId = await getCurrentUserId();
+
+  const [experiencesRaw, interviewsRaw] = await Promise.all([
+    prisma.interviewExperience.findMany({
+      include: {
+        problem: {
+          select: { id: true, title: true, description: true, difficulty: true },
+        },
+        company: { select: { name: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 30,
+    }),
+    prisma.interview.findMany({
+      where: { userId, status: InterviewStatus.COMPLETED },
+      include: {
+        problem: { select: { title: true } },
+        template: { select: { name: true } },
+        evaluation: true,
+        transcript: {
+          orderBy: { createdAt: "asc" },
+          select: { id: true, role: true, content: true, elapsedSeconds: true },
+        },
+      },
+      // `completedAt` isn't currently set when an interview finishes, so
+      // order by `updatedAt` (which the finish flow does update) instead.
+      orderBy: { updatedAt: "desc" },
+    }),
+  ]);
+
+  const experiences: ExperienceItem[] = experiencesRaw.map((exp) => ({
+    id: exp.id,
+    role: exp.role,
+    level: exp.level,
+    year: exp.year,
+    source: exp.source,
+    url: exp.url,
+    notes: exp.notes,
+    problem: exp.problem,
+    company: exp.company,
+  }));
+
+  const completedInterviews: CompletedInterviewItem[] = interviewsRaw.map(
+    (interview) => {
+      const metadata = (interview.evaluation?.metadata ??
+        {}) as EvaluationMetadata;
+
+      return {
+        id: interview.id,
+        mode: interview.mode,
+        difficulty: interview.difficulty,
+        duration: interview.duration,
+        company: interview.company,
+        displayDate: formatDisplayDate(
+          interview.completedAt ?? interview.updatedAt
+        ),
+        problem: interview.problem,
+        template: interview.template,
+        transcript: interview.transcript,
+        evaluation: interview.evaluation
+          ? {
+              overallScore: interview.evaluation.overallScore,
+              feedback: interview.evaluation.feedback,
+              dimensionScores:
+                (interview.evaluation.dimensionScores as unknown as DimensionScore[]) ??
+                [],
+              evidence:
+                (interview.evaluation.evidence as unknown as EvidenceEntry[]) ??
+                [],
+              metadata,
+            }
+          : null,
+      };
+    }
+  );
+
+  return (
+    <LibraryView
+      experiences={experiences}
+      completedInterviews={completedInterviews}
+    />
+  );
+}
+================================================
 FILE: ./src/features/dashboard/components/NextRecommendedInterview.tsx
 ================================================
 import Link from "next/link";
@@ -4019,6 +5236,327 @@ export default function NextRecommendedInterview({ recommendation }: Props) {
         Start Interview →
       </Link>
     </div>
+  );
+}
+================================================
+FILE: ./src/features/dashboard/components/DashboardView.tsx
+================================================
+// src/features/dashboard/components/DashboardView.tsx
+import Link from "next/link";
+
+import Card from "@/src/components/ui/Card";
+import Heading from "@/src/components/ui/Heading";
+import Text from "@/src/components/ui/Text";
+import { Button } from "@/src/components/ui/Button";
+
+import type { SkillGraph } from "@/src/modules/interview/services/mastery/SkillGraphService";
+import type { Recommendation } from "@/src/modules/interview/services/recommendation/RecommendationService";
+import type { Difficulty } from "@prisma/client";
+
+export type ExploreProblem = {
+  id: string;
+  title: string;
+  difficulty: Difficulty;
+  description: string | null;
+};
+
+type Props = {
+  hasData: boolean;
+  overallReadiness: number | null;
+  categoryRatings: Record<string, number>; // template slug ("hld" | "lld" | "dsa") -> 0-5 stars
+  skillGraph: SkillGraph;
+  recommendation: Recommendation | null;
+  exploreProblems: ExploreProblem[];
+};
+
+const TEMPLATE_LABELS: Record<string, string> = {
+  hld: "High-Level Design",
+  lld: "Low-Level Design",
+  dsa: "Data Structures & Algorithms",
+};
+
+function Stars({ rating }: { rating: number | undefined }) {
+  if (!rating) {
+    return (
+      <span className="text-sm italic text-muted-foreground">
+        Not assessed
+      </span>
+    );
+  }
+
+  return (
+    <span className="font-mono text-lg tracking-wider text-amber-500">
+      {"★".repeat(rating)}
+      {"☆".repeat(5 - rating)}
+    </span>
+  );
+}
+
+const DIFFICULTY_STYLES: Record<Difficulty, string> = {
+  EASY: "border-green-800 text-green-400",
+  MEDIUM: "border-amber-800 text-amber-400",
+  HARD: "border-red-800 text-red-400",
+};
+
+export default function DashboardView({
+  hasData,
+  overallReadiness,
+  categoryRatings,
+  skillGraph,
+  recommendation,
+  exploreProblems,
+}: Props) {
+  const strengthNames = skillGraph.strengths.slice(0, 3).map((s) => s.name);
+  const weaknessNames = skillGraph.weaknesses.slice(0, 3).map((w) => w.name);
+
+  return (
+    <main className="mx-auto max-w-5xl px-6 py-12 text-foreground">
+      <div className="flex flex-col gap-4 border-b border-border pb-6 md:flex-row md:items-end md:justify-between">
+        <div>
+          <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+            Active Session
+          </span>
+          <h1 className="mt-1 text-3xl font-bold tracking-tight text-foreground">
+            Your Dashboard
+          </h1>
+        </div>
+      </div>
+
+      <div className="mt-10 grid grid-cols-1 gap-8 md:grid-cols-2">
+        {/* 01 — Current standing */}
+        <div className="space-y-4">
+          <div>
+            <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+              01. Current Standing
+            </span>
+            <Heading level="h3" className="mt-1">
+              How am I doing?
+            </Heading>
+          </div>
+
+          <Card padding="6" className="space-y-6">
+            <div>
+              <div className="mb-2 flex items-baseline justify-between">
+                <Text variant="small" className="font-medium">
+                  Interview Readiness
+                </Text>
+                <span className="font-mono text-2xl font-bold text-foreground">
+                  {hasData && overallReadiness !== null
+                    ? `${overallReadiness}%`
+                    : "—"}
+                </span>
+              </div>
+
+              {hasData && overallReadiness !== null ? (
+                <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full rounded-full bg-primary transition-all duration-1000"
+                    style={{ width: `${overallReadiness}%` }}
+                  />
+                </div>
+              ) : (
+                <Text variant="small" className="italic">
+                  Not enough data yet. Complete an interview to calculate
+                  readiness.
+                </Text>
+              )}
+            </div>
+
+            <div className="space-y-3 border-t border-border pt-4">
+              {Object.entries(TEMPLATE_LABELS).map(([slug, label]) => (
+                <div key={slug} className="flex items-center justify-between">
+                  <span className="font-mono text-sm text-muted-foreground">
+                    {label}
+                  </span>
+                  <Stars rating={categoryRatings[slug]} />
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+
+        {/* 02 — Live feedback */}
+        <div className="space-y-4">
+          <div>
+            <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+              02. Live Feedback
+            </span>
+            <Heading level="h3" className="mt-1">
+              What changed recently?
+            </Heading>
+          </div>
+
+          <Card padding="6" className="flex h-[230px] flex-col justify-between">
+            {hasData && (strengthNames.length > 0 || weaknessNames.length > 0) ? (
+              <div className="grid h-full grid-cols-2 gap-4">
+                <div className="space-y-3 overflow-y-auto border-r border-border pr-2">
+                  <span className="block text-xs font-semibold uppercase tracking-wide text-green-500">
+                    Recently Improved
+                  </span>
+                  <ul className="space-y-1.5">
+                    {strengthNames.length > 0 ? (
+                      strengthNames.map((name, i) => (
+                        <li
+                          key={i}
+                          className="flex items-start gap-1 text-xs leading-snug text-foreground"
+                        >
+                          <span className="mt-0.5 text-green-500">✓</span>
+                          {name}
+                        </li>
+                      ))
+                    ) : (
+                      <li className="text-xs italic text-muted-foreground">
+                        None yet
+                      </li>
+                    )}
+                  </ul>
+                </div>
+
+                <div className="space-y-3 overflow-y-auto pl-2">
+                  <span className="block text-xs font-semibold uppercase tracking-wide text-amber-500">
+                    Needs Attention
+                  </span>
+                  <ul className="space-y-1.5">
+                    {weaknessNames.length > 0 ? (
+                      weaknessNames.map((name, i) => (
+                        <li
+                          key={i}
+                          className="flex items-start gap-1 text-xs leading-snug text-foreground"
+                        >
+                          <span className="mt-0.5 text-amber-500">•</span>
+                          {name}
+                        </li>
+                      ))
+                    ) : (
+                      <li className="text-xs italic text-muted-foreground">
+                        None yet
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              </div>
+            ) : (
+              <div className="flex h-full flex-col items-center justify-center p-4 text-center">
+                <Text variant="small" className="italic">
+                  Practice more problems to surface strengths and growth
+                  areas.
+                </Text>
+              </div>
+            )}
+          </Card>
+        </div>
+
+        {/* 03 — Smart mentor recommendation */}
+        <div className="space-y-4 md:col-span-2">
+          <div>
+            <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+              03. Smart Mentor Recommendation
+            </span>
+            <Heading level="h3" className="mt-1">
+              What should I do next?
+            </Heading>
+          </div>
+
+          {recommendation ? (
+            <div className="overflow-hidden rounded-xl border border-primary/40 bg-card">
+              <div className="flex items-center justify-between bg-primary/10 p-4">
+                <div>
+                  <span className="block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                    Recommended Practice Session
+                  </span>
+                  <span className="text-base font-semibold text-foreground">
+                    {recommendation.title}
+                  </span>
+                </div>
+
+                <span
+                  className={`rounded border px-2 py-0.5 font-mono text-xs ${DIFFICULTY_STYLES[recommendation.difficulty]}`}
+                >
+                  {recommendation.difficulty}
+                </span>
+              </div>
+
+              <div className="space-y-4 p-6">
+                <div className="space-y-1">
+                  <span className="block font-mono text-xs uppercase tracking-widest text-muted-foreground">
+                    Mentor Assessment
+                  </span>
+                  <ul className="space-y-1 text-sm text-foreground">
+                    {recommendation.reasons.map((reason, i) => (
+                      <li key={i}>• {reason}</li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="flex items-center justify-end pt-2">
+                  <Link
+                    href={`/interview/setup?problemId=${recommendation.problemId}&type=hld`}
+                  >
+                    <Button variant="primary" className="text-sm">
+                      Start Interview →
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <Card padding="6">
+              <Text variant="muted">
+                Complete a few interviews to unlock personalized
+                recommendations.
+              </Text>
+            </Card>
+          )}
+        </div>
+      </div>
+
+      {/* 04 — Explore more problems */}
+      <div className="mt-12 space-y-4">
+        <div className="flex items-end justify-between">
+          <div>
+            <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+              04. Explore
+            </span>
+            <Heading level="h3" className="mt-1">
+              More problems to try
+            </Heading>
+          </div>
+
+          <Link
+            href="/#interviews"
+            className="font-mono text-xs text-muted-foreground hover:text-foreground"
+          >
+            Browse all →
+          </Link>
+        </div>
+
+        <div className="-mx-1 flex gap-4 overflow-x-auto px-1 pb-2 pt-1">
+          {exploreProblems.map((problem) => (
+            <Link
+              key={problem.id}
+              href={`/interview/setup?problemId=${problem.id}&type=hld`}
+              className="flex h-[140px] w-64 flex-shrink-0 flex-col justify-between rounded-lg border border-border bg-card p-5 transition hover:border-foreground/40"
+            >
+              <div>
+                <span className="mb-1 block font-mono text-[10px] uppercase text-muted-foreground">
+                  {problem.difficulty}
+                </span>
+                <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground">
+                  {problem.title}
+                </h3>
+              </div>
+
+              <div className="flex items-center justify-between border-t border-border pt-2 text-[10px] font-mono text-muted-foreground">
+                <span className="line-clamp-1">
+                  {problem.description ?? "System Design"}
+                </span>
+                <span className="flex-shrink-0 text-foreground">Start →</span>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </main>
   );
 }
 ================================================
@@ -9462,6 +11000,119 @@ export class MasteryService {
     const decayFactor = Math.pow(0.5, decaySteps);
 
     return 0.5 + (score - 0.5) * decayFactor;
+  }
+}
+================================================
+FILE: ./src/modules/interview/services/learning/LearningActionService.ts
+================================================
+// src/modules/interview/services/learning/LearningActionService.ts
+import { prisma } from "@/shared/prisma/client";
+
+const MIN_CONFIDENCE_TO_TARGET = 0.35; // ignore concepts with too little evidence to trust the gap
+const CANDIDATE_CONCEPT_LIMIT = 5; // how many of the user's weakest concepts we search segments for
+
+export interface NextLearningAction {
+  actionId: string;
+  type: string;
+  prompt: string;
+  reflection: string;
+  payload: unknown;
+  segment: {
+    id: string;
+    title: string;
+    dialogue: unknown;
+  };
+  scenario: {
+    id: string;
+    title: string;
+  };
+  targetConcept: {
+    slug: string;
+    name: string;
+  };
+}
+
+export class LearningActionService {
+  /**
+   * Finds the next Learning Action for a user: rank their weakest
+   * confidently-assessed concepts, find a ScenarioSegment tagged with one of
+   * them, and return whichever of its LearningActions the user hasn't
+   * attempted yet (or, if all attempted, the least recently attempted one).
+   */
+  async nextActionForUser(userId: string): Promise<NextLearningAction | null> {
+    const weakConcepts = await prisma.conceptMastery.findMany({
+      where: { userId, confidence: { gte: MIN_CONFIDENCE_TO_TARGET } },
+      orderBy: { score: "asc" },
+      take: CANDIDATE_CONCEPT_LIMIT,
+      select: { conceptId: true, concept: { select: { slug: true, name: true } } },
+    });
+
+    if (weakConcepts.length === 0) {
+      return null; // not enough evidence yet — caller should fall back to a default/intro scenario
+    }
+
+    for (const weak of weakConcepts) {
+      const segment = await prisma.scenarioSegment.findFirst({
+        where: {
+          scenario: { isActive: true },
+          concepts: { some: { conceptId: weak.conceptId } },
+        },
+        orderBy: {
+          concepts: { _count: "desc" }, // prefer segments richly tagged with this concept
+        },
+        include: {
+          scenario: { select: { id: true, title: true } },
+          actions: {
+            orderBy: { order: "asc" },
+            include: {
+              attempts: {
+                where: { userId },
+                orderBy: { createdAt: "desc" },
+                take: 1,
+              },
+            },
+          },
+        },
+      });
+
+      if (!segment || segment.actions.length === 0) continue;
+
+      const unattempted = segment.actions.find((a) => a.attempts.length === 0);
+      const chosen = unattempted ?? segment.actions[0];
+
+      return {
+        actionId: chosen.id,
+        type: chosen.type,
+        prompt: chosen.prompt,
+        reflection: chosen.reflection,
+        payload: chosen.payload,
+        segment: {
+          id: segment.id,
+          title: segment.title,
+          dialogue: segment.dialogue,
+        },
+        scenario: segment.scenario,
+        targetConcept: weak.concept,
+      };
+    }
+
+    return null; // no authored content yet covers any of this user's weak concepts
+  }
+
+  async recordAttempt(params: {
+    userId: string;
+    actionId: string;
+    response: unknown;
+    correct?: boolean;
+  }) {
+    return prisma.learningActionAttempt.create({
+      data: {
+        userId: params.userId,
+        actionId: params.actionId,
+        response: params.response as object,
+        correct: params.correct ?? null,
+      },
+    });
   }
 }
 ================================================

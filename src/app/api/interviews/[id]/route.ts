@@ -44,7 +44,7 @@ export async function GET(request: Request, { params }: Props) {
       {
         id: interview.id,
         status: interview.status,
-        type: interview.type,
+        template: interview.template,
         difficulty: interview.difficulty,
         duration: interview.duration,
         company: interview.company,
