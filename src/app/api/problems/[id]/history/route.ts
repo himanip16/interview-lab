@@ -5,9 +5,10 @@ import { prisma } from "@/shared/prisma/client";
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("userId");
 
@@ -21,7 +22,7 @@ export async function GET(
     const interviews = await prisma.interview.findMany({
       where: {
         userId,
-        problemId: params.id,
+        problemId: id,
         status: InterviewStatus.COMPLETED,
       },
       orderBy: {

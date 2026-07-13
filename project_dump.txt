@@ -240,19 +240,31 @@ PROJECT STRUCTURE
 │   │   │   │   ├── hooks
 │   │   │   │   │   └── useReport.ts
 │   │   │   │   └── index.ts
+│   │   │   ├── services
+│   │   │   │   └── interviewApi.ts
 │   │   │   ├── setup
 │   │   │   │   ├── components
 │   │   │   │   │   ├── CompanySelector.tsx
 │   │   │   │   │   ├── DifficultySelector.tsx
 │   │   │   │   │   ├── DurationSelector.tsx
+│   │   │   │   │   ├── ErrorBanner.tsx
 │   │   │   │   │   ├── InterviewTypeSelector.tsx
+│   │   │   │   │   ├── Pagination.tsx
+│   │   │   │   │   ├── ProblemCard.tsx
+│   │   │   │   │   ├── ProblemFilters.tsx
 │   │   │   │   │   ├── ProblemInventoryView.tsx
+│   │   │   │   │   ├── ProblemList.tsx
 │   │   │   │   │   ├── ProblemSelector.tsx
 │   │   │   │   │   ├── SetupCard.tsx
-│   │   │   │   │   └── TopicSelector.tsx
+│   │   │   │   │   ├── TopicSelector.tsx
+│   │   │   │   │   ├── problemSchema.ts
+│   │   │   │   │   └── useProblems.ts
 │   │   │   │   ├── hooks
 │   │   │   │   │   └── useInterviewSetup.ts
-│   │   │   │   └── index.ts
+│   │   │   │   ├── index.ts
+│   │   │   │   └── types
+│   │   │   │       ├── interview.ts
+│   │   │   │       └── setup.ts
 │   │   │   └── types
 │   │   │       ├── CreateInterviewInput.ts
 │   │   │       ├── InterviewState.ts
@@ -290,6 +302,7 @@ PROJECT STRUCTURE
 │   │   │       └── LibraryView.tsx
 │   │   └── shared
 │   ├── lib
+│   │   ├── logger.ts
 │   │   └── utils.ts
 │   ├── modules
 │   │   ├── ai
@@ -399,7 +412,7 @@ PROJECT STRUCTURE
 ├── tsconfig.json
 └── tsconfig.tsbuildinfo
 
-162 directories, 236 files
+164 directories, 247 files
 
 FILE CONTENTS
 
@@ -3946,11 +3959,8 @@ FILE: ./src/app/interview/setup/page.tsx
 ================================================
 "use client";
 
-import { useState } from "react";
-import {
-  useRouter,
-  useSearchParams,
-} from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useCallback, useMemo } from "react";
 
 import CompanySelector from "@/src/features/interview/setup/components/CompanySelector";
 import DifficultySelector from "@/src/features/interview/setup/components/DifficultySelector";
@@ -3958,85 +3968,75 @@ import DurationSelector from "@/src/features/interview/setup/components/Duration
 import InterviewTypeSelector from "@/src/features/interview/setup/components/InterviewTypeSelector";
 import ProblemSelector from "@/src/features/interview/setup/components/ProblemSelector";
 import SetupCard from "@/src/features/interview/setup/components/SetupCard";
-import { useToast } from "@/src/components/ui/Toast";
 import { Button } from "@/src/components/ui/Button";
+import { useInterviewSetup } from "@/src/features/interview/setup/hooks/useInterviewSetup";
+import { parseInterviewType } from "@/src/features/interview/setup/types/setup";
 
 export default function InterviewSetupPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   const problemIdParam = searchParams.get("problemId");
   const typeParam = searchParams.get("type");
 
-  const [interviewType, setInterviewType] = useState(typeParam ?? "hld");
-  const [topic, setTopic] = useState("");
-  const [difficulty, setDifficulty] = useState("Medium");
-  const [duration, setDuration] = useState(45);
-  const [company, setCompany] = useState("");
-  const [problemId, setProblemId] = useState<string | null>(problemIdParam);
-  const [loading, setLoading] = useState(false);
+  const {
+    form,
+    loading,
+    validationError,
+    updateField,
+    startInterview,
+  } = useInterviewSetup({
+    initialInterviewType: parseInterviewType(typeParam),
+    initialProblemId: problemIdParam,
+  });
 
-  const { showToast } = useToast();
-
-  async function handleStartInterview() {
-    if (!problemId) {
-      showToast("Please select a problem to start the interview.", "error");
-      return;
+  // Sync form with search params when URL changes
+  useEffect(() => {
+    const newInterviewType = parseInterviewType(typeParam);
+    if (newInterviewType !== form.interviewType) {
+      updateField("interviewType", newInterviewType);
     }
-
-    try {
-      setLoading(true);
-
-      const payload = {
-        type: interviewType,
-        difficulty,
-        duration,
-        company: company || "General",
-        problemId,
-      };
-
-      if (process.env.NODE_ENV === "development") {
-        console.log("Request payload:", payload);
-      }
-
-      const response = await fetch(
-        "/api/interviews/start",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        }
-      );
-
-      const data = await response.json();
-
-      if (process.env.NODE_ENV === "development") {
-        console.log("Status:", response.status);
-        console.log("Response:", data);
-      }
-
-      if (!response.ok) {
-        throw new Error(
-          data.error ?? "Failed to start interview"
-        );
-      }
-
-      router.push(`/interview/live/${data.id}`);
-    } catch (error) {
-      console.error(error);
-
-      showToast(
-        error instanceof Error
-          ? error.message
-          : "Unknown error",
-        "error"
-      );
-    } finally {
-      setLoading(false);
+    if (problemIdParam !== form.problemId) {
+      updateField("problemId", problemIdParam || "", false);
     }
-  }
+  }, [typeParam, problemIdParam, form.interviewType, form.problemId, updateField]);
+
+  // Memoize onChange handlers to prevent unnecessary rerenders
+  const handleInterviewTypeChange = useCallback(
+    (value: string) => updateField("interviewType", value as any),
+    [updateField]
+  );
+
+  const handleDifficultyChange = useCallback(
+    (value: string) => updateField("difficulty", value as any),
+    [updateField]
+  );
+
+  const handleDurationChange = useCallback(
+    (value: number) => updateField("duration", value, false),
+    [updateField]
+  );
+
+  const handleCompanyChange = useCallback(
+    (value: string) => updateField("company", value),
+    [updateField]
+  );
+
+  const handleProblemIdChange = useCallback(
+    (value: string | null) => updateField("problemId", value || "", false),
+    [updateField]
+  );
+
+  // Memoize ProblemSelector props to prevent unnecessary rerenders
+  const problemSelectorProps = useMemo(
+    () => ({
+      value: form.problemId || null,
+      onChange: handleProblemIdChange,
+      interviewType: form.interviewType,
+      difficulty: form.difficulty,
+      company: form.company,
+    }),
+    [form.problemId, form.interviewType, form.difficulty, form.company, handleProblemIdChange]
+  );
 
   return (
     <main className="min-h-screen bg-background px-6 py-12">
@@ -4049,40 +4049,40 @@ export default function InterviewSetupPage() {
           Configure your interview before starting.
         </p>
 
+        {validationError && (
+          <div className="mb-4 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
+            {validationError}
+          </div>
+        )}
+
         <InterviewTypeSelector
-          value={interviewType}
-          onChange={setInterviewType}
-          onTopicChange={setTopic}
+          value={form.interviewType}
+          onChange={handleInterviewTypeChange}
         />
 
         <DifficultySelector
-          value={difficulty}
-          onChange={setDifficulty}
+          value={form.difficulty}
+          onChange={handleDifficultyChange}
         />
 
         <DurationSelector
-          value={duration}
-          onChange={setDuration}
+          value={form.duration}
+          onChange={handleDurationChange}
         />
 
         <CompanySelector
-          value={company}
-          onChange={setCompany}
+          value={form.company}
+          onChange={handleCompanyChange}
         />
 
-        <ProblemSelector
-          value={problemId}
-          onChange={setProblemId}
-          interviewType={interviewType}
-          difficulty={difficulty}
-          company={company}
-        />
+        <ProblemSelector {...problemSelectorProps} />
 
         <Button
           type="button"
           variant="primary"
-          disabled={loading || !problemId}
-          onClick={handleStartInterview}
+          disabled={loading || !form.problemId}
+          onClick={startInterview}
+          aria-busy={loading}
           className="mt-10 w-full py-4 text-lg"
         >
           {loading
@@ -9174,46 +9174,272 @@ export type Interview = {
   category: string;
 };
 ================================================
+FILE: ./src/features/interview/setup/types/setup.ts
+================================================
+import { Difficulty } from "@prisma/client";
+import { z } from "zod";
+
+export const INTERVIEW_TYPES = ["hld", "lld", "dsa", "pr_review", "deep_dive", "tech_doc_review", "task_breakdown"] as const;
+export type InterviewType = (typeof INTERVIEW_TYPES)[number];
+
+export const SETUP_DIFFICULTIES = ["Easy", "Medium", "Hard"] as const;
+export type SetupDifficulty = (typeof SETUP_DIFFICULTIES)[number];
+
+export const DIFFICULTY_MAP: Record<SetupDifficulty, Difficulty> = {
+  Easy: Difficulty.EASY,
+  Medium: Difficulty.MEDIUM,
+  Hard: Difficulty.HARD,
+};
+
+export const DEFAULT_COMPANY = "General";
+
+export function parseInterviewType(value: string | null): InterviewType {
+  if (value && INTERVIEW_TYPES.includes(value as InterviewType)) {
+    return value as InterviewType;
+  }
+  return "hld";
+}
+
+// Form validation schema
+export const interviewSetupSchema = z.object({
+  interviewType: z.enum(INTERVIEW_TYPES),
+  difficulty: z.enum(SETUP_DIFFICULTIES),
+  duration: z.number().int().positive().max(180), // Max 3 hours
+  company: z.string().min(1, "Company is required").max(100),
+  problemId: z.string().min(1, "Please select a problem"),
+});
+
+export type InterviewSetupForm = z.infer<typeof interviewSetupSchema>;
+
+================================================
+FILE: ./src/features/interview/setup/types/interview.ts
+================================================
+import { z } from "zod";
+
+export const StartInterviewResponseSchema = z.object({
+  id: z.string(),
+  type: z.string(),
+  difficulty: z.string(),
+  duration: z.number(),
+  company: z.string(),
+  problemId: z.string(),
+  createdAt: z.string().optional(),
+});
+
+export type StartInterviewResponse = z.infer<typeof StartInterviewResponseSchema>;
+
+================================================
+FILE: ./src/features/interview/setup/components/ProblemList.tsx
+================================================
+"use client";
+
+import type { Problem } from "./problemSchema";
+import ProblemCard from "./ProblemCard";
+
+type Props = {
+  problems: Problem[];
+  selectedValue: string | null;
+  expandedProblem: string | null;
+  onProblemClick: (problem: Problem) => void;
+  onSelectProblem: (problemId: string) => void;
+};
+
+export default function ProblemList({
+  problems,
+  selectedValue,
+  expandedProblem,
+  onProblemClick,
+  onSelectProblem,
+}: Props) {
+  if (problems.length === 0) {
+    return (
+      <div className="rounded-lg border border-border bg-card p-8 text-center">
+        <p className="text-muted-foreground">No problems match your filters.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {problems.map((problem) => (
+        <ProblemCard
+          key={problem.id}
+          problem={problem}
+          isSelected={problem.id === selectedValue}
+          isExpanded={expandedProblem === problem.id}
+          onClick={() => onProblemClick(problem)}
+          onSelect={() => onSelectProblem(problem.id)}
+        />
+      ))}
+    </div>
+  );
+}
+
+================================================
 FILE: ./src/features/interview/setup/components/ProblemSelector.tsx
 ================================================
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { Difficulty, ProblemCategory, InterviewStatus } from "@prisma/client";
+import { useState, useEffect } from "react";
 import { Button } from "@/src/components/ui/Button";
-
-type Problem = {
-  id: string;
-  slug: string;
-  title: string;
-  description: string | null;
-  category: ProblemCategory;
-  difficulty: Difficulty;
-  interviewType: string;
-  cruxOfProblem: string | null;
-  estimatedMinutes: number | null;
-  tags: string[];
-  completionHistory?: {
-    completed: boolean;
-    timesCompleted: number;
-    lastCompletedAt: Date | null;
-  };
-};
+import ProblemFilters from "./ProblemFilters";
+import ProblemList from "./ProblemList";
+import Pagination from "./Pagination";
+import ErrorBanner from "./ErrorBanner";
+import { useProblems, type FilterState, INTERVIEW_TYPES, DIFFICULTIES } from "./useProblems";
+import type { Problem } from "./problemSchema";
+import { type InterviewType, type SetupDifficulty, DIFFICULTY_MAP } from "../types/setup";
 
 type Props = {
   value: string | null;
   onChange: (value: string | null) => void;
-  interviewType?: (typeof INTERVIEW_TYPES)[number];
-  difficulty?: (typeof DIFFICULTIES)[number];
-  company?: string;
-  onSearch?: () => void;
   userId?: string | null;
-  hideSearchGate?: boolean;
+  interviewType?: InterviewType;
+  difficulty?: SetupDifficulty;
+  company?: string;
 };
 
-const INTERVIEW_TYPES = ["hld", "lld", "dsa", "pr_review", "deep_dive", "tech_doc_review", "task_breakdown"] as const;
-const DIFFICULTIES = ["All", Difficulty.EASY, Difficulty.MEDIUM, Difficulty.HARD] as const;
-const SORT_OPTIONS = ["interviewCount", "title", "difficulty", "estimatedMinutes"] as const;
+export default function ProblemSelector({
+  value,
+  onChange,
+  userId,
+  interviewType = "hld",
+  difficulty = "Medium",
+  company = "",
+}: Props) {
+  const [filters, setFilters] = useState<FilterState>({
+    selectedType: interviewType,
+    selectedCategory: "All",
+    selectedDifficulty: DIFFICULTY_MAP[difficulty],
+    selectedSort: "interviewCount",
+    page: 1,
+  });
+  const [expandedProblem, setExpandedProblem] = useState<string | null>(null);
+
+  const { problems, loading, error, totalPages, fetchProblems } = useProblems(userId || null);
+
+  // Update filters when parent props change
+  useEffect(() => {
+    setFilters((prev) => ({
+      ...prev,
+      selectedType: interviewType,
+      selectedDifficulty: DIFFICULTY_MAP[difficulty],
+    }));
+  }, [interviewType, difficulty]);
+
+  // Fetch problems when filters change
+  useEffect(() => {
+    fetchProblems(filters);
+  }, [filters, fetchProblems]);
+
+  // Clamp page when totalPages changes
+  useEffect(() => {
+    if (filters.page > totalPages) {
+      handleFiltersChange({ page: Math.max(1, totalPages) });
+    }
+  }, [totalPages, filters.page]);
+
+  function handleFiltersChange(newFilters: Partial<FilterState>) {
+    setFilters((prev) => ({ ...prev, ...newFilters }));
+    setExpandedProblem(null);
+  }
+
+  function handleProblemClick(problem: Problem) {
+    if (expandedProblem === problem.id) {
+      setExpandedProblem(null);
+    } else {
+      setExpandedProblem(problem.id);
+    }
+  }
+
+  function handleSelectProblem(problemId: string) {
+    onChange(problemId);
+  }
+
+  return (
+    <div className="mt-8">
+      <h3 className="mb-3 font-semibold text-foreground">
+        Select a Problem
+      </h3>
+
+      <ProblemFilters filters={filters} onFiltersChange={handleFiltersChange} />
+
+      {error && <ErrorBanner error={error} onRetry={() => fetchProblems(filters)} />}
+
+      {/* Problem Count */}
+      <p className="text-sm text-muted-foreground mb-4">
+        {problems.length} problem{problems.length !== 1 ? "s" : ""} found
+      </p>
+
+      <Pagination
+        currentPage={filters.page}
+        totalPages={totalPages}
+        onPageChange={(page) => handleFiltersChange({ page })}
+      />
+
+      {/* Problem List */}
+      {loading && problems.length === 0 ? (
+        <p className="text-sm text-muted-foreground">Loading problems...</p>
+      ) : (
+        <>
+          {loading && (
+            <p className="text-sm text-muted-foreground mb-4">Loading...</p>
+          )}
+          <ProblemList
+            problems={problems}
+            selectedValue={value}
+            expandedProblem={expandedProblem}
+            onProblemClick={handleProblemClick}
+            onSelectProblem={handleSelectProblem}
+          />
+        </>
+      )}
+    </div>
+  );
+}
+
+================================================
+FILE: ./src/features/interview/setup/components/Pagination.tsx
+================================================
+type Props = {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+};
+
+export default function Pagination({ currentPage, totalPages, onPageChange }: Props) {
+  if (totalPages <= 1) {
+    return null;
+  }
+
+  return (
+    <div className="flex items-center justify-center gap-2 mb-4">
+      <button
+        onClick={() => onPageChange(currentPage - 1)}
+        disabled={currentPage === 1}
+        className="rounded border border-border bg-card px-3 py-1.5 text-sm text-foreground disabled:opacity-50 disabled:cursor-not-allowed hover:border-foreground/40"
+      >
+        Previous
+      </button>
+      <span className="text-sm text-muted-foreground">
+        Page {currentPage} of {totalPages}
+      </span>
+      <button
+        onClick={() => onPageChange(currentPage + 1)}
+        disabled={currentPage === totalPages}
+        className="rounded border border-border bg-card px-3 py-1.5 text-sm text-foreground disabled:opacity-50 disabled:cursor-not-allowed hover:border-foreground/40"
+      >
+        Next
+      </button>
+    </div>
+  );
+}
+
+================================================
+FILE: ./src/features/interview/setup/components/ProblemFilters.tsx
+================================================
+import { ProblemCategory } from "@prisma/client";
+import { INTERVIEW_TYPES, DIFFICULTIES, SORT_OPTIONS, type FilterState } from "./useProblems";
 
 const CATEGORY_LABELS: Record<ProblemCategory, string> = {
   SYSTEM_DESIGN: "System Design",
@@ -9241,368 +9467,87 @@ const ALL_CATEGORIES: ProblemCategory[] = [
   ProblemCategory.NETWORKING,
 ];
 
-const DIFFICULTY_COLORS: Record<Difficulty, string> = {
-  EASY: "border-green-800 text-green-400",
-  MEDIUM: "border-amber-800 text-amber-400",
-  HARD: "border-red-800 text-red-400",
+type Props = {
+  filters: FilterState;
+  onFiltersChange: (filters: Partial<FilterState>) => void;
 };
 
-export default function ProblemSelector({
-  value,
-  onChange,
-  interviewType = "hld",
-  difficulty = "All",
-  company = "",
-  onSearch,
-  userId,
-}: Props) {
-  const [problems, setProblems] = useState<Problem[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedType, setSelectedType] = useState<(typeof INTERVIEW_TYPES)[number]>(interviewType);
-  const [selectedCategory, setSelectedCategory] = useState<string>("All");
-  const [selectedDifficulty, setSelectedDifficulty] = useState<(typeof DIFFICULTIES)[number]>(difficulty);
-  const [selectedSort, setSelectedSort] = useState<(typeof SORT_OPTIONS)[number]>("interviewCount");
-  const [expandedProblem, setExpandedProblem] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
-  const [limit] = useState(20);
-  const [totalPages, setTotalPages] = useState(1);
-  const abortControllerRef = useRef<AbortController | null>(null);
-
-  async function fetchProblems() {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      // Cancel previous request if still pending
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-      
-      // Create new AbortController for this request
-      abortControllerRef.current = new AbortController();
-      
-      const params = new URLSearchParams();
-      if (selectedType) params.append("interviewType", selectedType);
-      if (selectedDifficulty !== "All") params.append("difficulty", selectedDifficulty);
-      if (selectedCategory !== "All") params.append("category", selectedCategory);
-      if (company) params.append("company", company);
-      params.append("sort", selectedSort);
-      params.append("page", page.toString());
-      params.append("limit", limit.toString());
-      if (userId) params.append("userId", userId);
-
-      const response = await fetch(
-        `/api/problems${params.toString() ? `?${params.toString()}` : ""}`,
-        { signal: abortControllerRef.current.signal }
-      );
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch problems: ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      
-      setProblems(data.problems || []);
-      setTotalPages(data.totalPages || 1);
-    } catch (error) {
-      // Ignore abort errors (from cancelled requests)
-      if (error instanceof Error && error.name === 'AbortError') {
-        return;
-      }
-      const errorMessage = error instanceof Error ? error.message : "Failed to fetch problems";
-      setError(errorMessage);
-      console.error("Failed to fetch problems:", error);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    fetchProblems();
-  }, [page, selectedType, selectedDifficulty, selectedCategory, selectedSort, company]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-    };
-  }, []);
-
-  function handleProblemClick(problem: Problem) {
-    if (expandedProblem === problem.id) {
-      setExpandedProblem(null);
-    } else {
-      setExpandedProblem(problem.id);
-    }
-  }
-
-  function formatDate(date: Date | null): string {
-    if (!date) return "Never";
-    return new Intl.DateTimeFormat("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    }).format(new Date(date));
-  }
-
+export default function ProblemFilters({ filters, onFiltersChange }: Props) {
   return (
-    <div className="mt-8">
-      <h3 className="mb-3 font-semibold text-foreground">
-        Select a Problem
-      </h3>
+    <>
+      {/* Interview Type Tabs */}
+      <div className="flex overflow-x-auto rounded-lg border border-border bg-muted p-1 mb-4">
+        {INTERVIEW_TYPES.map((type) => (
+          <button
+            key={type}
+            onClick={() => {
+              onFiltersChange({ selectedType: type, page: 1 });
+            }}
+            className={`whitespace-nowrap rounded px-4 py-2 font-mono text-sm font-medium transition ${
+              filters.selectedType === type
+                ? "bg-card text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {type.toUpperCase()}
+          </button>
+        ))}
+      </div>
 
-      <>
-          {/* Interview Type Tabs */}
-          <div className="flex overflow-x-auto rounded-lg border border-border bg-muted p-1 mb-4">
-            {INTERVIEW_TYPES.map((type) => (
-              <button
-                key={type}
-                onClick={() => {
-                  setSelectedType(type);
-                  setPage(1);
-                  setExpandedProblem(null);
-                }}
-                className={`whitespace-nowrap rounded px-4 py-2 font-mono text-sm font-medium transition ${
-                  selectedType === type
-                    ? "bg-card text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {type.toUpperCase()}
-              </button>
+      {/* Filters */}
+      <div className="flex flex-wrap gap-4 mb-4">
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium text-foreground">Category:</label>
+          <select
+            value={filters.selectedCategory}
+            onChange={(e) => {
+              onFiltersChange({ selectedCategory: e.target.value, page: 1 });
+            }}
+            className="rounded border border-border bg-card px-3 py-1.5 text-sm text-foreground"
+          >
+            <option value="All">All Categories</option>
+            {ALL_CATEGORIES.map((cat) => (
+              <option key={cat} value={cat}>
+                {CATEGORY_LABELS[cat] || cat}
+              </option>
             ))}
-          </div>
+          </select>
+        </div>
 
-          {/* Filters */}
-          <div className="flex flex-wrap gap-4 mb-4">
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-foreground">Category:</label>
-              <select
-                value={selectedCategory}
-                onChange={(e) => {
-                  setSelectedCategory(e.target.value);
-                  setPage(1);
-                }}
-                className="rounded border border-border bg-card px-3 py-1.5 text-sm text-foreground"
-              >
-                <option value="All">All Categories</option>
-                {ALL_CATEGORIES.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {CATEGORY_LABELS[cat] || cat}
-                  </option>
-                ))}
-              </select>
-            </div>
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium text-foreground">Difficulty:</label>
+          <select
+            value={filters.selectedDifficulty}
+            onChange={(e) => {
+              onFiltersChange({ selectedDifficulty: e.target.value as (typeof DIFFICULTIES)[number], page: 1 });
+            }}
+            className="rounded border border-border bg-card px-3 py-1.5 text-sm text-foreground"
+          >
+            {DIFFICULTIES.map((diff) => (
+              <option key={diff} value={diff}>
+                {diff}
+              </option>
+            ))}
+          </select>
+        </div>
 
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-foreground">Difficulty:</label>
-              <select
-                value={selectedDifficulty}
-                onChange={(e) => {
-                  setSelectedDifficulty(e.target.value as (typeof DIFFICULTIES)[number]);
-                  setPage(1);
-                }}
-                className="rounded border border-border bg-card px-3 py-1.5 text-sm text-foreground"
-              >
-                {DIFFICULTIES.map((diff) => (
-                  <option key={diff} value={diff}>
-                    {diff}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-foreground">Sort by:</label>
-              <select
-                value={selectedSort}
-                onChange={(e) => {
-                  setSelectedSort(e.target.value as (typeof SORT_OPTIONS)[number]);
-                  setPage(1);
-                }}
-                className="rounded border border-border bg-card px-3 py-1.5 text-sm text-foreground"
-              >
-                <option value="interviewCount">Interview Count</option>
-                <option value="title">Title</option>
-                <option value="difficulty">Difficulty</option>
-                <option value="estimatedMinutes">Estimated Time</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Error Banner */}
-          {error && (
-            <div className="mb-4 rounded-lg border border-red-800 bg-red-500/10 p-4">
-              <p className="text-sm text-red-400">
-                {error}
-              </p>
-              <button
-                onClick={() => fetchProblems()}
-                className="mt-2 text-sm text-red-400 underline hover:text-red-300"
-              >
-                Try again
-              </button>
-            </div>
-          )}
-
-          {/* Problem Count */}
-          <p className="text-sm text-muted-foreground mb-4">
-            {problems.length} problem{problems.length !== 1 ? "s" : ""} found
-          </p>
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="rounded border border-border bg-card px-3 py-1.5 text-sm text-foreground disabled:opacity-50 disabled:cursor-not-allowed hover:border-foreground/40"
-              >
-                Previous
-              </button>
-              <span className="text-sm text-muted-foreground">
-                Page {page} of {totalPages}
-              </span>
-              <button
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-                className="rounded border border-border bg-card px-3 py-1.5 text-sm text-foreground disabled:opacity-50 disabled:cursor-not-allowed hover:border-foreground/40"
-              >
-                Next
-              </button>
-            </div>
-          )}
-
-          {/* Problem List */}
-          {loading ? (
-            <p className="text-sm text-muted-foreground">Loading problems...</p>
-          ) : problems.length === 0 ? (
-            <div className="rounded-lg border border-border bg-card p-8 text-center">
-              <p className="text-muted-foreground">No problems match your filters.</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {problems.map((problem: Problem) => (
-                <div
-                  key={problem.id}
-                  className="overflow-hidden rounded-lg border border-border bg-card transition hover:border-foreground/40"
-                >
-                  {/* Problem Row */}
-                  <button
-                    onClick={() => handleProblemClick(problem)}
-                    className="w-full px-4 py-3 text-left"
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3">
-                          <span className="text-lg font-semibold text-foreground">
-                            {problem.title}
-                          </span>
-                          <span
-                            className={`rounded border px-2 py-0.5 text-xs font-mono uppercase tracking-wider ${DIFFICULTY_COLORS[problem.difficulty]}`}
-                          >
-                            {problem.difficulty}
-                          </span>
-                          {problem.completionHistory?.completed && (
-                            <span className="rounded bg-green-500/10 px-2 py-0.5 text-xs font-mono uppercase tracking-wider text-green-400">
-                              Done
-                            </span>
-                          )}
-                        </div>
-
-                        {problem.cruxOfProblem && (
-                          <p className="mt-1 text-sm text-muted-foreground">
-                            {problem.cruxOfProblem}
-                          </p>
-                        )}
-
-                        {problem.tags && problem.tags.length > 0 && (
-                          <div className="mt-2 flex flex-wrap gap-1">
-                            {problem.tags.map((tag) => (
-                              <span
-                                key={tag}
-                                className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground"
-                              >
-                                {tag}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-4">
-                        {problem.estimatedMinutes && (
-                          <span className="text-sm font-mono text-muted-foreground">
-                            {problem.estimatedMinutes}min
-                          </span>
-                        )}
-                        {problem.completionHistory && (
-                          <div className="text-right">
-                            <div className="text-xs text-muted-foreground">
-                              {problem.completionHistory.timesCompleted}x done
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              Last: {formatDate(problem.completionHistory.lastCompletedAt)}
-                            </div>
-                          </div>
-                        )}
-                        <span className="text-muted-foreground">
-                          {expandedProblem === problem.id ? "▼" : "▶"}
-                        </span>
-                      </div>
-                    </div>
-                  </button>
-
-                  {/* Expanded Details */}
-                  {expandedProblem === problem.id && (
-                    <div className="border-t border-border bg-muted p-4">
-                      {problem.description && (
-                        <div className="mb-4">
-                          <h4 className="mb-2 text-sm font-semibold text-foreground">
-                            Description
-                          </h4>
-                          <p className="text-sm text-muted-foreground">
-                            {problem.description}
-                          </p>
-                        </div>
-                      )}
-
-                      <div className="mb-4">
-                        <h4 className="mb-2 text-sm font-semibold text-foreground">
-                          Details
-                        </h4>
-                        <div className="grid grid-cols-2 gap-2 text-sm">
-                          <div>
-                            <span className="text-muted-foreground">Category:</span>{" "}
-                            <span className="text-foreground">
-                              {CATEGORY_LABELS[problem.category] || problem.category}
-                            </span>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">Interview Type:</span>{" "}
-                            <span className="text-foreground uppercase">{problem.interviewType}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <Button
-                        variant="primary"
-                        onClick={() => onChange(problem.id)}
-                        className="w-full"
-                      >
-                        Select This Problem
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </>
-    </div>
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium text-foreground">Sort by:</label>
+          <select
+            value={filters.selectedSort}
+            onChange={(e) => {
+              onFiltersChange({ selectedSort: e.target.value as (typeof SORT_OPTIONS)[number], page: 1 });
+            }}
+            className="rounded border border-border bg-card px-3 py-1.5 text-sm text-foreground"
+          >
+            <option value="interviewCount">Interview Count</option>
+            <option value="title">Title</option>
+            <option value="difficulty">Difficulty</option>
+            <option value="estimatedMinutes">Estimated Time</option>
+          </select>
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -9660,6 +9605,187 @@ export default function SetupCard({
         </div>
     );
 }
+================================================
+FILE: ./src/features/interview/setup/components/ProblemCard.tsx
+================================================
+"use client";
+
+import { useCallback } from "react";
+import { Difficulty, ProblemCategory } from "@prisma/client";
+import { Button } from "@/src/components/ui/Button";
+import type { Problem } from "./problemSchema";
+
+const CATEGORY_LABELS: Record<ProblemCategory, string> = {
+  SYSTEM_DESIGN: "System Design",
+  LOW_LEVEL_DESIGN: "Low Level Design",
+  DATABASES: "Databases",
+  BACKEND: "Backend",
+  DISTRIBUTED_SYSTEMS: "Distributed Systems",
+  JAVA: "Java",
+  KAFKA: "Kafka",
+  REDIS: "Redis",
+  OPERATING_SYSTEMS: "Operating Systems",
+  NETWORKING: "Networking",
+};
+
+const DIFFICULTY_COLORS: Record<Difficulty, string> = {
+  EASY: "border-green-800 text-green-400",
+  MEDIUM: "border-amber-800 text-amber-400",
+  HARD: "border-red-800 text-red-400",
+};
+
+const DATE_FORMATTER = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+});
+
+type Props = {
+  problem: Problem;
+  isSelected: boolean;
+  isExpanded: boolean;
+  onClick: () => void;
+  onSelect: () => void;
+};
+
+function formatDate(date: Date | null): string {
+  if (!date) return "Never";
+  return DATE_FORMATTER.format(new Date(date));
+}
+
+export default function ProblemCard({
+  problem,
+  isSelected,
+  isExpanded,
+  onClick,
+  onSelect,
+}: Props) {
+  return (
+    <div
+      className={`overflow-hidden rounded-lg border transition hover:border-foreground/40 ${
+        isSelected
+          ? "border-primary bg-primary/5"
+          : "border-border bg-card"
+      }`}
+    >
+      {/* Problem Row */}
+      <button
+        onClick={onClick}
+        className="w-full px-4 py-3 text-left"
+        aria-expanded={isExpanded}
+        aria-controls={`problem-details-${problem.id}`}
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1">
+            <div className="flex items-center gap-3">
+              <span className="text-lg font-semibold text-foreground">
+                {problem.title}
+              </span>
+              <span
+                className={`rounded border px-2 py-0.5 text-xs font-mono uppercase tracking-wider ${DIFFICULTY_COLORS[problem.difficulty]}`}
+              >
+                {problem.difficulty}
+              </span>
+              {problem.completionHistory?.completed && (
+                <span className="rounded bg-green-500/10 px-2 py-0.5 text-xs font-mono uppercase tracking-wider text-green-400">
+                  Done
+                </span>
+              )}
+              {isSelected && (
+                <span className="rounded bg-primary px-2 py-0.5 text-xs font-mono uppercase tracking-wider text-primary-foreground">
+                  ✓ Selected
+                </span>
+              )}
+            </div>
+
+            {problem.cruxOfProblem && (
+              <p className="mt-1 text-sm text-muted-foreground">
+                {problem.cruxOfProblem}
+              </p>
+            )}
+
+            {problem.tags && problem.tags.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1">
+                {problem.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center gap-4">
+            {problem.estimatedMinutes && (
+              <span className="text-sm font-mono text-muted-foreground">
+                {problem.estimatedMinutes}min
+              </span>
+            )}
+            {problem.completionHistory && (
+              <div className="text-right">
+                <div className="text-xs text-muted-foreground">
+                  {problem.completionHistory.timesCompleted}x done
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Last: {formatDate(problem.completionHistory.lastCompletedAt)}
+                </div>
+              </div>
+            )}
+            <span className="text-muted-foreground">
+              {isExpanded ? "▼" : "▶"}
+            </span>
+          </div>
+        </div>
+      </button>
+
+      {/* Expanded Details */}
+      {isExpanded && (
+        <div id={`problem-details-${problem.id}`} className="border-t border-border bg-muted p-4">
+          {problem.description && (
+            <div className="mb-4">
+              <h4 className="mb-2 text-sm font-semibold text-foreground">
+                Description
+              </h4>
+              <p className="text-sm text-muted-foreground">
+                {problem.description}
+              </p>
+            </div>
+          )}
+
+          <div className="mb-4">
+            <h4 className="mb-2 text-sm font-semibold text-foreground">
+              Details
+            </h4>
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div>
+                <span className="text-muted-foreground">Category:</span>{" "}
+                <span className="text-foreground">
+                  {CATEGORY_LABELS[problem.category] || problem.category}
+                </span>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Interview Type:</span>{" "}
+                <span className="text-foreground uppercase">{problem.interviewType}</span>
+              </div>
+            </div>
+          </div>
+
+          <Button
+            variant="primary"
+            onClick={onSelect}
+            className="w-full"
+          >
+            Select This Problem
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 ================================================
 FILE: ./src/features/interview/setup/components/CompanySelector.tsx
 ================================================
@@ -9926,6 +10052,7 @@ FILE: ./src/features/interview/setup/components/InterviewTypeSelector.tsx
 
 import { useEffect, useState } from "react";
 import { Button } from "@/src/components/ui/Button";
+import { type InterviewType } from "../types/setup";
 
 type InterviewTemplate = {
   id: string;
@@ -9935,8 +10062,8 @@ type InterviewTemplate = {
 };
 
 type Props = {
-  value: string;
-  onChange: (value: string) => void;
+  value: InterviewType;
+  onChange: (value: InterviewType) => void;
   onTopicChange?: (topic: string) => void;
 };
 
@@ -10017,7 +10144,7 @@ export default function InterviewTypeSelector({
                 type="button"
                 variant={value === template.slug ? "primary" : "outline"}
                 aria-pressed={value === template.slug}
-                onClick={() => onChange(template.slug)}
+                onClick={() => onChange(template.slug as InterviewType)}
                 className="h-auto w-full justify-start p-5 text-left"
               >
                 <div>
@@ -10060,20 +10187,75 @@ export default function InterviewTypeSelector({
   );
 }
 ================================================
+FILE: ./src/features/interview/setup/components/ErrorBanner.tsx
+================================================
+type Props = {
+  error: string;
+  onRetry: () => void;
+};
+
+export default function ErrorBanner({ error, onRetry }: Props) {
+  return (
+    <div className="mb-4 rounded-lg border border-red-800 bg-red-500/10 p-4">
+      <p className="text-sm text-red-400">
+        {error}
+      </p>
+      <button
+        onClick={onRetry}
+        className="mt-2 text-sm text-red-400 underline hover:text-red-300"
+      >
+        Try again
+      </button>
+    </div>
+  );
+}
+
+================================================
+FILE: ./src/features/interview/setup/components/problemSchema.ts
+================================================
+import { z } from "zod";
+import { Difficulty, ProblemCategory } from "@prisma/client";
+
+export const ProblemSchema = z.object({
+  id: z.string(),
+  slug: z.string(),
+  title: z.string(),
+  description: z.string().nullable(),
+  category: z.nativeEnum(ProblemCategory),
+  difficulty: z.nativeEnum(Difficulty),
+  interviewType: z.string(),
+  cruxOfProblem: z.string().nullable(),
+  estimatedMinutes: z.number().nullable(),
+  tags: z.array(z.string()),
+  completionHistory: z
+    .object({
+      completed: z.boolean(),
+      timesCompleted: z.number(),
+      lastCompletedAt: z.coerce.date().nullable(),
+    })
+    .optional(),
+});
+
+export const ProblemsResponseSchema = z.object({
+  problems: z.array(ProblemSchema),
+  totalPages: z.number(),
+});
+
+export type Problem = z.infer<typeof ProblemSchema>;
+export type ProblemsResponse = z.infer<typeof ProblemsResponseSchema>;
+
+================================================
 FILE: ./src/features/interview/setup/components/DifficultySelector.tsx
 ================================================
 import { Button } from "@/src/components/ui/Button";
+import { SETUP_DIFFICULTIES, type SetupDifficulty } from "../types/setup";
 
 type Props = {
-  value: string;
-  onChange: (value: string) => void;
+  value: SetupDifficulty;
+  onChange: (value: SetupDifficulty) => void;
 };
 
-const DIFFICULTY_OPTIONS = [
-  "Easy",
-  "Medium",
-  "Hard",
-] as const;
+const DIFFICULTY_OPTIONS = SETUP_DIFFICULTIES;
 
 export default function DifficultySelector({
   value,
@@ -10092,7 +10274,7 @@ export default function DifficultySelector({
             type="button"
             variant={value === option ? "primary" : "outline"}
             aria-pressed={value === option}
-            onClick={() => onChange(option)}
+            onClick={() => onChange(option as SetupDifficulty)}
           >
             {option}
           </Button>
@@ -10102,8 +10284,284 @@ export default function DifficultySelector({
   );
 }
 ================================================
+FILE: ./src/features/interview/setup/components/useProblems.ts
+================================================
+import { useState, useEffect, useRef, useCallback } from "react";
+import { ProblemsResponseSchema, type Problem } from "./problemSchema";
+import { logger } from "@/src/lib/logger";
+
+const INTERVIEW_TYPES = ["hld", "lld", "dsa", "pr_review", "deep_dive", "tech_doc_review", "task_breakdown"] as const;
+const DIFFICULTIES = ["All", "EASY", "MEDIUM", "HARD"] as const;
+const SORT_OPTIONS = ["interviewCount", "title", "difficulty", "estimatedMinutes"] as const;
+const PAGE_SIZE = 20;
+
+type FilterState = {
+  selectedType: (typeof INTERVIEW_TYPES)[number];
+  selectedCategory: string;
+  selectedDifficulty: (typeof DIFFICULTIES)[number];
+  selectedSort: (typeof SORT_OPTIONS)[number];
+  page: number;
+};
+
+export function useProblems(userId: string | null) {
+  const [problems, setProblems] = useState<Problem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [totalPages, setTotalPages] = useState(1);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const requestIdRef = useRef(0);
+
+  const fetchProblems = useCallback(
+    async (filters: FilterState) => {
+      const requestId = ++requestIdRef.current;
+      
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Cancel previous request if still pending
+        if (abortControllerRef.current) {
+          abortControllerRef.current.abort();
+        }
+        
+        // Create new AbortController for this request
+        abortControllerRef.current = new AbortController();
+        
+        const params = new URLSearchParams();
+        if (filters.selectedType) params.append("interviewType", filters.selectedType);
+        if (filters.selectedDifficulty !== "All") params.append("difficulty", filters.selectedDifficulty);
+        if (filters.selectedCategory !== "All") params.append("category", filters.selectedCategory);
+        params.append("sort", filters.selectedSort);
+        params.append("page", filters.page.toString());
+        params.append("limit", PAGE_SIZE.toString());
+        if (userId) params.append("userId", userId);
+
+        const response = await fetch(
+          `/api/problems${params.toString() ? `?${params.toString()}` : ""}`,
+          { signal: abortControllerRef.current.signal }
+        );
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch problems: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        // Validate response with Zod
+        const validatedData = ProblemsResponseSchema.parse(data);
+        
+        // Only update state if this is the most recent request
+        if (requestId === requestIdRef.current) {
+          setProblems(validatedData.problems);
+          setTotalPages(validatedData.totalPages);
+        }
+      } catch (error) {
+        // Ignore abort errors (from cancelled requests)
+        if (error instanceof Error && error.name === 'AbortError') {
+          return;
+        }
+        
+        // Only update error state if this is the most recent request
+        if (requestId === requestIdRef.current) {
+          const errorMessage = error instanceof Error ? error.message : "Failed to fetch problems";
+          setError(errorMessage);
+          logger.error("Failed to fetch problems", error);
+        }
+      } finally {
+        // Only update loading state if this is the most recent request
+        if (requestId === requestIdRef.current) {
+          setLoading(false);
+        }
+      }
+    },
+    [userId]
+  );
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
+
+  return {
+    problems,
+    loading,
+    error,
+    totalPages,
+    fetchProblems,
+  };
+}
+
+export { INTERVIEW_TYPES, DIFFICULTIES, SORT_OPTIONS, PAGE_SIZE };
+export type { FilterState };
+
+================================================
 FILE: ./src/features/interview/setup/hooks/useInterviewSetup.ts
 ================================================
+"use client";
+
+import { useState, useRef, useCallback, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/src/components/ui/Toast";
+import { logger } from "@/src/lib/logger";
+import { startInterview } from "@/src/features/interview/services/interviewApi";
+import {
+  interviewSetupSchema,
+  type InterviewSetupForm,
+  type InterviewType,
+  type SetupDifficulty,
+  DIFFICULTY_MAP,
+  DEFAULT_COMPANY,
+  parseInterviewType,
+} from "../types/setup";
+
+interface UseInterviewSetupOptions {
+  initialInterviewType?: InterviewType;
+  initialDifficulty?: SetupDifficulty;
+  initialDuration?: number;
+  initialCompany?: string;
+  initialProblemId?: string | null;
+}
+
+interface UseInterviewSetupReturn {
+  form: InterviewSetupForm;
+  loading: boolean;
+  validationError: string | null;
+  updateField: <K extends keyof InterviewSetupForm>(
+    field: K,
+    value: InterviewSetupForm[K],
+    clearProblemId?: boolean
+  ) => void;
+  startInterview: () => Promise<void>;
+}
+
+/**
+ * State synchronization rules:
+ * - Changing interviewType clears problemId (affects problem filtering)
+ * - Changing difficulty clears problemId (affects problem filtering)
+ * - Changing company clears problemId (affects problem filtering)
+ * - Changing duration does NOT clear problemId (doesn't affect filtering)
+ * - Changing problemId directly does NOT clear itself
+ */
+const FILTER_FIELDS: (keyof InterviewSetupForm)[] = [
+  "interviewType",
+  "difficulty",
+  "company",
+];
+
+export function useInterviewSetup({
+  initialInterviewType = "hld",
+  initialDifficulty = "Medium",
+  initialDuration = 45,
+  initialCompany = "",
+  initialProblemId = null,
+}: UseInterviewSetupOptions = {}): UseInterviewSetupReturn {
+  const router = useRouter();
+  const { showToast } = useToast();
+
+  const [form, setForm] = useState<InterviewSetupForm>({
+    interviewType: initialInterviewType,
+    difficulty: initialDifficulty,
+    duration: initialDuration,
+    company: initialCompany || DEFAULT_COMPANY,
+    problemId: initialProblemId || "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  const updateField = useCallback(
+    <K extends keyof InterviewSetupForm>(
+      field: K,
+      value: InterviewSetupForm[K],
+      clearProblemId = true
+    ) => {
+      setValidationError(null);
+      setForm((prev) => ({
+        ...prev,
+        [field]: value,
+        // Clear problemId if this is a filter field and clearProblemId is true
+        ...(clearProblemId && FILTER_FIELDS.includes(field) && field !== "problemId"
+          ? { problemId: "" }
+          : {}),
+      }));
+    },
+    []
+  );
+
+  const buildPayload = useCallback(() => {
+    return {
+      type: form.interviewType,
+      difficulty: DIFFICULTY_MAP[form.difficulty],
+      duration: form.duration,
+      company: form.company,
+      problemId: form.problemId,
+    };
+  }, [form]);
+
+  const startInterviewHandler = useCallback(async () => {
+    // Validate form
+    const validationResult = interviewSetupSchema.safeParse(form);
+    if (!validationResult.success) {
+      const firstError = validationResult.error.issues[0];
+      setValidationError(firstError.message);
+      showToast(firstError.message, "error");
+      return;
+    }
+
+    // Cancel any existing request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    abortControllerRef.current = new AbortController();
+
+    try {
+      setLoading(true);
+      setValidationError(null);
+
+      const payload = buildPayload();
+      logger.debug("Request payload", { payload });
+
+      const { id } = await startInterview(payload, {
+        signal: abortControllerRef.current.signal,
+      });
+      logger.debug("Interview started with ID", { interviewId: id });
+
+      try {
+        router.push(`/interview/live/${id}`);
+      } catch (navError) {
+        logger.error("Navigation failed", navError);
+        showToast("Failed to navigate to interview page", "error");
+      }
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        logger.debug("Interview start request was aborted");
+        return;
+      }
+      logger.error("Failed to start interview", error);
+
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      setValidationError(errorMessage);
+      showToast(errorMessage, "error");
+    } finally {
+      setLoading(false);
+      abortControllerRef.current = null;
+    }
+  }, [form, buildPayload, router, showToast]);
+
+  return {
+    form,
+    loading,
+    validationError,
+    updateField,
+    startInterview: startInterviewHandler,
+  };
+}
 
 ================================================
 FILE: ./src/features/interview/setup/index.ts
@@ -11153,6 +11611,54 @@ FILE: ./src/features/interview/report/index.ts
 ================================================
 
 ================================================
+FILE: ./src/features/interview/services/interviewApi.ts
+================================================
+import { z } from "zod";
+import { StartInterviewResponseSchema } from "../setup/types/interview";
+
+export interface StartInterviewPayload {
+  type: string;
+  difficulty: string;
+  duration: number;
+  company: string;
+  problemId: string;
+}
+
+export interface StartInterviewOptions {
+  signal?: AbortSignal;
+}
+
+export async function startInterview(
+  payload: StartInterviewPayload,
+  options?: StartInterviewOptions
+): Promise<{ id: string }> {
+  const response = await fetch("/api/interviews/start", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+    signal: options?.signal,
+  });
+
+  let data;
+  try {
+    data = await response.json();
+  } catch {
+    throw new Error("Invalid server response");
+  }
+
+  if (!response.ok) {
+    throw new Error(data.error ?? "Failed to start interview");
+  }
+
+  // Validate response with Zod
+  const validatedData = StartInterviewResponseSchema.parse(data);
+
+  return { id: validatedData.id };
+}
+
+================================================
 FILE: ./src/shared/logger/logger.ts
 ================================================
 import pino from "pino";
@@ -12070,6 +12576,56 @@ import { twMerge } from "tailwind-merge";
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+================================================
+FILE: ./src/lib/logger.ts
+================================================
+type LogLevel = "info" | "warn" | "error" | "debug";
+
+interface LogContext {
+  [key: string]: unknown;
+}
+
+class Logger {
+  private isDevelopment = process.env.NODE_ENV === "development";
+
+  private formatMessage(level: LogLevel, message: string, context?: LogContext): string {
+    const timestamp = new Date().toISOString();
+    const contextStr = context ? ` ${JSON.stringify(context)}` : "";
+    return `[${timestamp}] [${level.toUpperCase()}] ${message}${contextStr}`;
+  }
+
+  info(message: string, context?: LogContext): void {
+    if (this.isDevelopment) {
+      console.info(this.formatMessage("info", message, context));
+    }
+    // TODO: Integrate with production logging service (Sentry, Datadog, LogRocket)
+  }
+
+  warn(message: string, context?: LogContext): void {
+    if (this.isDevelopment) {
+      console.warn(this.formatMessage("warn", message, context));
+    }
+    // TODO: Integrate with production logging service
+  }
+
+  error(message: string, error?: Error | unknown, context?: LogContext): void {
+    if (this.isDevelopment) {
+      console.error(this.formatMessage("error", message, context), error);
+    }
+    // TODO: Integrate with production logging service
+    // Example: Sentry.captureException(error, { extra: context });
+  }
+
+  debug(message: string, context?: LogContext): void {
+    if (this.isDevelopment) {
+      console.debug(this.formatMessage("debug", message, context));
+    }
+    // Debug logs typically not sent to production
+  }
+}
+
+export const logger = new Logger();
 
 ================================================
 FILE: ./src/modules/auth/getCurrentUserId.ts

@@ -5,9 +5,10 @@ import { ensureGuestUser } from "@/src/modules/auth/getCurrentUserId";
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
     const { response, score, feedback } = body;
 
@@ -19,7 +20,7 @@ export async function POST(
     }
 
     const action = await prisma.learningAction.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: { segment: true },
     });
 

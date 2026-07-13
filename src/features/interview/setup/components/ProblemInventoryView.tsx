@@ -16,7 +16,6 @@ export default function ProblemInventoryView({ onSelectProblem, userId }: Props)
           onSelectProblem(problemId);
         }
       }}
-      onSearch={() => {}}
       userId={userId}
     />
   );

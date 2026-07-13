@@ -10,6 +10,7 @@ import { InterviewEngine } from "../../engine/InterviewEngine";
 import { InterviewRepository } from "../../repositories/InterviewRepository";
 import { InterviewProfileService } from "../../profiles/InterviewProfileService";
 import { WhiteboardSerializer } from "../whiteboard/WhiteboardSerializer";
+import { IncrementalSummaryService } from "../summary/IncrementalSummaryService";
 
 export interface ProcessInterviewMessageResult {
   reply: string;
@@ -33,6 +34,9 @@ export class InterviewMessageService {
 
   private readonly whiteboardSerializer =
     new WhiteboardSerializer();
+
+  private readonly summaryService =
+    new IncrementalSummaryService();
 
   async processMessage(
     interviewId: string,
@@ -175,6 +179,17 @@ export class InterviewMessageService {
       });
     }
 
+    // Update summary incrementally with new messages
+    const recentMessages = [
+      { role: "user", content: normalizedMessage },
+      { role: "assistant", content: result.reply },
+    ];
+    const updatedSummary = await this.summaryService.updateSummary(
+      interview.summary,
+      recentMessages
+    );
+    await this.repository.updateSummary(interview.id, updatedSummary);
+
     return {
       reply: result.reply,
       phase: nextPhase,
@@ -184,7 +199,7 @@ export class InterviewMessageService {
       confidence,
       completed:
         result.transition.completed,
-      summary: interview.summary,
+      summary: updatedSummary,
     };
   }
 
