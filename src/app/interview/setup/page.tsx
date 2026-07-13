@@ -1,10 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import {
-  useRouter,
-  useSearchParams,
-} from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useCallback, useMemo } from "react";
 
 import CompanySelector from "@/src/features/interview/setup/components/CompanySelector";
 import DifficultySelector from "@/src/features/interview/setup/components/DifficultySelector";
@@ -12,77 +9,75 @@ import DurationSelector from "@/src/features/interview/setup/components/Duration
 import InterviewTypeSelector from "@/src/features/interview/setup/components/InterviewTypeSelector";
 import ProblemSelector from "@/src/features/interview/setup/components/ProblemSelector";
 import SetupCard from "@/src/features/interview/setup/components/SetupCard";
-import { useToast } from "@/src/components/ui/Toast";
 import { Button } from "@/src/components/ui/Button";
-import { INTERVIEW_TYPES, SETUP_DIFFICULTIES, type InterviewType, type SetupDifficulty, DIFFICULTY_MAP, DEFAULT_COMPANY, parseInterviewType } from "@/src/features/interview/setup/types/setup";
-import { startInterview } from "@/src/features/interview/services/interviewApi";
-import { logger } from "@/src/lib/logger";
+import { useInterviewSetup } from "@/src/features/interview/setup/hooks/useInterviewSetup";
+import { parseInterviewType } from "@/src/features/interview/setup/types/setup";
 
 export default function InterviewSetupPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   const problemIdParam = searchParams.get("problemId");
   const typeParam = searchParams.get("type");
 
-  const [interviewType, setInterviewType] = useState<InterviewType>(
-    parseInterviewType(typeParam)
+  const {
+    form,
+    loading,
+    validationError,
+    updateField,
+    startInterview,
+  } = useInterviewSetup({
+    initialInterviewType: parseInterviewType(typeParam),
+    initialProblemId: problemIdParam,
+  });
+
+  // Sync form with search params when URL changes
+  useEffect(() => {
+    const newInterviewType = parseInterviewType(typeParam);
+    if (newInterviewType !== form.interviewType) {
+      updateField("interviewType", newInterviewType);
+    }
+    if (problemIdParam !== form.problemId) {
+      updateField("problemId", problemIdParam || "", false);
+    }
+  }, [typeParam, problemIdParam, form.interviewType, form.problemId, updateField]);
+
+  // Memoize onChange handlers to prevent unnecessary rerenders
+  const handleInterviewTypeChange = useCallback(
+    (value: string) => updateField("interviewType", value as any),
+    [updateField]
   );
-  const [difficulty, setDifficulty] = useState<SetupDifficulty>("Medium");
-  const [duration, setDuration] = useState(45);
-  const [company, setCompany] = useState("");
-  const [problemId, setProblemId] = useState<string | null>(problemIdParam);
-  const [loading, setLoading] = useState(false);
 
-  // Clear problemId when filters change to prevent stale selection
-  function handleFilterChange() {
-    setProblemId(null);
-  }
+  const handleDifficultyChange = useCallback(
+    (value: string) => updateField("difficulty", value as any),
+    [updateField]
+  );
 
-  const { showToast } = useToast();
+  const handleDurationChange = useCallback(
+    (value: number) => updateField("duration", value, false),
+    [updateField]
+  );
 
-  async function handleStartInterview() {
-    if (loading) return;
-    if (!problemId) {
-      showToast("Please select a problem to start the interview.", "error");
-      return;
-    }
+  const handleCompanyChange = useCallback(
+    (value: string) => updateField("company", value),
+    [updateField]
+  );
 
-    try {
-      setLoading(true);
+  const handleProblemIdChange = useCallback(
+    (value: string | null) => updateField("problemId", value || "", false),
+    [updateField]
+  );
 
-      const payload = {
-        type: interviewType,
-        difficulty: DIFFICULTY_MAP[difficulty],
-        duration,
-        company: company || DEFAULT_COMPANY,
-        problemId,
-      };
-
-      if (process.env.NODE_ENV === "development") {
-        console.log("Request payload:", payload);
-      }
-
-      const { id } = await startInterview(payload);
-
-      if (process.env.NODE_ENV === "development") {
-        console.log("Interview started with ID:", id);
-      }
-
-      router.push(`/interview/live/${id}`);
-    } catch (error) {
-      logger.error("Failed to start interview", error);
-
-      showToast(
-        error instanceof Error
-          ? error.message
-          : "Unknown error",
-        "error"
-      );
-    } finally {
-      setLoading(false);
-    }
-  }
+  // Memoize ProblemSelector props to prevent unnecessary rerenders
+  const problemSelectorProps = useMemo(
+    () => ({
+      value: form.problemId || null,
+      onChange: handleProblemIdChange,
+      interviewType: form.interviewType,
+      difficulty: form.difficulty,
+      company: form.company,
+    }),
+    [form.problemId, form.interviewType, form.difficulty, form.company, handleProblemIdChange]
+  );
 
   return (
     <main className="min-h-screen bg-background px-6 py-12">
@@ -95,48 +90,40 @@ export default function InterviewSetupPage() {
           Configure your interview before starting.
         </p>
 
+        {validationError && (
+          <div className="mb-4 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
+            {validationError}
+          </div>
+        )}
+
         <InterviewTypeSelector
-          value={interviewType}
-          onChange={(value) => {
-            setInterviewType(value);
-            handleFilterChange();
-          }}
+          value={form.interviewType}
+          onChange={handleInterviewTypeChange}
         />
 
         <DifficultySelector
-          value={difficulty}
-          onChange={(value) => {
-            setDifficulty(value);
-            handleFilterChange();
-          }}
+          value={form.difficulty}
+          onChange={handleDifficultyChange}
         />
 
         <DurationSelector
-          value={duration}
-          onChange={setDuration}
+          value={form.duration}
+          onChange={handleDurationChange}
         />
 
         <CompanySelector
-          value={company}
-          onChange={(value) => {
-            setCompany(value);
-            handleFilterChange();
-          }}
+          value={form.company}
+          onChange={handleCompanyChange}
         />
 
-        <ProblemSelector
-          value={problemId}
-          onChange={setProblemId}
-          interviewType={interviewType}
-          difficulty={difficulty}
-          company={company}
-        />
+        <ProblemSelector {...problemSelectorProps} />
 
         <Button
           type="button"
           variant="primary"
-          disabled={loading || !problemId}
-          onClick={handleStartInterview}
+          disabled={loading || !form.problemId}
+          onClick={startInterview}
+          aria-busy={loading}
           className="mt-10 w-full py-4 text-lg"
         >
           {loading

@@ -9,13 +9,21 @@ export interface StartInterviewPayload {
   problemId: string;
 }
 
-export async function startInterview(payload: StartInterviewPayload): Promise<{ id: string }> {
+export interface StartInterviewOptions {
+  signal?: AbortSignal;
+}
+
+export async function startInterview(
+  payload: StartInterviewPayload,
+  options?: StartInterviewOptions
+): Promise<{ id: string }> {
   const response = await fetch("/api/interviews/start", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(payload),
+    signal: options?.signal,
   });
 
   let data;

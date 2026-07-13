@@ -1,4 +1,5 @@
 import { Difficulty } from "@prisma/client";
+import { z } from "zod";
 
 export const INTERVIEW_TYPES = ["hld", "lld", "dsa", "pr_review", "deep_dive", "tech_doc_review", "task_breakdown"] as const;
 export type InterviewType = (typeof INTERVIEW_TYPES)[number];
@@ -20,3 +21,14 @@ export function parseInterviewType(value: string | null): InterviewType {
   }
   return "hld";
 }
+
+// Form validation schema
+export const interviewSetupSchema = z.object({
+  interviewType: z.enum(INTERVIEW_TYPES),
+  difficulty: z.enum(SETUP_DIFFICULTIES),
+  duration: z.number().int().positive().max(180), // Max 3 hours
+  company: z.string().min(1, "Company is required").max(100),
+  problemId: z.string().min(1, "Please select a problem"),
+});
+
+export type InterviewSetupForm = z.infer<typeof interviewSetupSchema>;
