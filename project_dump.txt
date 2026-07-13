@@ -124,6 +124,8 @@ PROJECT STRUCTURE
 │   │   │   │   │   └── history
 │   │   │   │   │       └── route.ts
 │   │   │   │   └── route.ts
+│   │   │   ├── recommendations
+│   │   │   │   └── route.ts
 │   │   │   └── users
 │   │   │       └── [id]
 │   │   │           ├── recommendations
@@ -397,7 +399,7 @@ PROJECT STRUCTURE
 ├── tsconfig.json
 └── tsconfig.tsbuildinfo
 
-161 directories, 235 files
+162 directories, 236 files
 
 FILE CONTENTS
 
@@ -4523,7 +4525,10 @@ export async function GET(request: Request) {
         break;
     }
 
-    const [problems, total] = await Promise.all([
+    let problems, total;
+    let fallbackUsed = false;
+
+    [problems, total] = await Promise.all([
       prisma.problem.findMany({
         where,
         include: {
@@ -4539,6 +4544,75 @@ export async function GET(request: Request) {
       }),
       prisma.problem.count({ where }),
     ]);
+
+    // If strict filtering returns no results, try fallback strategies
+    if (problems.length === 0 && page === 1) {
+      // Fallback 1: Remove company filter (most restrictive)
+      if (where.companies) {
+        const { companies: _, ...fallbackWhere } = where;
+        [problems, total] = await Promise.all([
+          prisma.problem.findMany({
+            where: fallbackWhere,
+            include: {
+              companies: {
+                include: {
+                  company: true,
+                },
+              },
+            },
+            orderBy,
+            skip: (page - 1) * limit,
+            take: limit,
+          }),
+          prisma.problem.count({ where: fallbackWhere }),
+        ]);
+        fallbackUsed = true;
+      }
+
+      // Fallback 2: Remove category filter if still no results
+      if (problems.length === 0 && where.category) {
+        const { category: _, companies: __, ...fallbackWhere } = where;
+        [problems, total] = await Promise.all([
+          prisma.problem.findMany({
+            where: fallbackWhere,
+            include: {
+              companies: {
+                include: {
+                  company: true,
+                },
+              },
+            },
+            orderBy,
+            skip: (page - 1) * limit,
+            take: limit,
+          }),
+          prisma.problem.count({ where: fallbackWhere }),
+        ]);
+        fallbackUsed = true;
+      }
+
+      // Fallback 3: Only use interview type if still no results
+      if (problems.length === 0 && where.interviewType) {
+        const { interviewType, ...fallbackWhere } = where;
+        [problems, total] = await Promise.all([
+          prisma.problem.findMany({
+            where: fallbackWhere,
+            include: {
+              companies: {
+                include: {
+                  company: true,
+                },
+              },
+            },
+            orderBy,
+            skip: (page - 1) * limit,
+            take: limit,
+          }),
+          prisma.problem.count({ where: fallbackWhere }),
+        ]);
+        fallbackUsed = true;
+      }
+    }
 
     // Add completion history if userId is provided
     let problemsWithHistory = problems;
@@ -4639,6 +4713,45 @@ export async function GET(
 
     return NextResponse.json(
       { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+================================================
+FILE: ./src/app/api/recommendations/route.ts
+================================================
+import { NextResponse } from "next/server";
+
+import { RecommendationService } from "@/src/modules/interview/services/recommendation/RecommendationService";
+import { getCurrentUserId } from "@/src/modules/auth/getCurrentUserId";
+
+export async function GET(request: Request) {
+  try {
+    const userId = await getCurrentUserId();
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: "User not authenticated." },
+        { status: 401 }
+      );
+    }
+
+    const limitParam = new URL(request.url).searchParams.get("limit");
+
+    const limit = limitParam
+      ? Math.min(Math.max(parseInt(limitParam, 10) || 5, 1), 20)
+      : 5;
+
+    const service = new RecommendationService();
+    const recommendations = await service.recommend(userId, limit);
+
+    return NextResponse.json({ recommendations }, { status: 200 });
+  } catch (error) {
+    console.error(error);
+
+    return NextResponse.json(
+      { error: "Internal server error." },
       { status: 500 }
     );
   }
@@ -5230,15 +5343,13 @@ import { InterviewStatus } from "@prisma/client";
 
 
 export async function POST(
-  req: Request
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const body = await req.json();
+    const { id } = await params;
 
-    const { interviewId } = body;
-
-
-    if (!interviewId) {
+    if (!id) {
       return NextResponse.json(
         {
           error: "Missing interview id",
@@ -5255,7 +5366,7 @@ export async function POST(
 
 
     const exists =
-      await repository.exists(interviewId);
+      await repository.exists(id);
 
 
     if (!exists) {
@@ -5271,7 +5382,7 @@ export async function POST(
 
 
     await repository.updateProgress(
-      interviewId,
+      id,
       {
         status: InterviewStatus.COMPLETED,
       }
@@ -5284,7 +5395,7 @@ export async function POST(
 
     const evaluation =
       await evaluationService.evaluateInterview(
-        interviewId
+        id
       );
 
 
@@ -5388,7 +5499,7 @@ export async function POST(
 ) {
   try {
     const body = await request.json();
-    const { response } = body;
+    const { response, score, feedback } = body;
 
     if (response === undefined) {
       return NextResponse.json(
@@ -5418,12 +5529,23 @@ export async function POST(
 
     const userId = await ensureGuestUser();
 
+    // Calculate score from response if not provided
+    let calculatedScore = score;
+    if (calculatedScore === undefined && typeof response === 'object' && response !== null) {
+      // For judge/compare actions, derive score from isCorrect field
+      if ('isCorrect' in response && typeof response.isCorrect === 'boolean') {
+        calculatedScore = response.isCorrect ? 1.0 : 0.0;
+      }
+    }
+
     const attempt = await prisma.userLearningAttempt.create({
       data: {
         user: { connect: { id: userId } },
         action: { connect: { id: action.id } },
-        status: "STARTED",
+        status: "COMPLETED",
         response,
+        score: calculatedScore,
+        feedback,
       },
     });
 
@@ -5647,8 +5769,8 @@ export default function SmartMentor() {
   useEffect(() => {
     async function fetchRecommendation() {
       try {
-        // For now, use a demo user ID. In production, this should come from auth
-        const response = await fetch('/api/users/demo-user/recommendations?limit=1');
+        // Fetch recommendations for the current authenticated user
+        const response = await fetch('/api/recommendations?limit=1');
         if (!response.ok) {
           throw new Error('Failed to fetch recommendations');
         }
@@ -5833,7 +5955,7 @@ export default function PersonalNotebooks() {
       case 'LOW_LEVEL_DESIGN':
         return 'lld';
       default:
-        return 'hld';
+        return 'dsa';
     }
   };
 
@@ -5854,7 +5976,7 @@ export default function PersonalNotebooks() {
       case 'LOW_LEVEL_DESIGN':
         return 'LLD';
       default:
-        return 'HLD';
+        return 'DSA';
     }
   };
 
@@ -7439,6 +7561,7 @@ import { LearningActionType } from "@prisma/client";
 
 interface LearningScenarioReaderProps {
   scenario: Scenario;
+  userId?: string;
 }
 
 interface ConversationMessage {
@@ -7446,7 +7569,7 @@ interface ConversationMessage {
   content: string;
 }
 
-export function LearningScenarioReader({ scenario }: LearningScenarioReaderProps) {
+export function LearningScenarioReader({ scenario, userId }: LearningScenarioReaderProps) {
   const [currentSegmentIndex, setCurrentSegmentIndex] = useState(0);
   const [completedActions, setCompletedActions] = useState<Set<string>>(new Set());
 
@@ -7456,7 +7579,19 @@ export function LearningScenarioReader({ scenario }: LearningScenarioReaderProps
     completedActions.has(action.id)
   );
 
-  const handleActionComplete = (actionId: string) => {
+  const handleActionComplete = async (actionId: string, response?: unknown) => {
+    // Persist attempt to database if userId is available
+    if (userId && response !== undefined) {
+      try {
+        await fetch(`/api/learning-actions/${actionId}/attempt`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ response }),
+        });
+      } catch (error) {
+        console.error("Failed to persist learning attempt:", error);
+      }
+    }
     setCompletedActions((prev) => new Set(prev).add(actionId));
   };
 
@@ -7484,7 +7619,7 @@ export function LearningScenarioReader({ scenario }: LearningScenarioReaderProps
       <ActionComponent
         key={action.id}
         action={action}
-        onComplete={() => handleActionComplete(action.id)}
+        onComplete={(response?: unknown) => handleActionComplete(action.id, response)}
       />
     );
   };
@@ -7554,7 +7689,7 @@ import { Action, PredictActionContent } from "../../types/learning";
 
 interface PredictActionProps {
   action: Action;
-  onComplete: () => void;
+  onComplete: (response?: unknown) => void;
 }
 
 export function PredictAction({ action, onComplete }: PredictActionProps) {
@@ -7573,7 +7708,7 @@ export function PredictAction({ action, onComplete }: PredictActionProps) {
   };
 
   const handleContinue = () => {
-    onComplete();
+    onComplete({ prediction });
   };
 
   return (
@@ -7642,7 +7777,7 @@ import { Action, FixActionContent } from "../../types/learning";
 
 interface FixActionProps {
   action: Action;
-  onComplete: () => void;
+  onComplete: (response?: unknown) => void;
 }
 
 export function FixAction({ action, onComplete }: FixActionProps) {
@@ -7661,7 +7796,7 @@ export function FixAction({ action, onComplete }: FixActionProps) {
   };
 
   const handleContinue = () => {
-    onComplete();
+    onComplete({ answer });
   };
 
   return (
@@ -7724,7 +7859,7 @@ import { Action, CompareActionContent } from "../../types/learning";
 
 interface CompareActionProps {
   action: Action;
-  onComplete: () => void;
+  onComplete: (response?: unknown) => void;
 }
 
 export function CompareAction({ action, onComplete }: CompareActionProps) {
@@ -7743,7 +7878,7 @@ export function CompareAction({ action, onComplete }: CompareActionProps) {
   };
 
   const handleContinue = () => {
-    onComplete();
+    onComplete({ selectedChoice, isCorrect });
   };
 
   const isCorrect = selectedChoice === correctChoice;
@@ -7814,7 +7949,7 @@ import { Action, JudgeActionContent } from "../../types/learning";
 
 interface JudgeActionProps {
   action: Action;
-  onComplete: () => void;
+  onComplete: (response?: unknown) => void;
 }
 
 export function JudgeAction({ action, onComplete }: JudgeActionProps) {
@@ -7832,7 +7967,7 @@ export function JudgeAction({ action, onComplete }: JudgeActionProps) {
   };
 
   const handleContinue = () => {
-    onComplete();
+    onComplete({ selectedOption, isCorrect });
   };
 
   const isCorrect = selectedOption === correctOptionId;
@@ -7897,7 +8032,7 @@ import { Action, ObserveActionContent } from "../../types/learning";
 
 interface ObserveActionProps {
   action: Action;
-  onComplete: () => void;
+  onComplete: (response?: unknown) => void;
 }
 
 export function ObserveAction({ action, onComplete }: ObserveActionProps) {
@@ -7911,7 +8046,7 @@ export function ObserveAction({ action, onComplete }: ObserveActionProps) {
   };
 
   const handleContinue = () => {
-    onComplete();
+    onComplete({ revealed: true });
   };
 
   return (
@@ -8114,7 +8249,7 @@ type Props = {
   completedInterviews: CompletedInterviewItem[];
 };
 
-type Tab = "problems" | "transcripts" | "diagrams";
+type Tab = "problems" | "transcripts" | "diagrams" | "experiences";
 
 const DIFFICULTY_STYLES: Record<Difficulty, string> = {
   EASY: "border-green-800 text-green-400",
@@ -8137,7 +8272,7 @@ function formatTimestamp(seconds: number): string {
     .padStart(2, "0")}`;
 }
 
-export default function LibraryView({ experiences: _experiences, completedInterviews }: Props) {
+export default function LibraryView({ experiences, completedInterviews }: Props) {
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<Tab>("problems");
   const [selectedInterview, setSelectedInterview] =
@@ -8146,7 +8281,7 @@ export default function LibraryView({ experiences: _experiences, completedInterv
   // Initialize tab from URL parameter
   useEffect(() => {
     const tabParam = searchParams.get("tab");
-    if (tabParam === "problems" || tabParam === "transcripts" || tabParam === "diagrams") {
+    if (tabParam === "problems" || tabParam === "transcripts" || tabParam === "diagrams" || tabParam === "experiences") {
       setActiveTab(tabParam as Tab);
     }
   }, [searchParams]);
@@ -8174,6 +8309,7 @@ export default function LibraryView({ experiences: _experiences, completedInterv
             [
               ["problems", "Problem Library"],
               ["transcripts", "Completed Interviews"],
+              ["experiences", "Interview Experiences"],
               ["diagrams", "Interactive Diagrams"],
             ] as [Tab, string][]
           ).map(([tab, label]) => (
@@ -8319,6 +8455,73 @@ export default function LibraryView({ experiences: _experiences, completedInterv
                   <Text variant="muted">
                     No session transcripts yet. Start a practice interview to
                     generate an evaluation log.
+                  </Text>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === "experiences" && (
+            <div className="space-y-4">
+              {experiences.length > 0 ? (
+                experiences.map((exp) => (
+                  <a
+                    key={exp.id}
+                    href={exp.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex w-full items-center justify-between rounded-lg border border-border bg-card p-5 text-left transition hover:border-foreground/40"
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3">
+                        <h3 className="text-sm font-bold text-foreground">
+                          {exp.problem.title}
+                        </h3>
+                        <span
+                          className={`rounded border px-2 py-0.5 text-xs font-mono uppercase tracking-wider ${DIFFICULTY_STYLES[exp.problem.difficulty]}`}
+                        >
+                          {exp.problem.difficulty}
+                        </span>
+                      </div>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <span className="font-mono text-xs text-muted-foreground">
+                          {exp.company.name}
+                        </span>
+                        {exp.role && (
+                          <span className="font-mono text-xs text-muted-foreground">
+                            • {exp.role}
+                          </span>
+                        )}
+                        {exp.level && (
+                          <span className="font-mono text-xs text-muted-foreground">
+                            • {exp.level}
+                          </span>
+                        )}
+                        {exp.year && (
+                          <span className="font-mono text-xs text-muted-foreground">
+                            • {exp.year}
+                          </span>
+                        )}
+                      </div>
+                      <div className="mt-2 flex items-center gap-2">
+                        <span className="inline-block rounded bg-muted px-2 py-0.5 font-mono text-[10px] font-bold uppercase text-muted-foreground">
+                          {SOURCE_LABELS[exp.source]}
+                        </span>
+                      </div>
+                      {exp.notes && (
+                        <p className="mt-2 text-xs text-muted-foreground line-clamp-2">
+                          {exp.notes}
+                        </p>
+                      )}
+                    </div>
+                    <span className="text-muted-foreground">↗</span>
+                  </a>
+                ))
+              ) : (
+                <div className="rounded-lg border border-border bg-card p-12 text-center">
+                  <Text variant="muted">
+                    No interview experiences collected yet. These are gathered from
+                    various sources to help you prepare for real interviews.
                   </Text>
                 </div>
               )}
@@ -9048,7 +9251,7 @@ export default function ProblemSelector({
   value,
   onChange,
   interviewType = "hld",
-  difficulty = "MEDIUM",
+  difficulty = "All",
   company = "",
   onSearch,
   userId,
@@ -9117,7 +9320,7 @@ export default function ProblemSelector({
 
   useEffect(() => {
     fetchProblems();
-  }, [page, selectedType, selectedDifficulty, selectedCategory, selectedSort]);
+  }, [page, selectedType, selectedDifficulty, selectedCategory, selectedSort, company]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -9973,12 +10176,12 @@ export default function LiveInterview({
 
 const data = JSON.parse(text);
 
-      if (data.aiMessage) {
-        setMessages((prev) => [...prev, data.aiMessage]);
+      if (data.reply) {
+        setMessages((prev) => [...prev, { role: "assistant", content: data.reply }]);
       }
 
-      if (data.newSummary) {
-        setSummary(data.newSummary);
+      if (data.summary) {
+        setSummary(data.summary);
         setIsSummaryLoading(false);
       }
     } catch (error) {
@@ -10074,7 +10277,6 @@ export default function Timer({ durationInMinutes, interviewId }: TimerProps) {
   const handleFinish = async () => {
     await fetch(`/api/interviews/${interviewId}/finish`, {
       method: 'POST',
-      body: JSON.stringify({ interviewId }),
     });
     router.push(`/interview/report/${interviewId}`);
   };
@@ -10256,7 +10458,7 @@ FILE: ./src/features/interview/live/components/ChatInput.tsx
 ================================================
 'use client';
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Mic,
   MicOff,
@@ -10264,6 +10466,10 @@ import {
   Loader2,
   CheckCircle2,
 } from "lucide-react";
+
+const SUCCESS_TIMEOUT_MS = 2500;
+const DEFAULT_LANGUAGE = "en-US";
+const TEXTArea_MIN_HEIGHT = 44;
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
@@ -10273,13 +10479,72 @@ interface ChatInputProps {
 type RecordingStatus =
   | "idle"
   | "recording"
-  | "transcribing"
-  | "success";
+  | "processing"
+  | "success"
+  | "error"
+  | "unsupported"
+  | "permissionDenied";
+
+interface SpeechRecognitionAlternative {
+  transcript: string;
+  confidence: number;
+}
+
+interface SpeechRecognitionResult {
+  length: number;
+  item(index: number): SpeechRecognitionAlternative;
+  [index: number]: SpeechRecognitionAlternative;
+  isFinal: boolean;
+}
+
+interface SpeechRecognitionResultList {
+  length: number;
+  item(index: number): SpeechRecognitionResult;
+  [index: number]: SpeechRecognitionResult;
+}
+
+interface SpeechRecognitionEvent extends Event {
+  resultIndex: number;
+  results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  error: "no-speech" | "audio-capture" | "not-allowed" | "network" | "aborted" | "language-not-supported" | "service-not-allowed";
+  message: string;
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  grammars?: any;
+  interimResults: boolean;
+  lang: string;
+  maxAlternatives: number;
+  serviceURI: string;
+
+  onstart: ((this: SpeechRecognition, ev: Event) => any) | null;
+  onend: ((this: SpeechRecognition, ev: Event) => any) | null;
+  onerror: ((this: SpeechRecognition, ev: SpeechRecognitionErrorEvent) => any) | null;
+  onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => any) | null;
+  onnomatch: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => any) | null;
+  onsoundstart: ((this: SpeechRecognition, ev: Event) => any) | null;
+  onsoundend: ((this: SpeechRecognition, ev: Event) => any) | null;
+  onspeechstart: ((this: SpeechRecognition, ev: Event) => any) | null;
+  onspeechend: ((this: SpeechRecognition, ev: Event) => any) | null;
+
+  start(): void;
+  stop(): void;
+  abort(): void;
+}
+
+interface SpeechRecognitionConstructor {
+  prototype: SpeechRecognition;
+  new (): SpeechRecognition;
+}
 
 declare global {
   interface Window {
-    SpeechRecognition: any;
-    webkitSpeechRecognition: any;
+    SpeechRecognition: SpeechRecognitionConstructor | undefined;
+    webkitSpeechRecognition: SpeechRecognitionConstructor | undefined;
   }
 }
 
@@ -10291,8 +10556,14 @@ export default function ChatInput({
   const [status, setStatus] =
     useState<RecordingStatus>("idle");
 
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const recognitionIdRef = useRef(0);
+
+  const speechSupported =
+    typeof window !== "undefined" &&
+    ("SpeechRecognition" in window ||
+     "webkitSpeechRecognition" in window);
 
   const isEmpty = message.trim().length === 0;
 
@@ -10301,14 +10572,84 @@ export default function ChatInput({
 
     const timer = setTimeout(() => {
       setStatus("idle");
-    }, 2500);
+    }, SUCCESS_TIMEOUT_MS);
 
     return () => clearTimeout(timer);
   }, [status]);
 
   useEffect(() => {
+    if (!speechSupported) {
+      setStatus("unsupported");
+      return;
+    }
+
+    const SpeechRecognitionConstructor =
+      window.SpeechRecognition ||
+      window.webkitSpeechRecognition;
+
+    if (!SpeechRecognitionConstructor) {
+      setStatus("unsupported");
+      return;
+    }
+
+    const recognition = new SpeechRecognitionConstructor();
+    const currentId = ++recognitionIdRef.current;
+
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = DEFAULT_LANGUAGE;
+
+    recognition.onstart = () => {
+      if (recognitionIdRef.current !== currentId) return;
+      setStatus("recording");
+    };
+
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      if (recognitionIdRef.current !== currentId) return;
+      setStatus("processing");
+
+      const transcript =
+        event.results[0][0].transcript ?? "";
+
+      setMessage(transcript);
+
+      // Small delay to ensure processing state is visible
+      setTimeout(() => {
+        if (recognitionIdRef.current === currentId) {
+          setStatus("success");
+        }
+      }, 100);
+    };
+
+    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+      if (recognitionIdRef.current !== currentId) return;
+      switch (event.error) {
+        case "no-speech":
+          // User clicked record but didn't say anything.
+          break;
+
+        case "not-allowed":
+          setStatus("permissionDenied");
+          break;
+
+        case "audio-capture":
+        case "network":
+        default:
+          setStatus("error");
+      }
+    };
+
+    recognition.onend = () => {
+      if (recognitionIdRef.current !== currentId) return;
+      setStatus((current) =>
+        current === "recording" ? "idle" : current
+      );
+    };
+
+    recognitionRef.current = recognition;
+
     return () => {
-      recognitionRef.current?.stop?.();
+      recognition.stop();
     };
   }, []);
 
@@ -10321,7 +10662,7 @@ export default function ChatInput({
     textarea.style.height = `${textarea.scrollHeight}px`;
   }, [message]);
 
-  const handleSend = () => {
+  const handleSend = useCallback(() => {
     const text = message.trim();
 
     if (!text || disabled) return;
@@ -10330,85 +10671,40 @@ export default function ChatInput({
 
     setMessage("");
     setStatus("idle");
-  };
+  }, [message, disabled, onSendMessage]);
 
-  const toggleListening = () => {
-    if (disabled || status === "transcribing") return;
+  const toggleListening = useCallback(() => {
+    if (disabled || !speechSupported) return;
+
+    if (status === "error" || status === "permissionDenied") {
+      setStatus("idle");
+      return;
+    }
+
+    if (status === "processing") return;
+
+    if (!recognitionRef.current) {
+      return;
+    }
 
     if (status === "recording") {
-      recognitionRef.current?.stop();
+      recognitionRef.current.stop();
       return;
     }
 
-    const SpeechRecognition =
-      window.SpeechRecognition ||
-      window.webkitSpeechRecognition;
+    recognitionRef.current.start();
+  }, [disabled, speechSupported, status]);
 
-    if (!SpeechRecognition) {
-      console.error(
-        "Speech Recognition is not supported in this browser."
-      );
-      return;
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
     }
+  }, [handleSend]);
 
-    const recognition = new SpeechRecognition();
-
-    recognitionRef.current = recognition;
-
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.lang = "en-US";
-
-    recognition.onstart = () => {
-      setStatus("recording");
-    };
-
-    recognition.onresult = (event: any) => {
-      setStatus("transcribing");
-
-      const transcript =
-        event.results[0][0].transcript ?? "";
-
-      setMessage(transcript);
-
-      setStatus("success");
-    };
-
-    recognition.onerror = (event: any) => {
-  console.log("SpeechRecognition:", event.error);
-
-  switch (event.error) {
-    case "no-speech":
-      // User clicked record but didn't say anything.
-      break;
-
-    case "audio-capture":
-      console.error("No microphone detected.");
-      break;
-
-    case "not-allowed":
-      console.error("Microphone permission denied.");
-      break;
-
-    case "network":
-      console.error("Speech recognition network error.");
-      break;
-
-    default:
-      console.error(event.error);
-  }
-
-  setStatus("idle");
-};
-
-    recognition.onend = () => {
-      setStatus((current) =>
-        current === "recording" ? "idle" : current
-      );
-    };
-
-    recognition.start();
-  };
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setMessage(e.target.value);
+  }, []);
 
   return (
     <div className="border-t border-border bg-card p-6">
@@ -10425,13 +10721,13 @@ export default function ChatInput({
           </div>
         )}
 
-        {status === "transcribing" && (
+        {status === "processing" && (
           <div className="flex items-center gap-2 text-sm text-primary">
             <Loader2
               size={14}
               className="animate-spin"
             />
-            Transcribing...
+            Processing...
           </div>
         )}
 
@@ -10441,6 +10737,24 @@ export default function ChatInput({
             Transcript ready. Review and press Send.
           </div>
         )}
+
+        {status === "error" && (
+          <div className="flex items-center gap-2 text-sm text-destructive">
+            Recording failed. Please try again.
+          </div>
+        )}
+
+        {status === "permissionDenied" && (
+          <div className="flex items-center gap-2 text-sm text-destructive">
+            Microphone access denied. Check browser permissions.
+          </div>
+        )}
+
+        {status === "unsupported" && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            Speech recognition not supported in this browser.
+          </div>
+        )}
       </div>
 
       <div className="flex items-end gap-3">
@@ -10448,7 +10762,7 @@ export default function ChatInput({
           type="button"
           onClick={toggleListening}
           disabled={
-            disabled || status === "transcribing"
+            disabled || status === "processing" || !speechSupported
           }
           className={`flex items-center gap-2 rounded-full border px-4 py-2 transition shrink-0 ${
             status === "recording"
@@ -10473,9 +10787,11 @@ export default function ChatInput({
           ref={textareaRef}
           rows={1}
           value={message}
-          disabled={disabled}
+          disabled={disabled || status === "recording"}
           placeholder={
-            disabled
+            status === "recording"
+              ? "Recording..."
+              : disabled
               ? "AI is thinking..."
               : "Explain your design..."
           }
@@ -10489,7 +10805,8 @@ export default function ChatInput({
               handleSend();
             }
           }}
-          className="max-h-40 min-h-[44px] min-w-[200px] flex-1 resize-none rounded-xl border border-border px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary disabled:bg-muted disabled:text-muted-foreground"
+          style={{ minHeight: `${TEXTArea_MIN_HEIGHT}px` }}
+          className="max-h-40 min-w-[200px] flex-1 resize-none rounded-xl border border-border px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary disabled:bg-muted disabled:text-muted-foreground"
         />
 
         <button
@@ -15101,7 +15418,7 @@ export class LearningActionService {
     }
 
     for (const weak of weakConcepts) {
-      const segment = await prisma.scenarioSegment.findFirst({
+      const segment = await prisma.learningSegment.findFirst({
         where: {
           scenario: { isActive: true },
           concepts: { some: { conceptId: weak.conceptId } },
@@ -15112,11 +15429,12 @@ export class LearningActionService {
         include: {
           scenario: { select: { id: true, title: true } },
           actions: {
-            orderBy: { order: "asc" },
+            where: { isActive: true },
+            orderBy: { createdAt: "asc" },
             include: {
               attempts: {
                 where: { userId },
-                orderBy: { createdAt: "desc" },
+                orderBy: { startedAt: "desc" },
                 take: 1,
               },
             },
@@ -15132,13 +15450,13 @@ export class LearningActionService {
       return {
         actionId: chosen.id,
         type: chosen.type,
-        prompt: chosen.prompt,
-        reflection: chosen.reflection,
-        payload: chosen.payload,
+        prompt: chosen.instructions ?? "",
+        reflection: JSON.stringify(chosen.content),
+        payload: chosen.content,
         segment: {
           id: segment.id,
-          title: segment.title,
-          dialogue: segment.dialogue,
+          title: segment.takeaway ?? `Segment ${segment.order}`,
+          dialogue: segment.conversation,
         },
         scenario: segment.scenario,
         targetConcept: weak.concept,
@@ -15152,14 +15470,17 @@ export class LearningActionService {
     userId: string;
     actionId: string;
     response: unknown;
-    correct?: boolean;
+    score?: number;
+    feedback?: string;
   }) {
-    return prisma.learningActionAttempt.create({
+    return prisma.userLearningAttempt.create({
       data: {
         userId: params.userId,
         actionId: params.actionId,
         response: params.response as object,
-        correct: params.correct ?? null,
+        status: "COMPLETED",
+        score: params.score,
+        feedback: params.feedback,
       },
     });
   }
@@ -15420,6 +15741,7 @@ export interface ProcessInterviewMessageResult {
   transitioned: boolean;
   confidence: number;
   completed: boolean;
+  summary: string;
 }
 
 export class InterviewMessageService {
@@ -15585,6 +15907,7 @@ export class InterviewMessageService {
       confidence,
       completed:
         result.transition.completed,
+      summary: interview.summary,
     };
   }
 
