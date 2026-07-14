@@ -54,6 +54,8 @@ PROJECT STRUCTURE
 │   │   │   └── migration.sql
 │   │   ├── 20260713125116_add_problem_metadata
 │   │   │   └── migration.sql
+│   │   ├── 20260714054547_new
+│   │   │   └── migration.sql
 │   │   └── migration_lock.toml
 │   ├── schema.prisma
 │   └── seed.ts
@@ -137,18 +139,6 @@ PROJECT STRUCTURE
 │   │   ├── dashboard
 │   │   │   └── [userId]
 │   │   │       └── page.tsx
-│   │   ├── diagram
-│   │   │   ├── instagram
-│   │   │   │   └── page.tsx
-│   │   │   ├── netflix
-│   │   │   │   └── page.tsx
-│   │   │   ├── page.tsx
-│   │   │   ├── twitter
-│   │   │   │   └── page.tsx
-│   │   │   ├── uber
-│   │   │   │   └── page.tsx
-│   │   │   └── whatsapp
-│   │   │       └── page.tsx
 │   │   ├── globals.css
 │   │   ├── interview
 │   │   │   ├── live
@@ -161,7 +151,22 @@ PROJECT STRUCTURE
 │   │   ├── learn
 │   │   │   ├── [slug]
 │   │   │   │   └── page.tsx
-│   │   │   └── page.tsx
+│   │   │   ├── diagrams
+│   │   │   │   ├── instagram
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── netflix
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── page.tsx
+│   │   │   │   ├── twitter
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── uber
+│   │   │   │   │   └── page.tsx
+│   │   │   │   └── whatsapp
+│   │   │   │       └── page.tsx
+│   │   │   ├── page.tsx
+│   │   │   └── scenarios
+│   │   │       └── [slug]
+│   │   │           └── page.tsx
 │   │   ├── library
 │   │   │   └── page.tsx
 │   │   ├── login
@@ -412,7 +417,7 @@ PROJECT STRUCTURE
 ├── tsconfig.json
 └── tsconfig.tsbuildinfo
 
-164 directories, 247 files
+167 directories, 249 files
 
 FILE CONTENTS
 
@@ -3383,73 +3388,166 @@ export function useTheme() {
   return context;
 }
 ================================================
-FILE: ./src/app/learn/page.tsx
+FILE: ./src/app/learn/diagrams/uber/page.tsx
 ================================================
-"use client";
+import SystemDiagram from "@/src/features/diagram/components/SystemDiagram";
 
-import { useScenarios } from "@/src/features/learning/hooks/useScenario";
-import { ScenarioListItem } from "@/src/features/learning/types/learning";
-import Link from "next/link";
-
-export default function LearnPage() {
-  const { scenarios, loading, error } = useScenarios();
-
-  if (loading) {
-    return (
-      <div className="max-w-4xl mx-auto p-6">
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">Loading scenarios...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="max-w-4xl mx-auto p-6">
-        <div className="text-center py-12">
-          <p className="text-destructive">{error}</p>
-        </div>
-      </div>
-    );
-  }
-
+export default function UberDiagramPage() {
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Learning Scenarios</h1>
-        <p className="text-muted-foreground">
-          Explore real interview conversations and learn from expert responses.
-        </p>
-      </div>
-
-      {scenarios.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">No scenarios available yet.</p>
-        </div>
-      ) : (
-        <div className="grid gap-6">
-          {scenarios.map((scenario: ScenarioListItem) => (
-            <Link
-              key={scenario.id}
-              href={`/learn/${scenario.slug}`}
-              className="block p-6 border border-border rounded-lg hover:border-primary transition-colors"
-            >
-              <h2 className="text-xl font-semibold mb-2">{scenario.title}</h2>
-              {scenario.description && (
-                <p className="text-muted-foreground mb-4">{scenario.description}</p>
-              )}
-              <div className="text-sm text-muted-foreground">
-                {scenario._count.segments} segment{scenario._count.segments !== 1 ? "s" : ""}
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
+    <div className="h-screen">
+      <SystemDiagram systemType="uber" />
     </div>
   );
 }
 
+================================================
+FILE: ./src/app/learn/diagrams/twitter/page.tsx
+================================================
+import SystemDiagram from "@/src/features/diagram/components/SystemDiagram";
+
+export default function TwitterDiagramPage() {
+  return (
+    <div className="h-screen">
+      <SystemDiagram systemType="twitter" />
+    </div>
+  );
+}
+
+================================================
+FILE: ./src/app/learn/diagrams/netflix/page.tsx
+================================================
+import SystemDiagram from "@/src/features/diagram/components/SystemDiagram";
+
+export default function NetflixDiagramPage() {
+  return (
+    <div className="h-screen">
+      <SystemDiagram systemType="netflix" />
+    </div>
+  );
+}
+
+================================================
+FILE: ./src/app/learn/diagrams/page.tsx
+================================================
+import SystemDiagram from "@/src/features/diagram/components/SystemDiagram";
+
+export default function DiagramPage() {
+  return (
+    <div className="h-screen">
+      <SystemDiagram systemType="dropbox" />
+    </div>
+  );
+}
+
+================================================
+FILE: ./src/app/learn/diagrams/instagram/page.tsx
+================================================
+import SystemDiagram from "@/src/features/diagram/components/SystemDiagram";
+
+export default function InstagramDiagramPage() {
+  return (
+    <div className="h-screen">
+      <SystemDiagram systemType="instagram" />
+    </div>
+  );
+}
+
+================================================
+FILE: ./src/app/learn/diagrams/whatsapp/page.tsx
+================================================
+import SystemDiagram from "@/src/features/diagram/components/SystemDiagram";
+
+export default function WhatsAppDiagramPage() {
+  return (
+    <div className="h-screen">
+      <SystemDiagram systemType="whatsapp" />
+    </div>
+  );
+}
+
+================================================
+FILE: ./src/app/learn/scenarios/[slug]/page.tsx
+================================================
+
+================================================
+FILE: ./src/app/learn/page.tsx
+================================================
+// src/app/learn/page.tsx
+"use client";
+
+import { useScenarios } from "@/src/features/learning/hooks/useScenario";
+import Link from "next/link";
+import Card from "@/src/components/ui/Card";
+import Heading from "@/src/components/ui/Heading";
+import Text from "@/src/components/ui/Text";
+
+export default function LearnPage() {
+  const { scenarios, loading } = useScenarios();
+
+  const diagrams = [
+    { slug: "uber", title: "Uber", desc: "Real-time matching & geospatial indexing" },
+    { slug: "twitter", title: "Twitter", desc: "Timeline fanout & eventual consistency" },
+    { slug: "netflix", title: "Netflix", desc: "Video streaming & CDN distribution" },
+    { slug: "whatsapp", title: "WhatsApp", desc: "E2E encryption & WebSocket scaling" },
+  ];
+
+  return (
+    <div className="max-w-6xl mx-auto p-6 space-y-12">
+      <header className="border-b border-border pb-8">
+        <Heading level="h1">Learning Center</Heading>
+        <Text variant="muted" className="mt-2">
+          Master system design through interactive blueprints and guided scenarios.
+        </Text>
+      </header>
+
+      {/* Section 1: Architecture Blueprints */}
+      <section>
+        <div className="flex items-baseline justify-between mb-6">
+          <Heading level="h2">Architecture Blueprints</Heading>
+          <Link href="/learn/diagrams" className="text-sm text-primary hover:underline">View all diagrams →</Link>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {diagrams.map((d) => (
+            <Link key={d.slug} href={`/learn/diagrams/${d.slug}`}>
+              <Card className="hover:border-primary transition-colors h-full">
+                <span className="text-[10px] font-mono text-primary uppercase font-bold">Interactive</span>
+                <h3 className="font-bold mt-1">{d.title}</h3>
+                <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{d.desc}</p>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* Section 2: Guided Scenarios */}
+      <section>
+        <Heading level="h2" className="mb-6">Guided Scenarios</Heading>
+        {loading ? (
+          <Text variant="muted">Loading scenarios...</Text>
+        ) : (
+          <div className="grid gap-4">
+            {scenarios.map((scenario) => (
+              <Link key={scenario.id} href={`/learn/scenarios/${scenario.slug}`}>
+                <Card className="flex items-center justify-between hover:border-primary transition-colors">
+                  <div>
+                    <h3 className="font-bold text-lg">{scenario.title}</h3>
+                    <Text variant="small">{scenario.description}</Text>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xs font-mono bg-muted px-2 py-1 rounded">
+                      {scenario._count.segments} Steps
+                    </span>
+                    <div className="text-primary text-sm mt-2">Start Journey →</div>
+                  </div>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
 ================================================
 FILE: ./src/app/learn/[slug]/page.tsx
 ================================================
@@ -3501,84 +3599,6 @@ export default function ScenarioPage({ params }: { params: Promise<{ slug: strin
   }
 
   return <LearningScenarioReader scenario={scenario} />;
-}
-
-================================================
-FILE: ./src/app/diagram/uber/page.tsx
-================================================
-import SystemDiagram from "@/src/features/diagram/components/SystemDiagram";
-
-export default function UberDiagramPage() {
-  return (
-    <div className="h-screen">
-      <SystemDiagram systemType="uber" />
-    </div>
-  );
-}
-
-================================================
-FILE: ./src/app/diagram/twitter/page.tsx
-================================================
-import SystemDiagram from "@/src/features/diagram/components/SystemDiagram";
-
-export default function TwitterDiagramPage() {
-  return (
-    <div className="h-screen">
-      <SystemDiagram systemType="twitter" />
-    </div>
-  );
-}
-
-================================================
-FILE: ./src/app/diagram/netflix/page.tsx
-================================================
-import SystemDiagram from "@/src/features/diagram/components/SystemDiagram";
-
-export default function NetflixDiagramPage() {
-  return (
-    <div className="h-screen">
-      <SystemDiagram systemType="netflix" />
-    </div>
-  );
-}
-
-================================================
-FILE: ./src/app/diagram/page.tsx
-================================================
-import SystemDiagram from "@/src/features/diagram/components/SystemDiagram";
-
-export default function DiagramPage() {
-  return (
-    <div className="h-screen">
-      <SystemDiagram systemType="dropbox" />
-    </div>
-  );
-}
-
-================================================
-FILE: ./src/app/diagram/instagram/page.tsx
-================================================
-import SystemDiagram from "@/src/features/diagram/components/SystemDiagram";
-
-export default function InstagramDiagramPage() {
-  return (
-    <div className="h-screen">
-      <SystemDiagram systemType="instagram" />
-    </div>
-  );
-}
-
-================================================
-FILE: ./src/app/diagram/whatsapp/page.tsx
-================================================
-import SystemDiagram from "@/src/features/diagram/components/SystemDiagram";
-
-export default function WhatsAppDiagramPage() {
-  return (
-    <div className="h-screen">
-      <SystemDiagram systemType="whatsapp" />
-    </div>
-  );
 }
 
 ================================================
@@ -4332,7 +4352,6 @@ export async function GET(
 FILE: ./src/app/api/problems/route.ts
 ================================================
 import { NextResponse } from "next/server";
-
 import { prisma } from "@/shared/prisma/client";
 import { Difficulty, InterviewStatus } from "@prisma/client";
 
@@ -4349,7 +4368,7 @@ export async function GET(request: Request) {
     const userId = searchParams.get("userId");
 
     const where: any = {};
-    
+
     if (difficulty && Object.values(Difficulty).includes(difficulty as Difficulty)) {
       where.difficulty = difficulty as Difficulty;
     }
@@ -4357,9 +4376,7 @@ export async function GET(request: Request) {
     if (company) {
       where.companies = {
         some: {
-          company: {
-            name: company,
-          },
+          company: { name: company },
         },
       };
     }
@@ -4374,34 +4391,30 @@ export async function GET(request: Request) {
 
     const orderBy: any = {};
     switch (sort) {
-      case "title":
-        orderBy.title = "asc";
-        break;
-      case "difficulty":
-        orderBy.difficulty = "asc";
-        break;
-      case "estimatedMinutes":
-        orderBy.estimatedMinutes = "asc";
-        break;
+      case "title": orderBy.title = "asc"; break;
+      case "difficulty": orderBy.difficulty = "asc"; break;
+      case "estimatedMinutes": orderBy.estimatedMinutes = "asc"; break;
       case "interviewCount":
-      default:
-        orderBy.interviewCount = "desc";
-        break;
+      default: orderBy.interviewCount = "desc"; break;
     }
 
-    let problems, total;
-    let fallbackUsed = false;
+    // 1. Define include options once at the top
+    const includeOptions = {
+      companies: {
+        include: { company: true },
+      },
+      tags: {
+        include: { tag: true }
+      }
+    };
 
+    let problems, total;
+
+    // First attempt
     [problems, total] = await Promise.all([
       prisma.problem.findMany({
         where,
-        include: {
-          companies: {
-            include: {
-              company: true,
-            },
-          },
-        },
+        include: includeOptions, // USE THE INCLUDE HERE
         orderBy,
         skip: (page - 1) * limit,
         take: limit,
@@ -4409,78 +4422,38 @@ export async function GET(request: Request) {
       prisma.problem.count({ where }),
     ]);
 
-    // If strict filtering returns no results, try fallback strategies
+    // Fallback logic
     if (problems.length === 0 && page === 1) {
-      // Fallback 1: Remove company filter (most restrictive)
       if (where.companies) {
         const { companies: _, ...fallbackWhere } = where;
         [problems, total] = await Promise.all([
           prisma.problem.findMany({
             where: fallbackWhere,
-            include: {
-              companies: {
-                include: {
-                  company: true,
-                },
-              },
-            },
+            include: includeOptions, // USE THE INCLUDE HERE
             orderBy,
             skip: (page - 1) * limit,
             take: limit,
           }),
           prisma.problem.count({ where: fallbackWhere }),
         ]);
-        fallbackUsed = true;
-      }
-
-      // Fallback 2: Remove category filter if still no results
-      if (problems.length === 0 && where.category) {
-        const { category: _, companies: __, ...fallbackWhere } = where;
+      } else if (where.category) {
+        const { category: _, ...fallbackWhere } = where;
         [problems, total] = await Promise.all([
           prisma.problem.findMany({
             where: fallbackWhere,
-            include: {
-              companies: {
-                include: {
-                  company: true,
-                },
-              },
-            },
+            include: includeOptions, // USE THE INCLUDE HERE
             orderBy,
             skip: (page - 1) * limit,
             take: limit,
           }),
           prisma.problem.count({ where: fallbackWhere }),
         ]);
-        fallbackUsed = true;
-      }
-
-      // Fallback 3: Only use interview type if still no results
-      if (problems.length === 0 && where.interviewType) {
-        const { interviewType, ...fallbackWhere } = where;
-        [problems, total] = await Promise.all([
-          prisma.problem.findMany({
-            where: fallbackWhere,
-            include: {
-              companies: {
-                include: {
-                  company: true,
-                },
-              },
-            },
-            orderBy,
-            skip: (page - 1) * limit,
-            take: limit,
-          }),
-          prisma.problem.count({ where: fallbackWhere }),
-        ]);
-        fallbackUsed = true;
       }
     }
 
-    // Add completion history if userId is provided
-    let problemsWithHistory = problems;
-    if (userId) {
+    // 2. Fetch history if needed
+    const historyMap = new Map<string, any>();
+    if (userId && problems.length > 0) {
       const problemIds = problems.map((p) => p.id);
       const interviews = await prisma.interview.findMany({
         where: {
@@ -4488,12 +4461,9 @@ export async function GET(request: Request) {
           problemId: { in: problemIds },
           status: InterviewStatus.COMPLETED,
         },
-        orderBy: {
-          updatedAt: "desc",
-        },
+        orderBy: { updatedAt: "desc" },
       });
 
-      const historyMap = new Map<string, { completed: boolean; timesCompleted: number; lastCompletedAt: Date | null }>();
       interviews.forEach((interview) => {
         const existing = historyMap.get(interview.problemId);
         if (existing) {
@@ -4506,31 +4476,37 @@ export async function GET(request: Request) {
           });
         }
       });
-
-      problemsWithHistory = problems.map((problem) => ({
-        ...problem,
-        completionHistory: historyMap.get(problem.id) || {
-          completed: false,
-          timesCompleted: 0,
-          lastCompletedAt: null,
-        },
-      }));
     }
 
+    // 3. TRANSFORM DATA (Crucial step to fix Zod errors)
+    const transformedProblems = problems.map((p: any) => ({
+      ...p,
+      // Flatten the tags relation into a simple array of strings
+      tags: p.tags?.map((t: any) => t.tag.name) || [],
+      // Ensure interviewType is never null for Zod (or use .nullable() in schema)
+      interviewType: p.interviewType || "general",
+      completionHistory: historyMap.get(p.id) || {
+        completed: false,
+        timesCompleted: 0,
+        lastCompletedAt: null,
+      },
+    }));
+
     return NextResponse.json(
-      { problems: problemsWithHistory, total, page, limit, totalPages: Math.ceil(total / limit) },
+      { 
+        problems: transformedProblems, 
+        total, 
+        page, 
+        limit, 
+        totalPages: Math.ceil(total / limit) 
+      },
       { status: 200 }
     );
   } catch (error) {
     console.error(error);
-
-    return NextResponse.json(
-      { error: "Internal server error." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 }
-
 ================================================
 FILE: ./src/app/api/problems/[id]/history/route.ts
 ================================================
@@ -5516,6 +5492,8 @@ FILE: ./src/app/globals.css
 ================================================
 @import "tailwindcss";
 
+
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -5533,20 +5511,21 @@ FILE: ./src/app/globals.css
   --font-mono: var(--font-geist-mono);
 }
 
-/* Dark Theme (Default) */
-:root,
+
+
+
+/* Dark Theme Refinement */
 [data-theme="dark"] {
-  --background: #1a1614;
-  --foreground: #FAFAFA;
-  --muted: #2D2620;
-  --muted-foreground: #CC7722;
-  --card: #2D2620;
-  --card-foreground: #FAFAFA;
-  --border: #9C3D28;
-  --primary: #3F00FF;
-  --primary-foreground: #FAFAFA;
-  --accent: #F9D77E;
-  --accent-foreground: #1a1614;
+  --background: #09090b; /* Deeper black/zinc */
+  --foreground: #fafafa;
+  --muted: #18181b;      /* Zinc 900 */
+  --muted-foreground: #a1a1aa; /* Zinc 400 */
+  --card: #09090b;
+  --card-foreground: #fafafa;
+  --border: #27272a;     /* Subtle Zinc 800 - THIS IS THE BIGGEST CHANGE */
+  --primary: #6366f1;    /* Modern Indigo instead of bright purple */
+  --primary-foreground: #ffffff;
+  --accent: #27272a;
 }
 
 /* Light Theme */
@@ -8480,7 +8459,7 @@ export default function LibraryView({ experiences, completedInterviews }: Props)
 
               <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 <Link
-                  href="/diagram"
+                  href="/learn/diagrams"
                   className="rounded border border-border bg-muted p-4 text-left transition hover:border-foreground/40"
                 >
                   <span className="inline-block rounded bg-blue-500/10 px-2 py-0.5 font-mono text-[9px] font-bold uppercase text-blue-400">
@@ -8495,7 +8474,7 @@ export default function LibraryView({ experiences, completedInterviews }: Props)
                 </Link>
 
                 <Link
-                  href="/diagram/twitter"
+                  href="/learn/diagrams/twitter"
                   className="rounded border border-border bg-muted p-4 text-left transition hover:border-foreground/40"
                 >
                   <span className="inline-block rounded bg-green-500/10 px-2 py-0.5 font-mono text-[9px] font-bold uppercase text-green-400">
@@ -8510,7 +8489,7 @@ export default function LibraryView({ experiences, completedInterviews }: Props)
                 </Link>
 
                 <Link
-                  href="/diagram/netflix"
+                  href="/learn/diagrams/netflix"
                   className="rounded border border-border bg-muted p-4 text-left transition hover:border-foreground/40"
                 >
                   <span className="inline-block rounded bg-purple-500/10 px-2 py-0.5 font-mono text-[9px] font-bold uppercase text-purple-400">
@@ -8525,7 +8504,7 @@ export default function LibraryView({ experiences, completedInterviews }: Props)
                 </Link>
 
                 <Link
-                  href="/diagram/uber"
+                  href="/learn/diagrams/uber"
                   className="rounded border border-border bg-muted p-4 text-left transition hover:border-foreground/40"
                 >
                   <span className="inline-block rounded bg-orange-500/10 px-2 py-0.5 font-mono text-[9px] font-bold uppercase text-orange-400">
@@ -8540,7 +8519,7 @@ export default function LibraryView({ experiences, completedInterviews }: Props)
                 </Link>
 
                 <Link
-                  href="/diagram/instagram"
+                  href="/learn/diagrams/instagram"
                   className="rounded border border-border bg-muted p-4 text-left transition hover:border-foreground/40"
                 >
                   <span className="inline-block rounded bg-red-500/10 px-2 py-0.5 font-mono text-[9px] font-bold uppercase text-red-400">
@@ -8555,7 +8534,7 @@ export default function LibraryView({ experiences, completedInterviews }: Props)
                 </Link>
 
                 <Link
-                  href="/diagram/whatsapp"
+                  href="/learn/diagrams/whatsapp"
                   className="rounded border border-border bg-muted p-4 text-left transition hover:border-foreground/40"
                 >
                   <span className="inline-block rounded bg-cyan-500/10 px-2 py-0.5 font-mono text-[9px] font-bold uppercase text-cyan-400">
@@ -9383,6 +9362,7 @@ FILE: ./src/features/interview/setup/components/ProblemFilters.tsx
 ================================================
 import { ProblemCategory } from "@prisma/client";
 import { INTERVIEW_TYPES, DIFFICULTIES, SORT_OPTIONS, type FilterState } from "./useProblems";
+import { cn } from "@/src/lib/utils";
 
 const CATEGORY_LABELS: Record<ProblemCategory, string> = {
   SYSTEM_DESIGN: "System Design",
@@ -9397,18 +9377,7 @@ const CATEGORY_LABELS: Record<ProblemCategory, string> = {
   NETWORKING: "Networking",
 };
 
-const ALL_CATEGORIES: ProblemCategory[] = [
-  ProblemCategory.SYSTEM_DESIGN,
-  ProblemCategory.LOW_LEVEL_DESIGN,
-  ProblemCategory.DATABASES,
-  ProblemCategory.BACKEND,
-  ProblemCategory.DISTRIBUTED_SYSTEMS,
-  ProblemCategory.JAVA,
-  ProblemCategory.KAFKA,
-  ProblemCategory.REDIS,
-  ProblemCategory.OPERATING_SYSTEMS,
-  ProblemCategory.NETWORKING,
-];
+const ALL_CATEGORIES = Object.values(ProblemCategory);
 
 type Props = {
   filters: FilterState;
@@ -9417,36 +9386,40 @@ type Props = {
 
 export default function ProblemFilters({ filters, onFiltersChange }: Props) {
   return (
-    <>
-      {/* Interview Type Tabs */}
-      <div className="flex overflow-x-auto rounded-lg border border-border bg-muted p-1 mb-4">
-        {INTERVIEW_TYPES.map((type) => (
-          <button
-            key={type}
-            onClick={() => {
-              onFiltersChange({ selectedType: type, page: 1 });
-            }}
-            className={`whitespace-nowrap rounded px-4 py-2 font-mono text-sm font-medium transition ${
-              filters.selectedType === type
-                ? "bg-card text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {type.toUpperCase()}
-          </button>
-        ))}
+    <div className="space-y-6 mb-8">
+      {/* 1. Interview Type Tabs - Modern Pill Style */}
+      <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+        {INTERVIEW_TYPES.map((type) => {
+          const isActive = filters.selectedType === type;
+          return (
+            <button
+              key={type}
+              onClick={() => onFiltersChange({ selectedType: type, page: 1 })}
+              className={cn(
+                "whitespace-nowrap px-4 py-2 rounded-full text-xs font-bold tracking-wide transition-all duration-200 border",
+                isActive
+                  ? "bg-primary border-primary text-white shadow-sm shadow-primary/20"
+                  : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200"
+              )}
+            >
+              {type.toUpperCase().replace("_", " ")}
+            </button>
+          );
+        })}
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-4 mb-4">
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-foreground">Category:</label>
+      {/* 2. Secondary Filters Row - Subtle Integrated Look */}
+      <div className="flex flex-wrap items-center gap-6 pt-4 border-t border-zinc-800/50">
+        
+        {/* Category Filter */}
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[10px] uppercase font-bold text-zinc-500 tracking-widest ml-1">
+            Category
+          </label>
           <select
             value={filters.selectedCategory}
-            onChange={(e) => {
-              onFiltersChange({ selectedCategory: e.target.value, page: 1 });
-            }}
-            className="rounded border border-border bg-card px-3 py-1.5 text-sm text-foreground"
+            onChange={(e) => onFiltersChange({ selectedCategory: e.target.value, page: 1 })}
+            className="bg-zinc-900 border border-zinc-800 text-zinc-300 text-sm rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-primary transition-all cursor-pointer hover:bg-zinc-800/50"
           >
             <option value="All">All Categories</option>
             {ALL_CATEGORIES.map((cat) => (
@@ -9457,43 +9430,54 @@ export default function ProblemFilters({ filters, onFiltersChange }: Props) {
           </select>
         </div>
 
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-foreground">Difficulty:</label>
+        {/* Difficulty Filter */}
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[10px] uppercase font-bold text-zinc-500 tracking-widest ml-1">
+            Difficulty
+          </label>
           <select
             value={filters.selectedDifficulty}
-            onChange={(e) => {
-              onFiltersChange({ selectedDifficulty: e.target.value as (typeof DIFFICULTIES)[number], page: 1 });
-            }}
-            className="rounded border border-border bg-card px-3 py-1.5 text-sm text-foreground"
+            onChange={(e) => 
+              onFiltersChange({ 
+                selectedDifficulty: e.target.value as (typeof DIFFICULTIES)[number], 
+                page: 1 
+              })
+            }
+            className="bg-zinc-900 border border-zinc-800 text-zinc-300 text-sm rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-primary transition-all cursor-pointer hover:bg-zinc-800/50"
           >
             {DIFFICULTIES.map((diff) => (
               <option key={diff} value={diff}>
-                {diff}
+                {diff === "All" ? "All Difficulties" : diff}
               </option>
             ))}
           </select>
         </div>
 
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-foreground">Sort by:</label>
+        {/* Sort Filter */}
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[10px] uppercase font-bold text-zinc-500 tracking-widest ml-1">
+            Sort By
+          </label>
           <select
             value={filters.selectedSort}
-            onChange={(e) => {
-              onFiltersChange({ selectedSort: e.target.value as (typeof SORT_OPTIONS)[number], page: 1 });
-            }}
-            className="rounded border border-border bg-card px-3 py-1.5 text-sm text-foreground"
+            onChange={(e) => 
+              onFiltersChange({ 
+                selectedSort: e.target.value as (typeof SORT_OPTIONS)[number], 
+                page: 1 
+              })
+            }
+            className="bg-zinc-900 border border-zinc-800 text-zinc-300 text-sm rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-primary transition-all cursor-pointer hover:bg-zinc-800/50"
           >
-            <option value="interviewCount">Interview Count</option>
-            <option value="title">Title</option>
-            <option value="difficulty">Difficulty</option>
-            <option value="estimatedMinutes">Estimated Time</option>
+            <option value="interviewCount">Popularity</option>
+            <option value="title">Alphabetical</option>
+            <option value="difficulty">Difficulty Level</option>
+            <option value="estimatedMinutes">Time Estimate</option>
           </select>
         </div>
       </div>
-    </>
+    </div>
   );
 }
-
 ================================================
 FILE: ./src/features/interview/setup/components/DurationSelector.tsx
 ================================================
@@ -9553,10 +9537,11 @@ FILE: ./src/features/interview/setup/components/ProblemCard.tsx
 ================================================
 "use client";
 
-import { useCallback } from "react";
 import { Difficulty, ProblemCategory } from "@prisma/client";
 import { Button } from "@/src/components/ui/Button";
 import type { Problem } from "./problemSchema";
+import { cn } from "@/src/lib/utils";
+import { ChevronRight, Clock, CheckCircle2 } from "lucide-react";
 
 const CATEGORY_LABELS: Record<ProblemCategory, string> = {
   SYSTEM_DESIGN: "System Design",
@@ -9571,17 +9556,11 @@ const CATEGORY_LABELS: Record<ProblemCategory, string> = {
   NETWORKING: "Networking",
 };
 
-const DIFFICULTY_COLORS: Record<Difficulty, string> = {
-  EASY: "border-green-800 text-green-400",
-  MEDIUM: "border-amber-800 text-amber-400",
-  HARD: "border-red-800 text-red-400",
+const DIFFICULTY_STYLES: Record<Difficulty, string> = {
+  EASY: "text-emerald-400 border-emerald-500/20 bg-emerald-500/5",
+  MEDIUM: "text-amber-400 border-amber-500/20 bg-amber-500/5",
+  HARD: "text-rose-400 border-red-500/20 bg-red-500/5",
 };
-
-const DATE_FORMATTER = new Intl.DateTimeFormat("en-US", {
-  month: "short",
-  day: "numeric",
-  year: "numeric",
-});
 
 type Props = {
   problem: Problem;
@@ -9590,11 +9569,6 @@ type Props = {
   onClick: () => void;
   onSelect: () => void;
 };
-
-function formatDate(date: Date | null): string {
-  if (!date) return "Never";
-  return DATE_FORMATTER.format(new Date(date));
-}
 
 export default function ProblemCard({
   problem,
@@ -9605,130 +9579,128 @@ export default function ProblemCard({
 }: Props) {
   return (
     <div
-      className={`overflow-hidden rounded-lg border transition hover:border-foreground/40 ${
+      className={cn(
+        "group rounded-xl border transition-all duration-300 overflow-hidden",
         isSelected
-          ? "border-primary bg-primary/5"
-          : "border-border bg-card"
-      }`}
+          ? "border-primary bg-primary/[0.03] ring-1 ring-primary/20"
+          : "border-zinc-800 bg-zinc-900/40 hover:border-zinc-700 hover:bg-zinc-900/80"
+      )}
     >
-      {/* Problem Row */}
       <button
         onClick={onClick}
-        className="w-full px-4 py-3 text-left"
-        aria-expanded={isExpanded}
-        aria-controls={`problem-details-${problem.id}`}
+        className="w-full p-5 text-left outline-none transition-transform active:scale-[0.99]"
       >
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1">
+        <div className="flex justify-between items-start gap-4">
+          <div className="flex-1 space-y-1.5">
             <div className="flex items-center gap-3">
-              <span className="text-lg font-semibold text-foreground">
+              <h3 className="text-lg font-bold tracking-tight text-zinc-100">
                 {problem.title}
-              </span>
+              </h3>
               <span
-                className={`rounded border px-2 py-0.5 text-xs font-mono uppercase tracking-wider ${DIFFICULTY_COLORS[problem.difficulty]}`}
+                className={cn(
+                  "text-[10px] px-2 py-0.5 rounded-md border font-bold uppercase tracking-wider",
+                  DIFFICULTY_STYLES[problem.difficulty]
+                )}
               >
                 {problem.difficulty}
               </span>
-              {problem.completionHistory?.completed && (
-                <span className="rounded bg-green-500/10 px-2 py-0.5 text-xs font-mono uppercase tracking-wider text-green-400">
-                  Done
-                </span>
-              )}
               {isSelected && (
-                <span className="rounded bg-primary px-2 py-0.5 text-xs font-mono uppercase tracking-wider text-primary-foreground">
-                  ✓ Selected
+                <span className="text-[10px] px-2 py-0.5 rounded-md bg-primary text-white font-bold uppercase tracking-wider">
+                  Selected
                 </span>
               )}
             </div>
-
-            {problem.cruxOfProblem && (
-              <p className="mt-1 text-sm text-muted-foreground">
-                {problem.cruxOfProblem}
-              </p>
-            )}
+            
+            <p className="text-sm text-zinc-400 font-medium leading-relaxed max-w-2xl">
+              {problem.cruxOfProblem}
+            </p>
 
             {problem.tags && problem.tags.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-1">
-                {problem.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground"
-                  >
-                    {tag}
+              <div className="flex gap-2 pt-1">
+                {problem.tags.slice(0, 3).map((tag) => (
+                  <span key={tag} className="text-[10px] text-zinc-500 font-mono">
+                    #{tag}
                   </span>
                 ))}
               </div>
             )}
           </div>
 
-          <div className="flex items-center gap-4">
-            {problem.estimatedMinutes && (
-              <span className="text-sm font-mono text-muted-foreground">
-                {problem.estimatedMinutes}min
-              </span>
-            )}
-            {problem.completionHistory && (
-              <div className="text-right">
-                <div className="text-xs text-muted-foreground">
-                  {problem.completionHistory.timesCompleted}x done
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  Last: {formatDate(problem.completionHistory.lastCompletedAt)}
-                </div>
+          <div className="flex flex-col items-end gap-3 shrink-0">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-1.5 text-zinc-500">
+                <Clock size={14} />
+                <span className="text-xs font-mono">{problem.estimatedMinutes}m</span>
+              </div>
+              <ChevronRight 
+                size={18} 
+                className={cn(
+                  "text-zinc-600 transition-transform duration-300", 
+                  isExpanded && "rotate-90 text-zinc-400"
+                )} 
+              />
+            </div>
+            
+            {problem.completionHistory?.completed && (
+              <div className="flex items-center gap-1 text-emerald-500">
+                <CheckCircle2 size={12} />
+                <span className="text-[10px] font-bold uppercase tracking-widest">
+                  Completed
+                </span>
               </div>
             )}
-            <span className="text-muted-foreground">
-              {isExpanded ? "▼" : "▶"}
-            </span>
           </div>
         </div>
       </button>
 
-      {/* Expanded Details */}
       {isExpanded && (
-        <div id={`problem-details-${problem.id}`} className="border-t border-border bg-muted p-4">
-          {problem.description && (
-            <div className="mb-4">
-              <h4 className="mb-2 text-sm font-semibold text-foreground">
-                Description
+        <div className="px-5 pb-6 space-y-6 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="h-px bg-gradient-to-r from-transparent via-zinc-800 to-transparent w-full" />
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="md:col-span-2 space-y-3">
+              <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em]">
+                Problem Context
               </h4>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-zinc-300 leading-relaxed">
                 {problem.description}
               </p>
             </div>
-          )}
 
-          <div className="mb-4">
-            <h4 className="mb-2 text-sm font-semibold text-foreground">
-              Details
-            </h4>
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <div>
-                <span className="text-muted-foreground">Category:</span>{" "}
-                <span className="text-foreground">
-                  {CATEGORY_LABELS[problem.category] || problem.category}
-                </span>
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em]">
+                  Category
+                </h4>
+                <p className="text-sm text-zinc-200 font-medium">
+                  {CATEGORY_LABELS[problem.category]}
+                </p>
               </div>
-              <div>
-                <span className="text-muted-foreground">Interview Type:</span>{" "}
-                <span className="text-foreground uppercase">{problem.interviewType}</span>
+              <div className="space-y-1">
+                <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em]">
+                  Template
+                </h4>
+                <p className="text-sm text-zinc-200 font-medium uppercase">
+                  {problem.interviewType}
+                </p>
               </div>
             </div>
           </div>
 
           <Button
-            variant="primary"
-            onClick={onSelect}
-            className="w-full"
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelect();
+            }}
+            className="w-full py-6 bg-primary hover:bg-primary/90 text-white rounded-xl font-bold text-sm uppercase tracking-widest shadow-lg shadow-primary/20 transition-all active:scale-[0.98]"
           >
-            Select This Problem
+            Launch Interview Session
           </Button>
         </div>
       )}
     </div>
   );
 }
-
 ================================================
 FILE: ./src/features/interview/setup/components/CompanySelector.tsx
 ================================================
@@ -10158,6 +10130,8 @@ FILE: ./src/features/interview/setup/components/problemSchema.ts
 import { z } from "zod";
 import { Difficulty, ProblemCategory } from "@prisma/client";
 
+// src/features/interview/setup/components/problemSchema.ts
+
 export const ProblemSchema = z.object({
   id: z.string(),
   slug: z.string(),
@@ -10165,10 +10139,12 @@ export const ProblemSchema = z.object({
   description: z.string().nullable(),
   category: z.nativeEnum(ProblemCategory),
   difficulty: z.nativeEnum(Difficulty),
-  interviewType: z.string(),
+  // FIX: Make this nullable or optional to match the database
+  interviewType: z.string().nullable().optional(), 
   cruxOfProblem: z.string().nullable(),
   estimatedMinutes: z.number().nullable(),
-  tags: z.array(z.string()),
+  // Ensure tags is always an array
+  tags: z.array(z.string()).default([]), 
   completionHistory: z
     .object({
       completed: z.boolean(),

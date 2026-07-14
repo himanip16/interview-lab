@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback } from "react";
 import { Difficulty, ProblemCategory } from "@prisma/client";
 import { Button } from "@/src/components/ui/Button";
 import type { Problem } from "./problemSchema";
+import { cn } from "@/src/lib/utils";
+import { ChevronRight, Clock, CheckCircle2 } from "lucide-react";
 
 const CATEGORY_LABELS: Record<ProblemCategory, string> = {
   SYSTEM_DESIGN: "System Design",
@@ -18,17 +19,11 @@ const CATEGORY_LABELS: Record<ProblemCategory, string> = {
   NETWORKING: "Networking",
 };
 
-const DIFFICULTY_COLORS: Record<Difficulty, string> = {
-  EASY: "border-green-800 text-green-400",
-  MEDIUM: "border-amber-800 text-amber-400",
-  HARD: "border-red-800 text-red-400",
+const DIFFICULTY_STYLES: Record<Difficulty, string> = {
+  EASY: "text-emerald-400 border-emerald-500/20 bg-emerald-500/5",
+  MEDIUM: "text-amber-400 border-amber-500/20 bg-amber-500/5",
+  HARD: "text-rose-400 border-red-500/20 bg-red-500/5",
 };
-
-const DATE_FORMATTER = new Intl.DateTimeFormat("en-US", {
-  month: "short",
-  day: "numeric",
-  year: "numeric",
-});
 
 type Props = {
   problem: Problem;
@@ -37,11 +32,6 @@ type Props = {
   onClick: () => void;
   onSelect: () => void;
 };
-
-function formatDate(date: Date | null): string {
-  if (!date) return "Never";
-  return DATE_FORMATTER.format(new Date(date));
-}
 
 export default function ProblemCard({
   problem,
@@ -52,123 +42,122 @@ export default function ProblemCard({
 }: Props) {
   return (
     <div
-      className={`overflow-hidden rounded-lg border transition hover:border-foreground/40 ${
+      className={cn(
+        "group rounded-xl border transition-all duration-300 overflow-hidden",
         isSelected
-          ? "border-primary bg-primary/5"
-          : "border-border bg-card"
-      }`}
+          ? "border-primary bg-primary/[0.03] ring-1 ring-primary/20"
+          : "border-zinc-800 bg-zinc-900/40 hover:border-zinc-700 hover:bg-zinc-900/80"
+      )}
     >
-      {/* Problem Row */}
       <button
         onClick={onClick}
-        className="w-full px-4 py-3 text-left"
-        aria-expanded={isExpanded}
-        aria-controls={`problem-details-${problem.id}`}
+        className="w-full p-5 text-left outline-none transition-transform active:scale-[0.99]"
       >
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1">
+        <div className="flex justify-between items-start gap-4">
+          <div className="flex-1 space-y-1.5">
             <div className="flex items-center gap-3">
-              <span className="text-lg font-semibold text-foreground">
+              <h3 className="text-lg font-bold tracking-tight text-zinc-100">
                 {problem.title}
-              </span>
+              </h3>
               <span
-                className={`rounded border px-2 py-0.5 text-xs font-mono uppercase tracking-wider ${DIFFICULTY_COLORS[problem.difficulty]}`}
+                className={cn(
+                  "text-[10px] px-2 py-0.5 rounded-md border font-bold uppercase tracking-wider",
+                  DIFFICULTY_STYLES[problem.difficulty]
+                )}
               >
                 {problem.difficulty}
               </span>
-              {problem.completionHistory?.completed && (
-                <span className="rounded bg-green-500/10 px-2 py-0.5 text-xs font-mono uppercase tracking-wider text-green-400">
-                  Done
-                </span>
-              )}
               {isSelected && (
-                <span className="rounded bg-primary px-2 py-0.5 text-xs font-mono uppercase tracking-wider text-primary-foreground">
-                  ✓ Selected
+                <span className="text-[10px] px-2 py-0.5 rounded-md bg-primary text-white font-bold uppercase tracking-wider">
+                  Selected
                 </span>
               )}
             </div>
-
-            {problem.cruxOfProblem && (
-              <p className="mt-1 text-sm text-muted-foreground">
-                {problem.cruxOfProblem}
-              </p>
-            )}
+            
+            <p className="text-sm text-zinc-400 font-medium leading-relaxed max-w-2xl">
+              {problem.cruxOfProblem}
+            </p>
 
             {problem.tags && problem.tags.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-1">
-                {problem.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground"
-                  >
-                    {tag}
+              <div className="flex gap-2 pt-1">
+                {problem.tags.slice(0, 3).map((tag) => (
+                  <span key={tag} className="text-[10px] text-zinc-500 font-mono">
+                    #{tag}
                   </span>
                 ))}
               </div>
             )}
           </div>
 
-          <div className="flex items-center gap-4">
-            {problem.estimatedMinutes && (
-              <span className="text-sm font-mono text-muted-foreground">
-                {problem.estimatedMinutes}min
-              </span>
-            )}
-            {problem.completionHistory && (
-              <div className="text-right">
-                <div className="text-xs text-muted-foreground">
-                  {problem.completionHistory.timesCompleted}x done
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  Last: {formatDate(problem.completionHistory.lastCompletedAt)}
-                </div>
+          <div className="flex flex-col items-end gap-3 shrink-0">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-1.5 text-zinc-500">
+                <Clock size={14} />
+                <span className="text-xs font-mono">{problem.estimatedMinutes}m</span>
+              </div>
+              <ChevronRight 
+                size={18} 
+                className={cn(
+                  "text-zinc-600 transition-transform duration-300", 
+                  isExpanded && "rotate-90 text-zinc-400"
+                )} 
+              />
+            </div>
+            
+            {problem.completionHistory?.completed && (
+              <div className="flex items-center gap-1 text-emerald-500">
+                <CheckCircle2 size={12} />
+                <span className="text-[10px] font-bold uppercase tracking-widest">
+                  Completed
+                </span>
               </div>
             )}
-            <span className="text-muted-foreground">
-              {isExpanded ? "▼" : "▶"}
-            </span>
           </div>
         </div>
       </button>
 
-      {/* Expanded Details */}
       {isExpanded && (
-        <div id={`problem-details-${problem.id}`} className="border-t border-border bg-muted p-4">
-          {problem.description && (
-            <div className="mb-4">
-              <h4 className="mb-2 text-sm font-semibold text-foreground">
-                Description
+        <div className="px-5 pb-6 space-y-6 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="h-px bg-gradient-to-r from-transparent via-zinc-800 to-transparent w-full" />
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="md:col-span-2 space-y-3">
+              <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em]">
+                Problem Context
               </h4>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-zinc-300 leading-relaxed">
                 {problem.description}
               </p>
             </div>
-          )}
 
-          <div className="mb-4">
-            <h4 className="mb-2 text-sm font-semibold text-foreground">
-              Details
-            </h4>
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <div>
-                <span className="text-muted-foreground">Category:</span>{" "}
-                <span className="text-foreground">
-                  {CATEGORY_LABELS[problem.category] || problem.category}
-                </span>
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em]">
+                  Category
+                </h4>
+                <p className="text-sm text-zinc-200 font-medium">
+                  {CATEGORY_LABELS[problem.category]}
+                </p>
               </div>
-              <div>
-                <span className="text-muted-foreground">Interview Type:</span>{" "}
-                <span className="text-foreground uppercase">{problem.interviewType}</span>
+              <div className="space-y-1">
+                <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em]">
+                  Template
+                </h4>
+                <p className="text-sm text-zinc-200 font-medium uppercase">
+                  {problem.interviewType}
+                </p>
               </div>
             </div>
           </div>
 
           <Button
-            variant="primary"
-            onClick={onSelect}
-            className="w-full"
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelect();
+            }}
+            className="w-full py-6 bg-primary hover:bg-primary/90 text-white rounded-xl font-bold text-sm uppercase tracking-widest shadow-lg shadow-primary/20 transition-all active:scale-[0.98]"
           >
-            Select This Problem
+            Launch Interview Session
           </Button>
         </div>
       )}
