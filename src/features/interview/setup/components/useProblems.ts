@@ -2,11 +2,12 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { ProblemsResponseSchema, type Problem } from "./problemSchema";
 import { logger } from "@/lib/logger";
 import { Difficulty } from "@prisma/client";
+import { DEFAULT_PAGE_SIZE } from "@/shared/config/common-constants";
 
 const INTERVIEW_TYPES = ["hld", "lld", "dsa", "pr_review", "deep_dive", "tech_doc_review", "task_breakdown"] as const;
 const DIFFICULTIES = ["All", ...Object.values(Difficulty)] as const;
 const SORT_OPTIONS = ["interviewCount", "title", "difficulty", "estimatedMinutes"] as const;
-const PAGE_SIZE = 20;
+const PAGE_SIZE = DEFAULT_PAGE_SIZE;
 
 type FilterState = {
   selectedType: (typeof INTERVIEW_TYPES)[number];

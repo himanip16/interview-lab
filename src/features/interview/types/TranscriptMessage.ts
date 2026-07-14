@@ -1,4 +1,6 @@
+import { TranscriptRole } from "@/shared/config/common-constants";
+
 export interface TranscriptMessage {
-  role: "assistant" | "user";
+  role: TranscriptRole;
   content: string;
 }

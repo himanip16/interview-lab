@@ -1,21 +1,29 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { Panel } from "@/components/ui/Panel";
 import { Search } from "@/components/ui/Search";
-import { useSearchParams } from "next/navigation"; 
+import { useSearchParams } from "next/navigation";
+import {
+  DIFFICULTY_LEVELS,
+  DIFFICULTY_ORDER,
+  PROBLEM_TYPES,
+  SORT_OPTIONS,
+  STATUS_FILTERS,
+  ALL_FILTER,
+  type DifficultyLevel,
+  type ProblemType,
+  type SortOption,
+  type StatusFilter,
+} from "@/shared/config/common-constants"; 
 
-type ProblemType = "hld" | "lld" | "dsa";
-type Difficulty = "easy" | "medium" | "hard";
-type SortOption = "popularity" | "alpha" | "difficulty" | "time";
-type StatusFilter = "all" | "done" | "pending";
 
 type Problem = {
   title: string;
   crux: string;
   type: ProblemType;
-  diff: Difficulty;
+  diff: DifficultyLevel;
   mins: number;
   done: boolean;
   pop: number;
@@ -34,14 +42,14 @@ const MOCK_PROBLEMS: Problem[] = [
   { title:'Two pointers technique', crux:'Pointer movement and termination conditions', type:'dsa', diff:'easy', mins:30, done:true, pop:7 },
 ];
 
-const DIFF_ORDER: Record<Difficulty, number> = { easy: 0, medium: 1, hard: 2 };
+const DIFF_ORDER = DIFFICULTY_ORDER;
 const TYPE_COLORS: Record<ProblemType, string> = {
   hld: "bg-[var(--violet)]",
   lld: "bg-[var(--coral)]",
   dsa: "bg-[var(--mint-deep)]",
 };
 
-const DIFF_CLASSES: Record<Difficulty, string> = {
+const DIFF_CLASSES: Record<DifficultyLevel, string> = {
   easy: "text-[var(--mint-deep)] bg-[rgba(0,168,126,0.1)]",
   medium: "text-[var(--amber)] bg-[rgba(232,148,10,0.1)]",
   hard: "text-[var(--coral)] bg-[rgba(255,90,60,0.1)]",
@@ -52,21 +60,23 @@ export default function ProblemsPage() {
   const [isSortMenuOpen, setIsSortMenuOpen] = useState(false);
   const searchParams = useSearchParams();
   const categoryFromUrl = searchParams.get("category");
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   const [state, setState] = useState({
-    type: "all" as ProblemType | "all",
-    diff: "all" as Difficulty | "all",
-    status: "all" as StatusFilter,
+    type: ALL_FILTER as ProblemType | typeof ALL_FILTER,
+    diff: ALL_FILTER as DifficultyLevel | typeof ALL_FILTER,
+    status: ALL_FILTER as StatusFilter,
     sort: "popularity" as SortOption,
-    category: categoryFromUrl || "all",
+    category: categoryFromUrl || ALL_FILTER,
   });
 
   const filteredProblems = useMemo(() => {
     let result = problems.filter(p =>
-      (state.type === 'all' || p.type === state.type) &&
-      (state.diff === 'all' || p.diff === state.diff) &&
-      (state.status === 'all' || (state.status === 'done' ? p.done : !p.done)) &&
-      (state.category === 'all' || p.type === state.category)
+      (state.type === ALL_FILTER || p.type === state.type) &&
+      (state.diff === ALL_FILTER || p.diff === state.diff) &&
+      (state.status === ALL_FILTER || (state.status === 'done' ? p.done : !p.done)) &&
+      (state.category === ALL_FILTER || p.type === state.category)
     );
 
     if (state.sort === 'popularity') {
@@ -84,7 +94,60 @@ export default function ProblemsPage() {
 
   const getBarClass = (type: ProblemType): string => TYPE_COLORS[type] || TYPE_COLORS.hld;
   const getTagClass = (type: ProblemType): string => TYPE_COLORS[type] || TYPE_COLORS.hld;
-  const getDiffClass = (diff: Difficulty): string => DIFF_CLASSES[diff] || DIFF_CLASSES.easy;
+  const getDiffClass = (diff: DifficultyLevel): string => DIFF_CLASSES[diff] || DIFF_CLASSES.easy;
+
+  // Close dropdown on Escape key or click outside
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isSortMenuOpen) {
+        setIsSortMenuOpen(false);
+        triggerRef.current?.focus();
+      }
+    };
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsSortMenuOpen(false);
+      }
+    };
+
+    if (isSortMenuOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isSortMenuOpen]);
+
+  // Handle arrow key navigation
+  const handleKeyDown = (event: React.KeyboardEvent, index: number) => {
+    const options = SORT_OPTIONS;
+    
+    switch (event.key) {
+      case 'ArrowDown':
+        event.preventDefault();
+        const nextIndex = (index + 1) % options.length;
+        const nextButton = dropdownRef.current?.querySelectorAll('button')[nextIndex] as HTMLButtonElement;
+        nextButton?.focus();
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        const prevIndex = (index - 1 + options.length) % options.length;
+        const prevButton = dropdownRef.current?.querySelectorAll('button')[prevIndex] as HTMLButtonElement;
+        prevButton?.focus();
+        break;
+      case 'Enter':
+      case ' ':
+        event.preventDefault();
+        setState(prev => ({ ...prev, sort: options[index] as SortOption }));
+        setIsSortMenuOpen(false);
+        triggerRef.current?.focus();
+        break;
+    }
+  };
   
 
   return (
@@ -111,10 +174,10 @@ export default function ProblemsPage() {
               Type
             </span>
             <div className="flex gap-1.5" id="typeGroup">
-              {["all", "hld", "lld", "dsa"].map((type) => (
+              {[ALL_FILTER, ...PROBLEM_TYPES].map((type) => (
                 <button
                   key={type}
-                  onClick={() => setState({ ...state, type: type as ProblemType | "all" })}
+                  onClick={() => setState(prev => ({ ...prev, type: type as ProblemType | typeof ALL_FILTER }))}
                   className={cn(
                     "body-s font-semibold p-[6px_13px] radius-pill border border-[var(--border)] text-[var(--ink-400)] cursor-pointer transition-all duration-200 whitespace-nowrap",
                     state.type === type && "bg-[var(--ink)] text-white border-[var(--ink)]",
@@ -123,7 +186,7 @@ export default function ProblemsPage() {
                     state.type === 'dsa' && state.type === type && "bg-[var(--mint-deep)] border-[var(--mint-deep)]"
                   )}
                 >
-                  {type === "all" ? "All" : type.toUpperCase()}
+                  {type === ALL_FILTER ? "All" : type.toUpperCase()}
                 </button>
               ))}
             </div>
@@ -135,16 +198,16 @@ export default function ProblemsPage() {
               Difficulty
             </span>
             <div className="flex gap-1.5" id="diffGroup">
-              {["all", "easy", "medium", "hard"].map((diff) => (
+              {[ALL_FILTER, ...DIFFICULTY_LEVELS].map((diff) => (
                 <button
                   key={diff}
-                  onClick={() => setState({ ...state, diff: diff as Difficulty | "all" })}
+                  onClick={() => setState(prev => ({ ...prev, diff: diff as DifficultyLevel | typeof ALL_FILTER }))}
                   className={cn(
                     "body-s font-semibold p-[6px_13px] radius-pill border border-[var(--border)] text-[var(--ink-400)] cursor-pointer transition-all duration-200 whitespace-nowrap",
                     state.diff === diff && "bg-[var(--ink)] text-white border-[var(--ink)]"
                   )}
                 >
-                  {diff === "all" ? "All" : diff.charAt(0).toUpperCase() + diff.slice(1)}
+                  {diff === ALL_FILTER ? "All" : diff.charAt(0).toUpperCase() + diff.slice(1)}
                 </button>
               ))}
             </div>
@@ -152,16 +215,16 @@ export default function ProblemsPage() {
               Status
             </span>
             <div className="flex gap-1.5" id="statusGroup">
-              {["all", "done", "pending"].map((status) => (
+              {STATUS_FILTERS.map((status) => (
                 <button
                   key={status}
-                  onClick={() => setState({ ...state, status: status as StatusFilter })}
+                  onClick={() => setState(prev => ({ ...prev, status: status as StatusFilter }))}
                   className={cn(
                     "body-s font-semibold p-[6px_13px] radius-pill border border-[var(--border)] text-[var(--ink-400)] cursor-pointer transition-all duration-200 whitespace-nowrap",
                     state.status === status && "bg-[var(--ink)] text-white border-[var(--ink)]"
                   )}
                 >
-                  {status === "all" ? "All" : status === "done" ? "Completed" : "Not started"}
+                  {status === ALL_FILTER ? "All" : status === "done" ? "Completed" : "Not started"}
                 </button>
               ))}
             </div>
@@ -174,9 +237,23 @@ export default function ProblemsPage() {
             </div>
 
             {/* Sort Dropdown */}
-            <div className="relative">
+            <div className="relative" ref={dropdownRef}>
               <button
-                onClick={() => setIsSortMenuOpen(!isSortMenuOpen)}
+                ref={triggerRef}
+                onClick={() => setIsSortMenuOpen(prev => !prev)}
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowDown' && !isSortMenuOpen) {
+                    e.preventDefault();
+                    setIsSortMenuOpen(true);
+                    setTimeout(() => {
+                      const firstOption = dropdownRef.current?.querySelectorAll('button')[0] as HTMLButtonElement;
+                      firstOption?.focus();
+                    }, 0);
+                  }
+                }}
+                aria-haspopup="true"
+                aria-expanded={isSortMenuOpen}
+                aria-controls="sort-menu"
                 className="flex items-center gap-1.75 body-s font-semibold p-[8px_14px] radius-pill border border-[var(--border)] bg-[var(--surface)] cursor-pointer text-[var(--ink)]"
               >
                 <svg className="w-[13px] h-[13px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
@@ -194,14 +271,24 @@ export default function ProblemsPage() {
               </button>
 
               {isSortMenuOpen && (
-                <div className="absolute right-0 top-[calc(100%+6px)] bg-[var(--surface)] radius-card border border-[var(--border)] shadow-floating p-1.5 z-10 min-w-[170px]">
-                  {["popularity", "alpha", "difficulty", "time"].map((option) => (
+                <div
+                  id="sort-menu"
+                  role="menu"
+                  aria-labelledby="sortLabel"
+                  className="absolute right-0 top-[calc(100%+6px)] bg-[var(--surface)] radius-card border border-[var(--border)] shadow-floating p-1.5 z-10 min-w-[170px]"
+                >
+                  {SORT_OPTIONS.map((option, index) => (
                     <button
                       key={option}
+                      role="menuitem"
+                      tabIndex={index === 0 ? 0 : -1}
                       onClick={() => {
-                        setState({ ...state, sort: option as SortOption });
+                        setState(prev => ({ ...prev, sort: option as SortOption }));
                         setIsSortMenuOpen(false);
+                        triggerRef.current?.focus();
                       }}
+                      onKeyDown={(e) => handleKeyDown(e, index)}
+                      aria-selected={state.sort === option}
                       className={cn(
                         "block w-full text-left body-s p-[8px_12px] radius-small cursor-pointer text-[var(--ink-400)] font-medium",
                         state.sort === option ? "text-[var(--ink)] font-semibold" : "hover:bg-[var(--paper-100)]"
