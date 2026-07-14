@@ -2,10 +2,10 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Breadcrumb } from '@/src/components/layout/Breadcrumb';
-import { Inspector } from '@/src/components/layout/Inspector';
-import { Panel } from '@/src/components/ui/Panel';
-import { cn } from '@/src/lib/utils';
+import { Breadcrumb } from '@/components/layout/Breadcrumb';
+import { Inspector } from '@/components/layout/Inspector';
+import { Panel } from '@/components/ui/Panel';
+import { cn } from '@/lib/utils';
 
 interface NodeData {
   id: string;

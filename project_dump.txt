@@ -49,6 +49,10 @@ PROJECT STRUCTURE
 │   │   │   └── migration.sql
 │   │   ├── 20260714054547_new
 │   │   │   └── migration.sql
+│   │   ├── 20260714134339_add_evidence_type
+│   │   │   └── migration.sql
+│   │   ├── 20260714135029_add_interview_metadata_and_evidence_type
+│   │   │   └── migration.sql
 │   │   └── migration_lock.toml
 │   ├── schema.prisma
 │   └── seed.ts
@@ -91,6 +95,7 @@ PROJECT STRUCTURE
 │   │   │   │   │   ├── route.ts
 │   │   │   │   │   └── whiteboard
 │   │   │   │   │       └── route.ts
+│   │   │   │   ├── route.ts
 │   │   │   │   ├── start
 │   │   │   │   │   └── route.ts
 │   │   │   │   └── status
@@ -257,6 +262,7 @@ PROJECT STRUCTURE
 │   │   │   │   │   ├── ProblemInventoryView.tsx
 │   │   │   │   │   ├── ProblemSelector.tsx
 │   │   │   │   │   ├── SetupCard.tsx
+│   │   │   │   │   ├── TopicSelector.tsx
 │   │   │   │   │   ├── problemSchema.ts
 │   │   │   │   │   └── useProblems.ts
 │   │   │   │   ├── hooks
@@ -300,8 +306,9 @@ PROJECT STRUCTURE
 │   │   │   └── types
 │   │   │       └── learning.ts
 │   │   ├── library
-│   │   │   └── components
-│   │   │       └── LibraryView.tsx
+│   │   │   ├── components
+│   │   │   │   └── LibraryView.tsx
+│   │   │   └── page.tsx
 │   │   └── shared
 │   ├── frontend
 │   │   ├── actionCorousel.html
@@ -415,7 +422,7 @@ PROJECT STRUCTURE
 ├── tsconfig.json
 └── tsconfig.tsbuildinfo
 
-165 directories, 249 files
+167 directories, 254 files
 
 FILE CONTENTS
 
@@ -572,6 +579,9 @@ model Interview {
 
   // NEW — code editor state (deprioritized, not wired into prompts/evaluator yet)
   codeState Json? // Frozen application state, no versioning needed
+
+  // NEW — metadata for storing error states and other runtime information
+  metadata Json? // Arbitrary metadata, no versioning needed
 
   user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   template   InterviewTemplate @relation(fields: [templateId], references: [id])
@@ -730,17 +740,18 @@ model Concept {
 }
 
 model EvidenceItem {
-  id               String     @id @default(cuid())
+  id               String       @id @default(cuid())
   evaluationId     String
-  evaluation       Evaluation @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  evaluation       Evaluation   @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
   messageId        String
-  message          Message    @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  message          Message       @relation(fields: [messageId], references: [id], onDelete: Cascade)
   dimension        String
   timestampSeconds Int
   quote            String
   comment          String
-  normalizedScore  Float      @default(0)
-  createdAt        DateTime   @default(now())
+  type             EvidenceType
+  normalizedScore  Float         @default(0)
+  createdAt        DateTime      @default(now())
 
   concepts EvidenceConcept[]
 
@@ -980,6 +991,11 @@ enum Difficulty {
 enum MessageRole {
   assistant
   user
+}
+
+enum EvidenceType {
+  STRENGTH
+  WEAKNESS
 }
 
 model PracticeActivity {
@@ -4051,7 +4067,8 @@ FILE: ./tsconfig.json
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["src/*"],
+      "@/shared/*": ["src/shared/*", "shared/*"]
     }
   },
   "include": [
@@ -4215,10 +4232,11 @@ FILE: ./src/app/learn/whiteboard/page.tsx
 "use client";
 
 import React, { useState } from 'react';
-import { Breadcrumb } from '@/src/components/layout/Breadcrumb';
-import { Inspector } from '@/src/components/layout/Inspector';
-import { Panel } from '@/src/components/ui/Panel';
-import { cn } from '@/src/lib/utils';
+import { useRouter } from 'next/navigation';
+import { Breadcrumb } from '@/components/layout/Breadcrumb';
+import { Inspector } from '@/components/layout/Inspector';
+import { Panel } from '@/components/ui/Panel';
+import { cn } from '@/lib/utils';
 
 interface NodeData {
   id: string;
@@ -4275,6 +4293,7 @@ const NODES_DATA: Record<string, NodeData> = {
 };
 
 export default function WhiteboardPage() {
+  const router = useRouter();
   const [selectedNode, setSelectedNode] = useState<string>('client');
   const [selectedSystem, setSelectedSystem] = useState<string>('URL shortener');
 
@@ -4291,7 +4310,7 @@ export default function WhiteboardPage() {
               { label: 'Learn', href: '/learn' },
               { label: 'Whiteboarding', active: true }
             ]}
-            onBack={() => window.history.back()}
+            onBack={() => router.back()}
           />
         </div>
 
@@ -4456,7 +4475,7 @@ export default function WhiteboardPage() {
 ================================================
 FILE: ./src/app/learn/diagrams/uber/page.tsx
 ================================================
-import SystemDiagram from "@/src/features/diagram/components/SystemDiagram";
+import SystemDiagram from "@/features/diagram/components/SystemDiagram";
 
 export default function UberDiagramPage() {
   return (
@@ -4469,7 +4488,7 @@ export default function UberDiagramPage() {
 ================================================
 FILE: ./src/app/learn/diagrams/twitter/page.tsx
 ================================================
-import SystemDiagram from "@/src/features/diagram/components/SystemDiagram";
+import SystemDiagram from "@/features/diagram/components/SystemDiagram";
 
 export default function TwitterDiagramPage() {
   return (
@@ -4482,7 +4501,7 @@ export default function TwitterDiagramPage() {
 ================================================
 FILE: ./src/app/learn/diagrams/netflix/page.tsx
 ================================================
-import SystemDiagram from "@/src/features/diagram/components/SystemDiagram";
+import SystemDiagram from "@/features/diagram/components/SystemDiagram";
 
 export default function NetflixDiagramPage() {
   return (
@@ -4495,7 +4514,7 @@ export default function NetflixDiagramPage() {
 ================================================
 FILE: ./src/app/learn/diagrams/page.tsx
 ================================================
-import SystemDiagram from "@/src/features/diagram/components/SystemDiagram";
+import SystemDiagram from "@/features/diagram/components/SystemDiagram";
 
 export default function DiagramPage() {
   return (
@@ -4508,7 +4527,7 @@ export default function DiagramPage() {
 ================================================
 FILE: ./src/app/learn/diagrams/instagram/page.tsx
 ================================================
-import SystemDiagram from "@/src/features/diagram/components/SystemDiagram";
+import SystemDiagram from "@/features/diagram/components/SystemDiagram";
 
 export default function InstagramDiagramPage() {
   return (
@@ -4521,7 +4540,7 @@ export default function InstagramDiagramPage() {
 ================================================
 FILE: ./src/app/learn/diagrams/whatsapp/page.tsx
 ================================================
-import SystemDiagram from "@/src/features/diagram/components/SystemDiagram";
+import SystemDiagram from "@/features/diagram/components/SystemDiagram";
 
 export default function WhatsAppDiagramPage() {
   return (
@@ -4537,10 +4556,10 @@ FILE: ./src/app/learn/card-detail/page.tsx
 "use client";
 
 import React from 'react';
-import { Search } from '@/src/components/ui/Search';
-import { Panel } from '@/src/components/ui/Panel';
-import { Badge } from '@/src/components/ui/Badge';
-import { cn } from '@/src/lib/utils';
+import { Search } from '@/components/ui/Search';
+import { Panel } from '@/components/ui/Panel';
+import { Badge } from '@/components/ui/Badge';
+import { cn } from '@/lib/utils';
 
 export default function CardDetailPage() {
   return (
@@ -4678,8 +4697,8 @@ FILE: ./src/app/learn/[slug]/page.tsx
 "use client";
 
 import { use } from "react";
-import { useScenario } from "@/src/features/learning/hooks/useScenario";
-import { LearningScenarioReader } from "@/src/features/learning/components/LearningScenarioReader";
+import { useScenario } from "@/features/learning/hooks/useScenario";
+import { LearningScenarioReader } from "@/features/learning/components/LearningScenarioReader";
 import Link from "next/link";
 
 export default function ScenarioPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -4731,9 +4750,9 @@ FILE: ./src/app/learn/action-carousel/page.tsx
 "use client";
 
 import React, { useRef } from 'react';
-import { Search } from '@/src/components/ui/Search';
-import { Panel } from '@/src/components/ui/Panel';
-import { cn } from '@/src/lib/utils';
+import { Search } from '@/components/ui/Search';
+import { Panel } from '@/components/ui/Panel';
+import { cn } from '@/lib/utils';
 
 const CARDS = [
   {
@@ -4934,11 +4953,11 @@ FILE: ./src/app/problems/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
-import { cn } from "@/src/lib/utils";
-import { Panel } from "@/src/components/ui/Panel";
-import { Search } from "@/src/components/ui/Search";
-import { Pill } from "@/src/components/ui/Pill";
-import { Badge } from "@/src/components/ui/Badge";
+import { cn } from "@/lib/utils";
+import { Panel } from "@/components/ui/Panel";
+import { Search } from "@/components/ui/Search";
+import { Pill } from "@/components/ui/Pill";
+import { Badge } from "@/components/ui/Badge";
 
 type Problem = {
   title: string;
@@ -5198,9 +5217,10 @@ FILE: ./src/app/library/transcript/page.tsx
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Breadcrumb } from '@/src/components/layout/Breadcrumb';
-import { Bubble } from '@/src/components/ui/Bubble';
-import { cn } from '@/src/lib/utils';
+import { useRouter } from 'next/navigation';
+import { Breadcrumb } from '@/components/layout/Breadcrumb';
+import { Bubble } from '@/components/ui/Bubble';
+import { cn } from '@/lib/utils';
 
 interface Evidence {
   id: string;
@@ -5239,6 +5259,7 @@ const EVIDENCE: Evidence[] = [
 ];
 
 export default function TranscriptPage() {
+  const router = useRouter();
   const [openAnnotations, setOpenAnnotations] = useState<Set<string>>(new Set());
   const [scrollProgress, setScrollProgress] = useState(0);
 
@@ -5279,7 +5300,7 @@ export default function TranscriptPage() {
             { label: 'Library', href: '/library' },
             { label: 'Read a transcript', active: true }
           ]}
-          onBack={() => window.history.back()}
+          onBack={() => router.back()}
           className="mb-4.5"
         />
 
@@ -5489,11 +5510,11 @@ FILE: ./src/app/library/page.tsx
 import { InterviewStatus } from "@prisma/client";
 
 import { prisma } from "@/shared/prisma/client";
-import { getCurrentUserId } from "@/src/modules/auth/getCurrentUserId";
+import { getCurrentUserId } from "@/modules/auth/getCurrentUserId";
 import LibraryView, {
   type CompletedInterviewItem,
   type ExperienceItem,
-} from "@/src/features/library/components/LibraryView";
+} from "@/features/library/components/LibraryView";
 
 type DimensionScore = {
   dimension: string;
@@ -5624,12 +5645,12 @@ export default function MarketingLayout({
 ================================================
 FILE: ./src/app/(marketing)/page.tsx
 ================================================
-import PageContainer from "@/src/components/layout/PageContainer";
+import PageContainer from "@/components/layout/PageContainer";
 
-import Hero from "@/src/features/landing/components/Hero";
-import SampleFeedback from "@/src/features/landing/components/SampleFeedback";
-import SmartMentor from "@/src/features/landing/components/SmartMentor";
-import PersonalNotebooks from "@/src/features/landing/components/PersonalNotebooks";
+import Hero from "@/features/landing/components/Hero";
+import SampleFeedback from "@/features/landing/components/SampleFeedback";
+import SmartMentor from "@/features/landing/components/SmartMentor";
+import PersonalNotebooks from "@/features/landing/components/PersonalNotebooks";
 
 export default function Home() {
   return (
@@ -5652,9 +5673,9 @@ import { notFound } from "next/navigation";
 import { InterviewStatus } from "@prisma/client";
 
 import { prisma } from "@/shared/prisma/client";
-import { SkillGraphService } from "@/src/modules/interview/services/mastery/SkillGraphService";
-import { RecommendationService } from "@/src/modules/interview/services/recommendation/RecommendationService";
-import DashboardView from "@/src/features/dashboard/components/DashboardView";
+import { SkillGraphService } from "@/modules/interview/services/mastery/SkillGraphService";
+import { RecommendationService } from "@/modules/interview/services/recommendation/RecommendationService";
+import DashboardView from "@/features/dashboard/components/DashboardView";
 
 type Props = {
   params: Promise<{ userId: string }>;
@@ -5828,7 +5849,7 @@ FILE: ./src/app/interview/live/[id]/page.tsx
 ================================================
 // app/interview/live/[id]/page.tsx
 import { prisma } from "@/shared/prisma/client";
-import LiveInterview from "@/src/features/interview/live/components/LiveInterview";
+import LiveInterview from "@/features/interview/live/components/LiveInterview";
 import { notFound } from "next/navigation";
 
 type Props = {
@@ -5856,7 +5877,8 @@ export default async function Page({ params }: Props) {
     <LiveInterview
   interviewId={interview.id}
   duration={interview.duration}
-  initialMessages={interview.transcript}  
+  initialMessages={interview.transcript}
+  initialWhiteboardState={interview.whiteboardState}
 />
   );
 }
@@ -5866,14 +5888,15 @@ FILE: ./src/app/interview/live/page.tsx
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Breadcrumb } from '@/src/components/layout/Breadcrumb';
-import { Timeline } from '@/src/components/layout/Timeline';
-import { Sidebar } from '@/src/components/layout/Sidebar';
-import { Bubble } from '@/src/components/ui/Bubble';
-import { Timer } from '@/src/components/ui/Timer';
-import { Stepper } from '@/src/components/ui/Stepper';
-import { Panel } from '@/src/components/ui/Panel';
-import { cn } from '@/src/lib/utils';
+import { useRouter } from 'next/navigation';
+import { Breadcrumb } from '@/components/layout/Breadcrumb';
+import { Timeline } from '@/components/layout/Timeline';
+import { Sidebar } from '@/components/layout/Sidebar';
+import { Bubble } from '@/components/ui/Bubble';
+import { Timer } from '@/components/ui/Timer';
+import { Stepper } from '@/components/ui/Stepper';
+import { Panel } from '@/components/ui/Panel';
+import { cn } from '@/lib/utils';
 
 interface Message {
   id: string;
@@ -5892,6 +5915,7 @@ const INITIAL_STEPS = [
 ];
 
 export default function LiveInterviewPage() {
+  const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([
     { id: '1', role: 'ai', content: 'Welcome! Today we\'ll design a URL shortener. Start by asking clarifying questions before you propose anything.' },
     { id: '2', role: 'user', content: 'Sure — what\'s the expected read to write ratio, and do we need custom aliases?' },
@@ -5954,7 +5978,7 @@ export default function LiveInterviewPage() {
               { label: 'Live interview', href: '/interview' },
               { label: 'Design a URL shortener', active: true }
             ]}
-            onBack={() => window.history.back()}
+            onBack={() => router.back()}
           />
           <div className="flex items-center gap-4.5">
             <div className="flex items-center gap-1.75 caption font-semibold text-[var(--coral)] p-[6px_13px] radius-pill bg-[rgba(255,90,60,0.1)]">
@@ -6075,9 +6099,9 @@ export default function LiveInterviewPage() {
 FILE: ./src/app/interview/report/[id]/page.tsx
 ================================================
 import { prisma } from "@/shared/prisma/client";
-import ConversationCard from "@/src/features/interview/report/components/ConversationCard";
-import OverallScoreCard from "@/src/features/interview/report/components/OverallScoreCard";
-import WhatHappenedCard from "@/src/features/interview/report/components/WhatHappenedCard";
+import ConversationCard from "@/features/interview/report/components/ConversationCard";
+import OverallScoreCard from "@/features/interview/report/components/OverallScoreCard";
+import WhatHappenedCard from "@/features/interview/report/components/WhatHappenedCard";
 
 type Props = {
   params: Promise<{
@@ -6102,10 +6126,38 @@ type EvidenceItem = {
   timestampSeconds: number;
   quote: string;
   comment: string;
+  type: "strength" | "weakness";
 };
 
 export default async function ReportPage({ params }: Props) {
   const { id } = await params;
+
+  const interview = await prisma.interview.findUnique({
+    where: { id },
+    select: { 
+      metadata: true, 
+      status: true,
+      whiteboardState: true,
+    },
+  });
+
+  // Check if evaluation failed
+  const interviewMetadata = interview?.metadata as { evaluationError?: string; evaluationFailedAt?: string } | null;
+  if (interviewMetadata?.evaluationError) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="text-center max-w-md">
+          <h2 className="text-xl font-semibold mb-2">Evaluation Failed</h2>
+          <p className="text-muted-foreground mb-4">
+            We encountered an error while generating your feedback. This has been logged and our team will investigate.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Error: {interviewMetadata.evaluationError}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const evaluation = await prisma.evaluation.findUnique({
     where: {
@@ -6194,7 +6246,7 @@ FILE: ./src/app/api/interview-templates/route.ts
 ================================================
 import { NextResponse } from "next/server";
 
-import { InterviewProfileService } from "@/src/modules/interview/profiles/InterviewProfileService";
+import { InterviewProfileService } from "@/modules/interview/profiles/InterviewProfileService";
 
 export async function GET(request: Request) {
   try {
@@ -6216,7 +6268,7 @@ export async function GET(request: Request) {
 FILE: ./src/app/api/auth/signout/route.ts
 ================================================
 import { NextResponse } from "next/server";
-import { signOut } from "@/src/modules/auth/auth";
+import { signOut } from "@/modules/auth/auth";
 
 export async function POST() {
   await signOut({ redirectTo: "/" });
@@ -6281,14 +6333,14 @@ export async function POST(request: Request) {
 ================================================
 FILE: ./src/app/api/auth/[...nextauth]/route.ts
 ================================================
-import { handlers } from "@/src/modules/auth/auth";
+import { handlers } from "@/modules/auth/auth";
 
 export const { GET, POST } = handlers;
 ================================================
 FILE: ./src/app/api/auth/session/route.ts
 ================================================
 import { NextResponse } from "next/server";
-import { auth } from "@/src/modules/auth/auth";
+import { auth } from "@/modules/auth/auth";
 
 export async function GET() {
   const session = await auth();
@@ -6624,8 +6676,8 @@ FILE: ./src/app/api/recommendations/route.ts
 ================================================
 import { NextResponse } from "next/server";
 
-import { RecommendationService } from "@/src/modules/interview/services/recommendation/RecommendationService";
-import { ensureGuestUser } from "@/src/modules/auth/getCurrentUserId";
+import { RecommendationService } from "@/modules/interview/services/recommendation/RecommendationService";
+import { ensureGuestUser } from "@/modules/auth/getCurrentUserId";
 
 export async function GET(request: Request) {
   try {
@@ -6656,7 +6708,7 @@ FILE: ./src/app/api/users/[id]/recommendations/route.ts
 ================================================
 import { NextResponse } from "next/server";
 
-import { RecommendationService } from "@/src/modules/interview/services/recommendation/RecommendationService";
+import { RecommendationService } from "@/modules/interview/services/recommendation/RecommendationService";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -6697,7 +6749,7 @@ FILE: ./src/app/api/users/[id]/skill-graph/route.ts
 ================================================
 import { NextResponse } from "next/server";
 
-import { SkillGraphService } from "@/src/modules/interview/services/mastery/SkillGraphService";
+import { SkillGraphService } from "@/modules/interview/services/mastery/SkillGraphService";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -6744,11 +6796,11 @@ import { NextResponse } from "next/server";
 import { Difficulty, InterviewMode } from "@prisma/client";
 
 import { prisma } from "@/shared/prisma/client";
-import { ensureGuestUser } from "@/src/modules/auth/getCurrentUserId";
-import { createInterview } from "@/src/modules/interview/services/interview/InterviewFactory";
-import { InterviewRepository } from "@/src/modules/interview/repositories/InterviewRepository";
-import { TranscriptService } from "@/src/modules/interview/services/TranscriptService";
-import { pickPersona } from "@/src/modules/interview/reverse/CandidatePersonas";
+import { ensureGuestUser } from "@/modules/auth/getCurrentUserId";
+import { createInterview } from "@/modules/interview/services/interview/InterviewFactory";
+import { InterviewRepository } from "@/modules/interview/repositories/InterviewRepository";
+import { TranscriptService } from "@/modules/interview/services/TranscriptService";
+import { pickPersona } from "@/modules/interview/reverse/CandidatePersonas";
 
 const difficultyMap: Record<string, Difficulty> = {
   EASY: Difficulty.EASY,
@@ -6869,7 +6921,7 @@ FILE: ./src/app/api/interviews/status/route.ts
 ================================================
 import { NextResponse } from "next/server";
 
-import { InterviewRepository } from "@/src/modules/interview/repositories/InterviewRepository";
+import { InterviewRepository } from "@/modules/interview/repositories/InterviewRepository";
 
 export async function GET(request: Request) {
   try {
@@ -6904,12 +6956,116 @@ export async function GET(request: Request) {
   }
 }
 ================================================
+FILE: ./src/app/api/interviews/route.ts
+================================================
+import { NextResponse } from "next/server";
+
+import { InterviewRepository } from "@/modules/interview/repositories/InterviewRepository";
+import { createInterview } from "@/modules/interview/services/interview/InterviewFactory";
+import { CreateInterviewInput } from "@/features/interview/types/CreateInterviewInput";
+import { ensureGuestUser } from "@/modules/auth/getCurrentUserId";
+import logger from "@/shared/logger/logger";
+
+export async function POST(request: Request) {
+  try {
+    const body: CreateInterviewInput = await request.json();
+
+    if (!body.templateId || !body.difficulty || !body.duration || !body.company || !body.problemId) {
+      return NextResponse.json(
+        {
+          error: "Missing required fields: templateId, difficulty, duration, company, problemId",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    const repository = new InterviewRepository();
+
+    const interviewData = createInterview(body);
+
+    const userId = await ensureGuestUser();
+
+    const interview = await repository.create({
+      difficulty: interviewData.difficulty,
+      duration: interviewData.duration,
+      company: interviewData.company,
+      status: interviewData.status,
+      problem: {
+        connect: {
+          id: interviewData.problemId,
+        },
+      },
+      template: {
+        connect: {
+          id: interviewData.templateId,
+        },
+      },
+      user: {
+        connect: {
+          id: userId,
+        },
+      },
+      currentPhase: interviewData.currentPhase,
+      summary: interviewData.summary,
+      promptVersion: interviewData.promptVersion,
+    });
+
+    return NextResponse.json(
+      {
+        id: interview.id,
+        status: interview.status,
+        templateId: interview.templateId,
+        difficulty: interview.difficulty,
+        duration: interview.duration,
+        company: interview.company,
+        problemId: interview.problemId,
+        currentPhase: interview.currentPhase,
+        summary: interview.summary,
+        createdAt: interview.createdAt,
+        updatedAt: interview.updatedAt,
+      },
+      {
+        status: 201,
+      }
+    );
+
+  } catch (error) {
+    if (error instanceof Error) {
+      logger.error(
+        {
+          err: error,
+          message: error.message,
+          stack: error.stack,
+        },
+        "Failed to create interview"
+      );
+    } else {
+      logger.error(
+        { error },
+        "Failed to create interview"
+      );
+    }
+
+    return NextResponse.json(
+      {
+        error: "Internal server error",
+      },
+      {
+        status: 500,
+      }
+    );
+  }
+}
+
+================================================
 FILE: ./src/app/api/interviews/[id]/whiteboard/route.ts
 ================================================
 import { NextResponse } from "next/server";
 
-import { InterviewRepository } from "@/src/modules/interview/repositories/InterviewRepository";
-import logger from "@/src/shared/logger/logger";
+import { InterviewRepository } from "@/modules/interview/repositories/InterviewRepository";
+import logger from "@/shared/logger/logger";
 
 type Props = {
   params: Promise<{
@@ -6986,9 +7142,9 @@ FILE: ./src/app/api/interviews/[id]/message/route.ts
 ================================================
 import { NextResponse } from "next/server";
 
-import logger from "@/src/shared/logger/logger";
+import logger from "@/shared/logger/logger";
 
-import { InterviewMessageService } from "@/src/modules/interview/services/interview/InterviewMessageService";
+import { InterviewMessageService } from "@/modules/interview/services/interview/InterviewMessageService";
 
 export async function POST(
   req: Request,
@@ -7113,8 +7269,8 @@ FILE: ./src/app/api/interviews/[id]/route.ts
 ================================================
 import { NextResponse } from "next/server";
 
-import { InterviewRepository } from "@/src/modules/interview/repositories/InterviewRepository";
-import logger from "@/src/shared/logger/logger";
+import { InterviewRepository } from "@/modules/interview/repositories/InterviewRepository";
+import logger from "@/shared/logger/logger";
 
 type Props = {
   params: Promise<{
@@ -7205,9 +7361,9 @@ FILE: ./src/app/api/interviews/[id]/finish/route.ts
 ================================================
 import { NextResponse } from "next/server";
 
-import { InterviewRepository } from "@/src/modules/interview/repositories/InterviewRepository";
-import { createEvaluationService } from "@/src/modules/container";
-import logger from "@/src/shared/logger/logger";
+import { InterviewRepository } from "@/modules/interview/repositories/InterviewRepository";
+import { createEvaluationService } from "@/modules/container";
+import logger from "@/shared/logger/logger";
 import { InterviewStatus } from "@prisma/client";
 
 
@@ -7361,7 +7517,7 @@ FILE: ./src/app/api/learning-actions/[id]/attempt/route.ts
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/shared/prisma/client";
-import { ensureGuestUser } from "@/src/modules/auth/getCurrentUserId";
+import { ensureGuestUser } from "@/modules/auth/getCurrentUserId";
 
 export async function POST(
   request: Request,
@@ -7840,7 +7996,7 @@ body {
 ================================================
 FILE: ./src/app/login/page.tsx
 ================================================
-import { signIn } from "@/src/modules/auth/auth";
+import { signIn } from "@/modules/auth/auth";
 
 export default function LoginPage() {
   async function loginAction(formData: FormData) {
@@ -7946,9 +8102,9 @@ FILE: ./src/features/landing/components/SmartMentor.tsx
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import Card from "@/src/components/ui/Card";
-import Heading from "@/src/components/ui/Heading";
-import Text from "@/src/components/ui/Text";
+import Card from "@/components/ui/Card";
+import Heading from "@/components/ui/Heading";
+import Text from "@/components/ui/Text";
 
 interface Recommendation {
   problemId: string;
@@ -8109,9 +8265,9 @@ FILE: ./src/features/landing/components/PersonalNotebooks.tsx
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import Card from "@/src/components/ui/Card";
-import Heading from "@/src/components/ui/Heading";
-import Text from "@/src/components/ui/Text";
+import Card from "@/components/ui/Card";
+import Heading from "@/components/ui/Heading";
+import Text from "@/components/ui/Text";
 
 interface Problem {
   id: string;
@@ -8241,7 +8397,7 @@ FILE: ./src/features/landing/components/SampleFeedback.tsx
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/src/components/ui/Button";
+import { Button } from "@/components/ui/Button";
 
 const sampleTranscript = [
   {
@@ -8447,9 +8603,9 @@ export default function SampleFeedback() {
 FILE: ./src/features/landing/components/FeatureCard.tsx
 ================================================
 import type { FC } from "react";
-import Card from "@/src/components/ui/Card";
-import Heading from "@/src/components/ui/Heading";
-import Text from "@/src/components/ui/Text";
+import Card from "@/components/ui/Card";
+import Heading from "@/components/ui/Heading";
+import Text from "@/components/ui/Text";
 
 type Props = {
   title: string;
@@ -8475,9 +8631,9 @@ export default FeatureCard;
 ================================================
 FILE: ./src/features/landing/index.ts
 ================================================
-export * from "@/src/features/interview/types/CreateInterviewInput";
-export * from "@/src/features/interview/types/InterviewState";
-export * from "@/src/features/interview/types/TranscriptMessage";
+export * from "@/features/interview/types/CreateInterviewInput";
+export * from "@/features/interview/types/InterviewState";
+export * from "@/features/interview/types/TranscriptMessage";
 ================================================
 FILE: ./src/features/diagram/components/SystemDiagram.tsx
 ================================================
@@ -10812,14 +10968,14 @@ import {
   InterviewMode,
 } from "@prisma/client";
 
-import Heading from "@/src/components/ui/Heading";
-import Text from "@/src/components/ui/Text";
-import { Button } from "@/src/components/ui/Button";
+import Heading from "@/components/ui/Heading";
+import Text from "@/components/ui/Text";
+import { Button } from "@/components/ui/Button";
 
-import OverallScoreCard from "@/src/features/interview/report/components/OverallScoreCard";
-import WhatHappenedCard from "@/src/features/interview/report/components/WhatHappenedCard";
-import EvidenceTimeline from "@/src/features/interview/report/components/EvidenceTimeline";
-import ProblemInventoryView from "@/src/features/interview/setup/components/ProblemInventoryView";
+import OverallScoreCard from "@/features/interview/report/components/OverallScoreCard";
+import WhatHappenedCard from "@/features/interview/report/components/WhatHappenedCard";
+import EvidenceTimeline from "@/features/interview/report/components/EvidenceTimeline";
+import ProblemInventoryView from "@/features/interview/setup/components/ProblemInventoryView";
 
 // ---------------------------------------------------------------------------
 // Types — plain shapes matching the Prisma `include`s built in page.tsx.
@@ -11286,11 +11442,134 @@ export default function LibraryView({ experiences, completedInterviews }: Props)
   );
 }
 ================================================
+FILE: ./src/features/library/page.tsx
+================================================
+// src/app/library/page.tsx
+import { InterviewStatus } from "@prisma/client";
+
+import { prisma } from "@/shared/prisma/client";
+import { getCurrentUserId } from "@/modules/auth/getCurrentUserId";
+import LibraryView, {
+  type CompletedInterviewItem,
+  type ExperienceItem,
+} from "@/features/library/components/LibraryView";
+
+type DimensionScore = {
+  dimension: string;
+  score: number;
+  summary: string;
+};
+
+type EvidenceEntry = {
+  dimension: string;
+  timestampSeconds: number;
+  quote: string;
+  comment: string;
+};
+
+type EvaluationMetadata = {
+  strengths?: string[];
+  weaknesses?: string[];
+};
+
+function formatDisplayDate(date: Date): string {
+  return new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  }).format(date);
+}
+
+export default async function LibraryPage() {
+  const userId = await getCurrentUserId();
+
+  const [experiencesRaw, interviewsRaw] = await Promise.all([
+    prisma.interviewExperience.findMany({
+      include: {
+        problem: {
+          select: { id: true, title: true, description: true, difficulty: true },
+        },
+        company: { select: { name: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 30,
+    }),
+    prisma.interview.findMany({
+      where: { userId, status: InterviewStatus.COMPLETED },
+      include: {
+        problem: { select: { title: true } },
+        template: { select: { name: true } },
+        evaluation: true,
+        transcript: {
+          orderBy: { createdAt: "asc" },
+          select: { id: true, role: true, content: true, elapsedSeconds: true },
+        },
+      },
+      // `completedAt` isn't currently set when an interview finishes, so
+      // order by `updatedAt` (which the finish flow does update) instead.
+      orderBy: { updatedAt: "desc" },
+    }),
+  ]);
+
+  const experiences: ExperienceItem[] = experiencesRaw.map((exp) => ({
+    id: exp.id,
+    role: exp.role,
+    level: exp.level,
+    year: exp.year,
+    source: exp.source,
+    url: exp.url,
+    notes: exp.notes,
+    problem: exp.problem,
+    company: exp.company,
+  }));
+
+  const completedInterviews: CompletedInterviewItem[] = interviewsRaw.map(
+    (interview) => {
+      const metadata = (interview.evaluation?.metadata ??
+        {}) as EvaluationMetadata;
+
+      return {
+        id: interview.id,
+        mode: interview.mode,
+        difficulty: interview.difficulty,
+        duration: interview.duration,
+        company: interview.company,
+        displayDate: formatDisplayDate(
+          interview.completedAt ?? interview.updatedAt
+        ),
+        problem: interview.problem,
+        template: interview.template,
+        transcript: interview.transcript,
+        evaluation: interview.evaluation
+          ? {
+              overallScore: interview.evaluation.overallScore,
+              feedback: interview.evaluation.feedback,
+              dimensionScores:
+                (interview.evaluation.dimensionScores as unknown as DimensionScore[]) ??
+                [],
+              evidence:
+                (interview.evaluation.evidence as unknown as EvidenceEntry[]) ??
+                [],
+              metadata,
+            }
+          : null,
+      };
+    }
+  );
+
+  return (
+    <LibraryView
+      experiences={experiences}
+      completedInterviews={completedInterviews}
+    />
+  );
+}
+================================================
 FILE: ./src/features/dashboard/components/NextRecommendedInterview.tsx
 ================================================
 import Link from "next/link";
 
-import type { Recommendation } from "@/src/modules/interview/services/recommendation/RecommendationService";
+import type { Recommendation } from "@/modules/interview/services/recommendation/RecommendationService";
 
 type Props = {
   recommendation: Recommendation | null;
@@ -11342,13 +11621,13 @@ FILE: ./src/features/dashboard/components/DashboardView.tsx
 // src/features/dashboard/components/DashboardView.tsx
 import Link from "next/link";
 
-import Card from "@/src/components/ui/Card";
-import Heading from "@/src/components/ui/Heading";
-import Text from "@/src/components/ui/Text";
-import { Button } from "@/src/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Heading } from "@/components/ui/Heading";
+import { Text } from "@/components/ui/Text";
+import { Button } from "@/components/ui/Button";
 
-import type { SkillGraph } from "@/src/modules/interview/services/mastery/SkillGraphService";
-import type { Recommendation } from "@/src/modules/interview/services/recommendation/RecommendationService";
+import type { SkillGraph } from "@/modules/interview/services/mastery/SkillGraphService";
+import type { Recommendation } from "@/modules/interview/services/recommendation/RecommendationService";
 import type { Difficulty } from "@prisma/client";
 
 export type ExploreProblem = {
@@ -11660,7 +11939,7 @@ export default function DashboardView({
 ================================================
 FILE: ./src/features/dashboard/components/SkillGraphView.tsx
 ================================================
-import type { SkillGraph } from "@/src/modules/interview/services/mastery/SkillGraphService";
+import type { SkillGraph } from "@/modules/interview/services/mastery/SkillGraphService";
 
 function scoreColor(score: number | null): string {
   if (score === null) return "bg-zinc-800";
@@ -11880,7 +12159,7 @@ FILE: ./src/features/interview/setup/components/ProblemSelector.tsx
 "use client";
 
 import { useEffect, useState } from "react";
-import { Button } from "@/src/components/ui/Button";
+import { Button } from "@/components/ui/Button";
 
 type Problem = {
   id: string;
@@ -12040,7 +12319,7 @@ FILE: ./src/features/interview/setup/components/ProblemFilters.tsx
 ================================================
 import { ProblemCategory } from "@prisma/client";
 import { INTERVIEW_TYPES, DIFFICULTIES, SORT_OPTIONS, type FilterState } from "./useProblems";
-import { cn } from "@/src/lib/utils";
+import { cn } from "@/lib/utils";
 
 const CATEGORY_LABELS: Record<ProblemCategory, string> = {
   SYSTEM_DESIGN: "System Design",
@@ -12159,7 +12438,7 @@ export default function ProblemFilters({ filters, onFiltersChange }: Props) {
 ================================================
 FILE: ./src/features/interview/setup/components/DurationSelector.tsx
 ================================================
-import { Button } from "@/src/components/ui/Button";
+import { Button } from "@/components/ui/Button";
 
 type Props = {
   value: number;
@@ -12217,7 +12496,7 @@ FILE: ./src/features/interview/setup/components/ProblemCard.tsx
 
 import { Difficulty, ProblemCategory } from "@prisma/client";
 import type { Problem } from "./problemSchema";
-import { cn } from "@/src/lib/utils";
+import { cn } from "@/lib/utils";
 
 const CATEGORY_LABELS: Record<ProblemCategory, string> = {
   SYSTEM_DESIGN: "System Design",
@@ -12311,7 +12590,7 @@ FILE: ./src/features/interview/setup/components/CompanySelector.tsx
 "use client";
 
 import { useEffect, useState } from "react";
-import { Select } from "@/src/components/ui/Select";
+import { Select } from "@/components/ui/Select";
 
 type Company = {
   id: string;
@@ -12562,7 +12841,7 @@ FILE: ./src/features/interview/setup/components/ProblemInventoryView.tsx
 ================================================
 "use client";
 
-import ProblemSelector from "@/src/features/interview/setup/components/ProblemSelector";
+import ProblemSelector from "@/features/interview/setup/components/ProblemSelector";
 
 type Props = {
   onSelectProblem?: (problemId: string) => void;
@@ -12584,12 +12863,169 @@ export default function ProblemInventoryView({ onSelectProblem, userId }: Props)
 }
 
 ================================================
+FILE: ./src/features/interview/setup/components/TopicSelector.tsx
+================================================
+"use client";
+
+import { useEffect, useState, useRef } from "react";
+import { Button } from "@/components/ui/Button";
+
+type Problem = {
+  id: string;
+  title: string;
+  description: string | null;
+  difficulty: string;
+  category: string;
+};
+
+type Props = {
+  value: string | null;
+  onChange: (value: string | null) => void;
+  difficulty?: string;
+  company?: string;
+};
+
+export default function TopicSelector({
+  value,
+  onChange,
+  difficulty,
+  company,
+}: Props) {
+  const [problems, setProblems] = useState<Problem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  async function fetchProblems() {
+    try {
+      setError(null);
+      
+      // Cancel previous request if still pending
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      
+      // Create new AbortController for this request
+      abortControllerRef.current = new AbortController();
+      
+      const params = new URLSearchParams();
+      if (difficulty) params.append("difficulty", difficulty);
+      if (company) params.append("company", company);
+
+      const response = await fetch(
+        `/api/problems${params.toString() ? `?${params.toString()}` : ""}`,
+        { signal: abortControllerRef.current.signal }
+      );
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch problems: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      setProblems(data.problems || []);
+    } catch (error) {
+      // Ignore abort errors (from cancelled requests)
+      if (error instanceof Error && error.name === 'AbortError') {
+        return;
+      }
+      const errorMessage = error instanceof Error ? error.message : "Failed to fetch problems";
+      setError(errorMessage);
+      console.error("Failed to fetch problems:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchProblems();
+  }, [difficulty, company]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="mt-8">
+        <h3 className="mb-3 font-semibold text-foreground">
+          Select a Problem
+        </h3>
+        <p className="text-sm text-muted-foreground">Loading problems...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-8">
+      <h3 className="mb-3 font-semibold text-foreground">
+        Select a Problem
+      </h3>
+
+      {error && (
+        <div className="mb-4 rounded-lg border border-red-800 bg-red-500/10 p-4">
+          <p className="text-sm text-red-400">
+            {error}
+          </p>
+          <button
+            onClick={() => {
+              setError(null);
+              setLoading(true);
+              fetchProblems();
+            }}
+            className="mt-2 text-sm text-red-400 underline hover:text-red-300"
+          >
+            Try again
+          </button>
+        </div>
+      )}
+
+      {problems.length === 0 ? (
+        <p className="text-sm text-muted-foreground">
+          No problems available for the selected filters.
+        </p>
+      ) : (
+        <div className="grid grid-cols-1 gap-3">
+          {problems.map((problem) => (
+            <Button
+              key={problem.id}
+              type="button"
+              variant={value === problem.id ? "primary" : "outline"}
+              aria-pressed={value === problem.id}
+              onClick={() => onChange(problem.id)}
+              className="h-auto w-full justify-start p-4 text-left"
+            >
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-semibold">{problem.title}</h4>
+                  <span className="text-xs font-mono text-muted-foreground">
+                    {problem.difficulty}
+                  </span>
+                </div>
+                {problem.description && (
+                  <p className="mt-1 text-sm opacity-80 line-clamp-2">
+                    {problem.description}
+                  </p>
+                )}
+              </div>
+            </Button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+================================================
 FILE: ./src/features/interview/setup/components/InterviewTypeSelector.tsx
 ================================================
 "use client";
 
 import { useEffect, useState } from "react";
-import { Button } from "@/src/components/ui/Button";
+import { Button } from "@/components/ui/Button";
 import { type InterviewType } from "../types/setup";
 
 type InterviewTemplate = {
@@ -12789,7 +13225,7 @@ export type ProblemsResponse = z.infer<typeof ProblemsResponseSchema>;
 ================================================
 FILE: ./src/features/interview/setup/components/DifficultySelector.tsx
 ================================================
-import { Button } from "@/src/components/ui/Button";
+import { Button } from "@/components/ui/Button";
 import { SETUP_DIFFICULTIES, type SetupDifficulty } from "../types/setup";
 
 type Props = {
@@ -12830,7 +13266,7 @@ FILE: ./src/features/interview/setup/components/useProblems.ts
 ================================================
 import { useState, useEffect, useRef, useCallback } from "react";
 import { ProblemsResponseSchema, type Problem } from "./problemSchema";
-import { logger } from "@/src/lib/logger";
+import { logger } from "@/lib/logger";
 import { Difficulty } from "@prisma/client";
 
 const INTERVIEW_TYPES = ["hld", "lld", "dsa", "pr_review", "deep_dive", "tech_doc_review", "task_breakdown"] as const;
@@ -12948,9 +13384,9 @@ FILE: ./src/features/interview/setup/hooks/useInterviewSetup.ts
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useToast } from "@/src/components/ui/Toast";
-import { logger } from "@/src/lib/logger";
-import { startInterview } from "@/src/features/interview/services/interviewApi";
+import { useToast } from "@/components/ui/Toast";
+import { logger } from "@/lib/logger";
+import { startInterview } from "@/features/interview/services/interviewApi";
 import {
   interviewSetupSchema,
   type InterviewSetupForm,
@@ -13125,34 +13561,88 @@ type Props = {
   interviewId: string;
   duration: number;
   initialMessages?: any[];
+  interviewTitle?: string;
+  designSummary?: string[];
+  initialWhiteboardState?: any;
 };
 
-export default function LiveInterview({ interviewId, duration, initialMessages = [] }: Props) {
-  const [messages, setMessages] = useState([
-    { role: 'ai', content: 'Welcome! Today we\'ll design a URL shortener. Start by asking clarifying questions before you propose anything.' },
-    { role: 'user', content: 'Sure — what\'s the expected read to write ratio, and do we need custom aliases?' },
-    { role: 'ai', content: 'Good question. Assume reads outnumber writes heavily, maybe 100 to 1. Custom aliases are a nice-to-have, not required for v1.' },
-    { role: 'user', content: 'Got it. Given that read-heavy pattern, I\'d lean toward a key-value store with a cache in front rather than a relational database.' },
-  ]);
-  const [isTyping, setIsTyping] = useState(true);
+export default function LiveInterview({ interviewId, duration, initialMessages = [], interviewTitle = 'System Design Interview', designSummary = [], initialWhiteboardState }: Props) {
+  const [messages, setMessages] = useState(initialMessages);
+  const [isTyping, setIsTyping] = useState(false);
   const [inputValue, setInputValue] = useState('');
+  const [whiteboardState, setWhiteboardState] = useState(initialWhiteboardState || null);
+  const [showWhiteboard, setShowWhiteboard] = useState(false);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [currentPath, setCurrentPath] = useState<{x: number, y: number}[]>([]);
 
+  // Auto-save whiteboard state to backend
   useEffect(() => {
-    setTimeout(() => {
-      setIsTyping(false);
-      setMessages(prev => [...prev, { role: 'ai', content: 'Reasonable. How would you generate the short code itself, and how do you avoid collisions?' }]);
-    }, 1600);
-  }, []);
+    if (whiteboardState) {
+      saveWhiteboardState(whiteboardState);
+    }
+  }, [whiteboardState]);
+
+  const saveWhiteboardState = async (state: any) => {
+    try {
+      await fetch(`/api/interviews/${interviewId}/whiteboard`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ whiteboardState: state }),
+      });
+    } catch (error) {
+      console.error('Failed to save whiteboard state:', error);
+    }
+  };
+
+  const handleWhiteboardChange = (newState: any) => {
+    setWhiteboardState(newState);
+  };
+
+  const handleWhiteboardDraw = (e: React.MouseEvent, action: 'down' | 'move' | 'up') => {
+    const canvas = e.currentTarget.querySelector('canvas');
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    if (action === 'down') {
+      setIsDrawing(true);
+      setCurrentPath([{x, y}]);
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.strokeStyle = '#15161C';
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+    } else if (action === 'move') {
+      if (isDrawing && e.buttons === 1) {
+        setCurrentPath(prev => [...prev, {x, y}]);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+      }
+    } else if (action === 'up') {
+      setIsDrawing(false);
+      ctx.closePath();
+      // Save the current path as a complete drawing
+      if (currentPath.length > 1) {
+        const currentDrawings = whiteboardState?.drawings || [];
+        handleWhiteboardChange({
+          ...whiteboardState,
+          drawings: [...currentDrawings, currentPath],
+          lastUpdated: new Date().toISOString(),
+        });
+        setCurrentPath([]);
+      }
+    }
+  };
 
   const handleSend = () => {
     if (inputValue.trim()) {
       setMessages(prev => [...prev, { role: 'user', content: inputValue }]);
       setInputValue('');
-      setIsTyping(true);
-      setTimeout(() => {
-        setIsTyping(false);
-        setMessages(prev => [...prev, { role: 'ai', content: 'That\'s a good approach. What about handling redirects at scale?' }]);
-      }, 1000);
     }
   };
 
@@ -13169,10 +13659,16 @@ export default function LiveInterview({ interviewId, duration, initialMessages =
               </svg>
             </button>
             <div className="crumb-text text-[13px] text-[#5A5B66] font-medium">
-              Live interview &nbsp;/&nbsp; <b className="text-[#15161C] font-semibold">Design a URL shortener</b>
+              Live interview &nbsp;/&nbsp; <b className="text-[#15161C] font-semibold">{interviewTitle}</b>
             </div>
           </div>
           <div className="head-right flex items-center gap-4.5">
+            <button
+              onClick={() => setShowWhiteboard(!showWhiteboard)}
+              className="px-3 py-1.5 text-xs font-medium border border-[rgba(21,22,28,0.1)] rounded-full hover:bg-[rgba(21,22,28,0.05)] transition-colors"
+            >
+              {showWhiteboard ? 'Hide Whiteboard' : 'Show Whiteboard'}
+            </button>
             <div className="live-badge flex items-center gap-1.75 text-[12px] font-semibold text-[#FF5A3C] bg-[rgba(255,90,60,0.1)] p-[6px_13px] rounded-[999px]">
               <span className="dot w-1.5 h-1.5 rounded-full bg-[#FF5A3C]">
                 <style>{`
@@ -13200,7 +13696,7 @@ export default function LiveInterview({ interviewId, duration, initialMessages =
                 `}</style>
               </div>
               <div className="ring absolute inset-0 rounded-full bg-[#15161C] flex items-center justify-center flex-col border-[1.5px] border-[rgba(0,217,163,0.4)]">
-                <div className="t font-['Poppins'] text-[13px] font-semibold text-[#00D9A3]">28:14</div>
+                <div className="t font-['Poppins'] text-[13px] font-semibold text-[#00D9A3]">{Math.floor(duration / 60)}:{(duration % 60).toString().padStart(2, '0')}</div>
                 <div className="l text-[7px] text-white/50 tracking-[0.05em] mt-0.25">LEFT</div>
               </div>
             </div>
@@ -13258,7 +13754,41 @@ export default function LiveInterview({ interviewId, duration, initialMessages =
         {/* Body */}
         <div className="body flex h-[520px]">
           {/* Chat */}
-          <div className="chat flex-1 flex flex-col">
+          <div className={`chat flex flex-col ${showWhiteboard ? 'flex-1' : 'flex-1'}`}>
+            {showWhiteboard && (
+              <div className="h-64 border-b border-[rgba(21,22,28,0.06)] p-4 bg-[#FAF9F6]">
+                <div className="text-xs text-[#5A5B66] mb-2 font-medium">Whiteboard - Draw your system design</div>
+                <div 
+                  className="w-full h-48 bg-white rounded-lg border border-[rgba(21,22,28,0.1)] relative cursor-crosshair"
+                  onMouseDown={(e) => handleWhiteboardDraw(e, 'down')}
+                  onMouseMove={(e) => handleWhiteboardDraw(e, 'move')}
+                  onMouseUp={(e) => handleWhiteboardDraw(e, 'up')}
+                  onMouseLeave={(e) => handleWhiteboardDraw(e, 'up')}
+                >
+                  <canvas
+                    ref={(canvas) => {
+                      if (canvas) {
+                        const ctx = canvas.getContext('2d');
+                        if (ctx) {
+                          canvas.width = canvas.offsetWidth;
+                          canvas.height = canvas.offsetHeight;
+                          // Restore drawing from state if available
+                          if (whiteboardState && whiteboardState.drawings) {
+                            whiteboardState.drawings.forEach((drawing: any) => {
+                              ctx.beginPath();
+                              ctx.moveTo(drawing.startX, drawing.startY);
+                              ctx.lineTo(drawing.endX, drawing.endY);
+                              ctx.stroke();
+                            });
+                          }
+                        }
+                      }
+                    }}
+                    className="w-full h-full"
+                  />
+                </div>
+              </div>
+            )}
             <div className="messages flex-1 overflow-y-auto p-[26px_30px] flex flex-col gap-4">
               {messages.map((msg, idx) => (
                 <div key={idx} className={`msg max-w-[70%] flex flex-col gap-1 ${msg.role === 'ai' ? 'ai self-start' : 'user self-end items-end'}`}>
@@ -13324,30 +13854,29 @@ export default function LiveInterview({ interviewId, duration, initialMessages =
             <div className="phase-pill inline-block text-[12px] font-semibold bg-[#15161C] text-white p-[5px_13px] rounded-[999px] mb-5.5">Requirements</div>
 
             <div className="side-label text-[10.5px] font-bold tracking-[0.06em] text-[#00A87E] text-transform:uppercase mb-2.5">Design summary</div>
-            <div className="summary-item text-[12.5px] text-[#5A5B66] leading-[1.6] pl-3.5 relative mb-2.5">
-              <style>{`
-                .summary-item::before {
-                  content: '';
-                  position: absolute;
-                  left: 0;
-                  top: 6px;
-                  width: 5px;
-                  height: 5px;
-                  border-radius: 50%;
-                  background: #00D9A3;
-                }
-              `}</style>
-              Read-heavy workload assumed, ~100:1 read/write ratio.
-            </div>
-            <div className="summary-item text-[12.5px] text-[#5A5B66] leading-[1.6] pl-3.5 relative mb-2.5">
-              Custom aliases scoped out of v1.
-            </div>
-            <div className="summary-item text-[12.5px] text-[#5A5B66] leading-[1.6] pl-3.5 relative mb-2.5">
-              Candidate is leaning key-value store + cache over relational.
-            </div>
-            <div className="summary-item text-[12.5px] text-[#5A5B66] leading-[1.6] pl-3.5 relative">
-              Not yet discussed: uniqueness strategy for short codes.
-            </div>
+            {designSummary.length > 0 ? (
+              designSummary.map((item, idx) => (
+                <div key={idx} className="summary-item text-[12.5px] text-[#5A5B66] leading-[1.6] pl-3.5 relative mb-2.5">
+                  <style>{`
+                    .summary-item::before {
+                      content: '';
+                      position: absolute;
+                      left: 0;
+                      top: 6px;
+                      width: 5px;
+                      height: 5px;
+                      border-radius: 50%;
+                      background: #00D9A3;
+                    }
+                  `}</style>
+                  {item}
+                </div>
+              ))
+            ) : (
+              <div className="text-[12.5px] text-[#5A5B66] leading-[1.6] pl-3.5 relative">
+                No design summary available yet.
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -14236,8 +14765,8 @@ export function useInterviewStore() {
 ================================================
 FILE: ./src/features/interview/report/components/WhatHappenedCard.tsx
 ================================================
-import Card from "@/src/components/ui/Card";
-import Text from "@/src/components/ui/Text";
+import { Card } from "@/components/ui/Card";
+import { Text } from "@/components/ui/Text";
 
 type Observation = {
   type: "OBSERVATION" | "ADVISORY";
@@ -14321,8 +14850,8 @@ export default function ScoreCard({ score, label = "Overall Score" }: { score: n
 ================================================
 FILE: ./src/features/interview/report/components/OverallScoreCard.tsx
 ================================================
-import Card from "@/src/components/ui/Card";
-import Text from "@/src/components/ui/Text";
+import { Card } from "@/components/ui/Card";
+import { Text } from "@/components/ui/Text";
 
 type Props = {
   score: number;
@@ -14353,8 +14882,8 @@ export default function OverallScoreCard({ score }: Props) {
 ================================================
 FILE: ./src/features/interview/report/components/ConversationCard.tsx
 ================================================
-import Card from "@/src/components/ui/Card";
-import Text from "@/src/components/ui/Text";
+import { Card } from "@/components/ui/Card";
+import { Text } from "@/components/ui/Text";
 
 type EvidenceItem = {
   dimension: string;
@@ -15950,8 +16479,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 FILE: ./src/modules/container.ts
 ================================================
 import { AIService } from "./ai/services/AIService";
-import { PromptLoader } from "@/src/modules/interview/prompt/PromptLoader";
-import logger  from "@/src/shared/logger/logger";
+import { PromptLoader } from "@/modules/interview/prompt/PromptLoader";
+import logger  from "@/shared/logger/logger";
 import { EvaluationService } from "./interview/services/evaluation/EvaluationService";
 
 export function createEvaluationService() {
@@ -16184,6 +16713,20 @@ export class InterviewRepository {
     });
   }
 
+  async updateMetadata(
+    interviewId: string,
+    metadata: Prisma.InputJsonValue
+  ) {
+    return prisma.interview.update({
+      where: {
+        id: interviewId,
+      },
+      data: {
+        metadata,
+      },
+    });
+  }
+
   async updateWhiteboardState(
     interviewId: string,
     whiteboardState: Prisma.InputJsonValue
@@ -16387,8 +16930,8 @@ FILE: ./src/modules/interview/evaluators/EvidenceEvaluator.ts
 ================================================
 import { z } from "zod";
 
-import { AIService } from "@/src/modules/ai/services/AIService";
-import { ValidatedJSONParser } from "@/src/modules/ai/utils/ValidatedJSONParser";
+import { AIService } from "@/modules/ai/services/AIService";
+import { ValidatedJSONParser } from "@/modules/ai/utils/ValidatedJSONParser";
 import { prisma } from "@/shared/prisma/client";
 
 import { PromptLoader } from "../prompt/PromptLoader";
@@ -17597,7 +18140,7 @@ FILE: ./src/modules/interview/engine/ResponseParser.ts
 ================================================
 import { z } from "zod";
 
-import { ValidatedJSONParser } from "@/src/modules/ai/utils/ValidatedJSONParser";
+import { ValidatedJSONParser } from "@/modules/ai/utils/ValidatedJSONParser";
 
 // Ollama structured-output schema, kept next to the Zod schema it must match
 // exactly — this used to live inside OllamaProvider.ts as a stale constant
@@ -17693,7 +18236,7 @@ FILE: ./src/modules/interview/engine/InterviewEngine.ts
 import {
   AIService,
   ChatMessage,
-} from "@/src/modules/ai/services/AIService";
+} from "@/modules/ai/services/AIService";
 
 import { PromptGuard } from "../guardrails/PromptGuard";
 import { InterviewProfile } from "../profiles/InterviewProfile";
@@ -17918,8 +18461,8 @@ All goal coverage values and confidence must be between 0 and 1.
 ================================================
 FILE: ./src/modules/interview/engine/PromptBuilder.ts
 ================================================
-import { PromptLoader } from "@/src/modules/interview/prompt/PromptLoader";
-import { PromptRenderer } from "@/src/modules/interview/prompt/PromptRenderer";
+import { PromptLoader } from "@/modules/interview/prompt/PromptLoader";
+import { PromptRenderer } from "@/modules/interview/prompt/PromptRenderer";
 
 import { InterviewPhaseDefinition } from "../profiles/InterviewProfile";
 import { CandidatePersona } from "../reverse/CandidatePersonas";
@@ -18810,7 +19353,7 @@ export class SkillGraphService {
 FILE: ./src/modules/interview/services/mastery/MasteryService.ts
 ================================================
 import { prisma } from "@/shared/prisma/client";
-import logger from "@/src/shared/logger/logger";
+import logger from "@/shared/logger/logger";
 
 // How quickly old mastery pulls back toward "unknown" (0.5) if a concept
 // hasn't been demonstrated recently. 90 days = one full decay step.
@@ -19317,7 +19860,7 @@ FILE: ./src/modules/interview/services/ProblemPickerService.ts
 FILE: ./src/modules/interview/services/interview/InterviewFactory.ts
 ================================================
 import { InterviewStatus, InterviewMode } from "@prisma/client";
-import { CreateInterviewInput } from "@/src/features/interview/types/CreateInterviewInput";
+import { CreateInterviewInput } from "@/features/interview/types/CreateInterviewInput";
 
 export function createInterview(input: CreateInterviewInput) {
   return {
@@ -19338,14 +19881,14 @@ import {
   Prisma,
 } from "@prisma/client";
 
-import { ChatMessage } from "@/src/modules/ai/services/AIService";
+import { ChatMessage } from "@/modules/ai/services/AIService";
 
 import { InterviewEngine } from "../../engine/InterviewEngine";
 import { InterviewRepository } from "../../repositories/InterviewRepository";
 import { InterviewProfileService } from "../../profiles/InterviewProfileService";
 import { WhiteboardSerializer } from "../whiteboard/WhiteboardSerializer";
 import { IncrementalSummaryService } from "../summary/IncrementalSummaryService";
-import { createEvaluationService } from "@/src/modules/container";
+import { createEvaluationService } from "@/modules/container";
 
 export interface ProcessInterviewMessageResult {
   reply: string;
@@ -19493,6 +20036,13 @@ export class InterviewMessageService {
       const evaluationService = createEvaluationService();
       evaluationService.evaluateInterview(interview.id).catch((error) => {
         console.error(`Failed to evaluate interview ${interview.id}:`, error);
+        // Store error in interview metadata so the report page can display it
+        this.repository.updateMetadata(interview.id, {
+          evaluationError: error instanceof Error ? error.message : 'Unknown evaluation error',
+          evaluationFailedAt: new Date().toISOString(),
+        }).catch((updateError: Error) => {
+          console.error(`Failed to store evaluation error for interview ${interview.id}:`, updateError);
+        });
       });
     }
 
@@ -19528,16 +20078,25 @@ export class InterviewMessageService {
       });
     }
 
-    // Update summary incrementally with new messages
-    const recentMessages = [
-      { role: "user", content: normalizedMessage },
-      { role: "assistant", content: result.reply },
-    ];
-    const updatedSummary = await this.summaryService.updateSummary(
-      interview.summary,
-      recentMessages
-    );
-    await this.repository.updateSummary(interview.id, updatedSummary);
+    // Update summary incrementally with new messages (debounced to every 3 turns)
+    // Also update on phase transitions or interview completion to capture important points
+    const shouldUpdateSummary = 
+      result.transition.shouldTransition || 
+      result.transition.completed ||
+      (interview.transcript.length + 1) % 3 === 0; // Update every 3 turns
+    
+    let updatedSummary = interview.summary;
+    if (shouldUpdateSummary) {
+      const recentMessages = [
+        { role: "user", content: normalizedMessage },
+        { role: "assistant", content: result.reply },
+      ];
+      updatedSummary = await this.summaryService.updateSummary(
+        interview.summary,
+        recentMessages
+      );
+      await this.repository.updateSummary(interview.id, updatedSummary);
+    }
 
     return {
       reply: result.reply,
@@ -19588,8 +20147,8 @@ FILE: ./src/modules/interview/services/evaluation/EvaluationService.ts
 ================================================
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/shared/prisma/client";
-import { AIService } from "@/src/modules/ai/services/AIService";
-import logger from "@/src/shared/logger/logger";
+import { AIService } from "@/modules/ai/services/AIService";
+import logger from "@/shared/logger/logger";
 
 import { EvidenceEvaluator } from "../../evaluators/EvidenceEvaluator";
 import { EvaluatableInterview } from "../../evaluators/types";
@@ -19736,6 +20295,7 @@ export class EvaluationService {
           timestampSeconds: item.timestampSeconds,
           quote: item.quote,
           comment: item.comment,
+          type: item.type.toUpperCase() as "STRENGTH" | "WEAKNESS",
           normalizedScore: item.normalizedScore,
         },
       });
@@ -19759,7 +20319,7 @@ export class EvaluationService {
 ================================================
 FILE: ./src/modules/interview/services/summary/SummaryService.ts
 ================================================
-import { AIService } from "@/src/modules/ai/services/AIService";
+import { AIService } from "@/modules/ai/services/AIService";
 
 type TranscriptMessage = {
   role: string;
@@ -19843,7 +20403,7 @@ FILE: ./src/modules/interview/services/summary/IncrementalSummaryService.ts
 ================================================
 // src/modules/interview/services/IncrementalSummaryService.ts
 
-import { AIService } from "@/src/modules/ai/services/AIService";
+import { AIService } from "@/modules/ai/services/AIService";
 
 export interface TranscriptMessage {
   role: string;
@@ -19907,7 +20467,7 @@ Requirements:
 ================================================
 FILE: ./src/modules/ai/providers/OpenAIProvider.ts
 ================================================
-import { env } from "@/src/shared/config/env";
+import { env } from "@/shared/config/env";
 import OpenAI from "openai";
 
 export interface GenerateOptions {
@@ -19948,7 +20508,7 @@ FILE: ./src/modules/ai/providers/ClaudeProvider.ts
 ================================================
 FILE: ./src/modules/ai/providers/OllamaProvider.ts
 ================================================
-import { env } from "@/src/shared/config/env";
+import { env } from "@/shared/config/env";
 
 export type ChatMessage = {
   role: "system" | "user" | "assistant";
@@ -20034,7 +20594,7 @@ export class OllamaProvider {
 ================================================
 FILE: ./src/modules/ai/providers/FallbackAIProvider.ts
 ================================================
-import { env } from "@/src/shared/config/env";
+import { env } from "@/shared/config/env";
 
 import { OllamaProvider, ChatMessage } from "./OllamaProvider";
 import { OpenAIProvider } from "./OpenAIProvider";
@@ -20160,7 +20720,7 @@ FILE: ./src/modules/ai/services/AIService.ts
 ================================================
 import { ZodSchema } from "zod";
 
-import { env } from "@/src/shared/config/env";
+import { env } from "@/shared/config/env";
 
 import { FallbackAIProvider } from "../providers/FallbackAIProvider";
 import { ChatMessage } from "../providers/OllamaProvider";

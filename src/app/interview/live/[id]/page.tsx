@@ -1,6 +1,6 @@
 // app/interview/live/[id]/page.tsx
 import { prisma } from "@/shared/prisma/client";
-import LiveInterview from "@/src/features/interview/live/components/LiveInterview";
+import LiveInterview from "@/features/interview/live/components/LiveInterview";
 import { notFound } from "next/navigation";
 
 type Props = {

@@ -1,4 +1,4 @@
-import { env } from "@/src/shared/config/env";
+import { env } from "@/shared/config/env";
 import OpenAI from "openai";
 
 export interface GenerateOptions {

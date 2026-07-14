@@ -1,6 +1,6 @@
 "use client";
 
-import ProblemSelector from "@/src/features/interview/setup/components/ProblemSelector";
+import ProblemSelector from "@/features/interview/setup/components/ProblemSelector";
 
 type Props = {
   onSelectProblem?: (problemId: string) => void;

@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Breadcrumb } from '@/src/components/layout/Breadcrumb';
-import { Bubble } from '@/src/components/ui/Bubble';
-import { cn } from '@/src/lib/utils';
+import { Breadcrumb } from '@/components/layout/Breadcrumb';
+import { Bubble } from '@/components/ui/Bubble';
+import { cn } from '@/lib/utils';
 
 interface Evidence {
   id: string;

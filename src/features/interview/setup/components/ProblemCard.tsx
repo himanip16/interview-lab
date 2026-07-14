@@ -2,7 +2,7 @@
 
 import { Difficulty, ProblemCategory } from "@prisma/client";
 import type { Problem } from "./problemSchema";
-import { cn } from "@/src/lib/utils";
+import { cn } from "@/lib/utils";
 
 const CATEGORY_LABELS: Record<ProblemCategory, string> = {
   SYSTEM_DESIGN: "System Design",

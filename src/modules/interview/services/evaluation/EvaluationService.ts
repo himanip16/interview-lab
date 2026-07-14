@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/shared/prisma/client";
-import { AIService } from "@/src/modules/ai/services/AIService";
-import logger from "@/src/shared/logger/logger";
+import { AIService } from "@/modules/ai/services/AIService";
+import logger from "@/shared/logger/logger";
 
 import { EvidenceEvaluator } from "../../evaluators/EvidenceEvaluator";
 import { EvaluatableInterview } from "../../evaluators/types";

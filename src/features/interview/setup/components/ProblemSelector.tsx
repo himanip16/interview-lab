@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Button } from "@/src/components/ui/Button";
+import { Button } from "@/components/ui/Button";
 
 type Problem = {
   id: string;

@@ -2,9 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import Card from "@/src/components/ui/Card";
-import Heading from "@/src/components/ui/Heading";
-import Text from "@/src/components/ui/Text";
+import Card from "@/components/ui/Card";
 
 interface Problem {
   id: string;
@@ -14,6 +12,7 @@ interface Problem {
   category: string;
   difficulty: string;
 }
+
 
 export default function PersonalNotebooks() {
   const [problems, setProblems] = useState<Problem[]>([]);

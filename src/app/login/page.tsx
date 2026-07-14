@@ -1,4 +1,4 @@
-import { signIn } from "@/src/modules/auth/auth";
+import { signIn } from "@/modules/auth/auth";
 
 export default function LoginPage() {
   async function loginAction(formData: FormData) {

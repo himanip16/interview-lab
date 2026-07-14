@@ -1,4 +1,4 @@
-import { Button } from "@/src/components/ui/Button";
+import { Button } from "@/components/ui/Button";
 import { SETUP_DIFFICULTIES, type SetupDifficulty } from "../types/setup";
 
 type Props = {

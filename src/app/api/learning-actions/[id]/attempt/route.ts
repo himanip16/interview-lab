@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/shared/prisma/client";
-import { ensureGuestUser } from "@/src/modules/auth/getCurrentUserId";
+import { ensureGuestUser } from "@/modules/auth/getCurrentUserId";
 
 export async function POST(
   request: Request,

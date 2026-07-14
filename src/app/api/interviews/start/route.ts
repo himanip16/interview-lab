@@ -2,11 +2,11 @@ import { NextResponse } from "next/server";
 import { Difficulty, InterviewMode } from "@prisma/client";
 
 import { prisma } from "@/shared/prisma/client";
-import { ensureGuestUser } from "@/src/modules/auth/getCurrentUserId";
-import { createInterview } from "@/src/modules/interview/services/interview/InterviewFactory";
-import { InterviewRepository } from "@/src/modules/interview/repositories/InterviewRepository";
-import { TranscriptService } from "@/src/modules/interview/services/TranscriptService";
-import { pickPersona } from "@/src/modules/interview/reverse/CandidatePersonas";
+import { ensureGuestUser } from "@/modules/auth/getCurrentUserId";
+import { createInterview } from "@/modules/interview/services/interview/InterviewFactory";
+import { InterviewRepository } from "@/modules/interview/repositories/InterviewRepository";
+import { TranscriptService } from "@/modules/interview/services/TranscriptService";
+import { pickPersona } from "@/modules/interview/reverse/CandidatePersonas";
 
 const difficultyMap: Record<string, Difficulty> = {
   EASY: Difficulty.EASY,

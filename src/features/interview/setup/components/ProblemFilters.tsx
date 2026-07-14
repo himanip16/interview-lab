@@ -1,6 +1,6 @@
 import { ProblemCategory } from "@prisma/client";
 import { INTERVIEW_TYPES, DIFFICULTIES, SORT_OPTIONS, type FilterState } from "./useProblems";
-import { cn } from "@/src/lib/utils";
+import { cn } from "@/lib/utils";
 
 const CATEGORY_LABELS: Record<ProblemCategory, string> = {
   SYSTEM_DESIGN: "System Design",

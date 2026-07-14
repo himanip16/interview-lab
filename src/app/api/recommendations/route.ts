@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { RecommendationService } from "@/src/modules/interview/services/recommendation/RecommendationService";
-import { ensureGuestUser } from "@/src/modules/auth/getCurrentUserId";
+import { RecommendationService } from "@/modules/interview/services/recommendation/RecommendationService";
+import { ensureGuestUser } from "@/modules/auth/getCurrentUserId";
 
 export async function GET(request: Request) {
   try {

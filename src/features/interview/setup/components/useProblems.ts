@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { ProblemsResponseSchema, type Problem } from "./problemSchema";
-import { logger } from "@/src/lib/logger";
+import { logger } from "@/lib/logger";
 import { Difficulty } from "@prisma/client";
 
 const INTERVIEW_TYPES = ["hld", "lld", "dsa", "pr_review", "deep_dive", "tech_doc_review", "task_breakdown"] as const;

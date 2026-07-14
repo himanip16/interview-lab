@@ -1,5 +1,5 @@
-import { PromptLoader } from "@/src/modules/interview/prompt/PromptLoader";
-import { PromptRenderer } from "@/src/modules/interview/prompt/PromptRenderer";
+import { PromptLoader } from "@/modules/interview/prompt/PromptLoader";
+import { PromptRenderer } from "@/modules/interview/prompt/PromptRenderer";
 
 import { InterviewPhaseDefinition } from "../profiles/InterviewProfile";
 import { CandidatePersona } from "../reverse/CandidatePersonas";

@@ -4,14 +4,14 @@ import {
   Prisma,
 } from "@prisma/client";
 
-import { ChatMessage } from "@/src/modules/ai/services/AIService";
+import { ChatMessage } from "@/modules/ai/services/AIService";
 
 import { InterviewEngine } from "../../engine/InterviewEngine";
 import { InterviewRepository } from "../../repositories/InterviewRepository";
 import { InterviewProfileService } from "../../profiles/InterviewProfileService";
 import { WhiteboardSerializer } from "../whiteboard/WhiteboardSerializer";
 import { IncrementalSummaryService } from "../summary/IncrementalSummaryService";
-import { createEvaluationService } from "@/src/modules/container";
+import { createEvaluationService } from "@/modules/container";
 
 export interface ProcessInterviewMessageResult {
   reply: string;

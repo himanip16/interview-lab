@@ -10,14 +10,14 @@ import {
   InterviewMode,
 } from "@prisma/client";
 
-import Heading from "@/src/components/ui/Heading";
-import Text from "@/src/components/ui/Text";
-import { Button } from "@/src/components/ui/Button";
+import Heading from "@/components/ui/Heading";
+import Text from "@/components/ui/Text";
+import { Button } from "@/components/ui/Button";
 
-import OverallScoreCard from "@/src/features/interview/report/components/OverallScoreCard";
-import WhatHappenedCard from "@/src/features/interview/report/components/WhatHappenedCard";
-import EvidenceTimeline from "@/src/features/interview/report/components/EvidenceTimeline";
-import ProblemInventoryView from "@/src/features/interview/setup/components/ProblemInventoryView";
+import OverallScoreCard from "@/features/interview/report/components/OverallScoreCard";
+import WhatHappenedCard from "@/features/interview/report/components/WhatHappenedCard";
+import EvidenceTimeline from "@/features/interview/report/components/EvidenceTimeline";
+import ProblemInventoryView from "@/features/interview/setup/components/ProblemInventoryView";
 
 // ---------------------------------------------------------------------------
 // Types — plain shapes matching the Prisma `include`s built in page.tsx.

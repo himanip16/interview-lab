@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { InterviewProfileService } from "@/src/modules/interview/profiles/InterviewProfileService";
+import { InterviewProfileService } from "@/modules/interview/profiles/InterviewProfileService";
 
 export async function GET(request: Request) {
   try {

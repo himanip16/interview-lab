@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { InterviewRepository } from "@/src/modules/interview/repositories/InterviewRepository";
-import logger from "@/src/shared/logger/logger";
+import { InterviewRepository } from "@/modules/interview/repositories/InterviewRepository";
+import logger from "@/shared/logger/logger";
 
 type Props = {
   params: Promise<{

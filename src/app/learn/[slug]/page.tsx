@@ -1,8 +1,8 @@
 "use client";
 
 import { use } from "react";
-import { useScenario } from "@/src/features/learning/hooks/useScenario";
-import { LearningScenarioReader } from "@/src/features/learning/components/LearningScenarioReader";
+import { useScenario } from "@/features/learning/hooks/useScenario";
+import { LearningScenarioReader } from "@/features/learning/components/LearningScenarioReader";
 import Link from "next/link";
 
 export default function ScenarioPage({ params }: { params: Promise<{ slug: string }> }) {

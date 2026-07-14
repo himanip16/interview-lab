@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-import { AIService } from "@/src/modules/ai/services/AIService";
-import { ValidatedJSONParser } from "@/src/modules/ai/utils/ValidatedJSONParser";
+import { AIService } from "@/modules/ai/services/AIService";
+import { ValidatedJSONParser } from "@/modules/ai/utils/ValidatedJSONParser";
 import { prisma } from "@/shared/prisma/client";
 
 import { PromptLoader } from "../prompt/PromptLoader";

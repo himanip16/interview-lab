@@ -1,6 +1,6 @@
 import { ZodSchema } from "zod";
 
-import { env } from "@/src/shared/config/env";
+import { env } from "@/shared/config/env";
 
 import { FallbackAIProvider } from "../providers/FallbackAIProvider";
 import { ChatMessage } from "../providers/OllamaProvider";

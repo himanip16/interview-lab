@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useRef } from 'react';
-import { Search } from '@/src/components/ui/Search';
-import { Panel } from '@/src/components/ui/Panel';
-import { cn } from '@/src/lib/utils';
+import { Search } from '@/components/ui/Search';
+import { Panel } from '@/components/ui/Panel';
+import { cn } from '@/lib/utils';
 
 const CARDS = [
   {

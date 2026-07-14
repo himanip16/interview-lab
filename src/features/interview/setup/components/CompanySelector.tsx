@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Select } from "@/src/components/ui/Select";
+import { Select } from "@/components/ui/Select";
 
 type Company = {
   id: string;

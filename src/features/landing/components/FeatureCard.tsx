@@ -1,7 +1,7 @@
 import type { FC } from "react";
-import Card from "@/src/components/ui/Card";
-import Heading from "@/src/components/ui/Heading";
-import Text from "@/src/components/ui/Text";
+import Card from "@/components/ui/Card";
+import Heading from "@/components/ui/Heading";
+import Text from "@/components/ui/Text";
 
 type Props = {
   title: string;

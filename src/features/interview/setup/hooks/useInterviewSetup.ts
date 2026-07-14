@@ -2,9 +2,9 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useToast } from "@/src/components/ui/Toast";
-import { logger } from "@/src/lib/logger";
-import { startInterview } from "@/src/features/interview/services/interviewApi";
+import { useToast } from "@/components/ui/Toast";
+import { logger } from "@/lib/logger";
+import { startInterview } from "@/features/interview/services/interviewApi";
 import {
   interviewSetupSchema,
   type InterviewSetupForm,

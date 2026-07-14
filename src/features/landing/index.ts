@@ -1,3 +1,3 @@
-export * from "@/src/features/interview/types/CreateInterviewInput";
-export * from "@/src/features/interview/types/InterviewState";
-export * from "@/src/features/interview/types/TranscriptMessage";
+export * from "@/features/interview/types/CreateInterviewInput";
+export * from "@/features/interview/types/InterviewState";
+export * from "@/features/interview/types/TranscriptMessage";

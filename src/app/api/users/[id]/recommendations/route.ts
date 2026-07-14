@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { RecommendationService } from "@/src/modules/interview/services/recommendation/RecommendationService";
+import { RecommendationService } from "@/modules/interview/services/recommendation/RecommendationService";
 
 type Props = {
   params: Promise<{ id: string }>;

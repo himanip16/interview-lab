@@ -2,14 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Breadcrumb } from '@/src/components/layout/Breadcrumb';
-import { Timeline } from '@/src/components/layout/Timeline';
-import { Sidebar } from '@/src/components/layout/Sidebar';
-import { Bubble } from '@/src/components/ui/Bubble';
-import { Timer } from '@/src/components/ui/Timer';
-import { Stepper } from '@/src/components/ui/Stepper';
-import { Panel } from '@/src/components/ui/Panel';
-import { cn } from '@/src/lib/utils';
+import { Breadcrumb } from '@/components/layout/Breadcrumb';
+import { Timeline } from '@/components/layout/Timeline';
+import { Sidebar } from '@/components/layout/Sidebar';
+import { Bubble } from '@/components/ui/Bubble';
+import { Timer } from '@/components/ui/Timer';
+import { Stepper } from '@/components/ui/Stepper';
+import { Panel } from '@/components/ui/Panel';
+import { cn } from '@/lib/utils';
 
 interface Message {
   id: string;

@@ -1,13 +1,13 @@
 // src/features/dashboard/components/DashboardView.tsx
 import Link from "next/link";
 
-import Card from "@/src/components/ui/Card";
-import Heading from "@/src/components/ui/Heading";
-import Text from "@/src/components/ui/Text";
-import { Button } from "@/src/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Heading } from "@/components/ui/Heading";
+import { Text } from "@/components/ui/Text";
+import { Button } from "@/components/ui/Button";
 
-import type { SkillGraph } from "@/src/modules/interview/services/mastery/SkillGraphService";
-import type { Recommendation } from "@/src/modules/interview/services/recommendation/RecommendationService";
+import type { SkillGraph } from "@/modules/interview/services/mastery/SkillGraphService";
+import type { Recommendation } from "@/modules/interview/services/recommendation/RecommendationService";
 import type { Difficulty } from "@prisma/client";
 
 export type ExploreProblem = {

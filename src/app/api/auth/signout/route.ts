@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { signOut } from "@/src/modules/auth/auth";
+import { signOut } from "@/modules/auth/auth";
 
 export async function POST() {
   await signOut({ redirectTo: "/" });

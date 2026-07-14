@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { ValidatedJSONParser } from "@/src/modules/ai/utils/ValidatedJSONParser";
+import { ValidatedJSONParser } from "@/modules/ai/utils/ValidatedJSONParser";
 
 // Ollama structured-output schema, kept next to the Zod schema it must match
 // exactly — this used to live inside OllamaProvider.ts as a stale constant

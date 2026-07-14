@@ -3,9 +3,9 @@ import { notFound } from "next/navigation";
 import { InterviewStatus } from "@prisma/client";
 
 import { prisma } from "@/shared/prisma/client";
-import { SkillGraphService } from "@/src/modules/interview/services/mastery/SkillGraphService";
-import { RecommendationService } from "@/src/modules/interview/services/recommendation/RecommendationService";
-import DashboardView from "@/src/features/dashboard/components/DashboardView";
+import { SkillGraphService } from "@/modules/interview/services/mastery/SkillGraphService";
+import { RecommendationService } from "@/modules/interview/services/recommendation/RecommendationService";
+import DashboardView from "@/features/dashboard/components/DashboardView";
 
 type Props = {
   params: Promise<{ userId: string }>;

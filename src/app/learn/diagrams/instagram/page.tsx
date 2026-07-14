@@ -1,4 +1,4 @@
-import SystemDiagram from "@/src/features/diagram/components/SystemDiagram";
+import SystemDiagram from "@/features/diagram/components/SystemDiagram";
 
 export default function InstagramDiagramPage() {
   return (

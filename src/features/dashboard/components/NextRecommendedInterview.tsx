@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import type { Recommendation } from "@/src/modules/interview/services/recommendation/RecommendationService";
+import type { Recommendation } from "@/modules/interview/services/recommendation/RecommendationService";
 
 type Props = {
   recommendation: Recommendation | null;

@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { cn } from "@/src/lib/utils";
-import { Panel } from "@/src/components/ui/Panel";
-import { Search } from "@/src/components/ui/Search";
-import { Pill } from "@/src/components/ui/Pill";
-import { Badge } from "@/src/components/ui/Badge";
+import { cn } from "@/lib/utils";
+import { Panel } from "@/components/ui/Panel";
+import { Search } from "@/components/ui/Search";
+import { Pill } from "@/components/ui/Pill";
+import { Badge } from "@/components/ui/Badge";
 
 type Problem = {
   title: string;

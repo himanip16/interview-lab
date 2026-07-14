@@ -1,4 +1,4 @@
-import { AIService } from "@/src/modules/ai/services/AIService";
+import { AIService } from "@/modules/ai/services/AIService";
 
 type TranscriptMessage = {
   role: string;

@@ -1,5 +1,5 @@
 import { InterviewStatus, InterviewMode } from "@prisma/client";
-import { CreateInterviewInput } from "@/src/features/interview/types/CreateInterviewInput";
+import { CreateInterviewInput } from "@/features/interview/types/CreateInterviewInput";
 
 export function createInterview(input: CreateInterviewInput) {
   return {
