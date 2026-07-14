@@ -1,13 +1,13 @@
 // components/interview/live/Message.tsx
 import React from 'react';
-import { Message as MessageType } from '@/src/features/interview/types/message';
+import { TranscriptMessage } from '../../types/TranscriptMessage';
 
 interface MessageProps {
-  message: MessageType;
+  message: TranscriptMessage;
 }
 
 const Message: React.FC<MessageProps> = ({ message }) => {
-  const isAI = message.role === 'assistant' || message.role === 'system';
+  const isAI = message.role === 'assistant';
 
   return (
     <div className={`flex ${isAI ? 'justify-start' : 'justify-end'} mb-4`}>

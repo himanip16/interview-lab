@@ -1,17 +1,17 @@
 // components/interview/live/MessageList.tsx
 import React from 'react';
-import { Message as MessageType } from '@/src/features/interview/types/message';
+import { TranscriptMessage } from '../../types/TranscriptMessage';
 import Message from './Message';
 
 interface MessageListProps {
-  messages: MessageType[];
+  messages: TranscriptMessage[];
 }
 
 const MessageList: React.FC<MessageListProps> = ({ messages }) => {
   return (
     <div className="space-y-4 min-h-full">
       {messages.map((msg, index) => (
-        <Message key={msg.id || index} message={msg} />
+        <Message key={index} message={msg} />
       ))}
       
       {messages.length === 0 && (
