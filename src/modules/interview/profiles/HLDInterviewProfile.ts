@@ -1,18 +1,19 @@
 import { InterviewProfile } from "./InterviewProfile";
+import { PhaseId, Goal, EvaluationDimension } from "../constants";
 
 export const HLDInterviewProfile: InterviewProfile = {
   type: "HLD",
 
   phases: [
     {
-      id: "introduction",
+      id: PhaseId.Introduction,
 
       goals: [
-        "candidate_understands_problem",
+        Goal.CandidateUnderstandsProblem,
       ],
 
       evaluationDimensions: [
-        "communication",
+        EvaluationDimension.Communication,
       ],
 
       targetDurationRatio: 0.05,
@@ -28,22 +29,24 @@ Ask the candidate to begin by clarifying the problem.
 
 Move forward once the candidate demonstrates that they understand the problem and begins requirement discovery.
 `.trim(),
+
+      showWhiteboard: false,
     },
 
     {
-      id: "requirements",
+      id: PhaseId.Requirements,
 
       goals: [
-        "functional_requirements",
-        "non_functional_requirements",
-        "scale",
-        "constraints",
+        Goal.FunctionalRequirements,
+        Goal.NonFunctionalRequirements,
+        Goal.Scale,
+        Goal.Constraints,
       ],
 
       evaluationDimensions: [
-        "requirement_clarity",
-        "scope_management",
-        "communication",
+        EvaluationDimension.RequirementClarity,
+        EvaluationDimension.ScopeManagement,
+        EvaluationDimension.Communication,
       ],
 
       targetDurationRatio: 0.15,
@@ -61,21 +64,23 @@ Probe missing functional requirements, non-functional requirements, scale, and c
 
 Do not discuss architecture yet.
 `.trim(),
+
+      showWhiteboard: false,
     },
 
     {
-      id: "high_level_design",
+      id: PhaseId.HighLevelDesign,
 
       goals: [
-        "core_components",
-        "service_boundaries",
-        "data_flow",
-        "storage_choice",
+        Goal.CoreComponents,
+        Goal.ServiceBoundaries,
+        Goal.DataFlow,
+        Goal.StorageChoice,
       ],
 
       evaluationDimensions: [
-        "architecture",
-        "technical_reasoning",
+        EvaluationDimension.Architecture,
+        EvaluationDimension.TechnicalReasoning,
       ],
 
       targetDurationRatio: 0.25,
@@ -91,21 +96,23 @@ Challenge unclear architectural choices.
 
 Do not design the system for the candidate.
 `.trim(),
+
+      showWhiteboard: true,
     },
 
     {
-      id: "deep_dive",
+      id: PhaseId.DeepDive,
 
       goals: [
-        "critical_component",
-        "data_model",
-        "consistency",
-        "technical_tradeoffs",
+        Goal.CriticalComponent,
+        Goal.DataModel,
+        Goal.Consistency,
+        Goal.TechnicalTradeoffs,
       ],
 
       evaluationDimensions: [
-        "technical_depth",
-        "tradeoffs",
+        EvaluationDimension.TechnicalDepth,
+        EvaluationDimension.Tradeoffs,
       ],
 
       targetDurationRatio: 0.3,
@@ -119,21 +126,23 @@ Probe implementation details, data modeling, consistency, and tradeoffs.
 
 Prefer areas where the candidate's reasoning is incomplete or weak.
 `.trim(),
+
+      showWhiteboard: true,
     },
 
     {
-      id: "scalability",
+      id: PhaseId.Scalability,
 
       goals: [
-        "bottlenecks",
-        "failure_modes",
-        "scaling_strategy",
-        "reliability",
+        Goal.Bottlenecks,
+        Goal.FailureModes,
+        Goal.ScalingStrategy,
+        Goal.Reliability,
       ],
 
       evaluationDimensions: [
-        "scalability",
-        "reliability",
+        EvaluationDimension.Scalability,
+        EvaluationDimension.Reliability,
       ],
 
       targetDurationRatio: 0.2,
@@ -147,18 +156,20 @@ Ask about bottlenecks, failure scenarios, capacity pressure, and scaling strateg
 
 Challenge assumptions using realistic production scenarios.
 `.trim(),
+
+      showWhiteboard: true,
     },
 
     {
-      id: "closing",
+      id: PhaseId.Closing,
 
       goals: [
-        "final_tradeoff_summary",
+        Goal.FinalTradeoffSummary,
       ],
 
       evaluationDimensions: [
-        "communication",
-        "tradeoffs",
+        EvaluationDimension.Communication,
+        EvaluationDimension.Tradeoffs,
       ],
 
       targetDurationRatio: 0.05,
@@ -172,6 +183,8 @@ Ask the candidate to summarize their design and the most important tradeoffs.
 
 Do not begin another technical phase.
 `.trim(),
+
+      showWhiteboard: false,
     },
   ],
 };

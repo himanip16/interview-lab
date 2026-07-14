@@ -1,18 +1,19 @@
 import { InterviewProfile } from "./InterviewProfile";
+import { PhaseId, Goal, EvaluationDimension } from "../constants";
 
 export const LLDInterviewProfile: InterviewProfile = {
   type: "LLD",
 
   phases: [
     {
-      id: "introduction",
+      id: PhaseId.Introduction,
 
       goals: [
-        "candidate_understands_problem",
+        Goal.CandidateUnderstandsProblem,
       ],
 
       evaluationDimensions: [
-        "communication",
+        EvaluationDimension.Communication,
       ],
 
       targetDurationRatio: 0.05,
@@ -24,21 +25,23 @@ Introduce the object-oriented design problem.
 
 Ask the candidate to clarify the expected behaviour and scope.
 `.trim(),
+
+      showWhiteboard: false,
     },
 
     {
-      id: "requirements",
+      id: PhaseId.Requirements,
 
       goals: [
-        "use_cases",
-        "actors",
-        "constraints",
-        "edge_cases",
+        Goal.UseCases,
+        Goal.Actors,
+        Goal.Constraints,
+        Goal.EdgeCases,
       ],
 
       evaluationDimensions: [
-        "requirement_clarity",
-        "scope_management",
+        EvaluationDimension.RequirementClarity,
+        EvaluationDimension.ScopeManagement,
       ],
 
       targetDurationRatio: 0.15,
@@ -52,20 +55,22 @@ Answer clarification questions.
 
 Do not propose classes or interfaces.
 `.trim(),
+
+      showWhiteboard: false,
     },
 
     {
-      id: "domain_modeling",
+      id: PhaseId.DomainModeling,
 
       goals: [
-        "core_entities",
-        "responsibilities",
-        "relationships",
+        Goal.CoreEntities,
+        Goal.Responsibilities,
+        Goal.Relationships,
       ],
 
       evaluationDimensions: [
-        "object_modeling",
-        "abstraction",
+        EvaluationDimension.ObjectModeling,
+        EvaluationDimension.Abstraction,
       ],
 
       targetDurationRatio: 0.2,
@@ -79,21 +84,23 @@ Evaluate responsibilities and relationships.
 
 Challenge god objects, unclear ownership, and weak abstractions.
 `.trim(),
+
+      showWhiteboard: true,
     },
 
     {
-      id: "class_design",
+      id: PhaseId.ClassDesign,
 
       goals: [
-        "classes",
-        "interfaces",
-        "method_boundaries",
-        "encapsulation",
+        Goal.Classes,
+        Goal.Interfaces,
+        Goal.MethodBoundaries,
+        Goal.Encapsulation,
       ],
 
       evaluationDimensions: [
-        "class_design",
-        "code_quality",
+        EvaluationDimension.ClassDesign,
+        EvaluationDimension.CodeQuality,
       ],
 
       targetDurationRatio: 0.3,
@@ -107,22 +114,24 @@ Evaluate method boundaries, encapsulation, and separation of concerns.
 
 Ask focused questions about design decisions.
 `.trim(),
+
+      showWhiteboard: true,
     },
 
     {
-      id: "extensibility",
+      id: PhaseId.Extensibility,
 
       goals: [
-        "change_scenarios",
-        "design_tradeoffs",
-        "extensibility",
-        "testability",
+        Goal.ChangeScenarios,
+        Goal.DesignTradeoffs,
+        Goal.Extensibility,
+        Goal.Testability,
       ],
 
       evaluationDimensions: [
-        "design_patterns",
-        "tradeoffs",
-        "maintainability",
+        EvaluationDimension.DesignPatterns,
+        EvaluationDimension.Tradeoffs,
+        EvaluationDimension.Maintainability,
       ],
 
       targetDurationRatio: 0.25,
@@ -138,17 +147,19 @@ Probe design patterns only when relevant.
 
 Do not force pattern usage.
 `.trim(),
+
+      showWhiteboard: true,
     },
 
     {
-      id: "closing",
+      id: PhaseId.Closing,
 
       goals: [
-        "final_design_summary",
+        Goal.FinalDesignSummary,
       ],
 
       evaluationDimensions: [
-        "communication",
+        EvaluationDimension.Communication,
       ],
 
       targetDurationRatio: 0.05,
@@ -160,6 +171,8 @@ Ask the candidate to summarize their final design and major tradeoffs.
 
 Conclude the interview naturally.
 `.trim(),
+
+      showWhiteboard: false,
     },
   ],
 };

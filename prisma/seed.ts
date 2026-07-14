@@ -5,6 +5,7 @@ import {
   ProblemCategory,
   LearningActionType,
 } from "@prisma/client";
+import { EvaluationDimension, PhaseId, Goal } from "../src/modules/interview/constants";
 
 const prisma = new PrismaClient();
 
@@ -651,8 +652,8 @@ Return reasoning.
 `.trim();
 }
 
-const RUBRICS: Record<string, string> = {
-  communication: rubric(
+const RUBRICS: Record<EvaluationDimension, string> = {
+  [EvaluationDimension.Communication]: rubric(
     [
       "Explains reasoning out loud before committing to decisions",
       "Structures the conversation (states assumptions, checks in, summarizes)",
@@ -661,7 +662,7 @@ const RUBRICS: Record<string, string> = {
     ],
     "is silent for long stretches or jumps to conclusions without narrating why"
   ),
-  requirement_clarity: rubric(
+  [EvaluationDimension.RequirementClarity]: rubric(
     [
       "Distinguishes functional vs non-functional requirements",
       "Asks about scale, latency, and consistency expectations",
@@ -669,14 +670,14 @@ const RUBRICS: Record<string, string> = {
     ],
     "starts designing before requirements are clarified"
   ),
-  scope_management: rubric(
+  [EvaluationDimension.ScopeManagement]: rubric(
     [
       "Keeps requirement gathering time-boxed and focused",
       "Avoids over-scoping into unrelated features",
     ],
     "spends excessive time on requirements or scope-creeps the problem"
   ),
-  architecture: rubric(
+  [EvaluationDimension.Architecture]: rubric(
     [
       "Identifies the right core components and service boundaries",
       "Justifies storage/database choices",
@@ -684,28 +685,28 @@ const RUBRICS: Record<string, string> = {
     ],
     "proposes an architecture without justifying key decisions"
   ),
-  technical_reasoning: rubric(
+  [EvaluationDimension.TechnicalReasoning]: rubric(
     [
       "Backs design choices with concrete reasoning, not buzzwords",
       "Considers more than one option before choosing",
     ],
     "name-drops technologies without explaining why they fit"
   ),
-  technical_depth: rubric(
+  [EvaluationDimension.TechnicalDepth]: rubric(
     [
       "Goes beyond the surface level when probed on a component",
       "Handles follow-up questions about internals confidently",
     ],
     "gives shallow answers when pushed for detail"
   ),
-  tradeoffs: rubric(
+  [EvaluationDimension.Tradeoffs]: rubric(
     [
       "Explicitly names tradeoffs (e.g. consistency vs availability, latency vs cost)",
       "Justifies a choice given the stated requirements",
     ],
     "presents a design as if it has no downsides"
   ),
-  scalability: rubric(
+  [EvaluationDimension.Scalability]: rubric(
     [
       "Horizontal Scaling",
       "Load Balancer",
@@ -718,7 +719,7 @@ const RUBRICS: Record<string, string> = {
     ],
     "ignores scaling completely"
   ),
-  reliability: rubric(
+  [EvaluationDimension.Reliability]: rubric(
     [
       "Identifies single points of failure",
       "Discusses retries, timeouts, and graceful degradation",
@@ -726,21 +727,21 @@ const RUBRICS: Record<string, string> = {
     ],
     "assumes components never fail"
   ),
-  object_modeling: rubric(
+  [EvaluationDimension.ObjectModeling]: rubric(
     [
       "Identifies the right core entities and their responsibilities",
       "Models relationships (composition vs association vs inheritance) correctly",
     ],
     "produces a single god object or unclear ownership"
   ),
-  abstraction: rubric(
+  [EvaluationDimension.Abstraction]: rubric(
     [
       "Hides implementation details behind clean interfaces",
       "Avoids leaking internal state",
     ],
     "exposes internal implementation details unnecessarily"
   ),
-  class_design: rubric(
+  [EvaluationDimension.ClassDesign]: rubric(
     [
       "Defines clear method boundaries",
       "Applies encapsulation appropriately",
@@ -748,46 +749,46 @@ const RUBRICS: Record<string, string> = {
     ],
     "produces classes with unclear or overlapping responsibilities"
   ),
-  code_quality: rubric(
+  [EvaluationDimension.CodeQuality]: rubric(
     ["Names things clearly", "Keeps methods small and focused"],
     "writes code that is hard to follow or overly clever"
   ),
-  design_patterns: rubric(
+  [EvaluationDimension.DesignPatterns]: rubric(
     [
       "Applies a design pattern where it genuinely fits",
       "Explains why the pattern was chosen",
     ],
     "forces a pattern where it doesn't fit, or can't explain the choice"
   ),
-  maintainability: rubric(
+  [EvaluationDimension.Maintainability]: rubric(
     [
       "Design accommodates realistic future requirement changes",
       "Includes consideration for testability",
     ],
     "produces a design that would require a rewrite for small changes"
   ),
-  problem_solving: rubric(
+  [EvaluationDimension.ProblemSolving]: rubric(
     [
       "Breaks the problem into a clear approach before coding",
       "Considers brute force then optimizes",
     ],
     "jumps straight to code without a stated approach"
   ),
-  code_correctness: rubric(
+  [EvaluationDimension.CodeCorrectness]: rubric(
     [
       "Produces working code for the stated approach",
       "Handles edge cases (empty input, single element, duplicates)",
     ],
     "leaves obvious bugs or off-by-one errors unaddressed"
   ),
-  complexity_analysis: rubric(
+  [EvaluationDimension.ComplexityAnalysis]: rubric(
     [
       "States time and space complexity accurately",
       "Recognizes when a better complexity is possible",
     ],
     "cannot state or justify the complexity of their own solution"
   ),
-  edge_case_handling: rubric(
+  [EvaluationDimension.EdgeCaseHandling]: rubric(
     [
       "Proactively identifies edge cases before being prompted",
       "Adjusts the solution to handle them",
@@ -795,46 +796,46 @@ const RUBRICS: Record<string, string> = {
     "only handles edge cases after being explicitly told to"
   ),
   // Reverse-mode rubrics — evaluating the interviewer's technique
-  rapport_building: rubric(
+  [EvaluationDimension.RapportBuilding]: rubric(
     [
       "Opens with a clear, welcoming introduction",
       "Sets expectations for the session",
     ],
     "jumps into technical questions with no framing"
   ),
-  requirement_elicitation: rubric(
+  [EvaluationDimension.RequirementElicitation]: rubric(
     [
       "Asks open-ended questions to surface functional/non-functional requirements",
       "Doesn't spoon-feed the answer",
     ],
     "tells the candidate the requirements instead of drawing them out"
   ),
-  probing_depth: rubric(
+  [EvaluationDimension.ProbingDepth]: rubric(
     [
       "Follows up on vague or surface-level answers",
       "Pushes for specifics (numbers, tradeoffs, edge cases)",
     ],
     "accepts shallow answers without pushing further"
   ),
-  technical_listening: rubric(
+  [EvaluationDimension.TechnicalListening]: rubric(
     [
       "Picks up on what the candidate actually said and builds the next question from it",
     ],
     "asks a pre-scripted next question ignoring the candidate's last answer"
   ),
-  challenging_appropriately: rubric(
+  [EvaluationDimension.ChallengingAppropriately]: rubric(
     [
       "Introduces realistic pressure (scale, failure, edge cases) at the right moments",
     ],
     "never challenges the candidate's design, or challenges too aggressively to be useful"
   ),
-  time_management: rubric(
+  [EvaluationDimension.TimeManagement]: rubric(
     [
       "Keeps the session moving, doesn't get stuck on one topic too long",
     ],
     "lets one phase consume the entire interview"
   ),
-  summarizing_and_wrap_up: rubric(
+  [EvaluationDimension.SummarizingAndWrapUp]: rubric(
     [
       "Closes with a clear summary and gives the candidate a chance to ask questions",
     ],
@@ -877,97 +878,97 @@ const templates: TemplateSeed[] = [
     whiteboardPreset: "hld",
     phases: [
       {
-        phaseKey: "introduction",
+        phaseKey: PhaseId.Introduction,
         order: 0,
-        goals: ["candidate_understands_problem"],
-        evaluationDimensions: ["communication"],
+        goals: [Goal.CandidateUnderstandsProblem],
+        evaluationDimensions: [EvaluationDimension.Communication],
         targetDurationRatio: 0.05,
         transitionThreshold: 0.7,
         instructions:
           "Introduce the problem briefly. Do not reveal requirements. Ask the candidate to begin by clarifying the problem. Move forward once the candidate demonstrates that they understand the problem and begins requirement discovery.",
-        reverseEvaluationDimensions: ["rapport_building"],
+        reverseEvaluationDimensions: [EvaluationDimension.RapportBuilding],
       },
       {
-        phaseKey: "requirements",
+        phaseKey: PhaseId.Requirements,
         order: 1,
         goals: [
-          "functional_requirements",
-          "non_functional_requirements",
-          "scale",
-          "constraints",
+          Goal.FunctionalRequirements,
+          Goal.NonFunctionalRequirements,
+          Goal.Scale,
+          Goal.Constraints,
         ],
         evaluationDimensions: [
-          "requirement_clarity",
-          "scope_management",
-          "communication",
+          EvaluationDimension.RequirementClarity,
+          EvaluationDimension.ScopeManagement,
+          EvaluationDimension.Communication,
         ],
         targetDurationRatio: 0.15,
         transitionThreshold: 0.75,
         instructions:
           "Evaluate requirement gathering. Answer requirement questions when directly asked. Do not volunteer every requirement. Probe missing functional requirements, non-functional requirements, scale, and constraints. Do not discuss architecture yet.",
-        reverseEvaluationDimensions: ["requirement_elicitation", "technical_listening"],
+        reverseEvaluationDimensions: [EvaluationDimension.RequirementElicitation, EvaluationDimension.TechnicalListening],
       },
       {
-        phaseKey: "high_level_design",
+        phaseKey: PhaseId.HighLevelDesign,
         order: 2,
         goals: [
-          "core_components",
-          "service_boundaries",
-          "data_flow",
-          "storage_choice",
+          Goal.CoreComponents,
+          Goal.ServiceBoundaries,
+          Goal.DataFlow,
+          Goal.StorageChoice,
         ],
-        evaluationDimensions: ["architecture", "technical_reasoning"],
+        evaluationDimensions: [EvaluationDimension.Architecture, EvaluationDimension.TechnicalReasoning],
         targetDurationRatio: 0.25,
         transitionThreshold: 0.75,
         instructions:
           "Ask the candidate to propose a high-level architecture. Evaluate major components, service boundaries, data flow, and storage decisions. Challenge unclear architectural choices. Do not design the system for the candidate.",
         showWhiteboard: true,
-        reverseEvaluationDimensions: ["technical_listening", "time_management"],
+        reverseEvaluationDimensions: [EvaluationDimension.TechnicalListening, EvaluationDimension.TimeManagement],
       },
       {
-        phaseKey: "deep_dive",
+        phaseKey: PhaseId.DeepDive,
         order: 3,
         goals: [
-          "critical_component",
-          "data_model",
-          "consistency",
-          "technical_tradeoffs",
+          Goal.CriticalComponent,
+          Goal.DataModel,
+          Goal.Consistency,
+          Goal.TechnicalTradeoffs,
         ],
-        evaluationDimensions: ["technical_depth", "tradeoffs"],
+        evaluationDimensions: [EvaluationDimension.TechnicalDepth, EvaluationDimension.Tradeoffs],
         targetDurationRatio: 0.3,
         transitionThreshold: 0.7,
         instructions:
           "Choose important areas from the candidate's design for deeper discussion. Probe implementation details, data modeling, consistency, and tradeoffs. Prefer areas where the candidate's reasoning is incomplete or weak.",
         showWhiteboard: true,
-        reverseEvaluationDimensions: ["probing_depth", "challenging_appropriately"],
+        reverseEvaluationDimensions: [EvaluationDimension.ProbingDepth, EvaluationDimension.ChallengingAppropriately],
       },
       {
-        phaseKey: "scalability",
+        phaseKey: PhaseId.Scalability,
         order: 4,
         goals: [
-          "bottlenecks",
-          "failure_modes",
-          "scaling_strategy",
-          "reliability",
+          Goal.Bottlenecks,
+          Goal.FailureModes,
+          Goal.ScalingStrategy,
+          Goal.Reliability,
         ],
-        evaluationDimensions: ["scalability", "reliability"],
+        evaluationDimensions: [EvaluationDimension.Scalability, EvaluationDimension.Reliability],
         targetDurationRatio: 0.2,
         transitionThreshold: 0.7,
         instructions:
           "Probe scalability and reliability. Ask about bottlenecks, failure scenarios, capacity pressure, and scaling strategies. Challenge assumptions using realistic production scenarios.",
         showWhiteboard: true,
-        reverseEvaluationDimensions: ["challenging_appropriately", "probing_depth"],
+        reverseEvaluationDimensions: [EvaluationDimension.ChallengingAppropriately, EvaluationDimension.ProbingDepth],
       },
       {
-        phaseKey: "closing",
+        phaseKey: PhaseId.Closing,
         order: 5,
-        goals: ["final_tradeoff_summary"],
-        evaluationDimensions: ["communication", "tradeoffs"],
+        goals: [Goal.FinalTradeoffSummary],
+        evaluationDimensions: [EvaluationDimension.Communication, EvaluationDimension.Tradeoffs],
         targetDurationRatio: 0.05,
         transitionThreshold: 1,
         instructions:
           "Conclude the interview naturally. Ask the candidate to summarize their design and the most important tradeoffs. Do not begin another technical phase.",
-        reverseEvaluationDimensions: ["summarizing_and_wrap_up"],
+        reverseEvaluationDimensions: [EvaluationDimension.SummarizingAndWrapUp],
       },
     ],
   },
@@ -978,87 +979,87 @@ const templates: TemplateSeed[] = [
     whiteboardPreset: "lld",
     phases: [
       {
-        phaseKey: "introduction",
+        phaseKey: PhaseId.Introduction,
         order: 0,
-        goals: ["candidate_understands_problem"],
-        evaluationDimensions: ["communication"],
+        goals: [Goal.CandidateUnderstandsProblem],
+        evaluationDimensions: [EvaluationDimension.Communication],
         targetDurationRatio: 0.05,
         transitionThreshold: 0.7,
         instructions:
           "Introduce the object-oriented design problem. Ask the candidate to clarify the expected behaviour and scope.",
-        reverseEvaluationDimensions: ["rapport_building"],
+        reverseEvaluationDimensions: [EvaluationDimension.RapportBuilding],
       },
       {
-        phaseKey: "requirements",
+        phaseKey: PhaseId.Requirements,
         order: 1,
-        goals: ["use_cases", "actors", "constraints", "edge_cases"],
-        evaluationDimensions: ["requirement_clarity", "scope_management"],
+        goals: [Goal.UseCases, Goal.Actors, Goal.Constraints, Goal.EdgeCases],
+        evaluationDimensions: [EvaluationDimension.RequirementClarity, EvaluationDimension.ScopeManagement],
         targetDurationRatio: 0.15,
         transitionThreshold: 0.75,
         instructions:
           "Evaluate whether the candidate identifies important use cases, actors, constraints, and edge cases. Answer clarification questions. Do not propose classes or interfaces.",
-        reverseEvaluationDimensions: ["requirement_elicitation", "technical_listening"],
+        reverseEvaluationDimensions: [EvaluationDimension.RequirementElicitation, EvaluationDimension.TechnicalListening],
       },
       {
-        phaseKey: "domain_modeling",
+        phaseKey: PhaseId.DomainModeling,
         order: 2,
-        goals: ["core_entities", "responsibilities", "relationships"],
-        evaluationDimensions: ["object_modeling", "abstraction"],
+        goals: [Goal.CoreEntities, Goal.Responsibilities, Goal.Relationships],
+        evaluationDimensions: [EvaluationDimension.ObjectModeling, EvaluationDimension.Abstraction],
         targetDurationRatio: 0.2,
         transitionThreshold: 0.75,
         instructions:
           "Ask the candidate to identify the core entities. Evaluate responsibilities and relationships. Challenge god objects, unclear ownership, and weak abstractions.",
         showWhiteboard: true,
-        reverseEvaluationDimensions: ["technical_listening", "time_management"],
+        reverseEvaluationDimensions: [EvaluationDimension.TechnicalListening, EvaluationDimension.TimeManagement],
       },
       {
-        phaseKey: "class_design",
+        phaseKey: PhaseId.ClassDesign,
         order: 3,
         goals: [
-          "classes",
-          "interfaces",
-          "method_boundaries",
-          "encapsulation",
+          Goal.Classes,
+          Goal.Interfaces,
+          Goal.MethodBoundaries,
+          Goal.Encapsulation,
         ],
-        evaluationDimensions: ["class_design", "code_quality"],
+        evaluationDimensions: [EvaluationDimension.ClassDesign, EvaluationDimension.CodeQuality],
         targetDurationRatio: 0.3,
         transitionThreshold: 0.75,
         instructions:
           "Probe concrete class and interface design. Evaluate method boundaries, encapsulation, and separation of concerns. Ask focused questions about design decisions.",
         showWhiteboard: true,
-        reverseEvaluationDimensions: ["probing_depth", "challenging_appropriately"],
+        reverseEvaluationDimensions: [EvaluationDimension.ProbingDepth, EvaluationDimension.ChallengingAppropriately],
       },
       {
-        phaseKey: "extensibility",
+        phaseKey: PhaseId.Extensibility,
         order: 4,
         goals: [
-          "change_scenarios",
-          "design_tradeoffs",
-          "extensibility",
-          "testability",
+          Goal.ChangeScenarios,
+          Goal.DesignTradeoffs,
+          Goal.Extensibility,
+          Goal.Testability,
         ],
         evaluationDimensions: [
-          "design_patterns",
-          "tradeoffs",
-          "maintainability",
+          EvaluationDimension.DesignPatterns,
+          EvaluationDimension.Tradeoffs,
+          EvaluationDimension.Maintainability,
         ],
         targetDurationRatio: 0.25,
         transitionThreshold: 0.7,
         instructions:
           "Introduce realistic requirement changes. Evaluate whether the design is extensible and testable. Probe design patterns only when relevant. Do not force pattern usage.",
         showWhiteboard: true,
-        reverseEvaluationDimensions: ["challenging_appropriately", "probing_depth"],
+        reverseEvaluationDimensions: [EvaluationDimension.ChallengingAppropriately, EvaluationDimension.ProbingDepth],
       },
       {
-        phaseKey: "closing",
+        phaseKey: PhaseId.Closing,
         order: 5,
-        goals: ["final_design_summary"],
-        evaluationDimensions: ["communication"],
+        goals: [Goal.FinalDesignSummary],
+        evaluationDimensions: [EvaluationDimension.Communication],
         targetDurationRatio: 0.05,
         transitionThreshold: 1,
         instructions:
           "Ask the candidate to summarize their final design and major tradeoffs. Conclude the interview naturally.",
-        reverseEvaluationDimensions: ["summarizing_and_wrap_up"],
+        reverseEvaluationDimensions: [EvaluationDimension.SummarizingAndWrapUp],
       },
     ],
   },
@@ -1070,50 +1071,50 @@ const templates: TemplateSeed[] = [
     description: "Coding interview focused on problem solving and complexity analysis.",
     phases: [
       {
-        phaseKey: "clarification",
+        phaseKey: PhaseId.Clarification,
         order: 0,
-        goals: ["input_constraints", "edge_cases_identified"],
-        evaluationDimensions: ["communication", "edge_case_handling"],
+        goals: [Goal.InputConstraints, Goal.EdgeCasesIdentified],
+        evaluationDimensions: [EvaluationDimension.Communication, EvaluationDimension.EdgeCaseHandling],
         targetDurationRatio: 0.15,
         transitionThreshold: 0.7,
         instructions:
           "Present the problem statement. Ask the candidate to restate the problem and clarify input size, constraints, and edge cases before coding.",
       },
       {
-        phaseKey: "approach",
+        phaseKey: PhaseId.Approach,
         order: 1,
-        goals: ["brute_force_stated", "optimization_direction"],
-        evaluationDimensions: ["problem_solving", "complexity_analysis"],
+        goals: [Goal.BruteForceStated, Goal.OptimizationDirection],
+        evaluationDimensions: [EvaluationDimension.ProblemSolving, EvaluationDimension.ComplexityAnalysis],
         targetDurationRatio: 0.2,
         transitionThreshold: 0.7,
         instructions:
           "Ask the candidate to describe their approach and its complexity before writing code. Push for a brute-force baseline if skipped, then an optimization direction.",
       },
       {
-        phaseKey: "implementation",
+        phaseKey: PhaseId.Implementation,
         order: 2,
-        goals: ["working_code", "clean_structure"],
-        evaluationDimensions: ["code_correctness", "communication"],
+        goals: [Goal.WorkingCode, Goal.CleanStructure],
+        evaluationDimensions: [EvaluationDimension.CodeCorrectness, EvaluationDimension.Communication],
         targetDurationRatio: 0.45,
         transitionThreshold: 0.75,
         instructions:
           "Let the candidate implement their approach. Ask clarifying questions about their code as they write it. Do not write code for them.",
       },
       {
-        phaseKey: "testing",
+        phaseKey: PhaseId.Testing,
         order: 3,
-        goals: ["dry_run", "edge_case_verification"],
-        evaluationDimensions: ["edge_case_handling", "code_correctness"],
+        goals: [Goal.DryRun, Goal.EdgeCaseVerification],
+        evaluationDimensions: [EvaluationDimension.EdgeCaseHandling, EvaluationDimension.CodeCorrectness],
         targetDurationRatio: 0.15,
         transitionThreshold: 0.7,
         instructions:
           "Ask the candidate to dry-run their solution against a normal case and at least one edge case.",
       },
       {
-        phaseKey: "closing",
+        phaseKey: PhaseId.Closing,
         order: 4,
-        goals: ["final_complexity_summary"],
-        evaluationDimensions: ["complexity_analysis"],
+        goals: [Goal.FinalComplexitySummary],
+        evaluationDimensions: [EvaluationDimension.ComplexityAnalysis],
         targetDurationRatio: 0.05,
         transitionThreshold: 1,
         instructions:
@@ -1127,72 +1128,72 @@ const templates: TemplateSeed[] = [
     description: "Review a pull request with focus on code quality, design patterns, and maintainability.",
     phases: [
       {
-        phaseKey: "introduction",
+        phaseKey: PhaseId.Introduction,
         order: 0,
-        goals: ["candidate_understands_pr_context"],
-        evaluationDimensions: ["communication"],
+        goals: [Goal.CandidateUnderstandsPrContext],
+        evaluationDimensions: [EvaluationDimension.Communication],
         targetDurationRatio: 0.05,
         transitionThreshold: 0.7,
         instructions:
           "Introduce the PR context briefly. Ask the candidate to begin by understanding the purpose and scope of the changes.",
-        reverseEvaluationDimensions: ["rapport_building"],
+        reverseEvaluationDimensions: [EvaluationDimension.RapportBuilding],
       },
       {
-        phaseKey: "context_understanding",
+        phaseKey: PhaseId.ContextUnderstanding,
         order: 1,
-        goals: ["pr_purpose", "affected_areas", "dependencies"],
-        evaluationDimensions: ["requirement_clarity", "communication"],
+        goals: [Goal.PrPurpose, Goal.AffectedAreas, Goal.Dependencies],
+        evaluationDimensions: [EvaluationDimension.RequirementClarity, EvaluationDimension.Communication],
         targetDurationRatio: 0.15,
         transitionThreshold: 0.75,
         instructions:
           "Evaluate whether the candidate understands the PR's purpose, affected areas, and dependencies. Answer clarification questions about the codebase context.",
-        reverseEvaluationDimensions: ["requirement_elicitation", "technical_listening"],
+        reverseEvaluationDimensions: [EvaluationDimension.RequirementElicitation, EvaluationDimension.TechnicalListening],
       },
       {
-        phaseKey: "code_review",
+        phaseKey: PhaseId.CodeReview,
         order: 2,
-        goals: ["correctness", "code_quality", "design_patterns"],
-        evaluationDimensions: ["code_correctness", "code_quality", "design_patterns"],
+        goals: [Goal.Correctness, Goal.CodeQuality, Goal.DesignPatterns],
+        evaluationDimensions: [EvaluationDimension.CodeCorrectness, EvaluationDimension.CodeQuality, EvaluationDimension.DesignPatterns],
         targetDurationRatio: 0.35,
         transitionThreshold: 0.75,
         instructions:
           "Ask the candidate to review the code changes. Evaluate their ability to identify bugs, code quality issues, and design pattern usage. Challenge missed issues.",
         showWhiteboard: true,
-        reverseEvaluationDimensions: ["probing_depth", "technical_listening"],
+        reverseEvaluationDimensions: [EvaluationDimension.ProbingDepth, EvaluationDimension.TechnicalListening],
       },
       {
-        phaseKey: "design_review",
+        phaseKey: PhaseId.DesignReview,
         order: 3,
-        goals: ["architecture_impact", "extensibility", "maintainability"],
-        evaluationDimensions: ["architecture", "maintainability", "tradeoffs"],
+        goals: [Goal.ArchitectureImpact, Goal.Extensibility, Goal.Maintainability],
+        evaluationDimensions: [EvaluationDimension.Architecture, EvaluationDimension.Maintainability, EvaluationDimension.Tradeoffs],
         targetDurationRatio: 0.25,
         transitionThreshold: 0.7,
         instructions:
           "Probe the architectural impact of the changes. Evaluate whether the candidate considers extensibility, maintainability, and design tradeoffs.",
         showWhiteboard: true,
-        reverseEvaluationDimensions: ["probing_depth", "challenging_appropriately"],
+        reverseEvaluationDimensions: [EvaluationDimension.ProbingDepth, EvaluationDimension.ChallengingAppropriately],
       },
       {
-        phaseKey: "feedback_delivery",
+        phaseKey: PhaseId.FeedbackDelivery,
         order: 4,
-        goals: ["constructive_feedback", "actionable_suggestions"],
-        evaluationDimensions: ["communication", "tradeoffs"],
+        goals: [Goal.ConstructiveFeedback, Goal.ActionableSuggestions],
+        evaluationDimensions: [EvaluationDimension.Communication, EvaluationDimension.Tradeoffs],
         targetDurationRatio: 0.15,
         transitionThreshold: 0.7,
         instructions:
           "Ask the candidate to provide feedback as if they were reviewing this PR. Evaluate the constructiveness and actionability of their feedback.",
-        reverseEvaluationDimensions: ["technical_listening", "time_management"],
+        reverseEvaluationDimensions: [EvaluationDimension.TechnicalListening, EvaluationDimension.TimeManagement],
       },
       {
-        phaseKey: "closing",
+        phaseKey: PhaseId.Closing,
         order: 5,
-        goals: ["review_summary"],
-        evaluationDimensions: ["communication"],
+        goals: [Goal.ReviewSummary],
+        evaluationDimensions: [EvaluationDimension.Communication],
         targetDurationRatio: 0.05,
         transitionThreshold: 1,
         instructions:
           "Ask the candidate to summarize their review and the most important issues found. Conclude the interview naturally.",
-        reverseEvaluationDimensions: ["summarizing_and_wrap_up"],
+        reverseEvaluationDimensions: [EvaluationDimension.SummarizingAndWrapUp],
       },
     ],
   },
@@ -1634,7 +1635,7 @@ async function seedTemplates() {
     }
 
     for (const dimension of dimensions) {
-      const content = RUBRICS[dimension];
+      const content = RUBRICS[dimension as EvaluationDimension];
 
       if (!content) {
         console.warn(

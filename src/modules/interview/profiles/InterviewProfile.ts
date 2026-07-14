@@ -1,11 +1,11 @@
-export type PhaseId = string;
+import { PhaseId, Goal, EvaluationDimension } from "../constants";
 
 export interface InterviewPhaseDefinition {
   id: PhaseId;
 
-  goals: string[];
+  goals: Goal[];
 
-  evaluationDimensions: string[];
+  evaluationDimensions: EvaluationDimension[];
 
   targetDurationRatio: number;
 
