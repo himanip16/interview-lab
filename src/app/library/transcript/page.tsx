@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Breadcrumb } from '@/src/components/layout/Breadcrumb';
 import { Bubble } from '@/src/components/ui/Bubble';
 import { cn } from '@/src/lib/utils';
@@ -42,6 +43,7 @@ const EVIDENCE: Evidence[] = [
 ];
 
 export default function TranscriptPage() {
+  const router = useRouter();
   const [openAnnotations, setOpenAnnotations] = useState<Set<string>>(new Set());
   const [scrollProgress, setScrollProgress] = useState(0);
 
@@ -82,7 +84,7 @@ export default function TranscriptPage() {
             { label: 'Library', href: '/library' },
             { label: 'Read a transcript', active: true }
           ]}
-          onBack={() => window.history.back()}
+          onBack={() => router.back()}
           className="mb-4.5"
         />
 

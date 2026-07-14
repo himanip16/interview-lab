@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Breadcrumb } from '@/src/components/layout/Breadcrumb';
 import { Timeline } from '@/src/components/layout/Timeline';
 import { Sidebar } from '@/src/components/layout/Sidebar';
@@ -27,6 +28,7 @@ const INITIAL_STEPS = [
 ];
 
 export default function LiveInterviewPage() {
+  const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([
     { id: '1', role: 'ai', content: 'Welcome! Today we\'ll design a URL shortener. Start by asking clarifying questions before you propose anything.' },
     { id: '2', role: 'user', content: 'Sure — what\'s the expected read to write ratio, and do we need custom aliases?' },
@@ -89,7 +91,7 @@ export default function LiveInterviewPage() {
               { label: 'Live interview', href: '/interview' },
               { label: 'Design a URL shortener', active: true }
             ]}
-            onBack={() => window.history.back()}
+            onBack={() => router.back()}
           />
           <div className="flex items-center gap-4.5">
             <div className="flex items-center gap-1.75 caption font-semibold text-[var(--coral)] p-[6px_13px] radius-pill bg-[rgba(255,90,60,0.1)]">

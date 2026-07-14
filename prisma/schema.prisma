@@ -295,17 +295,18 @@ model Concept {
 }
 
 model EvidenceItem {
-  id               String     @id @default(cuid())
+  id               String       @id @default(cuid())
   evaluationId     String
-  evaluation       Evaluation @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  evaluation       Evaluation   @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
   messageId        String
-  message          Message    @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  message          Message       @relation(fields: [messageId], references: [id], onDelete: Cascade)
   dimension        String
   timestampSeconds Int
   quote            String
   comment          String
-  normalizedScore  Float      @default(0)
-  createdAt        DateTime   @default(now())
+  type             EvidenceType
+  normalizedScore  Float         @default(0)
+  createdAt        DateTime      @default(now())
 
   concepts EvidenceConcept[]
 
@@ -545,6 +546,11 @@ enum Difficulty {
 enum MessageRole {
   assistant
   user
+}
+
+enum EvidenceType {
+  STRENGTH
+  WEAKNESS
 }
 
 model PracticeActivity {

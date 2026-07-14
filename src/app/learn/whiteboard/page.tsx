@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Breadcrumb } from '@/src/components/layout/Breadcrumb';
 import { Inspector } from '@/src/components/layout/Inspector';
 import { Panel } from '@/src/components/ui/Panel';
@@ -61,6 +62,7 @@ const NODES_DATA: Record<string, NodeData> = {
 };
 
 export default function WhiteboardPage() {
+  const router = useRouter();
   const [selectedNode, setSelectedNode] = useState<string>('client');
   const [selectedSystem, setSelectedSystem] = useState<string>('URL shortener');
 
@@ -77,7 +79,7 @@ export default function WhiteboardPage() {
               { label: 'Learn', href: '/learn' },
               { label: 'Whiteboarding', active: true }
             ]}
-            onBack={() => window.history.back()}
+            onBack={() => router.back()}
           />
         </div>
 

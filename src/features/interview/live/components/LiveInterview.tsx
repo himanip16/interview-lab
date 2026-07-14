@@ -6,34 +6,19 @@ type Props = {
   interviewId: string;
   duration: number;
   initialMessages?: any[];
+  interviewTitle?: string;
+  designSummary?: string[];
 };
 
-export default function LiveInterview({ interviewId, duration, initialMessages = [] }: Props) {
-  const [messages, setMessages] = useState([
-    { role: 'ai', content: 'Welcome! Today we\'ll design a URL shortener. Start by asking clarifying questions before you propose anything.' },
-    { role: 'user', content: 'Sure — what\'s the expected read to write ratio, and do we need custom aliases?' },
-    { role: 'ai', content: 'Good question. Assume reads outnumber writes heavily, maybe 100 to 1. Custom aliases are a nice-to-have, not required for v1.' },
-    { role: 'user', content: 'Got it. Given that read-heavy pattern, I\'d lean toward a key-value store with a cache in front rather than a relational database.' },
-  ]);
-  const [isTyping, setIsTyping] = useState(true);
+export default function LiveInterview({ interviewId, duration, initialMessages = [], interviewTitle = 'System Design Interview', designSummary = [] }: Props) {
+  const [messages, setMessages] = useState(initialMessages);
+  const [isTyping, setIsTyping] = useState(false);
   const [inputValue, setInputValue] = useState('');
-
-  useEffect(() => {
-    setTimeout(() => {
-      setIsTyping(false);
-      setMessages(prev => [...prev, { role: 'ai', content: 'Reasonable. How would you generate the short code itself, and how do you avoid collisions?' }]);
-    }, 1600);
-  }, []);
 
   const handleSend = () => {
     if (inputValue.trim()) {
       setMessages(prev => [...prev, { role: 'user', content: inputValue }]);
       setInputValue('');
-      setIsTyping(true);
-      setTimeout(() => {
-        setIsTyping(false);
-        setMessages(prev => [...prev, { role: 'ai', content: 'That\'s a good approach. What about handling redirects at scale?' }]);
-      }, 1000);
     }
   };
 
@@ -50,7 +35,7 @@ export default function LiveInterview({ interviewId, duration, initialMessages =
               </svg>
             </button>
             <div className="crumb-text text-[13px] text-[#5A5B66] font-medium">
-              Live interview &nbsp;/&nbsp; <b className="text-[#15161C] font-semibold">Design a URL shortener</b>
+              Live interview &nbsp;/&nbsp; <b className="text-[#15161C] font-semibold">{interviewTitle}</b>
             </div>
           </div>
           <div className="head-right flex items-center gap-4.5">
@@ -81,7 +66,7 @@ export default function LiveInterview({ interviewId, duration, initialMessages =
                 `}</style>
               </div>
               <div className="ring absolute inset-0 rounded-full bg-[#15161C] flex items-center justify-center flex-col border-[1.5px] border-[rgba(0,217,163,0.4)]">
-                <div className="t font-['Poppins'] text-[13px] font-semibold text-[#00D9A3]">28:14</div>
+                <div className="t font-['Poppins'] text-[13px] font-semibold text-[#00D9A3]">{Math.floor(duration / 60)}:{(duration % 60).toString().padStart(2, '0')}</div>
                 <div className="l text-[7px] text-white/50 tracking-[0.05em] mt-0.25">LEFT</div>
               </div>
             </div>
@@ -205,30 +190,29 @@ export default function LiveInterview({ interviewId, duration, initialMessages =
             <div className="phase-pill inline-block text-[12px] font-semibold bg-[#15161C] text-white p-[5px_13px] rounded-[999px] mb-5.5">Requirements</div>
 
             <div className="side-label text-[10.5px] font-bold tracking-[0.06em] text-[#00A87E] text-transform:uppercase mb-2.5">Design summary</div>
-            <div className="summary-item text-[12.5px] text-[#5A5B66] leading-[1.6] pl-3.5 relative mb-2.5">
-              <style>{`
-                .summary-item::before {
-                  content: '';
-                  position: absolute;
-                  left: 0;
-                  top: 6px;
-                  width: 5px;
-                  height: 5px;
-                  border-radius: 50%;
-                  background: #00D9A3;
-                }
-              `}</style>
-              Read-heavy workload assumed, ~100:1 read/write ratio.
-            </div>
-            <div className="summary-item text-[12.5px] text-[#5A5B66] leading-[1.6] pl-3.5 relative mb-2.5">
-              Custom aliases scoped out of v1.
-            </div>
-            <div className="summary-item text-[12.5px] text-[#5A5B66] leading-[1.6] pl-3.5 relative mb-2.5">
-              Candidate is leaning key-value store + cache over relational.
-            </div>
-            <div className="summary-item text-[12.5px] text-[#5A5B66] leading-[1.6] pl-3.5 relative">
-              Not yet discussed: uniqueness strategy for short codes.
-            </div>
+            {designSummary.length > 0 ? (
+              designSummary.map((item, idx) => (
+                <div key={idx} className="summary-item text-[12.5px] text-[#5A5B66] leading-[1.6] pl-3.5 relative mb-2.5">
+                  <style>{`
+                    .summary-item::before {
+                      content: '';
+                      position: absolute;
+                      left: 0;
+                      top: 6px;
+                      width: 5px;
+                      height: 5px;
+                      border-radius: 50%;
+                      background: #00D9A3;
+                    }
+                  `}</style>
+                  {item}
+                </div>
+              ))
+            ) : (
+              <div className="text-[12.5px] text-[#5A5B66] leading-[1.6] pl-3.5 relative">
+                No design summary available yet.
+              </div>
+            )}
           </div>
         </div>
       </div>
