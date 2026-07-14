@@ -287,6 +287,7 @@ PROJECT STRUCTURE
 │   │   │       └── message.ts
 │   │   ├── landing
 │   │   │   ├── components
+│   │   │   │   ├── ActionCards.tsx
 │   │   │   │   ├── CTA.tsx
 │   │   │   │   ├── FeatureCard.tsx
 │   │   │   │   ├── Features.tsx
@@ -438,7 +439,7 @@ PROJECT STRUCTURE
 ├── tsconfig.json
 └── tsconfig.tsbuildinfo
 
-167 directories, 270 files
+167 directories, 271 files
 
 FILE CONTENTS
 
@@ -5008,18 +5009,21 @@ FILE: ./src/app/problems/page.tsx
 ================================================
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
-import { Panel } from "@/components/ui/Panel";
 import { Search } from "@/components/ui/Search";
-import { Pill } from "@/components/ui/Pill";
-import { Badge } from "@/components/ui/Badge";
+import { useSearchParams } from "next/navigation"; 
+
+type ProblemType = "hld" | "lld" | "dsa";
+type Difficulty = "easy" | "medium" | "hard";
+type SortOption = "popularity" | "alpha" | "difficulty" | "time";
+type StatusFilter = "all" | "done" | "pending";
 
 type Problem = {
   title: string;
   crux: string;
-  type: string;
-  diff: string;
+  type: ProblemType;
+  diff: Difficulty;
   mins: number;
   done: boolean;
   pop: number;
@@ -5040,48 +5044,44 @@ const MOCK_PROBLEMS: Problem[] = [
 
 export default function ProblemsPage() {
   const [problems, setProblems] = useState<Problem[]>(MOCK_PROBLEMS);
-  const [state, setState] = useState({ type:'all', diff:'all', status:'all', sort:'popularity' });
   const [isSortMenuOpen, setIsSortMenuOpen] = useState(false);
+  const searchParams = useSearchParams();
+  const categoryFromUrl = searchParams.get("category"); 
 
   const DIFF_ORDER = { easy:0, medium:1, hard:2 };
+  const [state, setState] = useState({ 
+    type: "all", 
+    diff: "all", 
+    status: "all", 
+    sort: "popularity",
+    category: categoryFromUrl || "all"  // ADD THIS
+  });
 
-  const filteredProblems = problems.filter(p =>
-    (state.type==='all' || p.type===state.type) &&
-    (state.diff==='all' || p.diff===state.diff) &&
-    (state.status==='all' || (state.status==='done' ? p.done : !p.done))
-  );
+  const filteredProblems = useMemo(() => {
+    let result = problems.filter(p =>
+      (state.type === 'all' || p.type === state.type) &&
+      (state.diff === 'all' || p.diff === state.diff) &&
+      (state.status === 'all' || (state.status === 'done' ? p.done : !p.done)) &&
+      (state.category === 'all' || p.type === state.category)
+    );
 
-  if (state.sort==='popularity') filteredProblems.sort((a,b) => b.pop - a.pop);
-  if (state.sort==='alpha') filteredProblems.sort((a,b) => a.title.localeCompare(b.title));
-  if (state.sort==='difficulty') filteredProblems.sort((a,b) => DIFF_ORDER[a.diff as keyof typeof DIFF_ORDER] - DIFF_ORDER[b.diff as keyof typeof DIFF_ORDER]);
-  if (state.sort==='time') filteredProblems.sort((a,b) => a.mins - b.mins);
-
-  const getBarClass = (type: string) => {
-    switch(type) {
-      case 'hld': return 'bg-[var(--violet)]';
-      case 'lld': return 'bg-[var(--coral)]';
-      case 'dsa': return 'bg-[var(--mint-deep)]';
-      default: return 'bg-[var(--violet)]';
+    if (state.sort === 'popularity') {
+      result = [...result].sort((a, b) => b.pop - a.pop);
+    } else if (state.sort === 'alpha') {
+      result = [...result].sort((a, b) => a.title.localeCompare(b.title));
+    } else if (state.sort === 'difficulty') {
+      result = [...result].sort((a, b) => DIFF_ORDER[a.diff] - DIFF_ORDER[b.diff]);
+    } else if (state.sort === 'time') {
+      result = [...result].sort((a, b) => a.mins - b.mins);
     }
-  };
 
-  const getTagClass = (type: string) => {
-    switch(type) {
-      case 'hld': return 'bg-[var(--violet)]';
-      case 'lld': return 'bg-[var(--coral)]';
-      case 'dsa': return 'bg-[var(--mint-deep)]';
-      default: return 'bg-[var(--violet)]';
-    }
-  };
+    return result;
+  }, [problems, state]);
 
-  const getDiffClass = (diff: string) => {
-    switch(diff) {
-      case 'easy': return 'text-[var(--mint-deep)] bg-[rgba(0,168,126,0.1)]';
-      case 'medium': return 'text-[var(--amber)] bg-[rgba(232,148,10,0.1)]';
-      case 'hard': return 'text-[var(--coral)] bg-[rgba(255,90,60,0.1)]';
-      default: return 'text-[var(--mint-deep)] bg-[rgba(0,168,126,0.1)]';
-    }
-  };
+  const getBarClass = (type: ProblemType): string => TYPE_COLORS[type] || TYPE_COLORS.hld;
+  const getTagClass = (type: ProblemType): string => TYPE_COLORS[type] || TYPE_COLORS.hld;
+  const getDiffClass = (diff: Difficulty): string => DIFF_CLASSES[diff] || DIFF_CLASSES.easy;
+  
 
   return (
     <div className="min-h-screen bg-[var(--paper)] py-10 px-6">
@@ -5735,22 +5735,15 @@ export default function MarketingLayout({
 ================================================
 FILE: ./src/app/(marketing)/page.tsx
 ================================================
-import PageContainer from "@/components/layout/PageContainer";
-
-import Hero from "@/features/landing/components/Hero";
-import SampleFeedback from "@/features/landing/components/SampleFeedback";
-import SmartMentor from "@/features/landing/components/SmartMentor";
-import PersonalNotebooks from "@/features/landing/components/PersonalNotebooks";
+import ActionCards from "@/features/landing/components/ActionCards";
 
 export default function Home() {
   return (
     <PageContainer>
       <Hero />
-
+      <ActionCards />  {/* ADD THIS */}
       <SmartMentor />
-
       <PersonalNotebooks />
-
       <SampleFeedback />
     </PageContainer>
   );
@@ -8691,6 +8684,45 @@ export default function SampleFeedback() {
   );
 }
 
+================================================
+FILE: ./src/features/landing/components/ActionCards.tsx
+================================================
+"use client";
+
+import Link from "next/link";
+
+const CATEGORIES = [
+  { id: "SYSTEM_DESIGN", label: "System Design", color: "bg-violet-500", icon: "🏗️", duration: "45 min" },
+  { id: "LOW_LEVEL_DESIGN", label: "Low Level Design", color: "bg-blue-500", icon: "⚙️", duration: "30 min" },
+  { id: "DATABASES", label: "Databases", color: "bg-emerald-500", icon: "🗄️", duration: "30 min" },
+  { id: "KAFKA", label: "Kafka & Streaming", color: "bg-yellow-500", icon: "📨", duration: "45 min" },
+  { id: "BACKEND", label: "Backend Engineering", color: "bg-orange-500", icon: "🔧", duration: "30 min" },
+];
+
+export default function ActionCards() {
+  return (
+    <section className="py-16">
+      <div className="mb-8">
+        <h2 className="text-3xl font-bold text-foreground">Choose Your Challenge</h2>
+        <p className="text-muted-foreground mt-2">Pick a topic and start practicing</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        {CATEGORIES.map((cat) => (
+          <Link
+            key={cat.id}
+            href={`/problems?category=${cat.id}`}
+            className={`${cat.color} rounded-xl p-6 text-white cursor-pointer transition-transform hover:scale-105 hover:shadow-lg`}
+          >
+            <div className="text-4xl mb-4">{cat.icon}</div>
+            <h3 className="font-bold text-lg">{cat.label}</h3>
+            <p className="text-sm opacity-90 mt-2">Practice • {cat.duration}</p>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
 ================================================
 FILE: ./src/features/landing/components/FeatureCard.tsx
 ================================================

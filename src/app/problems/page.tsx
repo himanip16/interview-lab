@@ -1,18 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { Panel } from "@/components/ui/Panel";
 import { Search } from "@/components/ui/Search";
-import { Pill } from "@/components/ui/Pill";
-import { Badge } from "@/components/ui/Badge";
 import { useSearchParams } from "next/navigation"; 
+
+type ProblemType = "hld" | "lld" | "dsa";
+type Difficulty = "easy" | "medium" | "hard";
+type SortOption = "popularity" | "alpha" | "difficulty" | "time";
+type StatusFilter = "all" | "done" | "pending";
 
 type Problem = {
   title: string;
   crux: string;
-  type: string;
-  diff: string;
+  type: ProblemType;
+  diff: Difficulty;
   mins: number;
   done: boolean;
   pop: number;
@@ -31,59 +34,57 @@ const MOCK_PROBLEMS: Problem[] = [
   { title:'Two pointers technique', crux:'Pointer movement and termination conditions', type:'dsa', diff:'easy', mins:30, done:true, pop:7 },
 ];
 
+const DIFF_ORDER: Record<Difficulty, number> = { easy: 0, medium: 1, hard: 2 };
+const TYPE_COLORS: Record<ProblemType, string> = {
+  hld: "bg-[var(--violet)]",
+  lld: "bg-[var(--coral)]",
+  dsa: "bg-[var(--mint-deep)]",
+};
+
+const DIFF_CLASSES: Record<Difficulty, string> = {
+  easy: "text-[var(--mint-deep)] bg-[rgba(0,168,126,0.1)]",
+  medium: "text-[var(--amber)] bg-[rgba(232,148,10,0.1)]",
+  hard: "text-[var(--coral)] bg-[rgba(255,90,60,0.1)]",
+};
+
 export default function ProblemsPage() {
-  const [problems, setProblems] = useState<Problem[]>(MOCK_PROBLEMS);
+  const problems = MOCK_PROBLEMS;
   const [isSortMenuOpen, setIsSortMenuOpen] = useState(false);
   const searchParams = useSearchParams();
-  const categoryFromUrl = searchParams.get("category"); 
+  const categoryFromUrl = searchParams.get("category");
 
-  const DIFF_ORDER = { easy:0, medium:1, hard:2 };
-  const [state, setState] = useState({ 
-    type: "all", 
-    diff: "all", 
-    status: "all", 
-    sort: "popularity",
-    category: categoryFromUrl || "all"  // ADD THIS
+  const [state, setState] = useState({
+    type: "all" as ProblemType | "all",
+    diff: "all" as Difficulty | "all",
+    status: "all" as StatusFilter,
+    sort: "popularity" as SortOption,
+    category: categoryFromUrl || "all",
   });
 
-  const filteredProblems = problems.filter(p =>
-    (state.type==='all' || p.type===state.type) &&
-    (state.diff==='all' || p.diff===state.diff) &&
-    (state.status==='all' || (state.status==='done' ? p.done : !p.done))
-  );
+  const filteredProblems = useMemo(() => {
+    let result = problems.filter(p =>
+      (state.type === 'all' || p.type === state.type) &&
+      (state.diff === 'all' || p.diff === state.diff) &&
+      (state.status === 'all' || (state.status === 'done' ? p.done : !p.done)) &&
+      (state.category === 'all' || p.type === state.category)
+    );
 
-  if (state.sort==='popularity') filteredProblems.sort((a,b) => b.pop - a.pop);
-  if (state.sort==='alpha') filteredProblems.sort((a,b) => a.title.localeCompare(b.title));
-  if (state.sort==='difficulty') filteredProblems.sort((a,b) => DIFF_ORDER[a.diff as keyof typeof DIFF_ORDER] - DIFF_ORDER[b.diff as keyof typeof DIFF_ORDER]);
-  if (state.sort==='time') filteredProblems.sort((a,b) => a.mins - b.mins);
-
-  const getBarClass = (type: string) => {
-    switch(type) {
-      case 'hld': return 'bg-[var(--violet)]';
-      case 'lld': return 'bg-[var(--coral)]';
-      case 'dsa': return 'bg-[var(--mint-deep)]';
-      default: return 'bg-[var(--violet)]';
+    if (state.sort === 'popularity') {
+      result = [...result].sort((a, b) => b.pop - a.pop);
+    } else if (state.sort === 'alpha') {
+      result = [...result].sort((a, b) => a.title.localeCompare(b.title));
+    } else if (state.sort === 'difficulty') {
+      result = [...result].sort((a, b) => DIFF_ORDER[a.diff] - DIFF_ORDER[b.diff]);
+    } else if (state.sort === 'time') {
+      result = [...result].sort((a, b) => a.mins - b.mins);
     }
-  };
-  
 
-  const getTagClass = (type: string) => {
-    switch(type) {
-      case 'hld': return 'bg-[var(--violet)]';
-      case 'lld': return 'bg-[var(--coral)]';
-      case 'dsa': return 'bg-[var(--mint-deep)]';
-      default: return 'bg-[var(--violet)]';
-    }
-  };
+    return result;
+  }, [problems, state]);
 
-  const getDiffClass = (diff: string) => {
-    switch(diff) {
-      case 'easy': return 'text-[var(--mint-deep)] bg-[rgba(0,168,126,0.1)]';
-      case 'medium': return 'text-[var(--amber)] bg-[rgba(232,148,10,0.1)]';
-      case 'hard': return 'text-[var(--coral)] bg-[rgba(255,90,60,0.1)]';
-      default: return 'text-[var(--mint-deep)] bg-[rgba(0,168,126,0.1)]';
-    }
-  };
+  const getBarClass = (type: ProblemType): string => TYPE_COLORS[type] || TYPE_COLORS.hld;
+  const getTagClass = (type: ProblemType): string => TYPE_COLORS[type] || TYPE_COLORS.hld;
+  const getDiffClass = (diff: Difficulty): string => DIFF_CLASSES[diff] || DIFF_CLASSES.easy;
   
 
   return (
@@ -113,7 +114,7 @@ export default function ProblemsPage() {
               {["all", "hld", "lld", "dsa"].map((type) => (
                 <button
                   key={type}
-                  onClick={() => setState({ ...state, type })}
+                  onClick={() => setState({ ...state, type: type as ProblemType | "all" })}
                   className={cn(
                     "body-s font-semibold p-[6px_13px] radius-pill border border-[var(--border)] text-[var(--ink-400)] cursor-pointer transition-all duration-200 whitespace-nowrap",
                     state.type === type && "bg-[var(--ink)] text-white border-[var(--ink)]",
@@ -137,7 +138,7 @@ export default function ProblemsPage() {
               {["all", "easy", "medium", "hard"].map((diff) => (
                 <button
                   key={diff}
-                  onClick={() => setState({ ...state, diff })}
+                  onClick={() => setState({ ...state, diff: diff as Difficulty | "all" })}
                   className={cn(
                     "body-s font-semibold p-[6px_13px] radius-pill border border-[var(--border)] text-[var(--ink-400)] cursor-pointer transition-all duration-200 whitespace-nowrap",
                     state.diff === diff && "bg-[var(--ink)] text-white border-[var(--ink)]"
@@ -154,7 +155,7 @@ export default function ProblemsPage() {
               {["all", "done", "pending"].map((status) => (
                 <button
                   key={status}
-                  onClick={() => setState({ ...state, status })}
+                  onClick={() => setState({ ...state, status: status as StatusFilter })}
                   className={cn(
                     "body-s font-semibold p-[6px_13px] radius-pill border border-[var(--border)] text-[var(--ink-400)] cursor-pointer transition-all duration-200 whitespace-nowrap",
                     state.status === status && "bg-[var(--ink)] text-white border-[var(--ink)]"
@@ -198,7 +199,7 @@ export default function ProblemsPage() {
                     <button
                       key={option}
                       onClick={() => {
-                        setState({ ...state, sort: option });
+                        setState({ ...state, sort: option as SortOption });
                         setIsSortMenuOpen(false);
                       }}
                       className={cn(
