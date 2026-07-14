@@ -4,7 +4,8 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { Panel } from "@/components/ui/Panel";
 import { Search } from "@/components/ui/Search";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useClickOutside } from "@/lib/hooks/useClickOutside";
 import {
   DIFFICULTY_LEVELS,
   DIFFICULTY_ORDER,
@@ -59,6 +60,7 @@ export default function ProblemsPage() {
   const problems = MOCK_PROBLEMS;
   const [isSortMenuOpen, setIsSortMenuOpen] = useState(false);
   const searchParams = useSearchParams();
+  const router = useRouter();
   const categoryFromUrl = searchParams.get("category");
   const dropdownRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -105,22 +107,17 @@ export default function ProblemsPage() {
       }
     };
 
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsSortMenuOpen(false);
-      }
-    };
-
     if (isSortMenuOpen) {
       document.addEventListener('keydown', handleKeyDown);
-      document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
-      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isSortMenuOpen]);
+
+  // Handle click outside using custom hook
+  useClickOutside(dropdownRef, () => setIsSortMenuOpen(false), isSortMenuOpen);
 
   // Handle arrow key navigation
   const handleKeyDown = (event: React.KeyboardEvent, index: number) => {
@@ -317,7 +314,7 @@ export default function ProblemsPage() {
                 key={p.title}
                 className="flex items-center gap-4 p-[16px_18px] radius-card border border-[var(--border)] cursor-pointer transition-transform duration-[0.25s] ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:-translate-y-[-3px] hover:shadow-floating"
                 onClick={() => {
-                  window.location.href = `/interview/setup?problemId=${p.title}`;
+                  router.push(`/interview/setup?problemId=${p.title}`);
                 }}
               >
                 <div className={`w-[5px] self-stretch radius-small flex-shrink-0 ${getBarClass(p.type)}`} />
