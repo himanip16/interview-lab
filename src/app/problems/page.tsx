@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { Panel } from "@/components/ui/Panel";
 import { Search } from "@/components/ui/Search";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useClickOutside } from "@/lib/hooks/useClickOutside";
 import {
@@ -21,6 +22,7 @@ import {
 
 
 type Problem = {
+  id: string;
   title: string;
   crux: string;
   type: ProblemType;
@@ -31,16 +33,16 @@ type Problem = {
 };
 
 const MOCK_PROBLEMS: Problem[] = [
-  { title:'Design a chat system', crux:'Message ordering, presence, and delivery guarantees', type:'hld', diff:'hard', mins:45, done:false, pop:9 },
-  { title:'Design an LRU cache', crux:'Hash map plus doubly linked list, O(1) get and put', type:'dsa', diff:'medium', mins:30, done:true, pop:8 },
-  { title:'Design a rate limiter', crux:'Distributed state, sliding windows, fairness under load', type:'hld', diff:'hard', mins:30, done:false, pop:7 },
-  { title:'Design a shopping cart', crux:'Cart persistence, price consistency, session handling', type:'lld', diff:'easy', mins:30, done:true, pop:6 },
-  { title:'Design a URL shortener', crux:'Unique ID generation and redirect performance', type:'hld', diff:'medium', mins:30, done:true, pop:9 },
-  { title:'Design a booking system', crux:'Availability checking, concurrency, double-booking', type:'lld', diff:'medium', mins:30, done:false, pop:5 },
-  { title:'Binary search variations', crux:'Search space reduction and boundary conditions', type:'dsa', diff:'medium', mins:30, done:false, pop:6 },
-  { title:'Design cache invalidation', crux:'Invalidation propagation, consistency, performance', type:'lld', diff:'hard', mins:45, done:false, pop:4 },
-  { title:'Design event sourcing', crux:'Event storage, snapshotting, replay performance', type:'lld', diff:'hard', mins:45, done:false, pop:3 },
-  { title:'Two pointers technique', crux:'Pointer movement and termination conditions', type:'dsa', diff:'easy', mins:30, done:true, pop:7 },
+  { id:'1', title:'Design a chat system', crux:'Message ordering, presence, and delivery guarantees', type:'hld', diff:'hard', mins:45, done:false, pop:9 },
+  { id:'2', title:'Design an LRU cache', crux:'Hash map plus doubly linked list, O(1) get and put', type:'dsa', diff:'medium', mins:30, done:true, pop:8 },
+  { id:'3', title:'Design a rate limiter', crux:'Distributed state, sliding windows, fairness under load', type:'hld', diff:'hard', mins:30, done:false, pop:7 },
+  { id:'4', title:'Design a shopping cart', crux:'Cart persistence, price consistency, session handling', type:'lld', diff:'easy', mins:30, done:true, pop:6 },
+  { id:'5', title:'Design a URL shortener', crux:'Unique ID generation and redirect performance', type:'hld', diff:'medium', mins:30, done:true, pop:9 },
+  { id:'6', title:'Design a booking system', crux:'Availability checking, concurrency, double-booking', type:'lld', diff:'medium', mins:30, done:false, pop:5 },
+  { id:'7', title:'Binary search variations', crux:'Search space reduction and boundary conditions', type:'dsa', diff:'medium', mins:30, done:false, pop:6 },
+  { id:'8', title:'Design cache invalidation', crux:'Invalidation propagation, consistency, performance', type:'lld', diff:'hard', mins:45, done:false, pop:4 },
+  { id:'9', title:'Design event sourcing', crux:'Event storage, snapshotting, replay performance', type:'lld', diff:'hard', mins:45, done:false, pop:3 },
+  { id:'10', title:'Two pointers technique', crux:'Pointer movement and termination conditions', type:'dsa', diff:'easy', mins:30, done:true, pop:7 },
 ];
 
 const DIFF_ORDER = DIFFICULTY_ORDER;
@@ -57,7 +59,9 @@ const DIFF_CLASSES: Record<DifficultyLevel, string> = {
 };
 
 export default function ProblemsPage() {
-  const problems = MOCK_PROBLEMS;
+  const [problems, setProblems] = useState<Problem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isSortMenuOpen, setIsSortMenuOpen] = useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -65,12 +69,37 @@ export default function ProblemsPage() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
+  // Fetch problems from API
+  const fetchProblems = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await fetch('/api/problems');
+      if (!response.ok) {
+        throw new Error('Failed to fetch problems');
+      }
+      const data = await response.json();
+      setProblems(data.problems || MOCK_PROBLEMS); // Fallback to mock if API returns empty
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load problems');
+      // Fallback to mock data on error
+      setProblems(MOCK_PROBLEMS);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProblems();
+  }, []);
+
   const [state, setState] = useState({
     type: ALL_FILTER as ProblemType | typeof ALL_FILTER,
     diff: ALL_FILTER as DifficultyLevel | typeof ALL_FILTER,
     status: ALL_FILTER as StatusFilter,
     sort: "popularity" as SortOption,
     category: categoryFromUrl || ALL_FILTER,
+    searchQuery: "",
   });
 
   const filteredProblems = useMemo(() => {
@@ -78,7 +107,8 @@ export default function ProblemsPage() {
       (state.type === ALL_FILTER || p.type === state.type) &&
       (state.diff === ALL_FILTER || p.diff === state.diff) &&
       (state.status === ALL_FILTER || (state.status === 'done' ? p.done : !p.done)) &&
-      (state.category === ALL_FILTER || p.type === state.category)
+      (state.category === ALL_FILTER || p.type === state.category) &&
+      (state.searchQuery === "" || p.title.toLowerCase().includes(state.searchQuery.toLowerCase()) || p.crux.toLowerCase().includes(state.searchQuery.toLowerCase()))
     );
 
     if (state.sort === 'popularity') {
@@ -157,9 +187,9 @@ export default function ProblemsPage() {
             Problem library
           </h2>
           <Search 
-            placeholder="Search problems…" 
+            placeholder="Search problems..." 
             className="w-[220px]"
-            onSearch={() => {}}
+            onSearch={(value) => setState(prev => ({ ...prev, searchQuery: value }))}
           />
         </div>
 
@@ -304,17 +334,44 @@ export default function ProblemsPage() {
 
         {/* Problem List */}
         <div className="flex flex-col gap-2.5 mt-4.5">
-          {filteredProblems.length === 0 ? (
+          {loading ? (
+            // Loading skeleton
+            Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4 p-[16px_18px] radius-card border border-[var(--border)]">
+                <Skeleton className="w-[5px] h-12 radius-small flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <Skeleton className="h-5 w-2/3 mb-2" />
+                  <Skeleton className="h-4 w-full" />
+                </div>
+                <Skeleton className="h-6 w-16 radius-pill" />
+                <Skeleton className="h-5 w-12" />
+                <Skeleton className="w-[22px] h-[22px] radius-pill" />
+              </div>
+            ))
+          ) : error ? (
+            // Error state with retry
+            <div className="text-center py-12">
+              <div className="body-s text-[var(--ink-400)] mb-4">
+                {error}
+              </div>
+              <button
+                onClick={fetchProblems}
+                className="body-s font-semibold p-[8px_16px] radius-pill border border-[var(--border)] bg-[var(--surface)] cursor-pointer text-[var(--ink)] hover:bg-[var(--paper-100)] transition-all"
+              >
+                Retry
+              </button>
+            </div>
+          ) : filteredProblems.length === 0 ? (
             <div className="text-center py-12 body-s text-[var(--ink-400)]">
               No problems match these filters.
             </div>
           ) : (
             filteredProblems.map((p) => (
               <div
-                key={p.title}
+                key={p.id}
                 className="flex items-center gap-4 p-[16px_18px] radius-card border border-[var(--border)] cursor-pointer transition-transform duration-[0.25s] ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:-translate-y-[-3px] hover:shadow-floating"
                 onClick={() => {
-                  router.push(`/interview/setup?problemId=${p.title}`);
+                  router.push(`/interview/setup?problemId=${encodeURIComponent(p.id)}`);
                 }}
               >
                 <div className={`w-[5px] self-stretch radius-small flex-shrink-0 ${getBarClass(p.type)}`} />
