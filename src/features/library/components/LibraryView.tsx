@@ -387,7 +387,7 @@ export default function LibraryView({ experiences, completedInterviews }: Props)
 
               <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 <Link
-                  href="/diagram"
+                  href="/learn/diagrams"
                   className="rounded border border-border bg-muted p-4 text-left transition hover:border-foreground/40"
                 >
                   <span className="inline-block rounded bg-blue-500/10 px-2 py-0.5 font-mono text-[9px] font-bold uppercase text-blue-400">
@@ -402,7 +402,7 @@ export default function LibraryView({ experiences, completedInterviews }: Props)
                 </Link>
 
                 <Link
-                  href="/diagram/twitter"
+                  href="/learn/diagrams/twitter"
                   className="rounded border border-border bg-muted p-4 text-left transition hover:border-foreground/40"
                 >
                   <span className="inline-block rounded bg-green-500/10 px-2 py-0.5 font-mono text-[9px] font-bold uppercase text-green-400">
@@ -417,7 +417,7 @@ export default function LibraryView({ experiences, completedInterviews }: Props)
                 </Link>
 
                 <Link
-                  href="/diagram/netflix"
+                  href="/learn/diagrams/netflix"
                   className="rounded border border-border bg-muted p-4 text-left transition hover:border-foreground/40"
                 >
                   <span className="inline-block rounded bg-purple-500/10 px-2 py-0.5 font-mono text-[9px] font-bold uppercase text-purple-400">
@@ -432,7 +432,7 @@ export default function LibraryView({ experiences, completedInterviews }: Props)
                 </Link>
 
                 <Link
-                  href="/diagram/uber"
+                  href="/learn/diagrams/uber"
                   className="rounded border border-border bg-muted p-4 text-left transition hover:border-foreground/40"
                 >
                   <span className="inline-block rounded bg-orange-500/10 px-2 py-0.5 font-mono text-[9px] font-bold uppercase text-orange-400">
@@ -447,7 +447,7 @@ export default function LibraryView({ experiences, completedInterviews }: Props)
                 </Link>
 
                 <Link
-                  href="/diagram/instagram"
+                  href="/learn/diagrams/instagram"
                   className="rounded border border-border bg-muted p-4 text-left transition hover:border-foreground/40"
                 >
                   <span className="inline-block rounded bg-red-500/10 px-2 py-0.5 font-mono text-[9px] font-bold uppercase text-red-400">
@@ -462,7 +462,7 @@ export default function LibraryView({ experiences, completedInterviews }: Props)
                 </Link>
 
                 <Link
-                  href="/diagram/whatsapp"
+                  href="/learn/diagrams/whatsapp"
                   className="rounded border border-border bg-muted p-4 text-left transition hover:border-foreground/40"
                 >
                   <span className="inline-block rounded bg-cyan-500/10 px-2 py-0.5 font-mono text-[9px] font-bold uppercase text-cyan-400">

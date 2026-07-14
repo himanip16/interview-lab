@@ -103,7 +103,9 @@ PROJECT STRUCTURE
 │   │   │   │   │   │   └── route.ts
 │   │   │   │   │   ├── message
 │   │   │   │   │   │   └── route.ts
-│   │   │   │   │   └── route.ts
+│   │   │   │   │   ├── route.ts
+│   │   │   │   │   └── whiteboard
+│   │   │   │   │       └── route.ts
 │   │   │   │   ├── route.ts
 │   │   │   │   ├── start
 │   │   │   │   │   └── route.ts
@@ -152,11 +154,9 @@ PROJECT STRUCTURE
 │   │   │   ├── live
 │   │   │   │   └── [id]
 │   │   │   │       └── page.tsx
-│   │   │   ├── report
-│   │   │   │   └── [id]
-│   │   │   │       └── page.tsx
-│   │   │   └── setup
-│   │   │       └── page.tsx
+│   │   │   └── report
+│   │   │       └── [id]
+│   │   │           └── page.tsx
 │   │   ├── layout.tsx
 │   │   ├── learn
 │   │   │   ├── [slug]
@@ -3811,7 +3811,10 @@ export default async function DashboardPage({ params }: Props) {
       prisma.interview.findMany({
         where: { userId, status: InterviewStatus.COMPLETED },
         include: { template: true, evaluation: true },
-        orderBy: { completedAt: "desc" },
+        orderBy: [
+          { completedAt: { sort: "desc", nulls: "last" } },
+          { updatedAt: "desc" },
+        ],
       }),
       prisma.problem.findMany({
         orderBy: { interviewCount: "desc" },
@@ -3951,145 +3954,6 @@ export default function RegisterPage() {
           Log in
         </a>
       </p>
-    </main>
-  );
-}
-================================================
-FILE: ./src/app/interview/setup/page.tsx
-================================================
-"use client";
-
-import { useSearchParams } from "next/navigation";
-import { useEffect, useCallback, useMemo } from "react";
-
-import CompanySelector from "@/src/features/interview/setup/components/CompanySelector";
-import DifficultySelector from "@/src/features/interview/setup/components/DifficultySelector";
-import DurationSelector from "@/src/features/interview/setup/components/DurationSelector";
-import InterviewTypeSelector from "@/src/features/interview/setup/components/InterviewTypeSelector";
-import ProblemSelector from "@/src/features/interview/setup/components/ProblemSelector";
-import SetupCard from "@/src/features/interview/setup/components/SetupCard";
-import { Button } from "@/src/components/ui/Button";
-import { useInterviewSetup } from "@/src/features/interview/setup/hooks/useInterviewSetup";
-import { parseInterviewType } from "@/src/features/interview/setup/types/setup";
-
-export default function InterviewSetupPage() {
-  const searchParams = useSearchParams();
-
-  const problemIdParam = searchParams.get("problemId");
-  const typeParam = searchParams.get("type");
-
-  const {
-    form,
-    loading,
-    validationError,
-    updateField,
-    startInterview,
-  } = useInterviewSetup({
-    initialInterviewType: parseInterviewType(typeParam),
-    initialProblemId: problemIdParam,
-  });
-
-  // Sync form with search params when URL changes
-  useEffect(() => {
-    const newInterviewType = parseInterviewType(typeParam);
-    if (newInterviewType !== form.interviewType) {
-      updateField("interviewType", newInterviewType);
-    }
-    if (problemIdParam !== form.problemId) {
-      updateField("problemId", problemIdParam || "", false);
-    }
-  }, [typeParam, problemIdParam, form.interviewType, form.problemId, updateField]);
-
-  // Memoize onChange handlers to prevent unnecessary rerenders
-  const handleInterviewTypeChange = useCallback(
-    (value: string) => updateField("interviewType", value as any),
-    [updateField]
-  );
-
-  const handleDifficultyChange = useCallback(
-    (value: string) => updateField("difficulty", value as any),
-    [updateField]
-  );
-
-  const handleDurationChange = useCallback(
-    (value: number) => updateField("duration", value, false),
-    [updateField]
-  );
-
-  const handleCompanyChange = useCallback(
-    (value: string) => updateField("company", value),
-    [updateField]
-  );
-
-  const handleProblemIdChange = useCallback(
-    (value: string | null) => updateField("problemId", value || "", false),
-    [updateField]
-  );
-
-  // Memoize ProblemSelector props to prevent unnecessary rerenders
-  const problemSelectorProps = useMemo(
-    () => ({
-      value: form.problemId || null,
-      onChange: handleProblemIdChange,
-      interviewType: form.interviewType,
-      difficulty: form.difficulty,
-      company: form.company,
-    }),
-    [form.problemId, form.interviewType, form.difficulty, form.company, handleProblemIdChange]
-  );
-
-  return (
-    <main className="min-h-screen bg-background px-6 py-12">
-      <SetupCard>
-        <h1 className="text-4xl font-bold text-foreground">
-          Interview Setup
-        </h1>
-
-        <p className="mt-3 text-muted-foreground">
-          Configure your interview before starting.
-        </p>
-
-        {validationError && (
-          <div className="mb-4 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
-            {validationError}
-          </div>
-        )}
-
-        <InterviewTypeSelector
-          value={form.interviewType}
-          onChange={handleInterviewTypeChange}
-        />
-
-        <DifficultySelector
-          value={form.difficulty}
-          onChange={handleDifficultyChange}
-        />
-
-        <DurationSelector
-          value={form.duration}
-          onChange={handleDurationChange}
-        />
-
-        <CompanySelector
-          value={form.company}
-          onChange={handleCompanyChange}
-        />
-
-        <ProblemSelector {...problemSelectorProps} />
-
-        <Button
-          type="button"
-          variant="primary"
-          disabled={loading || !form.problemId}
-          onClick={startInterview}
-          aria-busy={loading}
-          className="mt-10 w-full py-4 text-lg"
-        >
-          {loading
-            ? "Starting..."
-            : "Start Interview"}
-        </Button>
-      </SetupCard>
     </main>
   );
 }
@@ -4677,9 +4541,10 @@ import { prisma } from "@/shared/prisma/client";
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("userId");
 
@@ -4693,7 +4558,7 @@ export async function GET(
     const interviews = await prisma.interview.findMany({
       where: {
         userId,
-        problemId: params.id,
+        problemId: id,
         status: InterviewStatus.COMPLETED,
       },
       orderBy: {
@@ -4866,7 +4731,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    const { type, difficulty, duration, company, problemId, mode } = body;
+    const { type, difficulty, duration, company, problemId, mode, topic } = body;
 
     if (!type || !difficulty || !duration || !company || !problemId) {
       return NextResponse.json(
@@ -4917,6 +4782,7 @@ export async function POST(request: Request) {
       company,
       problemId: problem.id,
       mode: interviewMode,
+      topic,
     });
 
     const persona = interviewMode === InterviewMode.REVERSE ? pickPersona(interviewDifficulty) : null;
@@ -5108,6 +4974,84 @@ export async function POST(request: Request) {
       {
         status: 500,
       }
+    );
+  }
+}
+
+================================================
+FILE: ./src/app/api/interviews/[id]/whiteboard/route.ts
+================================================
+import { NextResponse } from "next/server";
+
+import { InterviewRepository } from "@/src/modules/interview/repositories/InterviewRepository";
+import logger from "@/src/shared/logger/logger";
+
+type Props = {
+  params: Promise<{
+    id: string;
+  }>;
+};
+
+export async function PUT(request: Request, { params }: Props) {
+  const { id } = await params;
+
+  try {
+    if (!id) {
+      return NextResponse.json(
+        { error: "Missing interview id" },
+        { status: 400 }
+      );
+    }
+
+    const body = await request.json();
+    const { whiteboardState } = body;
+
+    if (whiteboardState === undefined) {
+      return NextResponse.json(
+        { error: "Missing whiteboardState" },
+        { status: 400 }
+      );
+    }
+
+    const repository = new InterviewRepository();
+    
+    // Verify interview exists
+    const interview = await repository.getById(id);
+    if (!interview) {
+      return NextResponse.json(
+        { error: "Interview not found" },
+        { status: 404 }
+      );
+    }
+
+    // Update whiteboard state
+    await repository.updateWhiteboardState(id, whiteboardState);
+
+    return NextResponse.json(
+      { success: true, whiteboardState },
+      { status: 200 }
+    );
+
+  } catch (error) {
+    if (error instanceof Error) {
+      logger.error(
+        {
+          err: error,
+          message: error.message,
+          stack: error.stack,
+        },
+        "Failed to update whiteboard state"
+      );
+    } else {
+      logger.error(
+        { error },
+        "Failed to update whiteboard state"
+      );
+    }
+
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
     );
   }
 }
@@ -5385,6 +5329,7 @@ export async function POST(
       id,
       {
         status: InterviewStatus.COMPLETED,
+        completedAt: new Date(),
       }
     );
 
@@ -5495,9 +5440,10 @@ import { ensureGuestUser } from "@/src/modules/auth/getCurrentUserId";
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
     const { response, score, feedback } = body;
 
@@ -5509,7 +5455,7 @@ export async function POST(
     }
 
     const action = await prisma.learningAction.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: { segment: true },
     });
 
@@ -5723,12 +5669,7 @@ export default function Hero() {
             Learn
           </Link>
 
-          <Link
-            href="/interview/setup"
-            className="rounded-lg border border-border px-6 py-3 text-muted-foreground hover:border-foreground hover:text-foreground transition-colors"
-          >
-            Take a Test
-          </Link>
+        
 
           <Link
             href="/problems"
@@ -9119,6 +9060,7 @@ export interface CreateInterviewInput {
   company: string;
   problemId: string;
   mode?: InterviewMode;
+  topic?: string;
 }
 ================================================
 FILE: ./src/features/interview/types/TranscriptMessage.ts
@@ -9207,6 +9149,7 @@ export const interviewSetupSchema = z.object({
   duration: z.number().int().positive().max(180), // Max 3 hours
   company: z.string().min(1, "Company is required").max(100),
   problemId: z.string().min(1, "Please select a problem"),
+  topic: z.string().optional(),
 });
 
 export type InterviewSetupForm = z.infer<typeof interviewSetupSchema>;
@@ -9882,7 +9825,6 @@ export default function ProblemInventoryView({ onSelectProblem, userId }: Props)
           onSelectProblem(problemId);
         }
       }}
-      onSearch={() => {}}
       userId={userId}
     />
   );
@@ -10424,6 +10366,7 @@ interface UseInterviewSetupOptions {
   initialDuration?: number;
   initialCompany?: string;
   initialProblemId?: string | null;
+  initialTopic?: string;
 }
 
 interface UseInterviewSetupReturn {
@@ -10458,6 +10401,7 @@ export function useInterviewSetup({
   initialDuration = 45,
   initialCompany = "",
   initialProblemId = null,
+  initialTopic = "",
 }: UseInterviewSetupOptions = {}): UseInterviewSetupReturn {
   const router = useRouter();
   const { showToast } = useToast();
@@ -10468,6 +10412,7 @@ export function useInterviewSetup({
     duration: initialDuration,
     company: initialCompany || DEFAULT_COMPANY,
     problemId: initialProblemId || "",
+    topic: initialTopic,
   });
   const [loading, setLoading] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -10499,6 +10444,7 @@ export function useInterviewSetup({
       duration: form.duration,
       company: form.company,
       problemId: form.problemId,
+      topic: form.topic,
     };
   }, [form]);
 
@@ -12895,6 +12841,7 @@ export class InterviewRepository {
       status?: InterviewStatus;
       currentPhase?: string;
       phaseStartedAt?: Date;
+      completedAt?: Date;
     }
   ) {
     return prisma.interview.update({
@@ -12984,6 +12931,20 @@ export class InterviewRepository {
       },
       data: {
         summary,
+      },
+    });
+  }
+
+  async updateWhiteboardState(
+    interviewId: string,
+    whiteboardState: Prisma.InputJsonValue
+  ) {
+    return prisma.interview.update({
+      where: {
+        id: interviewId,
+      },
+      data: {
+        whiteboardState,
       },
     });
   }
@@ -16289,6 +16250,7 @@ import { InterviewEngine } from "../../engine/InterviewEngine";
 import { InterviewRepository } from "../../repositories/InterviewRepository";
 import { InterviewProfileService } from "../../profiles/InterviewProfileService";
 import { WhiteboardSerializer } from "../whiteboard/WhiteboardSerializer";
+import { IncrementalSummaryService } from "../summary/IncrementalSummaryService";
 
 export interface ProcessInterviewMessageResult {
   reply: string;
@@ -16312,6 +16274,9 @@ export class InterviewMessageService {
 
   private readonly whiteboardSerializer =
     new WhiteboardSerializer();
+
+  private readonly summaryService =
+    new IncrementalSummaryService();
 
   async processMessage(
     interviewId: string,
@@ -16454,6 +16419,17 @@ export class InterviewMessageService {
       });
     }
 
+    // Update summary incrementally with new messages
+    const recentMessages = [
+      { role: "user", content: normalizedMessage },
+      { role: "assistant", content: result.reply },
+    ];
+    const updatedSummary = await this.summaryService.updateSummary(
+      interview.summary,
+      recentMessages
+    );
+    await this.repository.updateSummary(interview.id, updatedSummary);
+
     return {
       reply: result.reply,
       phase: nextPhase,
@@ -16463,7 +16439,7 @@ export class InterviewMessageService {
       confidence,
       completed:
         result.transition.completed,
-      summary: interview.summary,
+      summary: updatedSummary,
     };
   }
 

@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-
 import { prisma } from "@/shared/prisma/client";
 import { Difficulty, InterviewStatus } from "@prisma/client";
 
@@ -16,7 +15,7 @@ export async function GET(request: Request) {
     const userId = searchParams.get("userId");
 
     const where: any = {};
-    
+
     if (difficulty && Object.values(Difficulty).includes(difficulty as Difficulty)) {
       where.difficulty = difficulty as Difficulty;
     }
@@ -24,9 +23,7 @@ export async function GET(request: Request) {
     if (company) {
       where.companies = {
         some: {
-          company: {
-            name: company,
-          },
+          company: { name: company },
         },
       };
     }
@@ -41,34 +38,30 @@ export async function GET(request: Request) {
 
     const orderBy: any = {};
     switch (sort) {
-      case "title":
-        orderBy.title = "asc";
-        break;
-      case "difficulty":
-        orderBy.difficulty = "asc";
-        break;
-      case "estimatedMinutes":
-        orderBy.estimatedMinutes = "asc";
-        break;
+      case "title": orderBy.title = "asc"; break;
+      case "difficulty": orderBy.difficulty = "asc"; break;
+      case "estimatedMinutes": orderBy.estimatedMinutes = "asc"; break;
       case "interviewCount":
-      default:
-        orderBy.interviewCount = "desc";
-        break;
+      default: orderBy.interviewCount = "desc"; break;
     }
 
-    let problems, total;
-    let fallbackUsed = false;
+    // 1. Define include options once at the top
+    const includeOptions = {
+      companies: {
+        include: { company: true },
+      },
+      tags: {
+        include: { tag: true }
+      }
+    };
 
+    let problems, total;
+
+    // First attempt
     [problems, total] = await Promise.all([
       prisma.problem.findMany({
         where,
-        include: {
-          companies: {
-            include: {
-              company: true,
-            },
-          },
-        },
+        include: includeOptions, // USE THE INCLUDE HERE
         orderBy,
         skip: (page - 1) * limit,
         take: limit,
@@ -76,78 +69,38 @@ export async function GET(request: Request) {
       prisma.problem.count({ where }),
     ]);
 
-    // If strict filtering returns no results, try fallback strategies
+    // Fallback logic
     if (problems.length === 0 && page === 1) {
-      // Fallback 1: Remove company filter (most restrictive)
       if (where.companies) {
         const { companies: _, ...fallbackWhere } = where;
         [problems, total] = await Promise.all([
           prisma.problem.findMany({
             where: fallbackWhere,
-            include: {
-              companies: {
-                include: {
-                  company: true,
-                },
-              },
-            },
+            include: includeOptions, // USE THE INCLUDE HERE
             orderBy,
             skip: (page - 1) * limit,
             take: limit,
           }),
           prisma.problem.count({ where: fallbackWhere }),
         ]);
-        fallbackUsed = true;
-      }
-
-      // Fallback 2: Remove category filter if still no results
-      if (problems.length === 0 && where.category) {
-        const { category: _, companies: __, ...fallbackWhere } = where;
+      } else if (where.category) {
+        const { category: _, ...fallbackWhere } = where;
         [problems, total] = await Promise.all([
           prisma.problem.findMany({
             where: fallbackWhere,
-            include: {
-              companies: {
-                include: {
-                  company: true,
-                },
-              },
-            },
+            include: includeOptions, // USE THE INCLUDE HERE
             orderBy,
             skip: (page - 1) * limit,
             take: limit,
           }),
           prisma.problem.count({ where: fallbackWhere }),
         ]);
-        fallbackUsed = true;
-      }
-
-      // Fallback 3: Only use interview type if still no results
-      if (problems.length === 0 && where.interviewType) {
-        const { interviewType, ...fallbackWhere } = where;
-        [problems, total] = await Promise.all([
-          prisma.problem.findMany({
-            where: fallbackWhere,
-            include: {
-              companies: {
-                include: {
-                  company: true,
-                },
-              },
-            },
-            orderBy,
-            skip: (page - 1) * limit,
-            take: limit,
-          }),
-          prisma.problem.count({ where: fallbackWhere }),
-        ]);
-        fallbackUsed = true;
       }
     }
 
-    // Add completion history if userId is provided
-    let problemsWithHistory = problems;
-    if (userId) {
+    // 2. Fetch history if needed
+    const historyMap = new Map<string, any>();
+    if (userId && problems.length > 0) {
       const problemIds = problems.map((p) => p.id);
       const interviews = await prisma.interview.findMany({
         where: {
@@ -155,12 +108,9 @@ export async function GET(request: Request) {
           problemId: { in: problemIds },
           status: InterviewStatus.COMPLETED,
         },
-        orderBy: {
-          updatedAt: "desc",
-        },
+        orderBy: { updatedAt: "desc" },
       });
 
-      const historyMap = new Map<string, { completed: boolean; timesCompleted: number; lastCompletedAt: Date | null }>();
       interviews.forEach((interview) => {
         const existing = historyMap.get(interview.problemId);
         if (existing) {
@@ -173,27 +123,34 @@ export async function GET(request: Request) {
           });
         }
       });
-
-      problemsWithHistory = problems.map((problem) => ({
-        ...problem,
-        completionHistory: historyMap.get(problem.id) || {
-          completed: false,
-          timesCompleted: 0,
-          lastCompletedAt: null,
-        },
-      }));
     }
 
+    // 3. TRANSFORM DATA (Crucial step to fix Zod errors)
+    const transformedProblems = problems.map((p: any) => ({
+      ...p,
+      // Flatten the tags relation into a simple array of strings
+      tags: p.tags?.map((t: any) => t.tag.name) || [],
+      // Ensure interviewType is never null for Zod (or use .nullable() in schema)
+      interviewType: p.interviewType || "general",
+      completionHistory: historyMap.get(p.id) || {
+        completed: false,
+        timesCompleted: 0,
+        lastCompletedAt: null,
+      },
+    }));
+
     return NextResponse.json(
-      { problems: problemsWithHistory, total, page, limit, totalPages: Math.ceil(total / limit) },
+      { 
+        problems: transformedProblems, 
+        total, 
+        page, 
+        limit, 
+        totalPages: Math.ceil(total / limit) 
+      },
       { status: 200 }
     );
   } catch (error) {
     console.error(error);
-
-    return NextResponse.json(
-      { error: "Internal server error." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 }

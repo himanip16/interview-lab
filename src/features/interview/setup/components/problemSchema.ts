@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { Difficulty, ProblemCategory } from "@prisma/client";
 
+// src/features/interview/setup/components/problemSchema.ts
+
 export const ProblemSchema = z.object({
   id: z.string(),
   slug: z.string(),
@@ -8,10 +10,12 @@ export const ProblemSchema = z.object({
   description: z.string().nullable(),
   category: z.nativeEnum(ProblemCategory),
   difficulty: z.nativeEnum(Difficulty),
-  interviewType: z.string(),
+  // FIX: Make this nullable or optional to match the database
+  interviewType: z.string().nullable().optional(), 
   cruxOfProblem: z.string().nullable(),
   estimatedMinutes: z.number().nullable(),
-  tags: z.array(z.string()),
+  // Ensure tags is always an array
+  tags: z.array(z.string()).default([]), 
   completionHistory: z
     .object({
       completed: z.boolean(),
