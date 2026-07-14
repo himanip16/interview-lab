@@ -52,6 +52,17 @@ model User {
   learningRecommendations LearningRecommendation[]
 }
 
+model InterviewSession {
+  id          String   @id @default(cuid())
+  userId      String?
+  problemId   String
+  difficulty  String
+  status      String   @default("STARTED")
+  // We store the dialogue as a JSON blob for flexibility
+  transcript  Json     
+  createdAt   DateTime @default(now()) @map("created_at")
+}
+
 // ---------------------------------------------------------------------------
 // Dynamic interview templates. Adding a new interview type (DSA, Behavioral,
 // Concurrency, ...) is now a data-seed operation: insert one InterviewTemplate
