@@ -9,9 +9,9 @@ import { TranscriptService } from "@/src/modules/interview/services/TranscriptSe
 import { pickPersona } from "@/src/modules/interview/reverse/CandidatePersonas";
 
 const difficultyMap: Record<string, Difficulty> = {
-  Easy: Difficulty.EASY,
-  Medium: Difficulty.MEDIUM,
-  Hard: Difficulty.HARD,
+  EASY: Difficulty.EASY,
+  MEDIUM: Difficulty.MEDIUM,
+  HARD: Difficulty.HARD,
 };
 
 export async function POST(request: Request) {

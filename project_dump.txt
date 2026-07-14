@@ -203,6 +203,7 @@ PROJECT STRUCTURE
 │   │   │   │   │   ├── ChatInput.tsx
 │   │   │   │   │   ├── Conversation.tsx
 │   │   │   │   │   ├── InterviewHeader.tsx
+│   │   │   │   │   ├── LiveInterview.tsx
 │   │   │   │   │   ├── Message.tsx
 │   │   │   │   │   ├── MessageList.tsx
 │   │   │   │   │   ├── Sidebar.tsx
@@ -267,6 +268,7 @@ PROJECT STRUCTURE
 │   │   │   └── index.ts
 │   │   ├── learning
 │   │   │   ├── components
+│   │   │   │   ├── ActionCarousel.tsx
 │   │   │   │   ├── LearningScenarioReader.tsx
 │   │   │   │   ├── SegmentConversation.tsx
 │   │   │   │   ├── SegmentTakeaway.tsx
@@ -402,7 +404,7 @@ PROJECT STRUCTURE
 ├── tsconfig.json
 └── tsconfig.tsbuildinfo
 
-167 directories, 234 files
+167 directories, 236 files
 
 FILE CONTENTS
 
@@ -3512,31 +3514,237 @@ FILE: ./src/app/problems/page.tsx
 ================================================
 "use client";
 
-import Navbar from "@/src/components/layout/Navbar";
-import PageContainer from "@/src/components/layout/PageContainer";
-import ProblemInventoryView from "@/src/features/interview/setup/components/ProblemInventoryView";
+import { useState } from "react";
+import ProblemCard from "@/src/features/interview/setup/components/ProblemCard";
+import type { Problem } from "@/src/features/interview/setup/components/problemSchema";
+import { cn } from "@/src/lib/utils";
+
+// Mock data - replace with actual data fetching
+const MOCK_PROBLEMS: Problem[] = [
+  {
+    id: "1",
+    slug: "design-chat-system",
+    title: "Design a chat system",
+    description: "Design a real-time chat system with message ordering, presence, and delivery guarantees",
+    cruxOfProblem: "Message ordering, presence, and delivery guarantees",
+    difficulty: "HARD",
+    category: "SYSTEM_DESIGN",
+    estimatedMinutes: 45,
+    tags: ["messaging", "real-time", "scalability"],
+    interviewType: "SYSTEM_DESIGN",
+    completionHistory: { completed: false, timesCompleted: 0, lastCompletedAt: null },
+  },
+  {
+    id: "2",
+    slug: "design-lru-cache",
+    title: "Design an LRU cache",
+    description: "Design an LRU cache with O(1) get and put operations",
+    cruxOfProblem: "Hash map plus doubly linked list, O(1) get and put",
+    difficulty: "MEDIUM",
+    category: "DATABASES",
+    estimatedMinutes: 30,
+    tags: ["caching", "data-structures", "optimization"],
+    interviewType: "LOW_LEVEL_DESIGN",
+    completionHistory: { completed: true, timesCompleted: 1, lastCompletedAt: new Date() },
+  },
+  {
+    id: "3",
+    slug: "design-rate-limiter",
+    title: "Design a rate limiter",
+    description: "Design a distributed rate limiter with sliding windows and fairness under load",
+    cruxOfProblem: "Distributed state, sliding windows, fairness under load",
+    difficulty: "HARD",
+    category: "SYSTEM_DESIGN",
+    estimatedMinutes: 30,
+    tags: ["rate-limiting", "distributed-systems", "fairness"],
+    interviewType: "SYSTEM_DESIGN",
+    completionHistory: { completed: false, timesCompleted: 0, lastCompletedAt: null },
+  },
+];
 
 export default function ProblemsPage() {
+  const [selectedType, setSelectedType] = useState("all");
+  const [selectedDifficulty, setSelectedDifficulty] = useState("all");
+  const [selectedStatus, setSelectedStatus] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortOption, setSortOption] = useState("popularity");
+  const [isSortMenuOpen, setIsSortMenuOpen] = useState(false);
+
+  const filteredProblems = MOCK_PROBLEMS.filter((problem) => {
+    const matchesType = selectedType === "all" || problem.category.toLowerCase().includes(selectedType);
+    const matchesDifficulty = selectedDifficulty === "all" || problem.difficulty.toLowerCase() === selectedDifficulty;
+    const matchesStatus = selectedStatus === "all" || 
+      (selectedStatus === "done" ? problem.completionHistory?.completed : !problem.completionHistory?.completed);
+    const matchesSearch = problem.title.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesType && matchesDifficulty && matchesStatus && matchesSearch;
+  });
+
   return (
-    <PageContainer>
-      <Navbar />
-
-      <section className="py-20">
-        <h1 className="text-4xl font-bold">
-          Problem Library
-        </h1>
-
-        <p className="mt-3 text-zinc-400">
-          Browse and select from our collection of interview problems.
-        </p>
-
-        <div className="mt-10">
-          <ProblemInventoryView onSelectProblem={(problemId) => {
-            window.location.href = `/interview/setup?problemId=${problemId}`;
-          }} />
+    <div className="min-h-screen bg-[#FAF9F6] py-10 px-6">
+      <div className="max-w-[960px] mx-auto bg-white rounded-[32px] p-[32px_36px_40px] shadow-[0_24px_60px_rgba(21,22,28,0.06)] border border-[rgba(21,22,28,0.06)]">
+        
+        {/* Top Section */}
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-[23px] font-semibold text-[#15161C] font-['Poppins'] tracking-tight">
+            Problem library
+          </h2>
+          <div className="flex items-center gap-2 bg-[#FAF9F6] border border-[rgba(21,22,28,0.08)] rounded-[999px] px-4 py-2.5 w-[220px]">
+            <svg className="w-[14px] h-[14px] opacity-50 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="7"/>
+              <path d="M21 21l-4.3-4.3"/>
+            </svg>
+            <input
+              type="text"
+              placeholder="Search problems…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="bg-transparent text-[13px] text-[#5A5B66] outline-none w-full placeholder:text-[#5A5B66]"
+            />
+          </div>
         </div>
-      </section>
-    </PageContainer>
+
+        {/* Filter Section */}
+        <div className="mb-2">
+          {/* Type Filter Row */}
+          <div className="flex items-center gap-4.5 flex-wrap mb-3.5">
+            <span className="text-[10.5px] font-bold tracking-[0.06em] text-[#5A5B66] uppercase mr-0.5">
+              Type
+            </span>
+            <div className="flex gap-1.5">
+              {["all", "hld", "lld", "dsa"].map((type) => (
+                <button
+                  key={type}
+                  onClick={() => setSelectedType(type)}
+                  className={cn(
+                    "text-[12.5px] font-semibold px-3 py-1.5 rounded-[999px] border cursor-pointer transition-all duration-200 whitespace-nowrap",
+                    selectedType === type
+                      ? "bg-[#15161C] text-white border-[#15161C]"
+                      : "border-[rgba(21,22,28,0.1)] text-[#5A5B66] hover:border-[rgba(21,22,28,0.2)]"
+                  )}
+                >
+                  {type === "all" ? "All" : type.toUpperCase()}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Difficulty & Status Filter Row */}
+          <div className="flex items-center gap-4.5 flex-wrap mb-3.5">
+            <span className="text-[10.5px] font-bold tracking-[0.06em] text-[#5A5B66] uppercase mr-0.5">
+              Difficulty
+            </span>
+            <div className="flex gap-1.5">
+              {["all", "easy", "medium", "hard"].map((diff) => (
+                <button
+                  key={diff}
+                  onClick={() => setSelectedDifficulty(diff)}
+                  className={cn(
+                    "text-[12.5px] font-semibold px-3 py-1.5 rounded-[999px] border cursor-pointer transition-all duration-200 whitespace-nowrap",
+                    selectedDifficulty === diff
+                      ? "bg-[#15161C] text-white border-[#15161C]"
+                      : "border-[rgba(21,22,28,0.1)] text-[#5A5B66] hover:border-[rgba(21,22,28,0.2)]"
+                  )}
+                >
+                  {diff === "all" ? "All" : diff.charAt(0).toUpperCase() + diff.slice(1)}
+                </button>
+              ))}
+            </div>
+
+            <span className="text-[10.5px] font-bold tracking-[0.06em] text-[#5A5B66] uppercase ml-2 mr-0.5">
+              Status
+            </span>
+            <div className="flex gap-1.5">
+              {["all", "done", "pending"].map((status) => (
+                <button
+                  key={status}
+                  onClick={() => setSelectedStatus(status)}
+                  className={cn(
+                    "text-[12.5px] font-semibold px-3 py-1.5 rounded-[999px] border cursor-pointer transition-all duration-200 whitespace-nowrap",
+                    selectedStatus === status
+                      ? "bg-[#15161C] text-white border-[#15161C]"
+                      : "border-[rgba(21,22,28,0.1)] text-[#5A5B66] hover:border-[rgba(21,22,28,0.2)]"
+                  )}
+                >
+                  {status === "all" ? "All" : status === "done" ? "Completed" : "Not started"}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Bottom Bar */}
+          <div className="flex items-center justify-between pt-3.5 border-t border-[rgba(21,22,28,0.06)] mb-1.5">
+            <div className="text-[12.5px] text-[#5A5B66]">
+              <b className="text-[#15161C]">{filteredProblems.length}</b> problem{filteredProblems.length !== 1 ? "s" : ""}
+            </div>
+
+            {/* Sort Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setIsSortMenuOpen(!isSortMenuOpen)}
+                className="flex items-center gap-1.5 text-[12.5px] font-semibold px-3.5 py-2 rounded-[999px] border border-[rgba(21,22,28,0.1)] bg-white cursor-pointer text-[#15161C]"
+              >
+                <svg className="w-[13px] h-[13px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                  <path d="M4 7h10M4 12h7M4 17h4"/>
+                  <path d="M16 6v13M16 19l-3-3M16 19l3-3"/>
+                </svg>
+                <span>
+                  {sortOption === "popularity" ? "Popularity" : 
+                   sortOption === "alpha" ? "Alphabetical" : 
+                   sortOption === "difficulty" ? "Difficulty" : "Time estimate"}
+                </span>
+                <svg className="w-[11px] h-[11px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </button>
+
+              {isSortMenuOpen && (
+                <div className="absolute right-0 top-[calc(100%+6px)] bg-white rounded-[14px] border border-[rgba(21,22,28,0.08)] shadow-[0_14px_34px_rgba(21,22,28,0.1)] p-1.5 z-10 min-w-[170px]">
+                  {["popularity", "alpha", "difficulty", "time"].map((option) => (
+                    <button
+                      key={option}
+                      onClick={() => {
+                        setSortOption(option);
+                        setIsSortMenuOpen(false);
+                      }}
+                      className={cn(
+                        "block w-full text-left text-[12.5px] px-3 py-2 rounded-lg cursor-pointer font-medium",
+                        sortOption === option ? "text-[#15161C] font-semibold" : "text-[#5A5B66] hover:bg-[#FAF9F6]"
+                      )}
+                    >
+                      {option === "popularity" ? "Popularity" : 
+                       option === "alpha" ? "Alphabetical" : 
+                       option === "difficulty" ? "Difficulty" : "Time estimate"}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Problem List */}
+        <div className="flex flex-col gap-2.5 mt-4.5">
+          {filteredProblems.length === 0 ? (
+            <div className="text-center py-12 text-[13.5px] text-[#5A5B66]">
+              No problems match these filters.
+            </div>
+          ) : (
+            filteredProblems.map((problem) => (
+              <ProblemCard
+                key={problem.id}
+                problem={problem}
+                isSelected={false}
+                isExpanded={false}
+                onClick={() => {
+                  window.location.href = `/interview/setup?problemId=${problem.id}`;
+                }}
+                onSelect={() => {}}
+              />
+            ))
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -7301,6 +7509,232 @@ export function SegmentConversation({ segment }: SegmentConversationProps) {
 }
 
 ================================================
+FILE: ./src/features/learning/components/ActionCarousel.tsx
+================================================
+"use client";
+
+import { useRef, useState } from "react";
+import { cn } from "@/src/lib/utils";
+import type { Action } from "../types/learning";
+
+export interface CarouselItem {
+  id: string;
+  title: string;
+  category: string;
+  duration: string;
+  gradientClass: string;
+  icon: React.ReactNode;
+}
+
+type Props = {
+  items: CarouselItem[];
+  onCardClick?: (item: CarouselItem) => void;
+};
+
+const GRADIENTS = [
+  "bg-gradient-to-br from-[#FF6B4A] to-[#E0432A]",
+  "bg-gradient-to-br from-[#3E6BFF] to-[#213FCC]",
+  "bg-gradient-to-br from-[#262832] to-[#121319]",
+  "bg-gradient-to-br from-[#00E0AB] to-[#00A87E]",
+  "bg-gradient-to-br from-[#FFB930] to-[#E8940A]",
+  "bg-gradient-to-br from-[#7A6BFF] to-[#4C3FD6]",
+  "bg-gradient-to-br from-[#FF4D93] to-[#D62568]",
+];
+
+// Helper function to convert Action to CarouselItem
+export function actionToCarouselItem(action: Action, index: number): CarouselItem {
+  const gradient = GRADIENTS[index % GRADIENTS.length];
+  
+  // Icon based on action type
+  const getIcon = () => {
+    switch (action.type) {
+      case "OBSERVE":
+        return (
+          <svg viewBox="0 0 84 84" fill="none">
+            <circle cx="42" cy="42" r="40" fill="#fff"/>
+            <ellipse cx="42" cy="46" rx="14" ry="10" fill="#FF6B4A"/>
+            <circle cx="35" cy="42" r="3" fill="#26282F"/>
+            <circle cx="49" cy="42" r="3" fill="#26282F"/>
+            <path d="M28 34 Q22 26 16 30" stroke="#FF6B4A" strokeWidth="3" strokeLinecap="round" fill="none"/>
+            <path d="M56 34 Q62 26 68 30" stroke="#FF6B4A" strokeWidth="3" strokeLinecap="round" fill="none"/>
+          </svg>
+        );
+      case "JUDGE":
+        return (
+          <svg viewBox="0 0 84 84" fill="none">
+            <circle cx="42" cy="42" r="40" fill="#fff"/>
+            <rect x="26" y="24" width="32" height="36" rx="4" fill="#3E6BFF"/>
+            <path d="M32 44l6 6 12-14" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+          </svg>
+        );
+      case "FIX":
+        return (
+          <svg viewBox="0 0 84 84" fill="none">
+            <circle cx="42" cy="42" r="40" fill="#fff"/>
+            <path d="M26 30h32v6H26z" fill="#262832"/>
+            <path d="M26 42h24v5H26z" fill="#262832" opacity="0.7"/>
+            <path d="M26 52h28v5H26z" fill="#262832" opacity="0.45"/>
+          </svg>
+        );
+      case "PREDICT":
+        return (
+          <svg viewBox="0 0 84 84" fill="none">
+            <circle cx="42" cy="42" r="40" fill="#fff"/>
+            <rect x="24" y="28" width="36" height="26" rx="3" fill="#00A87E"/>
+            <path d="M30 40h10M30 46h16" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"/>
+            <rect x="24" y="58" width="36" height="4" rx="2" fill="#00A87E" opacity="0.4"/>
+          </svg>
+        );
+      case "COMPARE":
+        return (
+          <svg viewBox="0 0 84 84" fill="none">
+            <circle cx="42" cy="42" r="40" fill="#fff"/>
+            <circle cx="42" cy="42" r="6" fill="#4C3FD6"/>
+            <circle cx="42" cy="42" r="13" stroke="#4C3FD6" strokeWidth="2.5" fill="none" opacity="0.55"/>
+            <circle cx="42" cy="42" r="20" stroke="#4C3FD6" strokeWidth="2.5" fill="none" opacity="0.3"/>
+          </svg>
+        );
+      default:
+        return (
+          <svg viewBox="0 0 84 84" fill="none">
+            <circle cx="42" cy="42" r="40" fill="#fff"/>
+            <circle cx="42" cy="42" r="6" fill="#4C3FD6"/>
+            <circle cx="42" cy="42" r="13" stroke="#4C3FD6" strokeWidth="2.5" fill="none" opacity="0.55"/>
+            <circle cx="42" cy="42" r="20" stroke="#4C3FD6" strokeWidth="2.5" fill="none" opacity="0.3"/>
+          </svg>
+        );
+    }
+  };
+
+  return {
+    id: action.id,
+    title: action.title,
+    category: action.type,
+    duration: "15 min", // Default duration, can be customized
+    gradientClass: gradient,
+    icon: getIcon(),
+  };
+}
+
+export default function ActionCarousel({ items, onCardClick }: Props) {
+  const railRef = useRef<HTMLDivElement>(null);
+  const [scrollPosition, setScrollPosition] = useState(0);
+
+  const scroll = (direction: "left" | "right") => {
+    if (railRef.current) {
+      const scrollAmount = 234; // card width (216) + gap (18)
+      railRef.current.scrollBy({
+        left: direction === "left" ? -scrollAmount : scrollAmount,
+        behavior: "smooth",
+      });
+    }
+  };
+
+  return (
+    <div className="relative">
+      {/* Rail Container */}
+      <div className="rail-wrap relative">
+        <div
+          ref={railRef}
+          className="rail flex gap-[18px] overflow-x-auto scroll-smooth scroll-snap-x-mandatory px-[4px] py-[34px] pb-2 mx-[-4px] scrollbar-hide"
+          style={{
+            scrollbarWidth: "none",
+            msOverflowStyle: "none",
+          }}
+        >
+          {items.map((item, index) => (
+            <div
+              key={item.id}
+              onClick={() => onCardClick?.(item)}
+              className={cn(
+                "card relative flex-shrink-0 w-[216px] h-[300px] rounded-[26px] p-[22px]",
+                "scroll-snap-start cursor-pointer overflow-visible",
+                "transition-transform duration-[0.35s] ease-[cubic-bezier(0.34,1.56,0.64,1)]",
+                "hover:-translate-y-2 flex flex-col justify-end",
+                GRADIENTS[index % GRADIENTS.length]
+              )}
+            >
+              {/* Floating Icon */}
+              <div className="icon-float absolute -top-[30px] left-1/2 -translate-x-1/2 w-[84px] h-[84px] animate-float">
+                {item.icon}
+              </div>
+
+              {/* Card Content */}
+              <h3 className="text-white text-[16.5px] font-semibold mb-1">{item.title}</h3>
+              <div className="meta flex items-center gap-1.5 text-[11.5px] text-white/75 font-medium">
+                <span>{item.category}</span>
+                <span className="dot w-1 h-1 rounded-full bg-white/60"></span>
+                <span>{item.duration}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Navigation */}
+      <div className="bottom flex items-center justify-between mt-5">
+        <div className="socials flex gap-[18px] text-[13px] text-[#5A5B66] font-medium">
+          <span>Facebook</span>
+          <span>Twitter</span>
+        </div>
+        <div className="nav-btns flex items-center gap-4">
+          <button
+            onClick={() => scroll("left")}
+            className="prev text-[13px] text-[#5A5B66] font-semibold cursor-pointer flex items-center gap-1.5 hover:text-[#15161C] transition-colors"
+          >
+            <span>&larr;</span>
+            <span>Prev</span>
+          </button>
+          <button
+            onClick={() => scroll("right")}
+            className="next-btn relative w-[46px] h-[46px] rounded-full border-none bg-[#15161C] text-white flex items-center justify-center cursor-pointer z-10 hover:bg-[#262832] transition-colors"
+          >
+            <div className="next-ring absolute inset-[-6px] rounded-full border-[1.5px] border-[rgba(0,168,126,0.5)] animate-breathe"></div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M9 6l6 6-6 6"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <style>{`
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        @keyframes float {
+          0%, 100% {
+            transform: translateX(-50%) translateY(0);
+          }
+          50% {
+            transform: translateX(-50%) translateY(-8px);
+          }
+        }
+        .animate-float {
+          animation: float 4.5s ease-in-out infinite;
+        }
+        @keyframes breathe {
+          0%, 100% {
+            transform: scale(1);
+            opacity: 0.7;
+          }
+          50% {
+            transform: scale(1.18);
+            opacity: 0;
+          }
+        }
+        .animate-breathe {
+          animation: breathe 2.6s ease-in-out infinite;
+        }
+      `}</style>
+    </div>
+  );
+}
+
+================================================
 FILE: ./src/features/learning/components/LearningScenarioReader.tsx
 ================================================
 import { useState } from "react";
@@ -9204,10 +9638,8 @@ FILE: ./src/features/interview/setup/components/ProblemCard.tsx
 "use client";
 
 import { Difficulty, ProblemCategory } from "@prisma/client";
-import { Button } from "@/src/components/ui/Button";
 import type { Problem } from "./problemSchema";
 import { cn } from "@/src/lib/utils";
-import { ChevronRight, Clock, CheckCircle2 } from "lucide-react";
 
 const CATEGORY_LABELS: Record<ProblemCategory, string> = {
   SYSTEM_DESIGN: "System Design",
@@ -9223,9 +9655,9 @@ const CATEGORY_LABELS: Record<ProblemCategory, string> = {
 };
 
 const DIFFICULTY_STYLES: Record<Difficulty, string> = {
-  EASY: "text-emerald-400 border-emerald-500/20 bg-emerald-500/5",
-  MEDIUM: "text-amber-400 border-amber-500/20 bg-amber-500/5",
-  HARD: "text-rose-400 border-red-500/20 bg-red-500/5",
+  EASY: "text-[#00A87E] bg-[rgba(0,168,126,0.1)]",
+  MEDIUM: "text-[#E8940A] bg-[rgba(232,148,10,0.1)]",
+  HARD: "text-[#FF5A3C] bg-[rgba(255,90,60,0.1)]",
 };
 
 type Props = {
@@ -9246,124 +9678,52 @@ export default function ProblemCard({
   return (
     <div
       className={cn(
-        "group rounded-xl border transition-all duration-300 overflow-hidden",
-        isSelected
-          ? "border-primary bg-primary/[0.03] ring-1 ring-primary/20"
-          : "border-zinc-800 bg-zinc-900/40 hover:border-zinc-700 hover:bg-zinc-900/80"
+        "group flex items-center gap-4 p-4 rounded-[18px] border cursor-pointer transition-all duration-[0.25s] ease-out",
+        "border-[rgba(21,22,28,0.07)] bg-white",
+        "hover:translate-y-[-3px] hover:shadow-[0_14px_30px_rgba(21,22,28,0.07)]",
+        isSelected && "border-[rgba(21,22,28,0.15)] shadow-[0_14px_30px_rgba(21,22,28,0.07)]"
       )}
+      onClick={onClick}
     >
-      <button
-        onClick={onClick}
-        className="w-full p-5 text-left outline-none transition-transform active:scale-[0.99]"
-      >
-        <div className="flex justify-between items-start gap-4">
-          <div className="flex-1 space-y-1.5">
-            <div className="flex items-center gap-3">
-              <h3 className="text-lg font-bold tracking-tight text-zinc-100">
-                {problem.title}
-              </h3>
-              <span
-                className={cn(
-                  "text-[10px] px-2 py-0.5 rounded-md border font-bold uppercase tracking-wider",
-                  DIFFICULTY_STYLES[problem.difficulty]
-                )}
-              >
-                {problem.difficulty}
-              </span>
-              {isSelected && (
-                <span className="text-[10px] px-2 py-0.5 rounded-md bg-primary text-white font-bold uppercase tracking-wider">
-                  Selected
-                </span>
-              )}
-            </div>
-            
-            <p className="text-sm text-zinc-400 font-medium leading-relaxed max-w-2xl">
-              {problem.cruxOfProblem}
-            </p>
-
-            {problem.tags && problem.tags.length > 0 && (
-              <div className="flex gap-2 pt-1">
-                {problem.tags.slice(0, 3).map((tag) => (
-                  <span key={tag} className="text-[10px] text-zinc-500 font-mono">
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="flex flex-col items-end gap-3 shrink-0">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1.5 text-zinc-500">
-                <Clock size={14} />
-                <span className="text-xs font-mono">{problem.estimatedMinutes}m</span>
-              </div>
-              <ChevronRight 
-                size={18} 
-                className={cn(
-                  "text-zinc-600 transition-transform duration-300", 
-                  isExpanded && "rotate-90 text-zinc-400"
-                )} 
-              />
-            </div>
-            
-            {problem.completionHistory?.completed && (
-              <div className="flex items-center gap-1 text-emerald-500">
-                <CheckCircle2 size={12} />
-                <span className="text-[10px] font-bold uppercase tracking-widest">
-                  Completed
-                </span>
-              </div>
-            )}
-          </div>
+      <div className="w-[5px] self-stretch rounded-[3px] flex-shrink-0 bg-[#6A5AE0]" />
+      
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <h3 className="text-[14.5px] font-semibold text-[#15161C] leading-tight">
+            {problem.title}
+          </h3>
+          <span className="text-[10px] font-bold tracking-[0.03em] px-2 py-0.5 rounded-[6px] text-white uppercase bg-[#6A5AE0]">
+            {CATEGORY_LABELS[problem.category].split(' ')[0]}
+          </span>
         </div>
-      </button>
+        <p className="text-[12.5px] text-[#5A5B66] mt-1 overflow-hidden text-ellipsis whitespace-nowrap">
+          {problem.cruxOfProblem}
+        </p>
+      </div>
 
-      {isExpanded && (
-        <div className="px-5 pb-6 space-y-6 animate-in fade-in slide-in-from-top-2 duration-300">
-          <div className="h-px bg-gradient-to-r from-transparent via-zinc-800 to-transparent w-full" />
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="md:col-span-2 space-y-3">
-              <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em]">
-                Problem Context
-              </h4>
-              <p className="text-sm text-zinc-300 leading-relaxed">
-                {problem.description}
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <div className="space-y-1">
-                <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em]">
-                  Category
-                </h4>
-                <p className="text-sm text-zinc-200 font-medium">
-                  {CATEGORY_LABELS[problem.category]}
-                </p>
-              </div>
-              <div className="space-y-1">
-                <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em]">
-                  Template
-                </h4>
-                <p className="text-sm text-zinc-200 font-medium uppercase">
-                  {problem.interviewType}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <Button
-            onClick={(e) => {
-              e.stopPropagation();
-              onSelect();
-            }}
-            className="w-full py-6 bg-primary hover:bg-primary/90 text-white rounded-xl font-bold text-sm uppercase tracking-widest shadow-lg shadow-primary/20 transition-all active:scale-[0.98]"
-          >
-            Launch Interview Session
-          </Button>
+      <div className="flex items-center gap-3.5 flex-shrink-0">
+        <span className={cn(
+          "text-[11px] font-semibold px-2.5 py-1 rounded-[999px]",
+          DIFFICULTY_STYLES[problem.difficulty]
+        )}>
+          {problem.difficulty.toLowerCase()}
+        </span>
+        <span className="text-[12px] text-[#5A5B66] w-12 text-right">
+          {problem.estimatedMinutes}m
+        </span>
+        <div className={cn(
+          "w-[22px] h-[22px] rounded-full flex items-center justify-center flex-shrink-0",
+          problem.completionHistory?.completed 
+            ? "bg-[#00A87E] text-white" 
+            : "border-[1.5px] border-[rgba(21,22,28,0.15)]"
+        )}>
+          {problem.completionHistory?.completed && (
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+              <path d="M5 12l5 5L20 7"/>
+            </svg>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -10154,6 +10514,217 @@ export function useInterviewSetup({
 ================================================
 FILE: ./src/features/interview/setup/index.ts
 ================================================
+
+================================================
+FILE: ./src/features/interview/live/components/LiveInterview.tsx
+================================================
+"use client";
+
+import { useState } from "react";
+import Timer from "./Timer";
+
+type Props = {
+  interviewId: string;
+  duration: number;
+  initialMessages: any[];
+};
+
+export default function LiveInterview({ interviewId, duration, initialMessages }: Props) {
+  const [currentPhase, setCurrentPhase] = useState("Requirements");
+
+  const phases = [
+    { name: "Intro", status: "done" },
+    { name: "Requirements", status: "active" },
+    { name: "High-level design", status: "upcoming" },
+    { name: "Deep dive", status: "upcoming" },
+    { name: "Scalability", status: "upcoming" },
+    { name: "Closing", status: "upcoming" },
+  ];
+
+  const summaryItems = [
+    "Read-heavy workload assumed, ~100:1 read/write ratio.",
+    "Custom aliases scoped out of v1.",
+    "Candidate is leaning key-value store + cache over relational.",
+    "Not yet discussed: uniqueness strategy for short codes.",
+  ];
+
+  return (
+    <div className="min-h-screen bg-[#FAF9F6] py-10 px-6">
+      <div className="max-w-[1080px] mx-auto bg-white rounded-[32px] overflow-hidden shadow-[0_24px_60px_rgba(21,22,28,0.06)] border border-[rgba(21,22,28,0.06)]">
+        
+        {/* Header */}
+        <div className="head flex items-center justify-between px-[30px] py-[22px] border-b border-[rgba(21,22,28,0.06)]">
+          <div className="crumb flex items-center gap-2.5">
+            <button className="back w-8 h-8 rounded-full border border-[rgba(21,22,28,0.1)] bg-none text-[#15161C] flex items-center justify-center cursor-pointer flex-shrink-0 hover:bg-[rgba(21,22,28,0.05)] transition-colors">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+                <path d="M15 6l-6 6 6 6"/>
+              </svg>
+            </button>
+            <div className="crumb-text text-[13px] text-[#5A5B66] font-medium">
+              Live interview &nbsp;/&nbsp; <b className="text-[#15161C] font-semibold">Design a URL shortener</b>
+            </div>
+          </div>
+
+          <div className="head-right flex items-center gap-4.5">
+            <div className="live-badge flex items-center gap-1.5 text-[12px] font-semibold text-[#FF5A3C] bg-[rgba(255,90,60,0.1)] px-3 py-1.5 rounded-[999px]">
+              <span className="dot w-1.5 h-1.5 rounded-full bg-[#FF5A3C] animate-pulse"></span>
+              Live
+            </div>
+            
+            <Timer durationInMinutes={duration} interviewId={interviewId} />
+          </div>
+        </div>
+
+        {/* Phase Stepper */}
+        <div className="stepper flex items-center gap-1.5 px-[30px] py-4 border-b border-[rgba(21,22,28,0.06)] overflow-x-auto">
+          {phases.map((phase, index) => (
+            <div key={phase.name}>
+              <div className={`step flex items-center gap-1.5 flex-shrink-0 ${phase.status}`}>
+                <div className={`node w-[9px] h-[9px] rounded-full ${
+                  phase.status === "done" ? "bg-[#00A87E]" :
+                  phase.status === "active" ? "bg-[#15161C] relative" :
+                  "border-[1.5px] border-[rgba(21,22,28,0.2)]"
+                }`}>
+                  {phase.status === "active" && (
+                    <div className="absolute inset-[-5px] rounded-full border-[1.5px] border-[rgba(21,22,28,0.35)] animate-breathe"></div>
+                  )}
+                </div>
+                <span className="text-[11.5px] font-semibold whitespace-nowrap text-[#5A5B66]">
+                  {phase.name}
+                </span>
+              </div>
+              {index < phases.length - 1 && (
+                <div className="step-line w-5 h-[1px] bg-[rgba(21,22,28,0.12)] flex-shrink-0"></div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Body */}
+        <div className="body flex h-[520px]">
+          {/* Chat Section */}
+          <div className="chat flex-1 flex flex-col">
+            <div className="messages flex-1 overflow-y-auto px-[30px] py-6 flex flex-col gap-4">
+              {/* AI Message */}
+              <div className="msg ai max-w-[70%] flex flex-col gap-1 self-start">
+                <div className="who text-[10.5px] text-[#5A5B66] font-semibold px-1">Interviewer</div>
+                <div className="bubble px-4 py-3 rounded-[18px] text-[13.5px] leading-[1.55] bg-[#F1EFEA] text-[#15161C] rounded-bl-[4px]">
+                  Welcome! Today we'll design a URL shortener. Start by asking clarifying questions before you propose anything.
+                </div>
+              </div>
+
+              {/* User Message */}
+              <div className="msg user max-w-[70%] flex flex-col gap-1 self-end items-end">
+                <div className="bubble px-4 py-3 rounded-[18px] text-[13.5px] leading-[1.55] bg-[#15161C] text-white rounded-br-[4px]">
+                  Sure — what's the expected read to write ratio, and do we need custom aliases?
+                </div>
+              </div>
+
+              {/* AI Message */}
+              <div className="msg ai max-w-[70%] flex flex-col gap-1 self-start">
+                <div className="who text-[10.5px] text-[#5A5B66] font-semibold px-1">Interviewer</div>
+                <div className="bubble px-4 py-3 rounded-[18px] text-[13.5px] leading-[1.55] bg-[#F1EFEA] text-[#15161C] rounded-bl-[4px]">
+                  Good question. Assume reads outnumber writes heavily, maybe 100 to 1. Custom aliases are a nice-to-have, not required for v1.
+                </div>
+              </div>
+
+              {/* User Message */}
+              <div className="msg user max-w-[70%] flex flex-col gap-1 self-end items-end">
+                <div className="bubble px-4 py-3 rounded-[18px] text-[13.5px] leading-[1.55] bg-[#15161C] text-white rounded-br-[4px]">
+                  Got it. Given that read-heavy pattern, I'd lean toward a key-value store with a cache in front rather than a relational database.
+                </div>
+              </div>
+
+              {/* Typing Indicator */}
+              <div className="msg ai max-w-[70%] flex flex-col gap-1 self-start">
+                <div className="who text-[10.5px] text-[#5A5B66] font-semibold px-1">Interviewer</div>
+                <div className="typing flex gap-1 px-4 py-3 bg-[#F1EFEA] rounded-[18px] rounded-bl-[4px] w-fit">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#5A5B66] animate-bounce"></span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#5A5B66] animate-bounce" style={{ animationDelay: "0.15s" }}></span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#5A5B66] animate-bounce" style={{ animationDelay: "0.3s" }}></span>
+                </div>
+              </div>
+            </div>
+
+            {/* Input Row */}
+            <div className="input-row flex items-center gap-2.5 px-6 py-4.5 border-t border-[rgba(21,22,28,0.06)]">
+              <button className="mic-btn w-10.5 h-10.5 rounded-full border border-[rgba(21,22,28,0.12)] bg-none text-[#5A5B66] flex items-center justify-center cursor-pointer flex-shrink-0 hover:bg-[rgba(21,22,28,0.05)] transition-colors">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="9" y="2" width="6" height="12" rx="3"/>
+                  <path d="M5 10a7 7 0 0014 0M12 19v3"/>
+                </svg>
+              </button>
+              <input 
+                className="field flex-1 border border-[rgba(21,22,28,0.1)] rounded-[999px] px-4.5 py-3 text-[13.5px] font-['Inter'] outline-none focus:border-[#00A87E] transition-colors"
+                placeholder="Explain your design…"
+              />
+              <button className="send-btn w-10.5 h-10.5 rounded-full border-none bg-[#00A87E] text-white flex items-center justify-center cursor-pointer flex-shrink-0 transition-transform hover:scale-[1.06]">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+                  <path d="M5 12h14M13 6l6 6-6 6"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {/* Sidebar */}
+          <div className="sidebar border-l border-[rgba(21,22,28,0.06)] px-5.5 py-6 overflow-y-auto" style={{ flex: "0 0 260px" }}>
+            <div className="side-label text-[10.5px] font-bold tracking-[0.06em] text-[#00A87E] uppercase mb-2.5">
+              Current phase
+            </div>
+            <div className="phase-pill inline-block text-[12px] font-semibold bg-[#15161C] text-white px-3 py-1 rounded-[999px] mb-5.5">
+              {currentPhase}
+            </div>
+
+            <div className="side-label text-[10.5px] font-bold tracking-[0.06em] text-[#00A87E] uppercase mb-2.5">
+              Design summary
+            </div>
+            {summaryItems.map((item, index) => (
+              <div key={index} className="summary-item text-[12.5px] text-[#5A5B66] leading-[1.6] pl-3.5 relative mb-2.5">
+                <div className="absolute left-0 top-1.5 w-1.25 h-1.25 rounded-full bg-[#00D9A3]"></div>
+                {item}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.25; }
+        }
+        .animate-pulse {
+          animation: pulse 1.6s ease-in-out infinite;
+        }
+        @keyframes breathe {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.15); }
+        }
+        .animate-breathe {
+          animation: breathe 2.4s ease-in-out infinite;
+        }
+        @keyframes bounce {
+          0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+          30% { transform: translateY(-4px); opacity: 1; }
+        }
+        .animate-bounce {
+          animation: bounce 1.2s ease-in-out infinite;
+        }
+        .flex-0-0:w-260px {
+          flex: 0 0 260px;
+        }
+        @media (max-width: 800px) {
+          .sidebar {
+            display: none;
+          }
+          .msg {
+            max-width: 85%;
+          }
+        }
+      `}</style>
+    </div>
+  );
+}
 
 ================================================
 FILE: ./src/features/interview/live/components/MessageList.tsx

@@ -11,6 +11,7 @@ import { InterviewRepository } from "../../repositories/InterviewRepository";
 import { InterviewProfileService } from "../../profiles/InterviewProfileService";
 import { WhiteboardSerializer } from "../whiteboard/WhiteboardSerializer";
 import { IncrementalSummaryService } from "../summary/IncrementalSummaryService";
+import { createEvaluationService } from "@/src/modules/container";
 
 export interface ProcessInterviewMessageResult {
   reply: string;
@@ -146,6 +147,20 @@ export class InterviewMessageService {
     const confidence =
       result.phaseAssessment?.confidence ??
       0.5;
+
+    // Trigger evaluation if interview naturally completed
+    if (result.transition.completed) {
+      // Set completedAt timestamp (status is set by persistTurn below)
+      await this.repository.updateProgress(interview.id, {
+        completedAt: new Date(),
+      });
+
+      // Evaluate in background without blocking response
+      const evaluationService = createEvaluationService();
+      evaluationService.evaluateInterview(interview.id).catch((error) => {
+        console.error(`Failed to evaluate interview ${interview.id}:`, error);
+      });
+    }
 
     const metadata: Prisma.InputJsonValue = {
       phase: nextPhase,
