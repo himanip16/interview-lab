@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Poppins, Inter } from "next/font/google";
 import "./globals.css";
-import { ToastProvider } from "../components/ui/Toast";
 import { ThemeProvider } from "../contexts/ThemeContext";
 import AuthProvider from "../components/providers/AuthProvider";
+import Navbar from "../components/layout/Navbar";
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -28,7 +28,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body className="min-h-full flex flex-col">
         <AuthProvider>
           <ThemeProvider>
-            <ToastProvider>{children}</ToastProvider>
+            <Navbar />
+            {children}
           </ThemeProvider>
         </AuthProvider>
       </body>
