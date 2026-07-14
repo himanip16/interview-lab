@@ -14,14 +14,12 @@ const prisma = new PrismaClient();
 // Zod schemas for JSON field validation
 // ---------------------------------------------------------------------------
 
-const GoalDefinitionSchema = z.object({
-  id: z.string(),
-  required: z.boolean(),
-  weight: z.number(),
-});
+// Replace the GoalDefinitionSchema with:
+const GoalDefinitionSchema = z.string(); // Just store the goal string directly
+
+const GoalDefinitionArraySchema = z.array(GoalDefinitionSchema);
 
 const EvaluationDimensionArraySchema = z.array(z.string());
-const GoalDefinitionArraySchema = z.array(GoalDefinitionSchema);
 const JsonValueSchema = z.any(); // Generic JSON validation for other fields
 
 // ---------------------------------------------------------------------------

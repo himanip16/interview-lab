@@ -92,14 +92,18 @@ export default function ProblemSelector({
   return (
     <div className="grid grid-cols-1 gap-3">
       {problems.map((problem) => (
-        <Button
-          key={problem.id}
-          type="button"
-          variant={value === problem.id ? "primary" : "outline"}
-          aria-pressed={value === problem.id}
-          onClick={() => onChange(problem.id)}
-          className="h-auto w-full justify-start p-4 text-left"
-        >
+        // In ProblemSelector.tsx
+<Button
+  key={problem.id}
+  type="button"
+  variant={value === problem.id ? "primary" : "ghost"}
+  aria-pressed={value === problem.id}
+  onClick={() => {
+    console.log("1. Button clicked, problemId:", problem.id);
+    onChange(problem.id);
+  }}
+  className="h-auto w-full justify-start p-4 text-left"
+>
           <div className="flex-1">
             <div className="flex items-center justify-between">
               <h4 className="font-semibold">{problem.title}</h4>

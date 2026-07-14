@@ -36,6 +36,7 @@ export default function SetupPage({ userId }: Props) {
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
 
   const handleStartInterview = () => {
+    console.log("Start clicked", selectedProblem);
     if (!selectedProblem) {
       alert("Please select a problem");
       return;
@@ -43,12 +44,14 @@ export default function SetupPage({ userId }: Props) {
 
     // Use startTransition to handle the Server Action
     startTransition(async () => {
+      console.log("Calling server action");
       await createInterviewSession({
         problemId: selectedProblem,
         difficulty: selectedDifficulty,
         userId: userId,
         type: selectedType
       });
+      console.log("Server action finished");
     });
   };
 
@@ -61,10 +64,10 @@ export default function SetupPage({ userId }: Props) {
         </div>
 
         <ProblemInventoryView
-          userId={userId}
-          onSelectProblem={setSelectedProblem}
-        />
-
+  value={selectedProblem}  // Add this
+  userId={userId}
+  onSelectProblem={setSelectedProblem}
+/>
         <InterviewTypeSelector
           value={selectedType}
           onChange={setSelectedType}

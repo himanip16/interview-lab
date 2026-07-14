@@ -61,6 +61,7 @@ PROJECT STRUCTURE
 ├── public
 │   ├── file.svg
 │   ├── globe.svg
+│   ├── mockTranscript.json
 │   ├── next.svg
 │   ├── vercel.svg
 │   └── window.svg
@@ -124,17 +125,24 @@ PROJECT STRUCTURE
 │   │   │           └── skill-graph
 │   │   │               └── route.ts
 │   │   ├── dashboard
-│   │   │   └── [userId]
-│   │   │       └── page.tsx
+│   │   │   ├── [userId]
+│   │   │   │   └── page.tsx
+│   │   │   └── page.tsx
 │   │   ├── globals.css
 │   │   ├── interview
 │   │   │   ├── live
 │   │   │   │   ├── [id]
 │   │   │   │   │   └── page.tsx
+│   │   │   │   ├── [sessionId]
+│   │   │   │   │   └── page.tsx
 │   │   │   │   └── page.tsx
-│   │   │   └── report
-│   │   │       └── [id]
-│   │   │           └── page.tsx
+│   │   │   ├── report
+│   │   │   │   └── [id]
+│   │   │   │       └── page.tsx
+│   │   │   └── setup
+│   │   │       ├── SetupPage.tsx
+│   │   │       ├── actions.ts
+│   │   │       └── page.tsx
 │   │   ├── layout.tsx
 │   │   ├── learn
 │   │   │   ├── [slug]
@@ -155,6 +163,7 @@ PROJECT STRUCTURE
 │   │   │   │   │   └── page.tsx
 │   │   │   │   └── whatsapp
 │   │   │   │       └── page.tsx
+│   │   │   ├── page.tsx
 │   │   │   ├── scenarios
 │   │   │   │   └── [slug]
 │   │   │   │       └── page.tsx
@@ -226,6 +235,8 @@ PROJECT STRUCTURE
 │   │   ├── interview
 │   │   │   ├── api
 │   │   │   ├── components
+│   │   │   │   ├── LiveInterviewClient.tsx
+│   │   │   │   └── NodeRenderer.tsx
 │   │   │   ├── hooks
 │   │   │   ├── live
 │   │   │   │   ├── components
@@ -284,6 +295,7 @@ PROJECT STRUCTURE
 │   │   │       ├── CreateInterviewInput.ts
 │   │   │       ├── InterviewState.ts
 │   │   │       ├── TranscriptMessage.ts
+│   │   │       ├── dialogue.ts
 │   │   │       ├── interview.ts
 │   │   │       └── message.ts
 │   │   ├── landing
@@ -323,9 +335,21 @@ PROJECT STRUCTURE
 │   │   │   │   ├── LibraryTabs.tsx
 │   │   │   │   ├── LibraryView.tsx
 │   │   │   │   ├── TranscriptDetail.tsx
-│   │   │   │   └── TranscriptList.tsx
-│   │   │   ├── page.tsx
-│   │   │   └── types.ts
+│   │   │   │   ├── TranscriptList.tsx
+│   │   │   │   └── transcript
+│   │   │   │       ├── DialogueBubble.tsx
+│   │   │   │       ├── Highlight.tsx
+│   │   │   │       ├── HighlightExplanation.tsx
+│   │   │   │       ├── TakeawayCard.tsx
+│   │   │   │       ├── TranscriptHeader.tsx
+│   │   │   │       ├── TranscriptLegend.tsx
+│   │   │   │       └── TranscriptMetadata.tsx
+│   │   │   ├── data
+│   │   │   ├── types
+│   │   │   │   └── transcript.ts
+│   │   │   ├── types.ts
+│   │   │   └── utils
+│   │   │       └── textCleaner.ts
 │   │   └── shared
 │   ├── frontend
 │   │   ├── actionCorousel.html
@@ -360,78 +384,83 @@ PROJECT STRUCTURE
 │   │   │   └── errors
 │   │   │       └── ApplicationErrors.ts
 │   │   ├── container.ts
-│   │   └── interview
+│   │   ├── interview
+│   │   │   ├── application
+│   │   │   ├── constants.ts
+│   │   │   ├── dto
+│   │   │   ├── engine
+│   │   │   │   ├── InterviewEngine.ts
+│   │   │   │   ├── InterviewStateMachine.ts
+│   │   │   │   ├── PromptBuilder.ts
+│   │   │   │   ├── ResponseParser.ts
+│   │   │   │   ├── StateUpdater.ts
+│   │   │   │   ├── context
+│   │   │   │   ├── parser
+│   │   │   │   ├── pipeline
+│   │   │   │   └── state
+│   │   │   ├── evaluators
+│   │   │   │   ├── ArchitectureEvaluator.ts
+│   │   │   │   ├── CommunicationEvaluator.ts
+│   │   │   │   ├── EvidenceEvaluator.ts
+│   │   │   │   ├── RequirementEvaluator.ts
+│   │   │   │   ├── TechnicalEvaluator.ts
+│   │   │   │   └── types.ts
+│   │   │   ├── guardrails
+│   │   │   │   └── PromptGuard.ts
+│   │   │   ├── models
+│   │   │   │   ├── Evaluation.ts
+│   │   │   │   ├── Message.ts
+│   │   │   │   └── PhaseResult.ts
+│   │   │   ├── phases
+│   │   │   ├── profiles
+│   │   │   │   ├── DSAInterviewProfile.ts
+│   │   │   │   ├── HLDInterviewProfile.ts
+│   │   │   │   ├── InterviewProfile.ts
+│   │   │   │   ├── InterviewProfileService.ts
+│   │   │   │   └── LLDInterviewProfile.ts
+│   │   │   ├── prompt
+│   │   │   │   ├── PromptLoader.ts
+│   │   │   │   ├── PromptRenderer.ts
+│   │   │   │   ├── requirements.ts
+│   │   │   │   └── templates
+│   │   │   │       ├── clarification.md
+│   │   │   │       ├── evaluation.md
+│   │   │   │       ├── intro.md
+│   │   │   │       ├── judge.md
+│   │   │   │       ├── reverse-candidate.md
+│   │   │   │       └── scaling.md
+│   │   │   ├── repositories
+│   │   │   │   ├── InterviewRepository.ts
+│   │   │   │   └── MessageRepository.ts
+│   │   │   ├── reverse
+│   │   │   │   └── CandidatePersonas.ts
+│   │   │   ├── services
+│   │   │   │   ├── ProblemPickerService.ts
+│   │   │   │   ├── TranscriptService.ts
+│   │   │   │   ├── evaluation
+│   │   │   │   │   └── EvaluationService.ts
+│   │   │   │   ├── interview
+│   │   │   │   │   ├── InterviewFactory.ts
+│   │   │   │   │   └── InterviewMessageService.ts
+│   │   │   │   ├── learning
+│   │   │   │   │   └── LearningActionService.ts
+│   │   │   │   ├── mastery
+│   │   │   │   │   ├── MasteryService.ts
+│   │   │   │   │   └── SkillGraphService.ts
+│   │   │   │   ├── recommendation
+│   │   │   │   │   └── RecommendationService.ts
+│   │   │   │   ├── studyplan
+│   │   │   │   │   └── StudyResources.ts
+│   │   │   │   ├── summary
+│   │   │   │   │   ├── IncrementalSummaryService.ts
+│   │   │   │   │   └── SummaryService.ts
+│   │   │   │   └── whiteboard
+│   │   │   └── types.ts
+│   │   └── transcript
 │   │       ├── application
-│   │       ├── constants.ts
-│   │       ├── dto
-│   │       ├── engine
-│   │       │   ├── InterviewEngine.ts
-│   │       │   ├── InterviewStateMachine.ts
-│   │       │   ├── PromptBuilder.ts
-│   │       │   ├── ResponseParser.ts
-│   │       │   ├── StateUpdater.ts
-│   │       │   ├── context
-│   │       │   ├── parser
-│   │       │   ├── pipeline
-│   │       │   └── state
-│   │       ├── evaluators
-│   │       │   ├── ArchitectureEvaluator.ts
-│   │       │   ├── CommunicationEvaluator.ts
-│   │       │   ├── EvidenceEvaluator.ts
-│   │       │   ├── RequirementEvaluator.ts
-│   │       │   ├── TechnicalEvaluator.ts
-│   │       │   └── types.ts
-│   │       ├── guardrails
-│   │       │   └── PromptGuard.ts
-│   │       ├── models
-│   │       │   ├── Evaluation.ts
-│   │       │   ├── Message.ts
-│   │       │   └── PhaseResult.ts
-│   │       ├── phases
-│   │       ├── profiles
-│   │       │   ├── DSAInterviewProfile.ts
-│   │       │   ├── HLDInterviewProfile.ts
-│   │       │   ├── InterviewProfile.ts
-│   │       │   ├── InterviewProfileService.ts
-│   │       │   └── LLDInterviewProfile.ts
-│   │       ├── prompt
-│   │       │   ├── PromptLoader.ts
-│   │       │   ├── PromptRenderer.ts
-│   │       │   ├── requirements.ts
-│   │       │   └── templates
-│   │       │       ├── clarification.md
-│   │       │       ├── evaluation.md
-│   │       │       ├── intro.md
-│   │       │       ├── judge.md
-│   │       │       ├── reverse-candidate.md
-│   │       │       └── scaling.md
-│   │       ├── repositories
-│   │       │   ├── InterviewRepository.ts
-│   │       │   └── MessageRepository.ts
-│   │       ├── reverse
-│   │       │   └── CandidatePersonas.ts
-│   │       ├── services
-│   │       │   ├── ProblemPickerService.ts
-│   │       │   ├── TranscriptService.ts
-│   │       │   ├── evaluation
-│   │       │   │   └── EvaluationService.ts
-│   │       │   ├── interview
-│   │       │   │   ├── InterviewFactory.ts
-│   │       │   │   └── InterviewMessageService.ts
-│   │       │   ├── learning
-│   │       │   │   └── LearningActionService.ts
-│   │       │   ├── mastery
-│   │       │   │   ├── MasteryService.ts
-│   │       │   │   └── SkillGraphService.ts
-│   │       │   ├── recommendation
-│   │       │   │   └── RecommendationService.ts
-│   │       │   ├── studyplan
-│   │       │   │   └── StudyResources.ts
-│   │       │   ├── summary
-│   │       │   │   ├── IncrementalSummaryService.ts
-│   │       │   │   └── SummaryService.ts
-│   │       │   └── whiteboard
-│   │       └── types.ts
+│   │       │   └── TranscriptService.ts
+│   │       └── domain
+│   │           └── TranscriptNode.ts
 │   └── shared
 │       ├── config
 │       │   ├── common-constants.ts
@@ -443,7 +472,7 @@ PROJECT STRUCTURE
 ├── tsconfig.json
 └── tsconfig.tsbuildinfo
 
-168 directories, 274 files
+177 directories, 294 files
 
 FILE CONTENTS
 
@@ -513,6 +542,17 @@ model User {
   practiceAttempts        PracticeAttempt[]
   practiceRecommendations PracticeRecommendation[]
   learningRecommendations LearningRecommendation[]
+}
+
+model InterviewSession {
+  id          String   @id @default(cuid())
+  userId      String?
+  problemId   String
+  difficulty  String
+  status      String   @default("STARTED")
+  // We store the dialogue as a JSON blob for flexibility
+  transcript  Json     
+  createdAt   DateTime @default(now()) @map("created_at")
 }
 
 // ---------------------------------------------------------------------------
@@ -3862,6 +3902,98 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 
 ================================================
+FILE: ./public/mockTranscript.json
+================================================
+{
+  "metadata": {
+    "title": "Design a Payment System",
+    "difficulty": "HARD",
+    "duration": 45,
+    "template": "HLD",
+    "category": "Distributed Systems"
+  },
+  "messages": [
+    {
+      "id": "1",
+      "role": "interviewer",
+      "content": [
+        { "type": "text", "value": "Let's design a payment system. What are the key requirements you'd consider?" }
+      ],
+      "elapsedSeconds": 0
+    },
+    {
+      "id": "2", 
+      "role": "candidate",
+      "content": [
+        { "type": "text", "value": "I'd focus on " },
+        { 
+          "type": "highlight", 
+          "status": "strong", 
+          "value": "consistency, availability, and durability", 
+          "explanation": "These are the core CAP theorem considerations for payment systems where data accuracy is critical.",
+          "id": "h1"
+        },
+        { "type": "text", "value": ". We need to handle high throughput, ensure exactly-once processing, and maintain strong consistency for financial transactions." }
+      ],
+      "elapsedSeconds": 15
+    },
+    {
+      "id": "3",
+      "role": "interviewer", 
+      "content": [
+        { "type": "text", "value": "Good. Let's say the payment succeeded, but our order service never received the event. What happens?" }
+      ],
+      "elapsedSeconds": 45
+    },
+    {
+      "id": "4",
+      "role": "candidate",
+      "content": [
+        { "type": "text", "value": "I wouldn't retry the payment itself. I'd first " },
+        { 
+          "type": "highlight", 
+          "status": "strong", 
+          "value": "separate payment state from event delivery", 
+          "explanation": "This prevents double-charging while ensuring eventual consistency through the outbox pattern.",
+          "id": "h2"
+        },
+        { "type": "text", "value": ". Use the outbox pattern where we write both the payment and event to the same transaction, then have a separate process reliably deliver events." }
+      ],
+      "elapsedSeconds": 60
+    },
+    {
+      "id": "5",
+      "role": "interviewer",
+      "content": [
+        { "type": "text", "value": "How would you handle idempotency?" }
+      ],
+      "elapsedSeconds": 90
+    },
+    {
+      "id": "6",
+      "role": "candidate", 
+      "content": [
+        { "type": "text", "value": "I'd use " },
+        { 
+          "type": "highlight", 
+          "status": "missed", 
+          "value": "client-generated idempotency keys", 
+          "explanation": "While this works, it has issues with client retries and key collisions. Server-side idempotency with request deduplication is more robust.",
+          "id": "h3"
+        },
+        { "type": "text", "value": ". Each payment request includes a unique key, and we cache the response. If we see the same key again, we return the cached result instead of processing." }
+      ],
+      "elapsedSeconds": 105
+    },
+    {
+      "id": "7",
+      "role": "takeaway",
+      "content": "Separate payment state from event delivery; use the outbox pattern with idempotent consumers for exactly-once semantics."
+    }
+  ]
+}
+
+================================================
 FILE: ./package.json
 ================================================
 {
@@ -4751,6 +4883,118 @@ export default function CardDetailPage() {
 ================================================
 FILE: ./src/app/learn/scenarios/[slug]/page.tsx
 ================================================
+
+================================================
+FILE: ./src/app/learn/page.tsx
+================================================
+// src/app/learn/page.tsx
+import Link from "next/link";
+import Heading from "@/components/ui/Heading";
+import Text from "@/components/ui/Text";
+import Card from "@/components/ui/Card";
+
+const LEARNING_PATHS = [
+  {
+    title: "System Design Diagrams",
+    description: "Interactive architecture diagrams for real-world systems like Twitter, Netflix, and Uber.",
+    href: "/learn/diagrams",
+    color: "blue",
+  },
+  {
+    title: "Learning Scenarios",
+    description: "Guided learning scenarios to master distributed systems concepts step by step.",
+    href: "/learn/scenarios",
+    color: "green",
+  },
+  {
+    title: "Whiteboard Practice",
+    description: "Practice system design on an interactive whiteboard with preset components.",
+    href: "/learn/whiteboard",
+    color: "purple",
+  },
+  {
+    title: "Action Carousel",
+    description: "Interactive exercises to test your understanding of system design patterns.",
+    href: "/learn/action-carousel",
+    color: "orange",
+  },
+];
+
+const COLOR_CLASSES: Record<string, string> = {
+  blue: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+  green: "bg-green-500/10 text-green-400 border-green-500/20",
+  purple: "bg-purple-500/10 text-purple-400 border-purple-500/20",
+  orange: "bg-orange-500/10 text-orange-400 border-orange-500/20",
+};
+
+export default function LearnPage() {
+  return (
+    <main className="mx-auto max-w-5xl px-6 py-12 text-foreground">
+      {/* Header */}
+      <div className="mb-8">
+        <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+          Learning Center
+        </span>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground">
+          Learn System Design
+        </h1>
+        <Text variant="muted" className="mt-2">
+          Master distributed systems through interactive diagrams, scenarios, and practice exercises.
+        </Text>
+      </div>
+
+      {/* Learning Paths */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {LEARNING_PATHS.map((path) => (
+          <Link key={path.href} href={path.href}>
+            <Card className="h-full hover:border-foreground/40 transition-colors cursor-pointer p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex-1">
+                  <h3 className="text-xl font-semibold text-foreground mb-2">
+                    {path.title}
+                  </h3>
+                  <Text variant="muted" className="leading-relaxed">
+                    {path.description}
+                  </Text>
+                </div>
+              </div>
+              <div className="flex items-center justify-between mt-4">
+                <span
+                  className={`inline-block rounded px-3 py-1 font-mono text-xs font-bold uppercase ${COLOR_CLASSES[path.color]} border`}
+                >
+                  Interactive
+                </span>
+                <span className="text-muted-foreground">→</span>
+              </div>
+            </Card>
+          </Link>
+        ))}
+      </div>
+
+      {/* Getting Started Section */}
+      <Card className="mt-8 p-6">
+        <Heading level="h3" className="mb-3">
+          Getting Started
+        </Heading>
+        <Text variant="body" className="leading-relaxed mb-4">
+          Start with interactive diagrams to understand real-world system architectures, then move to learning scenarios for deeper understanding, and practice on the whiteboard to solidify your knowledge.
+        </Text>
+        <div className="flex flex-wrap gap-3">
+          <Link href="/learn/diagrams">
+            <button className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:opacity-90 transition-opacity">
+              Browse Diagrams
+            </button>
+          </Link>
+          <Link href="/interview/setup">
+            <button className="px-4 py-2 border border-border bg-card rounded-lg font-medium hover:border-foreground/40 transition-colors">
+              Start Practice Interview
+            </button>
+          </Link>
+        </div>
+      </Card>
+    </main>
+  );
+}
 
 ================================================
 FILE: ./src/app/learn/[slug]/page.tsx
@@ -5894,23 +6138,42 @@ export default function MarketingLayout({
 FILE: ./src/app/(marketing)/page.tsx
 ================================================
 import PageContainer from "@/components/layout/PageContainer";
+
 import Hero from "@/features/landing/components/Hero";
-import ActionCards from "@/features/landing/components/ActionCards";
+import SampleFeedback from "@/features/landing/components/SampleFeedback";
 import SmartMentor from "@/features/landing/components/SmartMentor";
 import PersonalNotebooks from "@/features/landing/components/PersonalNotebooks";
-import SampleFeedback from "@/features/landing/components/SampleFeedback";
+
+import ActionCards from "@/features/landing/components/ActionCards";
 
 export default function Home() {
   return (
     <PageContainer>
       <Hero />
-      <ActionCards />
+      <ActionCards />  {/* ADD THIS */}
       <SmartMentor />
       <PersonalNotebooks />
       <SampleFeedback />
     </PageContainer>
   );
 }
+================================================
+FILE: ./src/app/dashboard/page.tsx
+================================================
+// src/app/dashboard/page.tsx
+import { redirect } from "next/navigation";
+import { getCurrentUserId } from "@/modules/auth/getCurrentUserId";
+
+export default async function DashboardRedirect() {
+  const userId = await getCurrentUserId();
+  
+  if (!userId) {
+    redirect("/login");
+  }
+  
+  redirect(`/dashboard/${userId}`);
+}
+
 ================================================
 FILE: ./src/app/dashboard/[userId]/page.tsx
 ================================================
@@ -6089,6 +6352,194 @@ export default function RegisterPage() {
         </a>
       </p>
     </main>
+  );
+}
+================================================
+FILE: ./src/app/interview/setup/actions.ts
+================================================
+'use server'
+
+import { prisma } from "@/shared/prisma/client";
+import { redirect } from "next/navigation";
+
+export async function createInterviewSession(data: {
+  problemId: string;
+  difficulty: string;
+  userId: string | null;
+  type: string;
+}) {
+  // 1. Create the session in the DB
+  const session = await prisma.interviewSession.create({
+    data: {
+      userId: data.userId,
+      problemId: data.problemId,
+      difficulty: data.difficulty,
+      status: "STARTED",
+      // We store a mock transcript for now. 
+      // In production, you'd fetch the actual content based on problemId.
+      transcript: [
+        {
+          id: "1",
+          type: "interviewer",
+          roleLabel: "Interviewer",
+          text: "The database commits, but the service crashes before Kafka publish. What happens?"
+        },
+        {
+          id: "2",
+          type: "candidate",
+          roleLabel: "Candidate",
+          content: [
+            { text: "I think " },
+            { text: "Kafka guarantees delivery", highlight: "missed", explanation: "Kafka only guarantees delivery once the message reaches the broker. If the service crashes before publishing, the message is lost forever." }
+          ]
+        },
+        {
+            id: "3",
+            type: "takeaway",
+            text: "Use the Transactional Outbox pattern to ensure atomicity between DB commits and Message publishing."
+        }
+      ]
+    }
+  });
+
+  // 2. Redirect to the unique session URL
+  redirect(`/interview/live/${session.id}`);
+}
+================================================
+FILE: ./src/app/interview/setup/SetupPage.tsx
+================================================
+"use client";
+
+import { useState, useTransition } from "react";
+import { useSearchParams } from "next/navigation";
+
+import SetupCard from "@/features/interview/setup/components/SetupCard";
+import ProblemInventoryView from "@/features/interview/setup/components/ProblemInventoryView";
+import InterviewTypeSelector from "@/features/interview/setup/components/InterviewTypeSelector";
+import DifficultySelector from "@/features/interview/setup/components/DifficultySelector";
+import DurationSelector from "@/features/interview/setup/components/DurationSelector";
+import TopicSelector from "@/features/interview/setup/components/TopicSelector";
+import { Button } from "@/components/ui/Button";
+
+import { createInterviewSession } from "./actions";
+import {
+  type InterviewType,
+  type SetupDifficulty,
+  parseInterviewType,
+} from "@/features/interview/setup/types/setup";
+
+type Props = {
+  userId: string | null;
+};
+
+export default function SetupPage({ userId }: Props) {
+  const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
+
+  const problemId = searchParams.get("problemId");
+  const type = searchParams.get("type");
+
+  const [selectedProblem, setSelectedProblem] = useState<string | null>(problemId);
+  const [selectedType, setSelectedType] = useState<InterviewType>(parseInterviewType(type));
+  const [selectedDifficulty, setSelectedDifficulty] = useState<SetupDifficulty>("Medium");
+  const [selectedDuration, setSelectedDuration] = useState<number>(30);
+  const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
+
+  const handleStartInterview = () => {
+    if (!selectedProblem) {
+      alert("Please select a problem");
+      return;
+    }
+
+    // Use startTransition to handle the Server Action
+    startTransition(async () => {
+      await createInterviewSession({
+        problemId: selectedProblem,
+        difficulty: selectedDifficulty,
+        userId: userId,
+        type: selectedType
+      });
+    });
+  };
+
+  return (
+    <SetupCard>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold mb-2">Setup Interview</h1>
+          <p className="text-muted-foreground">Configure your practice session</p>
+        </div>
+
+        <ProblemInventoryView
+          userId={userId}
+          onSelectProblem={setSelectedProblem}
+        />
+
+        <InterviewTypeSelector
+          value={selectedType}
+          onChange={setSelectedType}
+          onTopicChange={setSelectedTopic}
+        />
+
+        <DifficultySelector
+          value={selectedDifficulty}
+          onChange={setSelectedDifficulty}
+        />
+
+        <DurationSelector
+          value={selectedDuration}
+          onChange={setSelectedDuration}
+        />
+
+        <TopicSelector
+          value={selectedTopic}
+          onChange={setSelectedTopic}
+        />
+
+        <Button
+          className="w-full"
+          disabled={!selectedProblem || isPending}
+          onClick={handleStartInterview}
+        >
+          {isPending ? "Creating Session..." : "Start Interview"}
+        </Button>
+      </div>
+    </SetupCard>
+  );
+}
+================================================
+FILE: ./src/app/interview/setup/page.tsx
+================================================
+import { getCurrentUserId } from "@/modules/auth/getCurrentUserId";
+import SetupPage from "./SetupPage";
+
+export default async function InterviewSetupPage() {
+  const userId = await getCurrentUserId();
+
+  return <SetupPage userId={userId} />;
+}
+================================================
+FILE: ./src/app/interview/live/[sessionId]/page.tsx
+================================================
+import { prisma } from "@/shared/prisma/client";
+import { notFound } from "next/navigation";
+import LiveInterviewClient from "@/features/interview/components/LiveInterviewClient";
+
+export default async function SessionPage({ params }: { params: { sessionId: string } }) {
+  const session = await prisma.interviewSession.findUnique({
+    where: { id: params.sessionId }
+  });
+
+  if (!session) notFound();
+
+  return (
+    <div className="py-12 bg-[#FDFDFD] min-h-screen">
+      {/* 
+         Note: We cast transcript as any because Prisma Json types 
+         need to be mapped to our DialogueNode interface 
+      */}
+      <LiveInterviewClient initialTranscript={session.transcript as any} />
+    </div>
   );
 }
 ================================================
@@ -11280,6 +11731,97 @@ export function useScenario(slug: string) {
 }
 
 ================================================
+FILE: ./src/features/library/types/transcript.ts
+================================================
+// src/features/library/types/transcript.ts
+import { Difficulty } from "@prisma/client";
+
+export type ContentBlock = 
+  | { type: "text"; value: string }
+  | { 
+      type: "highlight"; 
+      status: "strong" | "missed"; 
+      value: string; 
+      explanation: string;
+      id: string;
+    };
+
+export type TranscriptMessage = {
+  id?: string;
+  role: "interviewer" | "candidate" | "takeaway";
+  content: ContentBlock[] | string;
+  elapsedSeconds?: number;
+  timestamp?: string;
+};
+
+export type TranscriptMetadata = {
+  title: string;
+  difficulty: Difficulty;
+  duration: number;
+  template: string;
+  category: string;
+};
+
+export type TranscriptData = {
+  metadata: TranscriptMetadata;
+  messages: TranscriptMessage[];
+};
+
+export type EnhancedTranscript = TranscriptMessage[];
+
+================================================
+FILE: ./src/features/library/utils/textCleaner.ts
+================================================
+// src/features/library/utils/textCleaner.ts
+
+/**
+ * Cleans common unicode escape sequences and formatting issues from transcript text
+ * Converts raw unicode sequences to their actual characters
+ */
+export function cleanTranscriptText(text: string): string {
+  return text
+    // Common unicode escape sequences
+    .replace(/\\u2014/g, "—") // em dash
+    .replace(/\\u2013/g, "–") // en dash
+    .replace(/\\u2018/g, "‘") // left single quote
+    .replace(/\\u2019/g, "’") // right single quote
+    .replace(/\\u201C/g, "“") // left double quote
+    .replace(/\\u201D/g, "”") // right double quote
+    .replace(/\\u2026/g, "…") // ellipsis
+    .replace(/\\u00A0/g, " ") // non-breaking space
+    // Common formatting issues
+    .replace(/\\n/g, "\n") // escaped newlines
+    .replace(/\\t/g, "  ") // escaped tabs to double space
+    .trim();
+}
+
+/**
+ * Cleans content blocks in a transcript message
+ */
+export function cleanContentBlocks(content: any): any {
+  if (typeof content === "string") {
+    return cleanTranscriptText(content);
+  }
+  
+  if (Array.isArray(content)) {
+    return content.map(block => {
+      if (typeof block === "string") {
+        return cleanTranscriptText(block);
+      }
+      if (block && typeof block === "object" && block.value) {
+        return {
+          ...block,
+          value: cleanTranscriptText(block.value)
+        };
+      }
+      return block;
+    });
+  }
+  
+  return content;
+}
+
+================================================
 FILE: ./src/features/library/types.ts
 ================================================
 // src/features/library/types.ts
@@ -11599,105 +12141,508 @@ export default function ExperienceList({ experiences }: Props) {
 }
 
 ================================================
+FILE: ./src/features/library/components/transcript/TranscriptHeader.tsx
+================================================
+// src/features/library/components/transcript/TranscriptHeader.tsx
+import Link from "next/link";
+import { type TranscriptMetadata } from "../../types/transcript";
+import { Difficulty } from "@prisma/client";
+
+type Props = {
+  metadata: TranscriptMetadata;
+};
+
+const DIFFICULTY_STYLES: Record<Difficulty, string> = {
+  EASY: "bg-green-50 text-green-700 border-green-200",
+  MEDIUM: "bg-amber-50 text-amber-700 border-amber-200",
+  HARD: "bg-rose-50 text-rose-700 border-rose-200",
+};
+
+export default function TranscriptHeader({ metadata }: Props) {
+  return (
+    <div className="mb-8">
+      {/* Breadcrumbs */}
+      <nav className="flex items-center gap-2 text-sm mb-5">
+        <Link 
+          href="/library" 
+          className="text-gray-500 hover:text-gray-700 transition-colors font-medium"
+        >
+          Library
+        </Link>
+        <span className="text-gray-300">/</span>
+        <span className="text-gray-600 font-medium">Read Transcript</span>
+      </nav>
+
+      {/* Title */}
+      <h1 className="text-4xl font-bold text-gray-900 mb-5 tracking-tight">
+        {metadata.title}
+      </h1>
+
+      {/* Metadata Tags */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="px-3 py-1.5 bg-slate-50 text-slate-600 rounded-full text-xs font-semibold uppercase tracking-wider border border-slate-200">
+          {metadata.template}
+        </span>
+        <span className="px-3 py-1.5 bg-slate-50 text-slate-600 rounded-full text-xs font-semibold uppercase tracking-wider border border-slate-200">
+          {metadata.category}
+        </span>
+        <span className={`px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider border ${
+          DIFFICULTY_STYLES[metadata.difficulty]
+        }`}>
+          {metadata.difficulty}
+        </span>
+        <span className="px-3 py-1.5 bg-slate-50 text-slate-600 rounded-full text-xs font-semibold uppercase tracking-wider border border-slate-200">
+          {metadata.duration} min
+        </span>
+      </div>
+    </div>
+  );
+}
+
+================================================
+FILE: ./src/features/library/components/transcript/TranscriptMetadata.tsx
+================================================
+// src/features/library/components/transcript/TranscriptMetadata.tsx
+import { Difficulty } from "@prisma/client";
+
+type Props = {
+  title: string;
+  difficulty: Difficulty;
+  duration: number;
+  template: string;
+};
+
+const DIFFICULTY_STYLES: Record<Difficulty, string> = {
+  EASY: "bg-green-100 text-green-700 border-green-200",
+  MEDIUM: "bg-amber-100 text-amber-700 border-amber-200",
+  HARD: "bg-rose-100 text-rose-700 border-rose-200",
+};
+
+export default function TranscriptMetadata({
+  title,
+  difficulty,
+  duration,
+  template,
+}: Props) {
+  return (
+    <div className="mb-6">
+      <h1 className="text-2xl font-bold text-gray-900 mb-3">{title}</h1>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-semibold uppercase tracking-wide border border-gray-200">
+          {template}
+        </span>
+        <span
+          className={`px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide border ${
+            DIFFICULTY_STYLES[difficulty]
+          }`}
+        >
+          {difficulty}
+        </span>
+        <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-semibold uppercase tracking-wide border border-gray-200">
+          {duration} min
+        </span>
+      </div>
+    </div>
+  );
+}
+
+================================================
+FILE: ./src/features/library/components/transcript/TakeawayCard.tsx
+================================================
+// src/features/library/components/transcript/TakeawayCard.tsx
+import { type ContentBlock } from "../../types/transcript";
+import { cleanTranscriptText } from "../../utils/textCleaner";
+
+type Props = {
+  content: ContentBlock[] | string;
+};
+
+function renderContentBlock(block: ContentBlock): React.ReactNode {
+  if (block.type === "text") {
+    return cleanTranscriptText(block.value);
+  }
+  if (block.type === "highlight") {
+    return cleanTranscriptText(block.value);
+  }
+  return String(block);
+}
+
+export default function TakeawayCard({ content }: Props) {
+  return (
+    <div className="border-l-4 border-emerald-500 bg-emerald-50/50 p-6 my-8 rounded-r-xl">
+      <span className="text-xs font-bold text-emerald-600 uppercase mb-2 block tracking-wider">
+        Takeaway
+      </span>
+      <p className="text-gray-700 font-medium italic leading-relaxed">
+        {typeof content === "string" 
+          ? cleanTranscriptText(content)
+          : content.map((block, index) => (
+              <span key={index}>{renderContentBlock(block)}</span>
+            ))
+        }
+      </p>
+    </div>
+  );
+}
+
+================================================
+FILE: ./src/features/library/components/transcript/Highlight.tsx
+================================================
+// src/features/library/components/transcript/Highlight.tsx
+"use client";
+
+import { type ContentBlock } from "../../types/transcript";
+
+type Props = {
+  highlight: ContentBlock & { type: "highlight" };
+  onClick: (id: string) => void;
+  isActive?: boolean;
+};
+
+export default function Highlight({ highlight, onClick, isActive = false }: Props) {
+  const isStrong = highlight.status === "strong";
+  
+  return (
+    <span
+      onClick={() => onClick(highlight.id)}
+      className={`cursor-pointer transition-all inline ${
+        isStrong
+          ? "bg-emerald-100 border-b-2 border-emerald-500 hover:bg-emerald-200/80"
+          : "bg-rose-100 border-b-2 border-rose-500 hover:bg-rose-200/80"
+      } ${isActive ? "ring-2 ring-offset-2 ring-blue-500" : ""}`}
+    >
+      {highlight.value}
+    </span>
+  );
+}
+
+================================================
+FILE: ./src/features/library/components/transcript/TranscriptLegend.tsx
+================================================
+// src/features/library/components/transcript/TranscriptLegend.tsx
+export default function TranscriptLegend() {
+  return (
+    <div className="sticky top-0 z-10 flex items-center gap-6 mb-6 pb-4 border-b border-gray-100 bg-white/95 backdrop-blur-sm">
+      <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+        Legend:
+      </span>
+      <div className="flex items-center gap-2">
+        <span className="w-3 h-3 rounded-full bg-emerald-500"></span>
+        <span className="text-xs text-gray-600">Strong moment</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="w-3 h-3 rounded-full bg-rose-500"></span>
+        <span className="text-xs text-gray-600">Missed something</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-gray-400 italic">Click highlights for AI explanation</span>
+      </div>
+    </div>
+  );
+}
+
+================================================
+FILE: ./src/features/library/components/transcript/DialogueBubble.tsx
+================================================
+// src/features/library/components/transcript/DialogueBubble.tsx
+import { type ContentBlock } from "../../types/transcript";
+import Highlight from "./Highlight";
+import TakeawayCard from "./TakeawayCard";
+
+type Props = {
+  role: "interviewer" | "candidate" | "takeaway";
+  content: ContentBlock[] | string;
+  elapsedSeconds?: number;
+  onHighlightClick?: (highlightId: string) => void;
+  activeHighlightId?: string | null;
+};
+
+export default function DialogueBubble({
+  role,
+  content,
+  elapsedSeconds,
+  onHighlightClick,
+  activeHighlightId,
+}: Props) {
+  const isInterviewer = role === "interviewer";
+  const isTakeaway = role === "takeaway";
+
+  function formatTimestamp(seconds: number): string {
+    const minutes = Math.floor(seconds / 60);
+    const remaining = Math.floor(seconds % 60);
+    return `${minutes.toString().padStart(2, "0")}:${remaining
+      .toString()
+      .padStart(2, "0")}`;
+  }
+
+  function renderContent(contentBlock: ContentBlock | string): React.ReactNode {
+    if (typeof contentBlock === "string") {
+      return <span>{contentBlock}</span>;
+    }
+
+    if (contentBlock.type === "text") {
+      return <span>{contentBlock.value}</span>;
+    }
+
+    if (contentBlock.type === "highlight") {
+      const isActive = activeHighlightId === contentBlock.id;
+      
+      return (
+        <Highlight
+          highlight={contentBlock}
+          onClick={onHighlightClick || (() => {})}
+          isActive={isActive}
+        />
+      );
+    }
+
+    return <span>{String(contentBlock)}</span>;
+  }
+
+  function renderContentBlocks(blocks: ContentBlock[] | string): React.ReactNode {
+    if (typeof blocks === "string") {
+      return <span key="text">{blocks}</span>;
+    }
+
+    return blocks.map((block, index) => (
+      <span key={index}>{renderContent(block)}</span>
+    ));
+  }
+
+  if (isTakeaway) {
+    return <TakeawayCard content={content} />;
+  }
+
+  return (
+    <div className={`mb-10 ${isInterviewer ? "max-w-xl" : "max-w-2xl ml-auto"}`}>
+      <div className={`mb-3 flex items-baseline ${isInterviewer ? "justify-start" : "justify-end"}`}>
+        <span className={`text-xs uppercase tracking-wider ${
+          isInterviewer 
+            ? "font-normal text-gray-400" 
+            : "font-semibold text-gray-600"
+        }`}>
+          {role === "interviewer" ? "Interviewer" : "Candidate"}
+        </span>
+        {elapsedSeconds !== undefined && (
+          <span className={`font-mono text-[10px] text-muted-foreground ${isInterviewer ? "ml-3" : "mr-3"}`}>
+            {formatTimestamp(elapsedSeconds)}
+          </span>
+        )}
+      </div>
+      <div
+        className={`p-6 rounded-2xl leading-relaxed ${
+          isInterviewer
+            ? "bg-transparent border border-gray-100"
+            : "bg-white shadow-sm border border-gray-200"
+        }`}
+      >
+        <p className={`text-gray-800 ${isInterviewer ? "font-normal" : "font-medium"}`}>
+          {renderContentBlocks(content)}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+================================================
+FILE: ./src/features/library/components/transcript/HighlightExplanation.tsx
+================================================
+// src/features/library/components/transcript/HighlightExplanation.tsx
+"use client";
+
+import { type ContentBlock } from "../../types/transcript";
+
+type Props = {
+  highlight: ContentBlock & { type: "highlight" };
+  onClose: () => void;
+};
+
+export default function HighlightExplanation({ highlight, onClose }: Props) {
+  const isStrong = highlight.status === "strong";
+
+  return (
+    <div
+      className={`mt-3 p-4 rounded-lg border ${
+        isStrong
+          ? "bg-emerald-50 border-emerald-200"
+          : "bg-rose-50 border-rose-200"
+      }`}
+    >
+      <div className="flex items-start justify-between mb-2">
+        <span
+          className={`text-xs font-bold uppercase ${
+            isStrong ? "text-emerald-600" : "text-rose-600"
+          }`}
+        >
+          {isStrong ? "✓ Strong moment" : "✗ Missed something"}
+        </span>
+        <button
+          onClick={onClose}
+          className="text-gray-400 hover:text-gray-600 transition-colors"
+          aria-label="Close explanation"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <p className="text-sm text-gray-700 leading-relaxed">
+        {highlight.explanation}
+      </p>
+    </div>
+  );
+}
+
+================================================
 FILE: ./src/features/library/components/TranscriptDetail.tsx
 ================================================
 // src/features/library/components/TranscriptDetail.tsx
 "use client";
 
-import { CompletedInterviewItem } from "../types";
+import { useState, useEffect } from "react";
+import { type ContentBlock, type TranscriptData } from "../types/transcript";
+import { cleanContentBlocks } from "../utils/textCleaner";
 import Text from "@/components/ui/Text";
 import Card from "@/components/ui/Card";
-import OverallScoreCard from "@/features/interview/report/components/OverallScoreCard";
-import WhatHappenedCard from "@/features/interview/report/components/WhatHappenedCard";
-import EvidenceTimeline from "@/features/interview/report/components/EvidenceTimeline";
+import DialogueBubble from "./transcript/DialogueBubble";
+import HighlightExplanation from "./transcript/HighlightExplanation";
+import TranscriptLegend from "./transcript/TranscriptLegend";
+import TranscriptHeader from "./transcript/TranscriptHeader";
 
 type Props = {
-  interview: CompletedInterviewItem;
-  onBack: () => void;
+  onBack?: () => void;
 };
 
-function formatTimestamp(seconds: number): string {
-  const minutes = Math.floor(seconds / 60);
-  const remaining = Math.floor(seconds % 60);
-  return `${minutes.toString().padStart(2, "0")}:${remaining
-    .toString()
-    .padStart(2, "0")}`;
+// Helper to find all highlights in content
+function findHighlights(content: ContentBlock[] | string): (ContentBlock & { type: "highlight" })[] {
+  if (typeof content === "string") return [];
+  return content.filter((block): block is ContentBlock & { type: "highlight" } => block.type === "highlight");
 }
 
-export default function TranscriptDetail({ interview, onBack }: Props) {
+export default function TranscriptDetail({ onBack }: Props) {
+  const [transcriptData, setTranscriptData] = useState<TranscriptData | null>(null);
+  const [activeHighlightId, setActiveHighlightId] = useState<string | null>(null);
+  const [activeHighlight, setActiveHighlight] = useState<(ContentBlock & { type: "highlight" }) | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadMockData() {
+      try {
+        const response = await fetch("/mockTranscript.json");
+        const data = await response.json();
+        
+        // Clean unicode content from all messages
+        const cleanedMessages = data.messages.map((message: any) => ({
+          ...message,
+          content: cleanContentBlocks(message.content)
+        }));
+        
+        setTranscriptData({
+          ...data,
+          messages: cleanedMessages
+        });
+      } catch (error) {
+        console.error("Failed to load mock transcript data:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadMockData();
+  }, []);
+
+  const handleHighlightClick = (highlightId: string) => {
+    if (!transcriptData) return;
+    
+    // Find the highlight in all messages
+    for (const message of transcriptData.messages) {
+      const highlights = findHighlights(message.content);
+      const found = highlights.find((h) => h.id === highlightId);
+      if (found) {
+        if (activeHighlightId === highlightId) {
+          setActiveHighlightId(null);
+          setActiveHighlight(null);
+        } else {
+          setActiveHighlightId(highlightId);
+          setActiveHighlight(found);
+        }
+        return;
+      }
+    }
+  };
+
+  const handleCloseExplanation = () => {
+    setActiveHighlightId(null);
+    setActiveHighlight(null);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Text variant="muted">Loading transcript...</Text>
+      </div>
+    );
+  }
+
+  if (!transcriptData) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Text variant="muted">Failed to load transcript data.</Text>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <button
-        onClick={onBack}
-        className="font-mono text-xs text-muted-foreground hover:text-foreground"
-      >
-        ← Back to completed interviews
-      </button>
+      {onBack && (
+        <button
+          onClick={onBack}
+          className="font-mono text-xs text-muted-foreground hover:text-foreground"
+        >
+          ← Back to library
+        </button>
+      )}
 
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
         {/* Transcript */}
         <div className="space-y-4 lg:col-span-2">
           <Card className="p-6">
-            <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-              Live conversation log
-            </span>
-            <h3 className="mt-1 text-base font-bold text-foreground">
-              {interview.problem.title} Transcript
-            </h3>
+            <TranscriptHeader metadata={transcriptData.metadata} />
+            
+            <TranscriptLegend />
 
-            <div className="mt-6 max-h-[480px] space-y-4 divide-y divide-border overflow-y-auto pr-2">
-              {interview.transcript.map((message, idx) => (
-                <div key={message.id ?? idx} className="pt-4 first:pt-0">
-                  <div className="mb-1 flex items-baseline justify-between">
-                    <span
-                      className={`font-mono text-[10px] font-bold uppercase tracking-wide ${
-                        message.role === "assistant"
-                          ? "text-muted-foreground"
-                          : "text-foreground"
-                      }`}
-                    >
-                      {message.role === "assistant" ? "Interviewer" : "Candidate"}
-                    </span>
-                    <span className="font-mono text-[10px] text-muted-foreground">
-                      {formatTimestamp(message.elapsedSeconds)}
-                    </span>
-                  </div>
-                  <p className="text-sm leading-relaxed text-foreground">
-                    {message.content}
-                  </p>
+            <div className="max-h-[600px] space-y-4 overflow-y-auto pr-2">
+              {transcriptData.messages.map((message, idx) => (
+                <div key={message.id ?? idx}>
+                  <DialogueBubble
+                    role={message.role}
+                    content={message.content}
+                    elapsedSeconds={message.elapsedSeconds}
+                    onHighlightClick={handleHighlightClick}
+                    activeHighlightId={activeHighlightId}
+                  />
+                  {activeHighlightId && activeHighlight && (
+                    <HighlightExplanation
+                      highlight={activeHighlight}
+                      onClose={handleCloseExplanation}
+                    />
+                  )}
                 </div>
               ))}
 
-              {interview.transcript.length === 0 && (
-                <Text variant="muted">No messages recorded for this session.</Text>
+              {transcriptData.messages.length === 0 && (
+                <Text variant="muted">No messages in this transcript.</Text>
               )}
             </div>
           </Card>
         </div>
 
-        {/* Evaluation */}
+        {/* Evaluation Placeholder */}
         <div className="space-y-4">
-          {interview.evaluation ? (
-            <>
-              <OverallScoreCard score={interview.evaluation.overallScore} />
-              <WhatHappenedCard
-                observations={[]}
-                strengths={interview.evaluation.metadata.strengths ?? []}
-                weaknesses={interview.evaluation.metadata.weaknesses ?? []}
-              />
-            </>
-          ) : (
-            <Card className="p-6 text-center">
-              <Text variant="muted">Evaluation still generating — check back shortly.</Text>
-            </Card>
-          )}
+          <Card className="p-6">
+            <Text variant="muted">Evaluation panel coming soon...</Text>
+          </Card>
         </div>
       </div>
-
-      {interview.evaluation &&
-        interview.evaluation.evidence.length > 0 && (
-          <EvidenceTimeline evidence={interview.evaluation.evidence} />
-        )}
     </div>
   );
 }
@@ -11778,7 +12723,6 @@ export default function LibraryView({ experiences, completedInterviews }: Props)
       {selectedInterview && (
         <div className="mt-8">
           <TranscriptDetail
-            interview={selectedInterview}
             onBack={() => setSelectedInterview(null)}
           />
         </div>
@@ -11890,119 +12834,6 @@ export default function EmptyState({ message }: Props) {
   );
 }
 
-================================================
-FILE: ./src/features/library/page.tsx
-================================================
-// src/app/library/page.tsx
-import { InterviewStatus } from "@prisma/client";
-
-import { prisma } from "@/shared/prisma/client";
-import { getCurrentUserId } from "@/modules/auth/getCurrentUserId";
-import LibraryView from "@/features/library/components/LibraryView";
-import {
-  type CompletedInterviewItem,
-  type ExperienceItem,
-  type DimensionScore,
-  type EvidenceEntry,
-  type EvaluationMetadata,
-} from "@/features/library/types";
-
-const EXPERIENCE_LIMIT = 30;
-
-const dateFormatter = new Intl.DateTimeFormat("en-US", {
-  year: "numeric",
-  month: "short",
-  day: "numeric",
-});
-
-function formatDisplayDate(date: Date): string {
-  return dateFormatter.format(date);
-}
-
-export default async function LibraryPage() {
-  const userId = await getCurrentUserId();
-
-  const [experiencesRaw, interviewsRaw] = await Promise.all([
-    prisma.interviewExperience.findMany({
-      include: {
-        problem: {
-          select: { id: true, title: true, description: true, difficulty: true },
-        },
-        company: { select: { name: true } },
-      },
-      orderBy: { createdAt: "desc" },
-      take: EXPERIENCE_LIMIT,
-    }),
-    prisma.interview.findMany({
-      where: { userId, status: InterviewStatus.COMPLETED },
-      include: {
-        problem: { select: { title: true } },
-        template: { select: { name: true } },
-        evaluation: true,
-        transcript: {
-          orderBy: { createdAt: "asc" },
-          select: { id: true, role: true, content: true, elapsedSeconds: true },
-        },
-      },
-      // `completedAt` isn't currently set when an interview finishes, so
-      // order by `updatedAt` (which the finish flow does update) instead.
-      orderBy: { updatedAt: "desc" },
-    }),
-  ]);
-
-  const experiences: ExperienceItem[] = experiencesRaw.map((exp) => ({
-    id: exp.id,
-    role: exp.role,
-    level: exp.level,
-    year: exp.year,
-    source: exp.source,
-    url: exp.url,
-    notes: exp.notes,
-    problem: exp.problem,
-    company: exp.company,
-  }));
-
-  const completedInterviews: CompletedInterviewItem[] = interviewsRaw.map(
-    (interview) => {
-      const metadata = (interview.evaluation?.metadata ??
-        {}) as EvaluationMetadata;
-
-      return {
-        id: interview.id,
-        mode: interview.mode,
-        difficulty: interview.difficulty,
-        duration: interview.duration,
-        company: interview.company,
-        displayDate: formatDisplayDate(
-          interview.completedAt ?? interview.updatedAt
-        ),
-        problem: interview.problem,
-        template: interview.template,
-        transcript: interview.transcript,
-        evaluation: interview.evaluation
-          ? {
-              overallScore: interview.evaluation.overallScore,
-              feedback: interview.evaluation.feedback,
-              dimensionScores:
-                (interview.evaluation.dimensionScores as unknown as DimensionScore[]) ??
-                [],
-              evidence:
-                (interview.evaluation.evidence as unknown as EvidenceEntry[]) ??
-                [],
-              metadata,
-            }
-          : null,
-      };
-    }
-  );
-
-  return (
-    <LibraryView
-      experiences={experiences}
-      completedInterviews={completedInterviews}
-    />
-  );
-}
 ================================================
 FILE: ./src/features/dashboard/components/NextRecommendedInterview.tsx
 ================================================
@@ -12614,6 +13445,23 @@ import { TranscriptRole } from "@/shared/config/common-constants";
 export interface TranscriptMessage {
   role: TranscriptRole;
   content: string;
+}
+================================================
+FILE: ./src/features/interview/types/dialogue.ts
+================================================
+export type NodeType = 'interviewer' | 'candidate' | 'takeaway';
+
+export interface DialogueNode {
+  id: string;
+  type: NodeType;
+  roleLabel: string;
+  text?: string;
+  // For candidate highlights
+  content?: {
+    text: string;
+    highlight?: 'strong' | 'missed';
+    explanation?: string;
+  }[];
 }
 ================================================
 FILE: ./src/features/interview/types/InterviewState.ts
@@ -14110,6 +14958,99 @@ FILE: ./src/features/interview/setup/index.ts
 ================================================
 
 ================================================
+FILE: ./src/features/interview/components/LiveInterviewClient.tsx
+================================================
+'use client';
+
+import { useState } from 'react';
+import { DialogueNode } from '../types/dialogue';
+import { NodeRenderer } from './NodeRenderer';
+
+export default function LiveInterviewClient({ initialTranscript }: { initialTranscript: DialogueNode[] }) {
+  const [visibleCount, setVisibleCount] = useState(1);
+
+  const showNext = () => {
+    if (visibleCount < initialTranscript.length) {
+      setVisibleCount(prev => prev + 1);
+    }
+  };
+
+  return (
+    <div className="max-w-2xl mx-auto px-4">
+      {/* Legend */}
+      <div className="flex gap-6 mb-12 text-xs font-medium text-gray-500 border-b pb-4">
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-emerald-500" /> Strong moment
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-rose-500" /> Missed something
+        </div>
+      </div>
+
+      <div className="space-y-10">
+        {initialTranscript.slice(0, visibleCount).map((node, idx) => (
+          <NodeRenderer key={node.id} node={node} isLast={idx === visibleCount - 1} />
+        ))}
+      </div>
+
+      {visibleCount < initialTranscript.length && (
+        <button 
+          onClick={showNext}
+          className="mt-12 w-full py-4 border-2 border-dashed border-gray-200 rounded-xl text-gray-400 hover:border-emerald-400 hover:text-emerald-500 transition-all font-medium"
+        >
+          Tap to continue conversation...
+        </button>
+      )}
+    </div>
+  );
+}
+================================================
+FILE: ./src/features/interview/components/NodeRenderer.tsx
+================================================
+import { DialogueNode } from '../types/dialogue';
+
+export function NodeRenderer({ node }: { node: DialogueNode; isLast: boolean }) {
+  if (node.type === 'takeaway') {
+    return (
+      <div className="bg-emerald-50/50 border-l-4 border-emerald-500 p-6 rounded-r-xl my-8">
+        <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-2 block">Takeaway</span>
+        <p className="text-gray-700 italic font-medium leading-relaxed">"{node.text}"</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 block">
+        {node.roleLabel}
+      </span>
+      
+      <div className={`p-6 rounded-2xl ${
+        node.type === 'interviewer' 
+          ? "bg-transparent border border-gray-100" 
+          : "bg-white shadow-sm border border-gray-200"
+      }`}>
+        <div className="text-gray-800 leading-relaxed text-[15px]">
+          {node.content ? node.content.map((part, i) => (
+            part.highlight ? (
+              <span key={i} className={`group relative cursor-help border-b-2 px-1 ${
+                part.highlight === 'strong' ? 'bg-emerald-50 border-emerald-500' : 'bg-rose-50 border-rose-500'
+              }`}>
+                {part.text}
+                <span className="invisible group-hover:visible absolute top-full left-0 mt-2 w-64 p-3 bg-gray-900 text-white text-xs rounded-lg z-50 shadow-xl">
+                  {part.explanation}
+                </span>
+              </span>
+            ) : (
+              <span key={i}>{part.text}</span>
+            )
+          )) : node.text}
+        </div>
+      </div>
+    </div>
+  );
+}
+================================================
 FILE: ./src/features/interview/live/components/LiveInterview.tsx
 ================================================
 "use client";
@@ -15324,8 +16265,8 @@ export function useInterviewStore() {
 ================================================
 FILE: ./src/features/interview/report/components/WhatHappenedCard.tsx
 ================================================
-import { Card } from "@/components/ui/Card";
-import { Text } from "@/components/ui/Text";
+import Card from "@/components/ui/Card";
+import Text from "@/components/ui/Text";
 
 type Observation = {
   type: "OBSERVATION" | "ADVISORY";
@@ -15409,8 +16350,8 @@ export default function ScoreCard({ score, label = "Overall Score" }: { score: n
 ================================================
 FILE: ./src/features/interview/report/components/OverallScoreCard.tsx
 ================================================
-import { Card } from "@/components/ui/Card";
-import { Text } from "@/components/ui/Text";
+import Card from "@/components/ui/Card";
+import Text from "@/components/ui/Text";
 
 type Props = {
   score: number;
@@ -15441,8 +16382,8 @@ export default function OverallScoreCard({ score }: Props) {
 ================================================
 FILE: ./src/features/interview/report/components/ConversationCard.tsx
 ================================================
-import { Card } from "@/components/ui/Card";
-import { Text } from "@/components/ui/Text";
+import Card from "@/components/ui/Card";
+import Text from "@/components/ui/Text";
 
 type EvidenceItem = {
   dimension: string;
@@ -17244,6 +18185,42 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     signIn: "/login",
   },
 });
+================================================
+FILE: ./src/modules/transcript/application/TranscriptService.ts
+================================================
+import { prisma } from "@/shared/prisma/client";
+import { TranscriptNode } from "../domain/TranscriptNode";
+
+export class TranscriptService {
+  static async getBySessionId(sessionId: string): Promise<TranscriptNode[]> {
+    const session = await prisma.interviewSession.findUnique({
+      where: { id: sessionId },
+      select: { transcript: true }
+    });
+
+    if (!session) throw new Error("Session not found");
+
+    // Map Prisma JSON to Domain Entity
+    return (session.transcript as any[]).sort((a, b) => a.order - b.order);
+  }
+}
+================================================
+FILE: ./src/modules/transcript/domain/TranscriptNode.ts
+================================================
+export type NodeRole = 'interviewer' | 'candidate' | 'takeaway';
+
+export interface TranscriptPart {
+  text: string;
+  highlight?: 'strong' | 'missed';
+  explanation?: string;
+}
+
+export interface TranscriptNode {
+  id: string;
+  role: NodeRole;
+  content: TranscriptPart[];
+  order: number;
+}
 ================================================
 FILE: ./src/modules/container.ts
 ================================================

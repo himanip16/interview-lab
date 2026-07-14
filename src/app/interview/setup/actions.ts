@@ -9,6 +9,8 @@ export async function createInterviewSession(data: {
   userId: string | null;
   type: string;
 }) {
+
+  console.log("Server action started");
   // 1. Create the session in the DB
   const session = await prisma.interviewSession.create({
     data: {
@@ -42,6 +44,7 @@ export async function createInterviewSession(data: {
       ]
     }
   });
+  console.log("Created session", session.id);
 
   // 2. Redirect to the unique session URL
   redirect(`/interview/live/${session.id}`);
