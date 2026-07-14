@@ -1,27 +1,77 @@
 // src/features/library/components/TranscriptDetail.tsx
 "use client";
 
+import { useState } from "react";
 import { CompletedInterviewItem } from "../types";
+import { type ContentBlock } from "../types/transcript";
 import Text from "@/components/ui/Text";
 import Card from "@/components/ui/Card";
 import OverallScoreCard from "@/features/interview/report/components/OverallScoreCard";
 import WhatHappenedCard from "@/features/interview/report/components/WhatHappenedCard";
 import EvidenceTimeline from "@/features/interview/report/components/EvidenceTimeline";
+import DialogueBubble from "./transcript/DialogueBubble";
+import HighlightExplanation from "./transcript/HighlightExplanation";
+import TranscriptLegend from "./transcript/TranscriptLegend";
+import TranscriptMetadata from "./transcript/TranscriptMetadata";
 
 type Props = {
   interview: CompletedInterviewItem;
   onBack: () => void;
 };
 
-function formatTimestamp(seconds: number): string {
-  const minutes = Math.floor(seconds / 60);
-  const remaining = Math.floor(seconds % 60);
-  return `${minutes.toString().padStart(2, "0")}:${remaining
-    .toString()
-    .padStart(2, "0")}`;
+// Helper function to convert legacy transcript to new format
+function convertToEnhancedTranscript(transcript: any[]): any[] {
+  return transcript.map((message) => {
+    if (typeof message.content === "string") {
+      // Legacy format - convert to new format
+      return {
+        ...message,
+        role: message.role === "assistant" ? "interviewer" : "candidate",
+        content: [{ type: "text", value: message.content }],
+      };
+    }
+    return {
+      ...message,
+      role: message.role === "assistant" ? "interviewer" : "candidate",
+    };
+  });
+}
+
+// Helper to find all highlights in content
+function findHighlights(content: ContentBlock[] | string): (ContentBlock & { type: "highlight" })[] {
+  if (typeof content === "string") return [];
+  return content.filter((block): block is ContentBlock & { type: "highlight" } => block.type === "highlight");
 }
 
 export default function TranscriptDetail({ interview, onBack }: Props) {
+  const [activeHighlightId, setActiveHighlightId] = useState<string | null>(null);
+  const [activeHighlight, setActiveHighlight] = useState<(ContentBlock & { type: "highlight" }) | null>(null);
+
+  const enhancedTranscript = convertToEnhancedTranscript(interview.transcript);
+
+  const handleHighlightClick = (highlightId: string) => {
+    // Find the highlight in all messages
+    for (const message of enhancedTranscript) {
+      const highlights = findHighlights(message.content);
+      const found = highlights.find((h) => h.id === highlightId);
+      if (found) {
+        if (activeHighlightId === highlightId) {
+          setActiveHighlightId(null);
+          setActiveHighlight(null);
+        } else {
+          setActiveHighlightId(highlightId);
+          setActiveHighlight(found);
+        }
+        return;
+      }
+    }
+  };
+
+  const handleCloseExplanation = () => {
+    setActiveHighlightId(null);
+    setActiveHighlight(null);
+  };
+
   return (
     <div className="space-y-6">
       <button
@@ -35,37 +85,35 @@ export default function TranscriptDetail({ interview, onBack }: Props) {
         {/* Transcript */}
         <div className="space-y-4 lg:col-span-2">
           <Card className="p-6">
-            <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-              Live conversation log
-            </span>
-            <h3 className="mt-1 text-base font-bold text-foreground">
-              {interview.problem.title} Transcript
-            </h3>
+            <TranscriptMetadata
+              title={interview.problem.title}
+              difficulty={interview.difficulty}
+              duration={interview.duration}
+              template={interview.template.name}
+            />
+            
+            <TranscriptLegend />
 
-            <div className="mt-6 max-h-[480px] space-y-4 divide-y divide-border overflow-y-auto pr-2">
-              {interview.transcript.map((message, idx) => (
-                <div key={message.id ?? idx} className="pt-4 first:pt-0">
-                  <div className="mb-1 flex items-baseline justify-between">
-                    <span
-                      className={`font-mono text-[10px] font-bold uppercase tracking-wide ${
-                        message.role === "assistant"
-                          ? "text-muted-foreground"
-                          : "text-foreground"
-                      }`}
-                    >
-                      {message.role === "assistant" ? "Interviewer" : "Candidate"}
-                    </span>
-                    <span className="font-mono text-[10px] text-muted-foreground">
-                      {formatTimestamp(message.elapsedSeconds)}
-                    </span>
-                  </div>
-                  <p className="text-sm leading-relaxed text-foreground">
-                    {message.content}
-                  </p>
+            <div className="max-h-[600px] space-y-4 overflow-y-auto pr-2">
+              {enhancedTranscript.map((message, idx) => (
+                <div key={message.id ?? idx}>
+                  <DialogueBubble
+                    role={message.role}
+                    content={message.content}
+                    elapsedSeconds={message.elapsedSeconds}
+                    onHighlightClick={handleHighlightClick}
+                    activeHighlightId={activeHighlightId}
+                  />
+                  {activeHighlightId && activeHighlight && (
+                    <HighlightExplanation
+                      highlight={activeHighlight}
+                      onClose={handleCloseExplanation}
+                    />
+                  )}
                 </div>
               ))}
 
-              {interview.transcript.length === 0 && (
+              {enhancedTranscript.length === 0 && (
                 <Text variant="muted">No messages recorded for this session.</Text>
               )}
             </div>
