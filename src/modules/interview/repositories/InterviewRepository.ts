@@ -147,6 +147,20 @@ export class InterviewRepository {
     });
   }
 
+  async updateMetadata(
+    interviewId: string,
+    metadata: Prisma.InputJsonValue
+  ) {
+    return prisma.interview.update({
+      where: {
+        id: interviewId,
+      },
+      data: {
+        metadata,
+      },
+    });
+  }
+
   async updateWhiteboardState(
     interviewId: string,
     whiteboardState: Prisma.InputJsonValue

@@ -138,6 +138,9 @@ model Interview {
   // NEW — code editor state (deprioritized, not wired into prompts/evaluator yet)
   codeState Json? // Frozen application state, no versioning needed
 
+  // NEW — metadata for storing error states and other runtime information
+  metadata Json? // Arbitrary metadata, no versioning needed
+
   user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   template   InterviewTemplate @relation(fields: [templateId], references: [id])
   evaluation Evaluation?

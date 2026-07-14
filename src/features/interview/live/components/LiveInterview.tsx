@@ -8,12 +8,81 @@ type Props = {
   initialMessages?: any[];
   interviewTitle?: string;
   designSummary?: string[];
+  initialWhiteboardState?: any;
 };
 
-export default function LiveInterview({ interviewId, duration, initialMessages = [], interviewTitle = 'System Design Interview', designSummary = [] }: Props) {
+export default function LiveInterview({ interviewId, duration, initialMessages = [], interviewTitle = 'System Design Interview', designSummary = [], initialWhiteboardState }: Props) {
   const [messages, setMessages] = useState(initialMessages);
   const [isTyping, setIsTyping] = useState(false);
   const [inputValue, setInputValue] = useState('');
+  const [whiteboardState, setWhiteboardState] = useState(initialWhiteboardState || null);
+  const [showWhiteboard, setShowWhiteboard] = useState(false);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [currentPath, setCurrentPath] = useState<{x: number, y: number}[]>([]);
+
+  // Auto-save whiteboard state to backend
+  useEffect(() => {
+    if (whiteboardState) {
+      saveWhiteboardState(whiteboardState);
+    }
+  }, [whiteboardState]);
+
+  const saveWhiteboardState = async (state: any) => {
+    try {
+      await fetch(`/api/interviews/${interviewId}/whiteboard`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ whiteboardState: state }),
+      });
+    } catch (error) {
+      console.error('Failed to save whiteboard state:', error);
+    }
+  };
+
+  const handleWhiteboardChange = (newState: any) => {
+    setWhiteboardState(newState);
+  };
+
+  const handleWhiteboardDraw = (e: React.MouseEvent, action: 'down' | 'move' | 'up') => {
+    const canvas = e.currentTarget.querySelector('canvas');
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    if (action === 'down') {
+      setIsDrawing(true);
+      setCurrentPath([{x, y}]);
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.strokeStyle = '#15161C';
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+    } else if (action === 'move') {
+      if (isDrawing && e.buttons === 1) {
+        setCurrentPath(prev => [...prev, {x, y}]);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+      }
+    } else if (action === 'up') {
+      setIsDrawing(false);
+      ctx.closePath();
+      // Save the current path as a complete drawing
+      if (currentPath.length > 1) {
+        const currentDrawings = whiteboardState?.drawings || [];
+        handleWhiteboardChange({
+          ...whiteboardState,
+          drawings: [...currentDrawings, currentPath],
+          lastUpdated: new Date().toISOString(),
+        });
+        setCurrentPath([]);
+      }
+    }
+  };
 
   const handleSend = () => {
     if (inputValue.trim()) {
@@ -39,6 +108,12 @@ export default function LiveInterview({ interviewId, duration, initialMessages =
             </div>
           </div>
           <div className="head-right flex items-center gap-4.5">
+            <button
+              onClick={() => setShowWhiteboard(!showWhiteboard)}
+              className="px-3 py-1.5 text-xs font-medium border border-[rgba(21,22,28,0.1)] rounded-full hover:bg-[rgba(21,22,28,0.05)] transition-colors"
+            >
+              {showWhiteboard ? 'Hide Whiteboard' : 'Show Whiteboard'}
+            </button>
             <div className="live-badge flex items-center gap-1.75 text-[12px] font-semibold text-[#FF5A3C] bg-[rgba(255,90,60,0.1)] p-[6px_13px] rounded-[999px]">
               <span className="dot w-1.5 h-1.5 rounded-full bg-[#FF5A3C]">
                 <style>{`
@@ -124,7 +199,41 @@ export default function LiveInterview({ interviewId, duration, initialMessages =
         {/* Body */}
         <div className="body flex h-[520px]">
           {/* Chat */}
-          <div className="chat flex-1 flex flex-col">
+          <div className={`chat flex flex-col ${showWhiteboard ? 'flex-1' : 'flex-1'}`}>
+            {showWhiteboard && (
+              <div className="h-64 border-b border-[rgba(21,22,28,0.06)] p-4 bg-[#FAF9F6]">
+                <div className="text-xs text-[#5A5B66] mb-2 font-medium">Whiteboard - Draw your system design</div>
+                <div 
+                  className="w-full h-48 bg-white rounded-lg border border-[rgba(21,22,28,0.1)] relative cursor-crosshair"
+                  onMouseDown={(e) => handleWhiteboardDraw(e, 'down')}
+                  onMouseMove={(e) => handleWhiteboardDraw(e, 'move')}
+                  onMouseUp={(e) => handleWhiteboardDraw(e, 'up')}
+                  onMouseLeave={(e) => handleWhiteboardDraw(e, 'up')}
+                >
+                  <canvas
+                    ref={(canvas) => {
+                      if (canvas) {
+                        const ctx = canvas.getContext('2d');
+                        if (ctx) {
+                          canvas.width = canvas.offsetWidth;
+                          canvas.height = canvas.offsetHeight;
+                          // Restore drawing from state if available
+                          if (whiteboardState && whiteboardState.drawings) {
+                            whiteboardState.drawings.forEach((drawing: any) => {
+                              ctx.beginPath();
+                              ctx.moveTo(drawing.startX, drawing.startY);
+                              ctx.lineTo(drawing.endX, drawing.endY);
+                              ctx.stroke();
+                            });
+                          }
+                        }
+                      }
+                    }}
+                    className="w-full h-full"
+                  />
+                </div>
+              </div>
+            )}
             <div className="messages flex-1 overflow-y-auto p-[26px_30px] flex flex-col gap-4">
               {messages.map((msg, idx) => (
                 <div key={idx} className={`msg max-w-[70%] flex flex-col gap-1 ${msg.role === 'ai' ? 'ai self-start' : 'user self-end items-end'}`}>

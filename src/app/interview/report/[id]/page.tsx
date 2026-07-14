@@ -26,10 +26,38 @@ type EvidenceItem = {
   timestampSeconds: number;
   quote: string;
   comment: string;
+  type: "strength" | "weakness";
 };
 
 export default async function ReportPage({ params }: Props) {
   const { id } = await params;
+
+  const interview = await prisma.interview.findUnique({
+    where: { id },
+    select: { 
+      metadata: true, 
+      status: true,
+      whiteboardState: true,
+    },
+  });
+
+  // Check if evaluation failed
+  const interviewMetadata = interview?.metadata as { evaluationError?: string; evaluationFailedAt?: string } | null;
+  if (interviewMetadata?.evaluationError) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="text-center max-w-md">
+          <h2 className="text-xl font-semibold mb-2">Evaluation Failed</h2>
+          <p className="text-muted-foreground mb-4">
+            We encountered an error while generating your feedback. This has been logged and our team will investigate.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Error: {interviewMetadata.evaluationError}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const evaluation = await prisma.evaluation.findUnique({
     where: {

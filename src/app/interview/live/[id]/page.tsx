@@ -28,7 +28,8 @@ export default async function Page({ params }: Props) {
     <LiveInterview
   interviewId={interview.id}
   duration={interview.duration}
-  initialMessages={interview.transcript}  
+  initialMessages={interview.transcript}
+  initialWhiteboardState={interview.whiteboardState}
 />
   );
 }

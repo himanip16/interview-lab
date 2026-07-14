@@ -159,6 +159,13 @@ export class InterviewMessageService {
       const evaluationService = createEvaluationService();
       evaluationService.evaluateInterview(interview.id).catch((error) => {
         console.error(`Failed to evaluate interview ${interview.id}:`, error);
+        // Store error in interview metadata so the report page can display it
+        this.repository.updateMetadata(interview.id, {
+          evaluationError: error instanceof Error ? error.message : 'Unknown evaluation error',
+          evaluationFailedAt: new Date().toISOString(),
+        }).catch((updateError: Error) => {
+          console.error(`Failed to store evaluation error for interview ${interview.id}:`, updateError);
+        });
       });
     }
 
@@ -194,16 +201,25 @@ export class InterviewMessageService {
       });
     }
 
-    // Update summary incrementally with new messages
-    const recentMessages = [
-      { role: "user", content: normalizedMessage },
-      { role: "assistant", content: result.reply },
-    ];
-    const updatedSummary = await this.summaryService.updateSummary(
-      interview.summary,
-      recentMessages
-    );
-    await this.repository.updateSummary(interview.id, updatedSummary);
+    // Update summary incrementally with new messages (debounced to every 3 turns)
+    // Also update on phase transitions or interview completion to capture important points
+    const shouldUpdateSummary = 
+      result.transition.shouldTransition || 
+      result.transition.completed ||
+      (interview.transcript.length + 1) % 3 === 0; // Update every 3 turns
+    
+    let updatedSummary = interview.summary;
+    if (shouldUpdateSummary) {
+      const recentMessages = [
+        { role: "user", content: normalizedMessage },
+        { role: "assistant", content: result.reply },
+      ];
+      updatedSummary = await this.summaryService.updateSummary(
+        interview.summary,
+        recentMessages
+      );
+      await this.repository.updateSummary(interview.id, updatedSummary);
+    }
 
     return {
       reply: result.reply,

@@ -148,6 +148,7 @@ export class EvaluationService {
           timestampSeconds: item.timestampSeconds,
           quote: item.quote,
           comment: item.comment,
+          type: item.type.toUpperCase() as "STRENGTH" | "WEAKNESS",
           normalizedScore: item.normalizedScore,
         },
       });
