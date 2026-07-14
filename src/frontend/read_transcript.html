@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Read a transcript</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FAF9F6; --ink:#15161C; --ink-soft:#5A5B66; --mint:#00D9A3; --mint-deep:#00A87E; --coral:#FF5A3C;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; }
+  h1,h2,h3{ font-family:'Poppins',sans-serif; letter-spacing:-0.02em; }
+
+  .progress{ position:sticky; top:0; height:3px; background:rgba(21,22,28,0.06); z-index:10; }
+  .progress-fill{ height:100%; width:0%; background:var(--mint-deep); transition:width .1s linear; }
+
+  .wrap{ max-width:680px; margin:0 auto; padding:36px 24px 90px; }
+
+  .crumb{ display:flex; align-items:center; gap:8px; font-size:13px; color:var(--ink-soft); font-weight:500; margin-bottom:18px; }
+  .crumb b{ color:var(--ink); font-weight:600; }
+  .back{ width:30px; height:30px; border-radius:50%; border:1px solid rgba(21,22,28,0.1); background:none; color:var(--ink); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; }
+
+  .header{ margin-bottom:8px; }
+  .header h1{ font-size:26px; font-weight:700; }
+  .meta-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:10px; }
+  .meta-pill{ font-size:11.5px; font-weight:600; padding:5px 12px; border-radius:999px; background:var(--paper); color:var(--ink-soft); border:1px solid rgba(21,22,28,0.08); }
+  .readonly-note{ display:flex; align-items:center; gap:7px; font-size:12px; color:var(--mint-deep); font-weight:600; margin-top:16px; padding:10px 14px; background:rgba(0,217,163,0.08); border-radius:12px; }
+  .readonly-note svg{ flex-shrink:0; }
+
+  .legend{ display:flex; gap:16px; margin:22px 0 8px; font-size:11.5px; color:var(--ink-soft); }
+  .legend span{ display:flex; align-items:center; gap:6px; }
+  .legend .sw{ width:18px; height:8px; border-radius:4px; }
+
+  /* ---------- CONVERSATION ---------- */
+  .convo{ margin-top:20px; display:flex; flex-direction:column; gap:22px; }
+  .msg{ display:flex; flex-direction:column; gap:5px; max-width:88%; }
+  .msg.ai{ align-self:flex-start; }
+  .msg.user{ align-self:flex-end; align-items:flex-end; }
+  .who{ font-size:11px; font-weight:600; color:var(--ink-soft); padding:0 3px; }
+  .bubble{ padding:15px 18px; border-radius:20px; font-size:14px; line-height:1.7; }
+  .msg.ai .bubble{ background:#fff; border:1px solid rgba(21,22,28,0.07); border-bottom-left-radius:6px; }
+  .msg.user .bubble{ background:#F1EFEA; border-bottom-right-radius:6px; }
+
+  .ev{ border-radius:4px; padding:0 2px; cursor:pointer; box-decoration-break:clone; -webkit-box-decoration-break:clone; }
+  .ev.strength{ background:rgba(0,217,163,0.22); border-bottom:2px solid var(--mint-deep); }
+  .ev.weakness{ background:rgba(255,90,60,0.16); border-bottom:2px solid var(--coral); }
+
+  .annotation{ max-width:88%; align-self:flex-end; margin-top:-8px; overflow:hidden; max-height:0; opacity:0; transition:max-height .3s ease, opacity .3s ease, margin .3s ease; }
+  .annotation.open{ max-height:120px; opacity:1; margin-top:2px; }
+  .annotation-inner{ font-size:12px; padding:11px 15px; border-radius:14px; line-height:1.55; }
+  .annotation-inner.strength{ background:rgba(0,217,163,0.08); color:var(--mint-deep); }
+  .annotation-inner.weakness{ background:rgba(255,90,60,0.08); color:#C9432B; }
+  .annotation-inner .tag{ font-weight:700; text-transform:uppercase; font-size:9.5px; letter-spacing:.05em; margin-right:6px; }
+
+  /* ---------- TAKEAWAY ---------- */
+  .takeaway{ margin:8px 4px; padding:20px 22px; border-radius:18px; background:linear-gradient(160deg,#fff,var(--paper)); border-left:3px solid var(--mint-deep); }
+  .takeaway .lbl{ font-size:10.5px; font-weight:700; letter-spacing:.06em; color:var(--mint-deep); text-transform:uppercase; margin-bottom:6px; }
+  .takeaway p{ font-size:13.5px; font-style:italic; color:var(--ink); line-height:1.6; }
+
+  /* ---------- CLOSING SUMMARY ---------- */
+  .summary{ margin-top:36px; padding:26px; border-radius:22px; background:var(--ink); color:#fff; }
+  .summary h3{ font-size:16px; font-weight:600; margin-bottom:14px; }
+  .sum-row{ display:flex; gap:14px; }
+  .sum-card{ flex:1; padding:14px; border-radius:14px; background:rgba(255,255,255,0.06); }
+  .sum-card .k{ font-size:10px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; margin-bottom:6px; }
+  .sum-card.strength .k{ color:var(--mint); }
+  .sum-card.weakness .k{ color:#FF8A6E; }
+  .sum-card p{ font-size:12px; color:rgba(255,255,255,0.7); line-height:1.55; }
+
+  @media (max-width:600px){ .msg{ max-width:96%; } .annotation{ max-width:96%; } }
+</style>
+</head>
+<body>
+
+<div class="progress"><div class="progress-fill" id="progFill"></div></div>
+
+<div class="wrap">
+  <div class="crumb">
+    <button class="back"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 6l-6 6 6 6"/></svg></button>
+    Library &nbsp;/&nbsp; <b>Read a transcript</b>
+  </div>
+
+  <div class="header">
+    <h1>Design a Payment System</h1>
+    <div class="meta-row">
+      <div class="meta-pill">HLD</div>
+      <div class="meta-pill">Hard</div>
+      <div class="meta-pill">45 min</div>
+      <div class="meta-pill">Scored 82</div>
+    </div>
+    <div class="readonly-note">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+      This is a full past session. Just read \u2014 nothing to answer.
+    </div>
+  </div>
+
+  <div class="legend">
+    <span><span class="sw" style="background:rgba(0,217,163,0.35)"></span>Strong moment</span>
+    <span><span class="sw" style="background:rgba(255,90,60,0.28)"></span>Missed something</span>
+    <span style="color:var(--ink-soft); opacity:.8;">tap a highlight to see why</span>
+  </div>
+
+  <div class="convo">
+    <div class="msg ai">
+      <div class="who">Interviewer</div>
+      <div class="bubble">Let's say the payment succeeded, but our order service never received the event. What happens?</div>
+    </div>
+
+    <div class="msg user">
+      <div class="who">Candidate</div>
+      <div class="bubble">I wouldn't retry the payment itself. I'd first <span class="ev strength" data-id="e1">separate payment state from event delivery</span>.</div>
+    </div>
+    <div class="annotation" id="a-e1"><div class="annotation-inner strength"><span class="tag">Strength &middot; Architecture</span>Correctly identifies that the external side effect and our system's awareness of it are two different failure surfaces \u2014 this is the crux of the whole problem.</div></div>
+
+    <div class="msg ai">
+      <div class="who">Interviewer</div>
+      <div class="bubble">Why?</div>
+    </div>
+
+    <div class="msg user">
+      <div class="who">Candidate</div>
+      <div class="bubble">Because the external side effect may already have happened. My uncertainty is whether our system observed it \u2014 not whether the charge occurred.</div>
+    </div>
+
+    <div class="takeaway">
+      <div class="lbl">Takeaway</div>
+      <p>"Separate payment state from event delivery; use the outbox pattern with idempotent consumers."</p>
+    </div>
+
+    <div class="msg ai">
+      <div class="who">Interviewer</div>
+      <div class="bubble">The client times out and retries the same payment request. What could go wrong?</div>
+    </div>
+
+    <div class="msg user">
+      <div class="who">Candidate</div>
+      <div class="bubble">If we're not careful, we'd charge the customer twice \u2014 the retry looks like a brand new request unless we can recognize it as the same one.</div>
+    </div>
+
+    <div class="msg ai">
+      <div class="who">Interviewer</div>
+      <div class="bubble">The database write succeeds. The service crashes before publishing to Kafka. How do you maintain consistency between services?</div>
+    </div>
+
+    <div class="msg user">
+      <div class="who">Candidate</div>
+      <div class="bubble">I'd use <span class="ev weakness" data-id="e2">Kafka because Kafka guarantees message delivery and makes the system eventually consistent</span>.</div>
+    </div>
+    <div class="annotation" id="a-e2"><div class="annotation-inner weakness"><span class="tag">Gap &middot; Consistency</span>Names a technology instead of the mechanism. The actual gap \u2014 what happens between the DB commit and the publish \u2014 is never addressed here.</div></div>
+
+    <div class="msg ai">
+      <div class="who">Interviewer</div>
+      <div class="bubble">Right, but what happens in that specific gap \u2014 between the write succeeding and the event actually going out?</div>
+    </div>
+
+    <div class="msg user">
+      <div class="who">Candidate</div>
+      <div class="bubble">Good point. I'd write the event to an <span class="ev strength" data-id="e3">outbox table in the same transaction as the payment record, then have a relay process publish from that table</span> \u2014 so a crash before publishing just means the relay catches up later, nothing is lost.</div>
+    </div>
+    <div class="annotation" id="a-e3"><div class="annotation-inner strength"><span class="tag">Strength &middot; Recovers well</span>Takes the follow-up seriously and lands on the actual pattern (transactional outbox) instead of repeating the earlier hand-wave.</div></div>
+  </div>
+
+  <div class="summary">
+    <h3>How this session went</h3>
+    <div class="sum-row">
+      <div class="sum-card strength"><div class="k">Strength</div><p>Recovered well after being pushed \u2014 found the outbox pattern once challenged on the vague answer.</p></div>
+      <div class="sum-card weakness"><div class="k">To work on</div><p>First instinct was to name a technology rather than explain the mechanism. Worth practicing leading with the "why."</p></div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.querySelectorAll('.ev').forEach(el => {
+  el.onclick = () => document.getElementById('a-'+el.dataset.id).classList.toggle('open');
+});
+window.addEventListener('scroll', () => {
+  const h = document.documentElement.scrollHeight - window.innerHeight;
+  document.getElementById('progFill').style.width = (window.scrollY / h * 100) + '%';
+});
+</script>
+
+</body>
+</html>

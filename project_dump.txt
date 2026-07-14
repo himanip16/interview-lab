@@ -4,10 +4,6 @@ PROJECT STRUCTURE
 ├── AGENTS.md
 ├── CLAUDE.md
 ├── README.md
-├── automate
-│   ├── find_and_move.sh
-│   ├── organize.py
-│   └── project_dump.txt
 ├── data
 │   ├── features.ts
 │   ├── prompts
@@ -139,7 +135,6 @@ PROJECT STRUCTURE
 │   │   ├── dashboard
 │   │   │   └── [userId]
 │   │   │       └── page.tsx
-│   │   ├── globals.css
 │   │   ├── interview
 │   │   │   ├── live
 │   │   │   │   └── [id]
@@ -163,7 +158,6 @@ PROJECT STRUCTURE
 │   │   │   │   │   └── page.tsx
 │   │   │   │   └── whatsapp
 │   │   │   │       └── page.tsx
-│   │   │   ├── page.tsx
 │   │   │   └── scenarios
 │   │   │       └── [slug]
 │   │   │           └── page.tsx
@@ -177,12 +171,9 @@ PROJECT STRUCTURE
 │   │       └── page.tsx
 │   ├── components
 │   │   ├── catalog
-│   │   │   ├── InterviewCard.tsx
-│   │   │   └── InterviewCatalog.tsx
 │   │   ├── conversation
 │   │   ├── interview
 │   │   ├── layout
-│   │   │   ├── Navbar.tsx
 │   │   │   └── PageContainer.tsx
 │   │   ├── providers
 │   │   │   └── AuthProvider.tsx
@@ -190,15 +181,6 @@ PROJECT STRUCTURE
 │   │   ├── theme
 │   │   │   └── ThemeProvider.tsx
 │   │   └── ui
-│   │       ├── Button.tsx
-│   │       ├── Card.tsx
-│   │       ├── Dialog.tsx
-│   │       ├── Heading.tsx
-│   │       ├── Input.tsx
-│   │       ├── Select.tsx
-│   │       ├── Text.tsx
-│   │       ├── ThemeToggle.tsx
-│   │       └── Toast.tsx
 │   ├── contexts
 │   │   └── ThemeContext.tsx
 │   ├── features
@@ -221,7 +203,6 @@ PROJECT STRUCTURE
 │   │   │   │   │   ├── ChatInput.tsx
 │   │   │   │   │   ├── Conversation.tsx
 │   │   │   │   │   ├── InterviewHeader.tsx
-│   │   │   │   │   ├── LiveInterview.tsx
 │   │   │   │   │   ├── Message.tsx
 │   │   │   │   │   ├── MessageList.tsx
 │   │   │   │   │   ├── Sidebar.tsx
@@ -258,8 +239,6 @@ PROJECT STRUCTURE
 │   │   │   │   │   ├── ProblemCard.tsx
 │   │   │   │   │   ├── ProblemFilters.tsx
 │   │   │   │   │   ├── ProblemInventoryView.tsx
-│   │   │   │   │   ├── ProblemList.tsx
-│   │   │   │   │   ├── ProblemSelector.tsx
 │   │   │   │   │   ├── SetupCard.tsx
 │   │   │   │   │   ├── TopicSelector.tsx
 │   │   │   │   │   ├── problemSchema.ts
@@ -306,6 +285,13 @@ PROJECT STRUCTURE
 │   │   │   └── components
 │   │   │       └── LibraryView.tsx
 │   │   └── shared
+│   ├── frontend
+│   │   ├── actionCorousel.html
+│   │   ├── card.html
+│   │   ├── listAllProblems.html
+│   │   ├── liveInterview.html
+│   │   ├── read_transcript.html
+│   │   └── whiteboard.html
 │   ├── lib
 │   │   ├── logger.ts
 │   │   └── utils.ts
@@ -405,7 +391,6 @@ PROJECT STRUCTURE
 │   │       │   │   ├── IncrementalSummaryService.ts
 │   │       │   │   └── SummaryService.ts
 │   │       │   └── whiteboard
-│   │       │       └── WhiteboardSerializer.ts
 │   │       └── types.ts
 │   └── shared
 │       ├── config
@@ -417,7 +402,7 @@ PROJECT STRUCTURE
 ├── tsconfig.json
 └── tsconfig.tsbuildinfo
 
-167 directories, 249 files
+167 directories, 234 files
 
 FILE CONTENTS
 
@@ -3470,85 +3455,6 @@ FILE: ./src/app/learn/scenarios/[slug]/page.tsx
 ================================================
 
 ================================================
-FILE: ./src/app/learn/page.tsx
-================================================
-// src/app/learn/page.tsx
-"use client";
-
-import { useScenarios } from "@/src/features/learning/hooks/useScenario";
-import Link from "next/link";
-import Card from "@/src/components/ui/Card";
-import Heading from "@/src/components/ui/Heading";
-import Text from "@/src/components/ui/Text";
-
-export default function LearnPage() {
-  const { scenarios, loading } = useScenarios();
-
-  const diagrams = [
-    { slug: "uber", title: "Uber", desc: "Real-time matching & geospatial indexing" },
-    { slug: "twitter", title: "Twitter", desc: "Timeline fanout & eventual consistency" },
-    { slug: "netflix", title: "Netflix", desc: "Video streaming & CDN distribution" },
-    { slug: "whatsapp", title: "WhatsApp", desc: "E2E encryption & WebSocket scaling" },
-  ];
-
-  return (
-    <div className="max-w-6xl mx-auto p-6 space-y-12">
-      <header className="border-b border-border pb-8">
-        <Heading level="h1">Learning Center</Heading>
-        <Text variant="muted" className="mt-2">
-          Master system design through interactive blueprints and guided scenarios.
-        </Text>
-      </header>
-
-      {/* Section 1: Architecture Blueprints */}
-      <section>
-        <div className="flex items-baseline justify-between mb-6">
-          <Heading level="h2">Architecture Blueprints</Heading>
-          <Link href="/learn/diagrams" className="text-sm text-primary hover:underline">View all diagrams →</Link>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {diagrams.map((d) => (
-            <Link key={d.slug} href={`/learn/diagrams/${d.slug}`}>
-              <Card className="hover:border-primary transition-colors h-full">
-                <span className="text-[10px] font-mono text-primary uppercase font-bold">Interactive</span>
-                <h3 className="font-bold mt-1">{d.title}</h3>
-                <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{d.desc}</p>
-              </Card>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* Section 2: Guided Scenarios */}
-      <section>
-        <Heading level="h2" className="mb-6">Guided Scenarios</Heading>
-        {loading ? (
-          <Text variant="muted">Loading scenarios...</Text>
-        ) : (
-          <div className="grid gap-4">
-            {scenarios.map((scenario) => (
-              <Link key={scenario.id} href={`/learn/scenarios/${scenario.slug}`}>
-                <Card className="flex items-center justify-between hover:border-primary transition-colors">
-                  <div>
-                    <h3 className="font-bold text-lg">{scenario.title}</h3>
-                    <Text variant="small">{scenario.description}</Text>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-xs font-mono bg-muted px-2 py-1 rounded">
-                      {scenario._count.segments} Steps
-                    </span>
-                    <div className="text-primary text-sm mt-2">Start Journey →</div>
-                  </div>
-                </Card>
-              </Link>
-            ))}
-          </div>
-        )}
-      </section>
-    </div>
-  );
-}
-================================================
 FILE: ./src/app/learn/[slug]/page.tsx
 ================================================
 "use client";
@@ -4095,20 +4001,22 @@ export default async function ReportPage({ params }: Props) {
 FILE: ./src/app/layout.tsx
 ================================================
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Poppins, Inter } from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from "../components/ui/Toast";
 import { ThemeProvider } from "../contexts/ThemeContext";
 import AuthProvider from "../components/providers/AuthProvider";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const poppins = Poppins({
+  variable: "--font-poppins",
   subsets: ["latin"],
+  weight: ["500", "600", "700"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
+  weight: ["400", "500", "600"],
 });
 
 export const metadata: Metadata = {
@@ -4118,7 +4026,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+    <html lang="en" className={`${poppins.variable} ${inter.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         <AuthProvider>
           <ThemeProvider>
@@ -5487,78 +5395,6 @@ export async function POST(
   }
 }
 
-================================================
-FILE: ./src/app/globals.css
-================================================
-@import "tailwindcss";
-
-
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-border: var(--border);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-
-
-
-/* Dark Theme Refinement */
-[data-theme="dark"] {
-  --background: #09090b; /* Deeper black/zinc */
-  --foreground: #fafafa;
-  --muted: #18181b;      /* Zinc 900 */
-  --muted-foreground: #a1a1aa; /* Zinc 400 */
-  --card: #09090b;
-  --card-foreground: #fafafa;
-  --border: #27272a;     /* Subtle Zinc 800 - THIS IS THE BIGGEST CHANGE */
-  --primary: #6366f1;    /* Modern Indigo instead of bright purple */
-  --primary-foreground: #ffffff;
-  --accent: #27272a;
-}
-
-/* Light Theme */
-[data-theme="light"] {
-  --background: #FAFAFA;
-  --foreground: #2D2620;
-  --muted: #F5E6D3;
-  --muted-foreground: #9C3D28;
-  --card: #FAFAFA;
-  --card-foreground: #2D2620;
-  --border: #CC7722;
-  --primary: #3F00FF;
-  --primary-foreground: #FAFAFA;
-  --accent: #E34234;
-  --accent-foreground: #FAFAFA;
-}
-
-html {
-  scroll-behavior: smooth;
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans), sans-serif;
-  transition:
-    background-color 200ms ease,
-    color 200ms ease;
-}
-
-button {
-  cursor: pointer;
-}
 ================================================
 FILE: ./src/app/login/page.tsx
 ================================================
@@ -9151,176 +8987,6 @@ export const StartInterviewResponseSchema = z.object({
 export type StartInterviewResponse = z.infer<typeof StartInterviewResponseSchema>;
 
 ================================================
-FILE: ./src/features/interview/setup/components/ProblemList.tsx
-================================================
-"use client";
-
-import type { Problem } from "./problemSchema";
-import ProblemCard from "./ProblemCard";
-
-type Props = {
-  problems: Problem[];
-  selectedValue: string | null;
-  expandedProblem: string | null;
-  onProblemClick: (problem: Problem) => void;
-  onSelectProblem: (problemId: string) => void;
-};
-
-export default function ProblemList({
-  problems,
-  selectedValue,
-  expandedProblem,
-  onProblemClick,
-  onSelectProblem,
-}: Props) {
-  if (problems.length === 0) {
-    return (
-      <div className="rounded-lg border border-border bg-card p-8 text-center">
-        <p className="text-muted-foreground">No problems match your filters.</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-3">
-      {problems.map((problem) => (
-        <ProblemCard
-          key={problem.id}
-          problem={problem}
-          isSelected={problem.id === selectedValue}
-          isExpanded={expandedProblem === problem.id}
-          onClick={() => onProblemClick(problem)}
-          onSelect={() => onSelectProblem(problem.id)}
-        />
-      ))}
-    </div>
-  );
-}
-
-================================================
-FILE: ./src/features/interview/setup/components/ProblemSelector.tsx
-================================================
-"use client";
-
-import { useState, useEffect } from "react";
-import { Button } from "@/src/components/ui/Button";
-import ProblemFilters from "./ProblemFilters";
-import ProblemList from "./ProblemList";
-import Pagination from "./Pagination";
-import ErrorBanner from "./ErrorBanner";
-import { useProblems, type FilterState, INTERVIEW_TYPES, DIFFICULTIES } from "./useProblems";
-import type { Problem } from "./problemSchema";
-import { type InterviewType, type SetupDifficulty, DIFFICULTY_MAP } from "../types/setup";
-
-type Props = {
-  value: string | null;
-  onChange: (value: string | null) => void;
-  userId?: string | null;
-  interviewType?: InterviewType;
-  difficulty?: SetupDifficulty;
-  company?: string;
-};
-
-export default function ProblemSelector({
-  value,
-  onChange,
-  userId,
-  interviewType = "hld",
-  difficulty = "Medium",
-  company = "",
-}: Props) {
-  const [filters, setFilters] = useState<FilterState>({
-    selectedType: interviewType,
-    selectedCategory: "All",
-    selectedDifficulty: DIFFICULTY_MAP[difficulty],
-    selectedSort: "interviewCount",
-    page: 1,
-  });
-  const [expandedProblem, setExpandedProblem] = useState<string | null>(null);
-
-  const { problems, loading, error, totalPages, fetchProblems } = useProblems(userId || null);
-
-  // Update filters when parent props change
-  useEffect(() => {
-    setFilters((prev) => ({
-      ...prev,
-      selectedType: interviewType,
-      selectedDifficulty: DIFFICULTY_MAP[difficulty],
-    }));
-  }, [interviewType, difficulty]);
-
-  // Fetch problems when filters change
-  useEffect(() => {
-    fetchProblems(filters);
-  }, [filters, fetchProblems]);
-
-  // Clamp page when totalPages changes
-  useEffect(() => {
-    if (filters.page > totalPages) {
-      handleFiltersChange({ page: Math.max(1, totalPages) });
-    }
-  }, [totalPages, filters.page]);
-
-  function handleFiltersChange(newFilters: Partial<FilterState>) {
-    setFilters((prev) => ({ ...prev, ...newFilters }));
-    setExpandedProblem(null);
-  }
-
-  function handleProblemClick(problem: Problem) {
-    if (expandedProblem === problem.id) {
-      setExpandedProblem(null);
-    } else {
-      setExpandedProblem(problem.id);
-    }
-  }
-
-  function handleSelectProblem(problemId: string) {
-    onChange(problemId);
-  }
-
-  return (
-    <div className="mt-8">
-      <h3 className="mb-3 font-semibold text-foreground">
-        Select a Problem
-      </h3>
-
-      <ProblemFilters filters={filters} onFiltersChange={handleFiltersChange} />
-
-      {error && <ErrorBanner error={error} onRetry={() => fetchProblems(filters)} />}
-
-      {/* Problem Count */}
-      <p className="text-sm text-muted-foreground mb-4">
-        {problems.length} problem{problems.length !== 1 ? "s" : ""} found
-      </p>
-
-      <Pagination
-        currentPage={filters.page}
-        totalPages={totalPages}
-        onPageChange={(page) => handleFiltersChange({ page })}
-      />
-
-      {/* Problem List */}
-      {loading && problems.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Loading problems...</p>
-      ) : (
-        <>
-          {loading && (
-            <p className="text-sm text-muted-foreground mb-4">Loading...</p>
-          )}
-          <ProblemList
-            problems={problems}
-            selectedValue={value}
-            expandedProblem={expandedProblem}
-            onProblemClick={handleProblemClick}
-            onSelectProblem={handleSelectProblem}
-          />
-        </>
-      )}
-    </div>
-  );
-}
-
-================================================
 FILE: ./src/features/interview/setup/components/Pagination.tsx
 ================================================
 type Props = {
@@ -10490,107 +10156,6 @@ FILE: ./src/features/interview/setup/index.ts
 ================================================
 
 ================================================
-FILE: ./src/features/interview/live/components/LiveInterview.tsx
-================================================
-'use client';
-
-import { useState } from 'react';
-import Chat from './Chat';
-import Sidebar from './Sidebar';
-import InterviewHeader from './InterviewHeader';
-import { useToast } from '../../../../components/ui/Toast';
-import { TranscriptMessage } from '../../types/TranscriptMessage';
-
-interface LiveInterviewProps {
-  interviewId: string;
-  duration: number;
-  initialMessages: TranscriptMessage[];
-}
-
-export default function LiveInterview({
-  interviewId,
-  duration,
-  initialMessages,
-}: LiveInterviewProps) {
-  const [messages, setMessages] = useState(initialMessages);
-  const [isLoading, setIsLoading] = useState(false);
-  const [summary, setSummary] = useState<string | null>(null);
-  const [isSummaryLoading, setIsSummaryLoading] = useState(true);
-  const { showToast } = useToast();
-
-  const handleSendMessage = async (content: string) => {
-    setIsLoading(true);
-
-    const userMsg: TranscriptMessage = {
-      role: "user",
-      content,
-    };
-
-    setMessages((prev) => [...prev, userMsg]);
-
-    try {
-      const response = await fetch(
-  `/api/interviews/${interviewId}/message`,
-  {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      message: content,
-    }),
-  }
-);
-
-      const text = await response.text();
-
-      if (process.env.NODE_ENV === "development") {
-        console.log("Status:", response.status);
-        console.log("Response:", text);
-      }
-
-      if (!response.ok) {
-        showToast(text, "error");
-        return;
-      }
-
-const data = JSON.parse(text);
-
-      if (data.reply) {
-        setMessages((prev) => [...prev, { role: "assistant", content: data.reply }]);
-      }
-
-      if (data.summary) {
-        setSummary(data.summary);
-        setIsSummaryLoading(false);
-      }
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return (
-    <div className="flex h-screen overflow-hidden">
-      <div className="flex flex-1 flex-col">
-        <InterviewHeader
-          duration={duration}
-          interviewId={interviewId}
-        />
-
-        <Chat
-          messages={messages}
-          onSendMessage={handleSendMessage}
-          isLoading={isLoading}
-        />
-      </div>
-
-      <Sidebar summary={summary} isSummaryLoading={isSummaryLoading} />
-    </div>
-  );
-}
-================================================
 FILE: ./src/features/interview/live/components/MessageList.tsx
 ================================================
 // components/interview/live/MessageList.tsx
@@ -11692,603 +11257,6 @@ export const env = envSchema.parse(process.env);
 
 export type Env = z.infer<typeof envSchema>;
 ================================================
-FILE: ./src/components/ui/Card.tsx
-================================================
-import type { FC, ReactNode } from "react";
-
-type Props = {
-  children: ReactNode;
-  className?: string;
-  rounded?: "xl" | "2xl";
-  padding?: "6" | "8";
-};
-
-const Card: FC<Props> = ({
-  children,
-  className = "",
-  rounded = "xl",
-  padding = "6",
-}) => {
-  const roundedClass = rounded === "xl" ? "rounded-xl" : "rounded-2xl";
-  const paddingClass = padding === "6" ? "p-6" : "p-8";
-
-  return (
-    <div className={`${roundedClass} bg-card ${paddingClass} border border-border ${className}`}>
-      {children}
-    </div>
-  );
-};
-
-export default Card;
-
-================================================
-FILE: ./src/components/ui/Heading.tsx
-================================================
-import type { FC, ReactNode } from "react";
-
-type Props = {
-  children: ReactNode;
-  level?: "h1" | "h2" | "h3" | "h4";
-  className?: string;
-};
-
-const Heading: FC<Props> = ({
-  children,
-  level = "h2",
-  className = "",
-}) => {
-  const levelClasses = {
-    h1: "text-4xl font-bold text-foreground",
-    h2: "text-3xl font-bold text-foreground",
-    h3: "text-2xl font-bold text-foreground",
-    h4: "text-xl font-semibold text-foreground",
-  };
-
-  const Tag = level;
-
-  return (
-    <Tag className={`${levelClasses[level]} ${className}`}>
-      {children}
-    </Tag>
-  );
-};
-
-export default Heading;
-
-================================================
-FILE: ./src/components/ui/ThemeToggle.tsx
-================================================
-"use client";
-
-import { useTheme } from "@/src/contexts/ThemeContext";
-
-export default function ThemeToggle() {
-  const { theme, toggleTheme } = useTheme();
-
-  return (
-    <button
-      onClick={toggleTheme}
-      className="p-2 rounded-md hover:bg-muted transition-colors"
-      aria-label="Toggle theme"
-    >
-      {theme === "dark" ? (
-        <svg
-          className="w-5 h-5 text-foreground"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-          />
-        </svg>
-      ) : (
-        <svg
-          className="w-5 h-5 text-foreground"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-          />
-        </svg>
-      )}
-    </button>
-  );
-}
-
-================================================
-FILE: ./src/components/ui/Dialog.tsx
-================================================
-"use client";
-
-import * as React from "react";
-import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { cn } from "../../lib/utils";
-
-const Dialog = DialogPrimitive.Root;
-
-const DialogTrigger = DialogPrimitive.Trigger;
-
-const DialogPortal = DialogPrimitive.Portal;
-
-const DialogClose = DialogPrimitive.Close;
-
-const DialogOverlay = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Overlay>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
->(({ className, ...props }, ref) => (
-  <DialogPrimitive.Overlay
-    ref={ref}
-    className={cn(
-      "fixed inset-0 z-50 bg-black/50 backdrop-blur-sm",
-      "data-[state=open]:animate-in data-[state=closed]:animate-out",
-      className
-    )}
-    {...props}
-  />
-));
-
-DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
-
-const DialogContent = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
->(({ className, children, ...props }, ref) => (
-  <DialogPortal>
-    <DialogOverlay />
-
-    <DialogPrimitive.Content
-      ref={ref}
-      className={cn(
-        "fixed left-1/2 top-1/2 z-50 w-[95vw] max-w-lg",
-        "-translate-x-1/2 -translate-y-1/2",
-        "rounded-2xl border border-zinc-200 bg-white p-6 shadow-xl",
-        "focus:outline-none",
-        className
-      )}
-      {...props}
-    >
-      {children}
-    </DialogPrimitive.Content>
-  </DialogPortal>
-));
-
-DialogContent.displayName = DialogPrimitive.Content.displayName;
-
-function DialogHeader({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
-  return (
-    <div
-      className={cn("flex flex-col space-y-2", className)}
-      {...props}
-    />
-  );
-}
-
-function DialogFooter({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
-  return (
-    <div
-      className={cn(
-        "mt-6 flex justify-end gap-2",
-        className
-      )}
-      {...props}
-    />
-  );
-}
-
-const DialogTitle = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Title>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
->(({ className, ...props }, ref) => (
-  <DialogPrimitive.Title
-    ref={ref}
-    className={cn(
-      "text-lg font-semibold text-zinc-900",
-      className
-    )}
-    {...props}
-  />
-));
-
-DialogTitle.displayName = DialogPrimitive.Title.displayName;
-
-const DialogDescription = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Description>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
->(({ className, ...props }, ref) => (
-  <DialogPrimitive.Description
-    ref={ref}
-    className={cn(
-      "text-sm text-zinc-600",
-      className
-    )}
-    {...props}
-  />
-));
-
-DialogDescription.displayName =
-  DialogPrimitive.Description.displayName;
-
-export {
-  Dialog,
-  DialogTrigger,
-  DialogPortal,
-  DialogClose,
-  DialogOverlay,
-  DialogContent,
-  DialogHeader,
-  DialogFooter,
-  DialogTitle,
-  DialogDescription,
-};
-================================================
-FILE: ./src/components/ui/Button.tsx
-================================================
-import * as React from "react";
-import { cn } from "../../lib/utils";
-
-interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "outline";
-}
-
-export const Button = React.forwardRef<
-  HTMLButtonElement,
-  ButtonProps
->(
-  (
-    {
-      children,
-      variant = "primary",
-      className,
-      type = "button",
-      ...props
-    },
-    ref
-  ) => {
-    const baseStyles =
-      "px-4 py-2 rounded-md font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
-
-    const variants = {
-      primary:
-        "bg-primary text-primary-foreground hover:opacity-90",
-      secondary:
-        "bg-muted text-muted-foreground hover:bg-muted/80",
-      outline:
-        "border border-border bg-transparent hover:bg-muted text-muted-foreground",
-    };
-
-    return (
-      <button
-        ref={ref}
-        type={type}
-        className={cn(
-          baseStyles,
-          variants[variant],
-          className
-        )}
-        {...props}
-      >
-        {children}
-      </button>
-    );
-  }
-);
-
-Button.displayName = "Button";
-================================================
-FILE: ./src/components/ui/Text.tsx
-================================================
-import type { FC, ReactNode } from "react";
-
-type Props = {
-  children: ReactNode;
-  variant?: "body" | "muted" | "small" | "large";
-  className?: string;
-};
-
-const Text: FC<Props> = ({
-  children,
-  variant = "body",
-  className = "",
-}) => {
-  const variantClasses = {
-    body: "text-base text-foreground",
-    muted: "text-base text-muted-foreground",
-    small: "text-sm text-muted-foreground",
-    large: "text-lg text-foreground",
-  };
-
-  return (
-    <p className={`${variantClasses[variant]} ${className}`}>
-      {children}
-    </p>
-  );
-};
-
-export default Text;
-
-================================================
-FILE: ./src/components/ui/Toast.tsx
-================================================
-"use client";
-
-import * as React from "react";
-import { cn } from "../../lib/utils";
-
-interface ToastProps {
-  message: string;
-  type?: "error" | "success" | "info";
-  onClose?: () => void;
-}
-
-export function Toast({ message, type = "info", onClose }: ToastProps) {
-  const [isVisible, setIsVisible] = React.useState(true);
-
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsVisible(false);
-      onClose?.();
-    }, 5000);
-
-    return () => clearTimeout(timer);
-  }, [onClose]);
-
-  if (!isVisible) return null;
-
-  const typeStyles = {
-    error: "bg-red-500 text-white",
-    success: "bg-green-500 text-white",
-    info: "bg-blue-500 text-white",
-  };
-
-  return (
-    <div
-      className={cn(
-        "fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg transition-all duration-300",
-        typeStyles[type]
-      )}
-      role="alert"
-      aria-live="polite"
-    >
-      <div className="flex items-center justify-between gap-4">
-        <p className="text-sm font-medium">{message}</p>
-        {onClose && (
-          <button
-            onClick={() => {
-              setIsVisible(false);
-              onClose();
-            }}
-            className="text-white/80 hover:text-white transition-colors"
-            aria-label="Close notification"
-          >
-            ✕
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
-
-interface ToastContextValue {
-  showToast: (message: string, type?: "error" | "success" | "info") => void;
-}
-
-const ToastContext = React.createContext<ToastContextValue | undefined>(
-  undefined
-);
-
-export function ToastProvider({ children }: { children: React.ReactNode }) {
-  const [toast, setToast] = React.useState<{
-    message: string;
-    type: "error" | "success" | "info";
-  } | null>(null);
-
-  const showToast = React.useCallback(
-    (message: string, type: "error" | "success" | "info" = "info") => {
-      setToast({ message, type });
-    },
-    []
-  );
-
-  const handleClose = React.useCallback(() => {
-    setToast(null);
-  }, []);
-
-  return (
-    <ToastContext.Provider value={{ showToast }}>
-      {children}
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={handleClose}
-        />
-      )}
-    </ToastContext.Provider>
-  );
-}
-
-export function useToast() {
-  const context = React.useContext(ToastContext);
-  if (context === undefined) {
-    throw new Error("useToast must be used within a ToastProvider");
-  }
-  return context;
-}
-
-================================================
-FILE: ./src/components/ui/Select.tsx
-================================================
-import * as React from "react";
-import { cn } from "../../lib/utils";
-
-export interface SelectProps
-  extends React.SelectHTMLAttributes<HTMLSelectElement> {}
-
-export const Select = React.forwardRef<
-  HTMLSelectElement,
-  SelectProps
->(({ className, children, ...props }, ref) => {
-  return (
-    <select
-      ref={ref}
-      className={cn(
-        "flex h-10 w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white",
-        "focus:outline-none focus:ring-2 focus:ring-emerald-500",
-        "disabled:cursor-not-allowed disabled:opacity-50",
-        className
-      )}
-      {...props}
-    >
-      {children}
-    </select>
-  );
-});
-
-Select.displayName = "Select";
-================================================
-FILE: ./src/components/ui/Input.tsx
-================================================
-
-// components/ui/Input.tsx
-import React from "react";
-
-export const Input = ({ className = "", ...props }: React.InputHTMLAttributes<HTMLInputElement>) => {
-  return (
-    <input
-      className={`
-        flex h-10 w-full rounded-md border border-zinc-700
-        bg-zinc-900 px-3 py-2 text-sm text-white
-        placeholder:text-zinc-500 focus:outline-none
-        focus:ring-2 focus:ring-emerald-500 disabled:cursor-not-allowed
-        disabled:opacity-50 ${className}
-      `}
-      {...props}
-    />
-  );
-};
-================================================
-FILE: ./src/components/layout/Navbar.tsx
-================================================
-"use client";
-
-import Link from "next/link";
-import { useState } from "react";
-import { useSession, signOut } from "next-auth/react";
-import ThemeToggle from "@/src/components/ui/ThemeToggle";
-import { Button } from "@/src/components/ui/Button";
-
-export default function Navbar() {
-  const { data: session, status } = useSession();
-  const [showMenu, setShowMenu] = useState(false);
-
-  const isAuthenticated = status === "authenticated";
-  const userEmail = session?.user?.email || null;
-  const userId = session?.user?.id || null;
-
-  async function handleSignOut() {
-    await signOut({ callbackUrl: "/" });
-  }
-
-  return (
-    <nav className="flex items-center justify-between py-6 border-b border-border">
-
-      <Link
-        href="/"
-        className="text-xl font-bold text-foreground tracking-tight"
-      >
-        AI Interviewer
-      </Link>
-
-
-      <div className="flex gap-8 text-sm text-muted-foreground items-center">
-
-        <Link 
-          href="/interview/setup"
-          className="hover:text-foreground transition-colors"
-        >
-          Interviews
-        </Link>
-
-        <Link
-          href="/learn"
-          className="hover:text-foreground transition-colors"
-        >
-          Learn
-        </Link>
-
-        {isAuthenticated ? (
-          <div className="relative">
-            <button
-              onClick={() => setShowMenu(!showMenu)}
-              className="flex items-center gap-2 hover:text-foreground transition-colors"
-            >
-              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-semibold">
-                {userEmail?.[0]?.toUpperCase() || "U"}
-              </div>
-            </button>
-
-            {showMenu && (
-              <div className="absolute right-0 mt-2 w-48 rounded-lg border border-border bg-card shadow-lg py-2">
-                <div className="px-4 py-2 text-xs text-muted-foreground border-b border-border">
-                  {userEmail}
-                </div>
-                {userId && (
-                  <Link
-                    href={`/dashboard/${userId}`}
-                    className="block px-4 py-2 text-sm hover:bg-muted transition-colors"
-                  >
-                    Dashboard
-                  </Link>
-                )}
-                <button
-                  onClick={handleSignOut}
-                  className="w-full px-4 py-2 text-left text-sm hover:bg-muted transition-colors"
-                >
-                  Sign Out
-                </button>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="flex gap-4 items-center">
-            <Link 
-              href="/login"
-              className="hover:text-foreground transition-colors"
-            >
-              Log In
-            </Link>
-            <Link href="/register">
-              <Button variant="primary">
-                Register
-              </Button>
-            </Link>
-          </div>
-        )}
-
-        <ThemeToggle />
-
-      </div>
-
-    </nav>
-  );
-}
-================================================
 FILE: ./src/components/layout/PageContainer.tsx
 ================================================
 type Props = {
@@ -12315,118 +11283,6 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
   return <SessionProvider>{children}</SessionProvider>;
 }
 
-================================================
-FILE: ./src/components/catalog/InterviewCard.tsx
-================================================
-import Link from "next/link";
-
-import { Interview } from "@/src/features/interview/types/interview";
-import Card from "@/src/components/ui/Card";
-import { Button } from "@/src/components/ui/Button";
-import Heading from "@/src/components/ui/Heading";
-import Text from "@/src/components/ui/Text";
-
-type Props = {
-  interview: Interview;
-};
-
-export default function InterviewCard({
-  interview,
-}: Props) {
-  const getInterviewType = (category: string): string => {
-    switch (category) {
-      case 'SYSTEM_DESIGN':
-      case 'DISTRIBUTED_SYSTEMS':
-        return 'hld';
-      case 'LOW_LEVEL_DESIGN':
-        return 'lld';
-      case 'DATABASES':
-      case 'BACKEND':
-      case 'JAVA':
-      case 'KAFKA':
-      case 'REDIS':
-      case 'OPERATING_SYSTEMS':
-      case 'NETWORKING':
-        return 'dsa';
-      default:
-        return 'hld';
-    }
-  };
-
-  return (
-    <Card className="shadow-sm transition hover:border-border/80">
-      <Heading level="h3">
-        {interview.title}
-      </Heading>
-
-      <Text variant="body" className="mt-2">
-        {interview.description}
-      </Text>
-
-      <div className="mt-6 flex items-center justify-between">
-        <Text variant="small">
-          {interview.duration} min •{" "}
-          {interview.difficulty}
-        </Text>
-
-        <Link
-          href={`/interview/setup?problemId=${interview.id}&type=${getInterviewType(interview.category)}`}
-        >
-          <Button variant="primary" className="px-4 py-2 text-sm">
-            Start →
-          </Button>
-        </Link>
-      </div>
-    </Card>
-  );
-}
-================================================
-FILE: ./src/components/catalog/InterviewCatalog.tsx
-================================================
-import { prisma } from "@/shared/prisma/client";
-
-import InterviewCard from "./InterviewCard";
-
-export default async function InterviewCatalog() {
-  const problems = await prisma.problem.findMany({
-    orderBy: {
-      interviewCount: "desc",
-    },
-  });
-
-  return (
-    <section id="interviews" className="py-20">
-      <h2 className="text-4xl font-bold">
-        Practice Interviews
-      </h2>
-
-      <p className="mt-3 text-zinc-400">
-        Choose a problem and start practicing.
-      </p>
-
-      <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {problems.map((problem) => (
-          <InterviewCard
-            key={problem.id}
-            interview={{
-              id: problem.id,
-              title: problem.title,
-              description: problem.description ?? "",
-              duration: 45,
-              difficulty:
-                problem.difficulty === "EASY"
-                  ? "Easy"
-                  : problem.difficulty === "HARD"
-                    ? "Hard"
-                    : "Medium",
-              category: problem.category,
-            }}
-          />
-        ))}
-      </div>
-    </section>
-  );
-}
 ================================================
 FILE: ./src/components/theme/ThemeProvider.tsx
 ================================================
@@ -12499,6 +11355,20 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+const CARD_PALETTE = [
+  { from: "#FF6B4A", to: "#E8940A" },
+  { from: "#3E6BFF", to: "#213FCC" },
+  { from: "#00E0AB", to: "#00A87E" },
+  { from: "#6A5AE0", to: "#4B3DB8" },
+];
+
+export function accentFor(id: string) {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
+  return CARD_PALETTE[hash % CARD_PALETTE.length];
+}
+
+export { CARD_PALETTE };
 ================================================
 FILE: ./src/lib/logger.ts
 ================================================
@@ -15504,48 +14374,6 @@ export class RecommendationService {
       : "A reach — attempt when you have time to struggle with it";
   }
 }
-================================================
-FILE: ./src/modules/interview/services/whiteboard/WhiteboardSerializer.ts
-================================================
-interface WhiteboardElement {
-  id: string;
-  type: string;
-  label: string;
-  points?: number[];
-  explanationTitle?: string;
-}
-
-export class WhiteboardSerializer {
-  /** Compact text description for prompt injection. Empty string if nothing drawn. */
-  describe(elements: WhiteboardElement[] | null | undefined): string {
-    if (!elements || elements.length === 0) {
-      return "The candidate has not drawn anything on the whiteboard yet.";
-    }
-
-    const nodes = elements.filter((el) => el.type !== "arrow");
-    const arrows = elements.filter((el) => el.type === "arrow");
-
-    const nodeById = new Map(nodes.map((n) => [n.id, n]));
-
-    const nodeLines = nodes.map(
-      (n) => `- ${n.label} (${n.type})` 
-    );
-
-    const connectionLines = arrows
-      .map((a) => a.explanationTitle) // "Connection: X ➜ Y" already stored by the whiteboard component
-      .filter((title): title is string => Boolean(title));
-
-    return [
-      "Components on whiteboard:",
-      ...nodeLines,
-      connectionLines.length > 0 ? "\nConnections:" : "",
-      ...connectionLines,
-    ]
-      .filter(Boolean)
-      .join("\n");
-  }
-}
-
 ================================================
 FILE: ./src/modules/interview/services/mastery/SkillGraphService.ts
 ================================================

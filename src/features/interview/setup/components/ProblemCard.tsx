@@ -1,10 +1,8 @@
 "use client";
 
 import { Difficulty, ProblemCategory } from "@prisma/client";
-import { Button } from "@/src/components/ui/Button";
 import type { Problem } from "./problemSchema";
 import { cn } from "@/src/lib/utils";
-import { ChevronRight, Clock, CheckCircle2 } from "lucide-react";
 
 const CATEGORY_LABELS: Record<ProblemCategory, string> = {
   SYSTEM_DESIGN: "System Design",
@@ -20,9 +18,9 @@ const CATEGORY_LABELS: Record<ProblemCategory, string> = {
 };
 
 const DIFFICULTY_STYLES: Record<Difficulty, string> = {
-  EASY: "text-emerald-400 border-emerald-500/20 bg-emerald-500/5",
-  MEDIUM: "text-amber-400 border-amber-500/20 bg-amber-500/5",
-  HARD: "text-rose-400 border-red-500/20 bg-red-500/5",
+  EASY: "text-[#00A87E] bg-[rgba(0,168,126,0.1)]",
+  MEDIUM: "text-[#E8940A] bg-[rgba(232,148,10,0.1)]",
+  HARD: "text-[#FF5A3C] bg-[rgba(255,90,60,0.1)]",
 };
 
 type Props = {
@@ -43,124 +41,52 @@ export default function ProblemCard({
   return (
     <div
       className={cn(
-        "group rounded-xl border transition-all duration-300 overflow-hidden",
-        isSelected
-          ? "border-primary bg-primary/[0.03] ring-1 ring-primary/20"
-          : "border-zinc-800 bg-zinc-900/40 hover:border-zinc-700 hover:bg-zinc-900/80"
+        "group flex items-center gap-4 p-4 rounded-[18px] border cursor-pointer transition-all duration-[0.25s] ease-out",
+        "border-[rgba(21,22,28,0.07)] bg-white",
+        "hover:translate-y-[-3px] hover:shadow-[0_14px_30px_rgba(21,22,28,0.07)]",
+        isSelected && "border-[rgba(21,22,28,0.15)] shadow-[0_14px_30px_rgba(21,22,28,0.07)]"
       )}
+      onClick={onClick}
     >
-      <button
-        onClick={onClick}
-        className="w-full p-5 text-left outline-none transition-transform active:scale-[0.99]"
-      >
-        <div className="flex justify-between items-start gap-4">
-          <div className="flex-1 space-y-1.5">
-            <div className="flex items-center gap-3">
-              <h3 className="text-lg font-bold tracking-tight text-zinc-100">
-                {problem.title}
-              </h3>
-              <span
-                className={cn(
-                  "text-[10px] px-2 py-0.5 rounded-md border font-bold uppercase tracking-wider",
-                  DIFFICULTY_STYLES[problem.difficulty]
-                )}
-              >
-                {problem.difficulty}
-              </span>
-              {isSelected && (
-                <span className="text-[10px] px-2 py-0.5 rounded-md bg-primary text-white font-bold uppercase tracking-wider">
-                  Selected
-                </span>
-              )}
-            </div>
-            
-            <p className="text-sm text-zinc-400 font-medium leading-relaxed max-w-2xl">
-              {problem.cruxOfProblem}
-            </p>
-
-            {problem.tags && problem.tags.length > 0 && (
-              <div className="flex gap-2 pt-1">
-                {problem.tags.slice(0, 3).map((tag) => (
-                  <span key={tag} className="text-[10px] text-zinc-500 font-mono">
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="flex flex-col items-end gap-3 shrink-0">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1.5 text-zinc-500">
-                <Clock size={14} />
-                <span className="text-xs font-mono">{problem.estimatedMinutes}m</span>
-              </div>
-              <ChevronRight 
-                size={18} 
-                className={cn(
-                  "text-zinc-600 transition-transform duration-300", 
-                  isExpanded && "rotate-90 text-zinc-400"
-                )} 
-              />
-            </div>
-            
-            {problem.completionHistory?.completed && (
-              <div className="flex items-center gap-1 text-emerald-500">
-                <CheckCircle2 size={12} />
-                <span className="text-[10px] font-bold uppercase tracking-widest">
-                  Completed
-                </span>
-              </div>
-            )}
-          </div>
+      <div className="w-[5px] self-stretch rounded-[3px] flex-shrink-0 bg-[#6A5AE0]" />
+      
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <h3 className="text-[14.5px] font-semibold text-[#15161C] leading-tight">
+            {problem.title}
+          </h3>
+          <span className="text-[10px] font-bold tracking-[0.03em] px-2 py-0.5 rounded-[6px] text-white uppercase bg-[#6A5AE0]">
+            {CATEGORY_LABELS[problem.category].split(' ')[0]}
+          </span>
         </div>
-      </button>
+        <p className="text-[12.5px] text-[#5A5B66] mt-1 overflow-hidden text-ellipsis whitespace-nowrap">
+          {problem.cruxOfProblem}
+        </p>
+      </div>
 
-      {isExpanded && (
-        <div className="px-5 pb-6 space-y-6 animate-in fade-in slide-in-from-top-2 duration-300">
-          <div className="h-px bg-gradient-to-r from-transparent via-zinc-800 to-transparent w-full" />
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="md:col-span-2 space-y-3">
-              <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em]">
-                Problem Context
-              </h4>
-              <p className="text-sm text-zinc-300 leading-relaxed">
-                {problem.description}
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <div className="space-y-1">
-                <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em]">
-                  Category
-                </h4>
-                <p className="text-sm text-zinc-200 font-medium">
-                  {CATEGORY_LABELS[problem.category]}
-                </p>
-              </div>
-              <div className="space-y-1">
-                <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em]">
-                  Template
-                </h4>
-                <p className="text-sm text-zinc-200 font-medium uppercase">
-                  {problem.interviewType}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <Button
-            onClick={(e) => {
-              e.stopPropagation();
-              onSelect();
-            }}
-            className="w-full py-6 bg-primary hover:bg-primary/90 text-white rounded-xl font-bold text-sm uppercase tracking-widest shadow-lg shadow-primary/20 transition-all active:scale-[0.98]"
-          >
-            Launch Interview Session
-          </Button>
+      <div className="flex items-center gap-3.5 flex-shrink-0">
+        <span className={cn(
+          "text-[11px] font-semibold px-2.5 py-1 rounded-[999px]",
+          DIFFICULTY_STYLES[problem.difficulty]
+        )}>
+          {problem.difficulty.toLowerCase()}
+        </span>
+        <span className="text-[12px] text-[#5A5B66] w-12 text-right">
+          {problem.estimatedMinutes}m
+        </span>
+        <div className={cn(
+          "w-[22px] h-[22px] rounded-full flex items-center justify-center flex-shrink-0",
+          problem.completionHistory?.completed 
+            ? "bg-[#00A87E] text-white" 
+            : "border-[1.5px] border-[rgba(21,22,28,0.15)]"
+        )}>
+          {problem.completionHistory?.completed && (
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+              <path d="M5 12l5 5L20 7"/>
+            </svg>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
