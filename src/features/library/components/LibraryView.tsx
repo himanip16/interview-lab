@@ -71,7 +71,6 @@ export default function LibraryView({ experiences, completedInterviews }: Props)
       {selectedInterview && (
         <div className="mt-8">
           <TranscriptDetail
-            interview={selectedInterview}
             onBack={() => setSelectedInterview(null)}
           />
         </div>

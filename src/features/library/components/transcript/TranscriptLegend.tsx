@@ -3,7 +3,7 @@
 
 export default function TranscriptLegend() {
   return (
-    <div className="flex items-center gap-6 mb-6 pb-4 border-b border-gray-100">
+    <div className="sticky top-0 z-10 flex items-center gap-6 mb-6 pb-4 border-b border-gray-100 bg-white/95 backdrop-blur-sm">
       <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
         Legend:
       </span>

@@ -1,4 +1,5 @@
 // src/features/library/types/transcript.ts
+import { Difficulty } from "@prisma/client";
 
 export type ContentBlock = 
   | { type: "text"; value: string }
@@ -16,6 +17,19 @@ export type TranscriptMessage = {
   content: ContentBlock[] | string;
   elapsedSeconds?: number;
   timestamp?: string;
+};
+
+export type TranscriptMetadata = {
+  title: string;
+  difficulty: Difficulty;
+  duration: number;
+  template: string;
+  category: string;
+};
+
+export type TranscriptData = {
+  metadata: TranscriptMetadata;
+  messages: TranscriptMessage[];
 };
 
 export type EnhancedTranscript = TranscriptMessage[];

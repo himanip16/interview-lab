@@ -1,0 +1,88 @@
+{
+  "metadata": {
+    "title": "Design a Payment System",
+    "difficulty": "HARD",
+    "duration": 45,
+    "template": "HLD",
+    "category": "Distributed Systems"
+  },
+  "messages": [
+    {
+      "id": "1",
+      "role": "interviewer",
+      "content": [
+        { "type": "text", "value": "Let's design a payment system. What are the key requirements you'd consider?" }
+      ],
+      "elapsedSeconds": 0
+    },
+    {
+      "id": "2", 
+      "role": "candidate",
+      "content": [
+        { "type": "text", "value": "I'd focus on " },
+        { 
+          "type": "highlight", 
+          "status": "strong", 
+          "value": "consistency, availability, and durability", 
+          "explanation": "These are the core CAP theorem considerations for payment systems where data accuracy is critical.",
+          "id": "h1"
+        },
+        { "type": "text", "value": ". We need to handle high throughput, ensure exactly-once processing, and maintain strong consistency for financial transactions." }
+      ],
+      "elapsedSeconds": 15
+    },
+    {
+      "id": "3",
+      "role": "interviewer", 
+      "content": [
+        { "type": "text", "value": "Good. Let's say the payment succeeded, but our order service never received the event. What happens?" }
+      ],
+      "elapsedSeconds": 45
+    },
+    {
+      "id": "4",
+      "role": "candidate",
+      "content": [
+        { "type": "text", "value": "I wouldn't retry the payment itself. I'd first " },
+        { 
+          "type": "highlight", 
+          "status": "strong", 
+          "value": "separate payment state from event delivery", 
+          "explanation": "This prevents double-charging while ensuring eventual consistency through the outbox pattern.",
+          "id": "h2"
+        },
+        { "type": "text", "value": ". Use the outbox pattern where we write both the payment and event to the same transaction, then have a separate process reliably deliver events." }
+      ],
+      "elapsedSeconds": 60
+    },
+    {
+      "id": "5",
+      "role": "interviewer",
+      "content": [
+        { "type": "text", "value": "How would you handle idempotency?" }
+      ],
+      "elapsedSeconds": 90
+    },
+    {
+      "id": "6",
+      "role": "candidate", 
+      "content": [
+        { "type": "text", "value": "I'd use " },
+        { 
+          "type": "highlight", 
+          "status": "missed", 
+          "value": "client-generated idempotency keys", 
+          "explanation": "While this works, it has issues with client retries and key collisions. Server-side idempotency with request deduplication is more robust.",
+          "id": "h3"
+        },
+        { "type": "text", "value": ". Each payment request includes a unique key, and we cache the response. If we see the same key again, we return the cached result instead of processing." }
+      ],
+      "elapsedSeconds": 105
+    },
+    {
+      "id": "7",
+      "role": "takeaway",
+      "content": "Separate payment state from event delivery; use the outbox pattern with idempotent consumers for exactly-once semantics."
+    }
+  ]
+}
