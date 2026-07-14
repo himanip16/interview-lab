@@ -2,6 +2,7 @@
 "use client";
 
 import { type ContentBlock } from "../../types/transcript";
+import Highlight from "./Highlight";
 
 type Props = {
   role: "interviewer" | "candidate" | "takeaway";
@@ -40,19 +41,13 @@ export default function DialogueBubble({
 
     if (contentBlock.type === "highlight") {
       const isActive = activeHighlightId === contentBlock.id;
-      const isStrong = contentBlock.status === "strong";
       
       return (
-        <span
-          onClick={() => onHighlightClick?.(contentBlock.id)}
-          className={`cursor-pointer transition-all ${
-            isStrong
-              ? "bg-emerald-100 border-b-2 border-emerald-500 hover:bg-emerald-200"
-              : "bg-rose-100 border-b-2 border-rose-500 hover:bg-rose-200"
-          } ${isActive ? "ring-2 ring-offset-2 ring-blue-500" : ""}`}
-        >
-          {contentBlock.value}
-        </span>
+        <Highlight
+          highlight={contentBlock}
+          onClick={onHighlightClick || (() => {})}
+          isActive={isActive}
+        />
       );
     }
 
