@@ -20,10 +20,10 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className="border-b border-border bg-background">
+    <nav className="border-b border-[var(--border)] bg-[var(--surface)]">
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex items-center justify-between h-16">
-          <Link href="/" className="font-semibold text-foreground">
+          <Link href="/" className="heading-m text-[var(--ink)]">
             System Design Interviewer
           </Link>
 
@@ -32,10 +32,10 @@ export default function Navbar() {
               <Link
                 key={item.path}
                 href={item.path}
-                className={`text-sm font-medium transition-colors hover:text-foreground ${
+                className={`body-m font-medium transition-colors hover:text-[var(--ink)] ${
                   isActive(item.path)
-                    ? "text-foreground"
-                    : "text-muted-foreground"
+                    ? "text-[var(--ink)]"
+                    : "text-[var(--ink-400)]"
                 }`}
               >
                 {item.name}
