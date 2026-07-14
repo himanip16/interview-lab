@@ -3,28 +3,14 @@ import { InterviewStatus } from "@prisma/client";
 
 import { prisma } from "@/shared/prisma/client";
 import { getCurrentUserId } from "@/modules/auth/getCurrentUserId";
-import LibraryView, {
+import LibraryView from "@/features/library/components/LibraryView";
+import {
   type CompletedInterviewItem,
   type ExperienceItem,
-} from "@/features/library/components/LibraryView";
-
-type DimensionScore = {
-  dimension: string;
-  score: number;
-  summary: string;
-};
-
-type EvidenceEntry = {
-  dimension: string;
-  timestampSeconds: number;
-  quote: string;
-  comment: string;
-};
-
-type EvaluationMetadata = {
-  strengths?: string[];
-  weaknesses?: string[];
-};
+  type DimensionScore,
+  type EvidenceEntry,
+  type EvaluationMetadata,
+} from "@/features/library/types";
 
 function formatDisplayDate(date: Date): string {
   return new Intl.DateTimeFormat("en-US", {

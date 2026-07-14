@@ -17,11 +17,7 @@ export const LLDInterviewProfile: InterviewProfile = {
       id: PhaseId.Introduction,
 
       goals: [
-        Goal.CandidateUnderstandsProblem,
-      ],
-
-      requiredGoals: [
-        Goal.CandidateUnderstandsProblem,
+        goal(Goal.CandidateUnderstandsProblem, true, 1.0),
       ],
 
       evaluationDimensions: [
@@ -56,17 +52,10 @@ export const LLDInterviewProfile: InterviewProfile = {
       id: PhaseId.Requirements,
 
       goals: [
-        Goal.LLD_UseCases,
-        Goal.Actors,
-        Goal.Constraints,
-        Goal.EdgeCases,
-      ],
-
-      requiredGoals: [
-        Goal.LLD_UseCases,
-        Goal.Actors,
-        Goal.Constraints,
-        Goal.EdgeCases,
+        goal(Goal.LLD_UseCases, true, 0.25),
+        goal(Goal.Actors, true, 0.25),
+        goal(Goal.Constraints, true, 0.25),
+        goal(Goal.EdgeCases, true, 0.25),
       ],
 
       evaluationDimensions: [
@@ -108,15 +97,9 @@ export const LLDInterviewProfile: InterviewProfile = {
       id: PhaseId.DomainModeling,
 
       goals: [
-        Goal.CoreEntities,
-        Goal.Responsibilities,
-        Goal.Relationships,
-      ],
-
-      requiredGoals: [
-        Goal.CoreEntities,
-        Goal.Responsibilities,
-        Goal.Relationships,
+        goal(Goal.CoreEntities, true, 0.33),
+        goal(Goal.Responsibilities, true, 0.33),
+        goal(Goal.Relationships, true, 0.34),
       ],
 
       evaluationDimensions: [
@@ -157,16 +140,10 @@ export const LLDInterviewProfile: InterviewProfile = {
       id: PhaseId.ClassDesign,
 
       goals: [
-        Goal.Classes,
-        Goal.Interfaces,
-        Goal.MethodBoundaries,
-        Goal.Encapsulation,
-      ],
-
-      requiredGoals: [
-        Goal.Classes,
-        Goal.Interfaces,
-        Goal.Encapsulation,
+        goal(Goal.Classes, true, 0.3),
+        goal(Goal.Interfaces, true, 0.3),
+        goal(Goal.MethodBoundaries, false, 0.1),
+        goal(Goal.Encapsulation, true, 0.3),
       ],
 
       evaluationDimensions: [
@@ -207,15 +184,10 @@ export const LLDInterviewProfile: InterviewProfile = {
       id: PhaseId.Extensibility,
 
       goals: [
-        Goal.ChangeScenarios,
-        Goal.DesignTradeoffs,
-        Goal.Extensibility,
-        Goal.Testability,
-      ],
-
-      requiredGoals: [
-        Goal.Extensibility,
-        Goal.Testability,
+        goal(Goal.ChangeScenarios, false, 0.2),
+        goal(Goal.DesignTradeoffs, false, 0.2),
+        goal(Goal.Extensibility, true, 0.3),
+        goal(Goal.Testability, true, 0.3),
       ],
 
       evaluationDimensions: [
@@ -258,11 +230,7 @@ export const LLDInterviewProfile: InterviewProfile = {
       id: PhaseId.Closing,
 
       goals: [
-        Goal.FinalDesignSummary,
-      ],
-
-      requiredGoals: [
-        Goal.FinalDesignSummary,
+        goal(Goal.FinalDesignSummary, true, 1.0),
       ],
 
       evaluationDimensions: [

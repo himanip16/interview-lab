@@ -2,8 +2,8 @@
 import Link from "next/link";
 
 import { Card } from "@/components/ui/Card";
-import { Heading } from "@/components/ui/Heading";
-import { Text } from "@/components/ui/Text";
+import Heading  from "@/components/ui/Heading";
+import Text from "@/components/ui/Text";
 import { Button } from "@/components/ui/Button";
 
 import type { SkillGraph } from "@/modules/interview/services/mastery/SkillGraphService";

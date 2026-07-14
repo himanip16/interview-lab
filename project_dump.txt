@@ -8102,7 +8102,7 @@ FILE: ./src/features/landing/components/SmartMentor.tsx
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import Card from "@/components/ui/Card";
+import { Card } from "@/components/ui/Card";
 import Heading from "@/components/ui/Heading";
 import Text from "@/components/ui/Text";
 
@@ -8265,7 +8265,7 @@ FILE: ./src/features/landing/components/PersonalNotebooks.tsx
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import Card from "@/components/ui/Card";
+import { Card } from "@/components/ui/Card";
 import Heading from "@/components/ui/Heading";
 import Text from "@/components/ui/Text";
 
@@ -8603,7 +8603,7 @@ export default function SampleFeedback() {
 FILE: ./src/features/landing/components/FeatureCard.tsx
 ================================================
 import type { FC } from "react";
-import Card from "@/components/ui/Card";
+import { Card } from "@/components/ui/Card";
 import Heading from "@/components/ui/Heading";
 import Text from "@/components/ui/Text";
 

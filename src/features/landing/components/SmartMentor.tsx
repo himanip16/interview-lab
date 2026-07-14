@@ -70,7 +70,7 @@ export default function SmartMentor() {
         <Text variant="muted">What should I practice next?</Text>
       </div>
 
-      <Card rounded="xl" padding="8">
+      <Card className="rounded-xl p-8">
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <Text variant="muted">Loading recommendations...</Text>

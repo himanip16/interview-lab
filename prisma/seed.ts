@@ -6,8 +6,51 @@ import {
   LearningActionType,
 } from "@prisma/client";
 import { EvaluationDimension, PhaseId, Goal } from "../src/modules/interview/constants";
+import { z } from "zod";
 
 const prisma = new PrismaClient();
+
+// ---------------------------------------------------------------------------
+// Zod schemas for JSON field validation
+// ---------------------------------------------------------------------------
+
+const GoalDefinitionSchema = z.object({
+  id: z.string(),
+  required: z.boolean(),
+  weight: z.number(),
+});
+
+const EvaluationDimensionArraySchema = z.array(z.string());
+const GoalDefinitionArraySchema = z.array(GoalDefinitionSchema);
+const JsonValueSchema = z.any(); // Generic JSON validation for other fields
+
+// ---------------------------------------------------------------------------
+// Safe validation helpers for JSON fields
+// ---------------------------------------------------------------------------
+
+function validateEvaluationDimensions(data: unknown): Prisma.InputJsonValue {
+  const result = EvaluationDimensionArraySchema.safeParse(data);
+  if (!result.success) {
+    throw new Error(`Invalid evaluationDimensions: ${result.error.message}`);
+  }
+  return result.data as Prisma.InputJsonValue;
+}
+
+function validateGoals(data: unknown): Prisma.InputJsonValue {
+  const result = GoalDefinitionArraySchema.safeParse(data);
+  if (!result.success) {
+    throw new Error(`Invalid goals: ${result.error.message}`);
+  }
+  return result.data as Prisma.InputJsonValue;
+}
+
+function validateJson(data: unknown): Prisma.InputJsonValue {
+  const result = JsonValueSchema.safeParse(data);
+  if (!result.success) {
+    throw new Error(`Invalid JSON: ${result.error.message}`);
+  }
+  return result.data as Prisma.InputJsonValue;
+}
 
 // ---------------------------------------------------------------------------
 // Problems - Expanded to 50+ focused problems by interview type
@@ -1607,29 +1650,25 @@ async function seedTemplates() {
         },
         update: {
           order: phase.order,
-          goals: phase.goals as Prisma.InputJsonValue,
-          evaluationDimensions:
-            phase.evaluationDimensions as Prisma.InputJsonValue,
+          goals: validateGoals(phase.goals),
+          evaluationDimensions: validateEvaluationDimensions(phase.evaluationDimensions),
           targetDurationRatio: phase.targetDurationRatio,
           transitionThreshold: phase.transitionThreshold,
           instructions: phase.instructions,
           showWhiteboard: phase.showWhiteboard,
-          reverseEvaluationDimensions:
-            phase.reverseEvaluationDimensions as Prisma.InputJsonValue,
+          reverseEvaluationDimensions: validateEvaluationDimensions(phase.reverseEvaluationDimensions ?? []),
         },
         create: {
           templateId: saved.id,
           phaseKey: phase.phaseKey,
           order: phase.order,
-          goals: phase.goals as Prisma.InputJsonValue,
-          evaluationDimensions:
-            phase.evaluationDimensions as Prisma.InputJsonValue,
+          goals: validateGoals(phase.goals),
+          evaluationDimensions: validateEvaluationDimensions(phase.evaluationDimensions),
           targetDurationRatio: phase.targetDurationRatio,
           transitionThreshold: phase.transitionThreshold,
           instructions: phase.instructions,
           showWhiteboard: phase.showWhiteboard,
-          reverseEvaluationDimensions:
-            phase.reverseEvaluationDimensions as Prisma.InputJsonValue,
+          reverseEvaluationDimensions: validateEvaluationDimensions(phase.reverseEvaluationDimensions ?? []),
         },
       });
     }
@@ -1845,13 +1884,13 @@ export async function seedLearningScenarios() {
     const segment = await prisma.learningSegment.upsert({
       where: { scenarioId_order: { scenarioId: scenario.id, order: segmentSeed.order } },
       update: {
-        conversation: segmentSeed.conversation as Prisma.InputJsonValue,
+        conversation: validateJson(segmentSeed.conversation),
         takeaway: segmentSeed.takeaway,
       },
       create: {
         scenarioId: scenario.id,
         order: segmentSeed.order,
-        conversation: segmentSeed.conversation as Prisma.InputJsonValue,
+        conversation: validateJson(segmentSeed.conversation),
         takeaway: segmentSeed.takeaway,
       },
     });
@@ -1881,7 +1920,7 @@ export async function seedLearningScenarios() {
         type: actionSeed.type,
         title: actionSeed.title,
         instructions: actionSeed.instructions,
-        content: actionSeed.content as Prisma.InputJsonValue,
+        content: validateJson(actionSeed.content),
       };
 
       if (existing) {
