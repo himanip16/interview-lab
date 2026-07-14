@@ -1,5 +1,19 @@
 @import "tailwindcss";
 
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+}
+
 /* CSS Custom Properties - Single Source of Truth for Design Tokens */
 :root {
   /* Neutral / Base Colors - Paper */
@@ -106,7 +120,21 @@
   --surface-elevated: #ffffff;
   --surface-overlay: rgba(0, 0, 0, 0.5);
 
+  /* Semantic Theme Tokens (Tailwind v4 / shadcn-style aliases) */
+  --background: var(--bg-primary);
+  --foreground: var(--ink);
+  --card: var(--surface);
+  --card-foreground: var(--ink);
+  --primary: var(--mint);
+  --primary-foreground: var(--paper);
+  --muted: var(--paper-100);
+  --muted-foreground: var(--ink-400);
+  --accent: var(--paper-100);
+  --accent-foreground: var(--ink);
+
   /* Typography Scale - Semantic Font Sizes */
+
+
   
   /* Headings */
   --font-size-heading-xl: 2.25rem;    /* 36px */
@@ -182,6 +210,16 @@
     --ink-800: #171717;
     --ink-900: #0a0a0a;
     --ink-950: #050505;
+
+    --bg-primary: #0a0a0a;
+    --bg-secondary: #171717;
+    --bg-tertiary: #262626;
+    --bg-muted: #404040;
+    --surface: #0a0a0a;
+    --surface-elevated: #171717;
+    --border: #262626;
+    --border-light: #171717;
+    --border-dark: #404040;
   }
 }
 

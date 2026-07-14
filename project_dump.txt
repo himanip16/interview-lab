@@ -201,6 +201,7 @@ PROJECT STRUCTURE
 │   │       ├── Panel.tsx
 │   │       ├── Pill.tsx
 │   │       ├── Search.tsx
+│   │       ├── Skeleton.tsx
 │   │       ├── Stepper.tsx
 │   │       ├── Tag.tsx
 │   │       ├── Text.tsx
@@ -334,6 +335,8 @@ PROJECT STRUCTURE
 │   │   ├── read_transcript.html
 │   │   └── whiteboard.html
 │   ├── lib
+│   │   ├── hooks
+│   │   │   └── useClickOutside.ts
 │   │   ├── logger.ts
 │   │   └── utils.ts
 │   ├── modules
@@ -431,6 +434,7 @@ PROJECT STRUCTURE
 │   │       └── types.ts
 │   └── shared
 │       ├── config
+│       │   ├── common-constants.ts
 │       │   ├── constants.ts
 │       │   └── env.ts
 │       └── logger
@@ -439,7 +443,7 @@ PROJECT STRUCTURE
 ├── tsconfig.json
 └── tsconfig.tsbuildinfo
 
-167 directories, 271 files
+168 directories, 274 files
 
 FILE CONTENTS
 
@@ -5009,60 +5013,115 @@ FILE: ./src/app/problems/page.tsx
 ================================================
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
+import { Panel } from "@/components/ui/Panel";
 import { Search } from "@/components/ui/Search";
-import { useSearchParams } from "next/navigation"; 
+import { Skeleton } from "@/components/ui/Skeleton";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useClickOutside } from "@/lib/hooks/useClickOutside";
+import {
+  DIFFICULTY_LEVELS,
+  DIFFICULTY_ORDER,
+  PROBLEM_TYPES,
+  SORT_OPTIONS,
+  STATUS_FILTERS,
+  ALL_FILTER,
+  type DifficultyLevel,
+  type ProblemType,
+  type SortOption,
+  type StatusFilter,
+} from "@/shared/config/common-constants"; 
 
-type ProblemType = "hld" | "lld" | "dsa";
-type Difficulty = "easy" | "medium" | "hard";
-type SortOption = "popularity" | "alpha" | "difficulty" | "time";
-type StatusFilter = "all" | "done" | "pending";
 
 type Problem = {
+  id: string;
   title: string;
   crux: string;
   type: ProblemType;
-  diff: Difficulty;
+  diff: DifficultyLevel;
   mins: number;
   done: boolean;
   pop: number;
 };
 
 const MOCK_PROBLEMS: Problem[] = [
-  { title:'Design a chat system', crux:'Message ordering, presence, and delivery guarantees', type:'hld', diff:'hard', mins:45, done:false, pop:9 },
-  { title:'Design an LRU cache', crux:'Hash map plus doubly linked list, O(1) get and put', type:'dsa', diff:'medium', mins:30, done:true, pop:8 },
-  { title:'Design a rate limiter', crux:'Distributed state, sliding windows, fairness under load', type:'hld', diff:'hard', mins:30, done:false, pop:7 },
-  { title:'Design a shopping cart', crux:'Cart persistence, price consistency, session handling', type:'lld', diff:'easy', mins:30, done:true, pop:6 },
-  { title:'Design a URL shortener', crux:'Unique ID generation and redirect performance', type:'hld', diff:'medium', mins:30, done:true, pop:9 },
-  { title:'Design a booking system', crux:'Availability checking, concurrency, double-booking', type:'lld', diff:'medium', mins:30, done:false, pop:5 },
-  { title:'Binary search variations', crux:'Search space reduction and boundary conditions', type:'dsa', diff:'medium', mins:30, done:false, pop:6 },
-  { title:'Design cache invalidation', crux:'Invalidation propagation, consistency, performance', type:'lld', diff:'hard', mins:45, done:false, pop:4 },
-  { title:'Design event sourcing', crux:'Event storage, snapshotting, replay performance', type:'lld', diff:'hard', mins:45, done:false, pop:3 },
-  { title:'Two pointers technique', crux:'Pointer movement and termination conditions', type:'dsa', diff:'easy', mins:30, done:true, pop:7 },
+  { id:'1', title:'Design a chat system', crux:'Message ordering, presence, and delivery guarantees', type:'hld', diff:'hard', mins:45, done:false, pop:9 },
+  { id:'2', title:'Design an LRU cache', crux:'Hash map plus doubly linked list, O(1) get and put', type:'dsa', diff:'medium', mins:30, done:true, pop:8 },
+  { id:'3', title:'Design a rate limiter', crux:'Distributed state, sliding windows, fairness under load', type:'hld', diff:'hard', mins:30, done:false, pop:7 },
+  { id:'4', title:'Design a shopping cart', crux:'Cart persistence, price consistency, session handling', type:'lld', diff:'easy', mins:30, done:true, pop:6 },
+  { id:'5', title:'Design a URL shortener', crux:'Unique ID generation and redirect performance', type:'hld', diff:'medium', mins:30, done:true, pop:9 },
+  { id:'6', title:'Design a booking system', crux:'Availability checking, concurrency, double-booking', type:'lld', diff:'medium', mins:30, done:false, pop:5 },
+  { id:'7', title:'Binary search variations', crux:'Search space reduction and boundary conditions', type:'dsa', diff:'medium', mins:30, done:false, pop:6 },
+  { id:'8', title:'Design cache invalidation', crux:'Invalidation propagation, consistency, performance', type:'lld', diff:'hard', mins:45, done:false, pop:4 },
+  { id:'9', title:'Design event sourcing', crux:'Event storage, snapshotting, replay performance', type:'lld', diff:'hard', mins:45, done:false, pop:3 },
+  { id:'10', title:'Two pointers technique', crux:'Pointer movement and termination conditions', type:'dsa', diff:'easy', mins:30, done:true, pop:7 },
 ];
 
+const DIFF_ORDER = DIFFICULTY_ORDER;
+const TYPE_COLORS: Record<ProblemType, string> = {
+  hld: "bg-[var(--violet)]",
+  lld: "bg-[var(--coral)]",
+  dsa: "bg-[var(--mint-deep)]",
+};
+
+const DIFF_CLASSES: Record<DifficultyLevel, string> = {
+  easy: "text-[var(--mint-deep)] bg-[rgba(0,168,126,0.1)]",
+  medium: "text-[var(--amber)] bg-[rgba(232,148,10,0.1)]",
+  hard: "text-[var(--coral)] bg-[rgba(255,90,60,0.1)]",
+};
+
 export default function ProblemsPage() {
-  const [problems, setProblems] = useState<Problem[]>(MOCK_PROBLEMS);
+  const [problems, setProblems] = useState<Problem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isSortMenuOpen, setIsSortMenuOpen] = useState(false);
   const searchParams = useSearchParams();
-  const categoryFromUrl = searchParams.get("category"); 
+  const router = useRouter();
+  const categoryFromUrl = searchParams.get("category");
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
-  const DIFF_ORDER = { easy:0, medium:1, hard:2 };
-  const [state, setState] = useState({ 
-    type: "all", 
-    diff: "all", 
-    status: "all", 
-    sort: "popularity",
-    category: categoryFromUrl || "all"  // ADD THIS
+  // Fetch problems from API
+  const fetchProblems = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await fetch('/api/problems');
+      if (!response.ok) {
+        throw new Error('Failed to fetch problems');
+      }
+      const data = await response.json();
+      setProblems(data.problems || MOCK_PROBLEMS); // Fallback to mock if API returns empty
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load problems');
+      // Fallback to mock data on error
+      setProblems(MOCK_PROBLEMS);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProblems();
+  }, []);
+
+  const [state, setState] = useState({
+    type: ALL_FILTER as ProblemType | typeof ALL_FILTER,
+    diff: ALL_FILTER as DifficultyLevel | typeof ALL_FILTER,
+    status: ALL_FILTER as StatusFilter,
+    sort: "popularity" as SortOption,
+    category: categoryFromUrl || ALL_FILTER,
+    searchQuery: "",
   });
 
   const filteredProblems = useMemo(() => {
     let result = problems.filter(p =>
-      (state.type === 'all' || p.type === state.type) &&
-      (state.diff === 'all' || p.diff === state.diff) &&
-      (state.status === 'all' || (state.status === 'done' ? p.done : !p.done)) &&
-      (state.category === 'all' || p.type === state.category)
+      (state.type === ALL_FILTER || p.type === state.type) &&
+      (state.diff === ALL_FILTER || p.diff === state.diff) &&
+      (state.status === ALL_FILTER || (state.status === 'done' ? p.done : !p.done)) &&
+      (state.category === ALL_FILTER || p.type === state.category) &&
+      (state.searchQuery === "" || p.title.toLowerCase().includes(state.searchQuery.toLowerCase()) || p.crux.toLowerCase().includes(state.searchQuery.toLowerCase()))
     );
 
     if (state.sort === 'popularity') {
@@ -5080,7 +5139,55 @@ export default function ProblemsPage() {
 
   const getBarClass = (type: ProblemType): string => TYPE_COLORS[type] || TYPE_COLORS.hld;
   const getTagClass = (type: ProblemType): string => TYPE_COLORS[type] || TYPE_COLORS.hld;
-  const getDiffClass = (diff: Difficulty): string => DIFF_CLASSES[diff] || DIFF_CLASSES.easy;
+  const getDiffClass = (diff: DifficultyLevel): string => DIFF_CLASSES[diff] || DIFF_CLASSES.easy;
+
+  // Close dropdown on Escape key or click outside
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isSortMenuOpen) {
+        setIsSortMenuOpen(false);
+        triggerRef.current?.focus();
+      }
+    };
+
+    if (isSortMenuOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isSortMenuOpen]);
+
+  // Handle click outside using custom hook
+  useClickOutside(dropdownRef, () => setIsSortMenuOpen(false), isSortMenuOpen);
+
+  // Handle arrow key navigation
+  const handleKeyDown = (event: React.KeyboardEvent, index: number) => {
+    const options = SORT_OPTIONS;
+    
+    switch (event.key) {
+      case 'ArrowDown':
+        event.preventDefault();
+        const nextIndex = (index + 1) % options.length;
+        const nextButton = dropdownRef.current?.querySelectorAll('button')[nextIndex] as HTMLButtonElement;
+        nextButton?.focus();
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        const prevIndex = (index - 1 + options.length) % options.length;
+        const prevButton = dropdownRef.current?.querySelectorAll('button')[prevIndex] as HTMLButtonElement;
+        prevButton?.focus();
+        break;
+      case 'Enter':
+      case ' ':
+        event.preventDefault();
+        setState(prev => ({ ...prev, sort: options[index] as SortOption }));
+        setIsSortMenuOpen(false);
+        triggerRef.current?.focus();
+        break;
+    }
+  };
   
 
   return (
@@ -5093,9 +5200,9 @@ export default function ProblemsPage() {
             Problem library
           </h2>
           <Search 
-            placeholder="Search problems…" 
+            placeholder="Search problems..." 
             className="w-[220px]"
-            onSearch={() => {}}
+            onSearch={(value) => setState(prev => ({ ...prev, searchQuery: value }))}
           />
         </div>
 
@@ -5107,10 +5214,10 @@ export default function ProblemsPage() {
               Type
             </span>
             <div className="flex gap-1.5" id="typeGroup">
-              {["all", "hld", "lld", "dsa"].map((type) => (
+              {[ALL_FILTER, ...PROBLEM_TYPES].map((type) => (
                 <button
                   key={type}
-                  onClick={() => setState({ ...state, type })}
+                  onClick={() => setState(prev => ({ ...prev, type: type as ProblemType | typeof ALL_FILTER }))}
                   className={cn(
                     "body-s font-semibold p-[6px_13px] radius-pill border border-[var(--border)] text-[var(--ink-400)] cursor-pointer transition-all duration-200 whitespace-nowrap",
                     state.type === type && "bg-[var(--ink)] text-white border-[var(--ink)]",
@@ -5119,7 +5226,7 @@ export default function ProblemsPage() {
                     state.type === 'dsa' && state.type === type && "bg-[var(--mint-deep)] border-[var(--mint-deep)]"
                   )}
                 >
-                  {type === "all" ? "All" : type.toUpperCase()}
+                  {type === ALL_FILTER ? "All" : type.toUpperCase()}
                 </button>
               ))}
             </div>
@@ -5131,16 +5238,16 @@ export default function ProblemsPage() {
               Difficulty
             </span>
             <div className="flex gap-1.5" id="diffGroup">
-              {["all", "easy", "medium", "hard"].map((diff) => (
+              {[ALL_FILTER, ...DIFFICULTY_LEVELS].map((diff) => (
                 <button
                   key={diff}
-                  onClick={() => setState({ ...state, diff })}
+                  onClick={() => setState(prev => ({ ...prev, diff: diff as DifficultyLevel | typeof ALL_FILTER }))}
                   className={cn(
                     "body-s font-semibold p-[6px_13px] radius-pill border border-[var(--border)] text-[var(--ink-400)] cursor-pointer transition-all duration-200 whitespace-nowrap",
                     state.diff === diff && "bg-[var(--ink)] text-white border-[var(--ink)]"
                   )}
                 >
-                  {diff === "all" ? "All" : diff.charAt(0).toUpperCase() + diff.slice(1)}
+                  {diff === ALL_FILTER ? "All" : diff.charAt(0).toUpperCase() + diff.slice(1)}
                 </button>
               ))}
             </div>
@@ -5148,16 +5255,16 @@ export default function ProblemsPage() {
               Status
             </span>
             <div className="flex gap-1.5" id="statusGroup">
-              {["all", "done", "pending"].map((status) => (
+              {STATUS_FILTERS.map((status) => (
                 <button
                   key={status}
-                  onClick={() => setState({ ...state, status })}
+                  onClick={() => setState(prev => ({ ...prev, status: status as StatusFilter }))}
                   className={cn(
                     "body-s font-semibold p-[6px_13px] radius-pill border border-[var(--border)] text-[var(--ink-400)] cursor-pointer transition-all duration-200 whitespace-nowrap",
                     state.status === status && "bg-[var(--ink)] text-white border-[var(--ink)]"
                   )}
                 >
-                  {status === "all" ? "All" : status === "done" ? "Completed" : "Not started"}
+                  {status === ALL_FILTER ? "All" : status === "done" ? "Completed" : "Not started"}
                 </button>
               ))}
             </div>
@@ -5170,9 +5277,23 @@ export default function ProblemsPage() {
             </div>
 
             {/* Sort Dropdown */}
-            <div className="relative">
+            <div className="relative" ref={dropdownRef}>
               <button
-                onClick={() => setIsSortMenuOpen(!isSortMenuOpen)}
+                ref={triggerRef}
+                onClick={() => setIsSortMenuOpen(prev => !prev)}
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowDown' && !isSortMenuOpen) {
+                    e.preventDefault();
+                    setIsSortMenuOpen(true);
+                    setTimeout(() => {
+                      const firstOption = dropdownRef.current?.querySelectorAll('button')[0] as HTMLButtonElement;
+                      firstOption?.focus();
+                    }, 0);
+                  }
+                }}
+                aria-haspopup="true"
+                aria-expanded={isSortMenuOpen}
+                aria-controls="sort-menu"
                 className="flex items-center gap-1.75 body-s font-semibold p-[8px_14px] radius-pill border border-[var(--border)] bg-[var(--surface)] cursor-pointer text-[var(--ink)]"
               >
                 <svg className="w-[13px] h-[13px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
@@ -5190,14 +5311,24 @@ export default function ProblemsPage() {
               </button>
 
               {isSortMenuOpen && (
-                <div className="absolute right-0 top-[calc(100%+6px)] bg-[var(--surface)] radius-card border border-[var(--border)] shadow-floating p-1.5 z-10 min-w-[170px]">
-                  {["popularity", "alpha", "difficulty", "time"].map((option) => (
+                <div
+                  id="sort-menu"
+                  role="menu"
+                  aria-labelledby="sortLabel"
+                  className="absolute right-0 top-[calc(100%+6px)] bg-[var(--surface)] radius-card border border-[var(--border)] shadow-floating p-1.5 z-10 min-w-[170px]"
+                >
+                  {SORT_OPTIONS.map((option, index) => (
                     <button
                       key={option}
+                      role="menuitem"
+                      tabIndex={index === 0 ? 0 : -1}
                       onClick={() => {
-                        setState({ ...state, sort: option });
+                        setState(prev => ({ ...prev, sort: option as SortOption }));
                         setIsSortMenuOpen(false);
+                        triggerRef.current?.focus();
                       }}
+                      onKeyDown={(e) => handleKeyDown(e, index)}
+                      aria-selected={state.sort === option}
                       className={cn(
                         "block w-full text-left body-s p-[8px_12px] radius-small cursor-pointer text-[var(--ink-400)] font-medium",
                         state.sort === option ? "text-[var(--ink)] font-semibold" : "hover:bg-[var(--paper-100)]"
@@ -5216,17 +5347,44 @@ export default function ProblemsPage() {
 
         {/* Problem List */}
         <div className="flex flex-col gap-2.5 mt-4.5">
-          {filteredProblems.length === 0 ? (
+          {loading ? (
+            // Loading skeleton
+            Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4 p-[16px_18px] radius-card border border-[var(--border)]">
+                <Skeleton className="w-[5px] h-12 radius-small flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <Skeleton className="h-5 w-2/3 mb-2" />
+                  <Skeleton className="h-4 w-full" />
+                </div>
+                <Skeleton className="h-6 w-16 radius-pill" />
+                <Skeleton className="h-5 w-12" />
+                <Skeleton className="w-[22px] h-[22px] radius-pill" />
+              </div>
+            ))
+          ) : error ? (
+            // Error state with retry
+            <div className="text-center py-12">
+              <div className="body-s text-[var(--ink-400)] mb-4">
+                {error}
+              </div>
+              <button
+                onClick={fetchProblems}
+                className="body-s font-semibold p-[8px_16px] radius-pill border border-[var(--border)] bg-[var(--surface)] cursor-pointer text-[var(--ink)] hover:bg-[var(--paper-100)] transition-all"
+              >
+                Retry
+              </button>
+            </div>
+          ) : filteredProblems.length === 0 ? (
             <div className="text-center py-12 body-s text-[var(--ink-400)]">
               No problems match these filters.
             </div>
           ) : (
             filteredProblems.map((p) => (
               <div
-                key={p.title}
+                key={p.id}
                 className="flex items-center gap-4 p-[16px_18px] radius-card border border-[var(--border)] cursor-pointer transition-transform duration-[0.25s] ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:-translate-y-[-3px] hover:shadow-floating"
                 onClick={() => {
-                  window.location.href = `/interview/setup?problemId=${p.title}`;
+                  router.push(`/interview/setup?problemId=${encodeURIComponent(p.id)}`);
                 }}
               >
                 <div className={`w-[5px] self-stretch radius-small flex-shrink-0 ${getBarClass(p.type)}`} />
@@ -5735,13 +5893,18 @@ export default function MarketingLayout({
 ================================================
 FILE: ./src/app/(marketing)/page.tsx
 ================================================
+import PageContainer from "@/components/layout/PageContainer";
+import Hero from "@/features/landing/components/Hero";
 import ActionCards from "@/features/landing/components/ActionCards";
+import SmartMentor from "@/features/landing/components/SmartMentor";
+import PersonalNotebooks from "@/features/landing/components/PersonalNotebooks";
+import SampleFeedback from "@/features/landing/components/SampleFeedback";
 
 export default function Home() {
   return (
     <PageContainer>
       <Hero />
-      <ActionCards />  {/* ADD THIS */}
+      <ActionCards />
       <SmartMentor />
       <PersonalNotebooks />
       <SampleFeedback />
@@ -6550,6 +6713,7 @@ FILE: ./src/app/api/problems/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/shared/prisma/client";
 import { Difficulty, InterviewStatus } from "@prisma/client";
+import { DEFAULT_PAGE_SIZE } from "@/shared/config/common-constants";
 
 export async function GET(request: Request) {
   try {
@@ -6560,7 +6724,7 @@ export async function GET(request: Request) {
     const category = searchParams.get("category");
     const sort = searchParams.get("sort") || "interviewCount";
     const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "20");
+    const limit = parseInt(searchParams.get("limit") || DEFAULT_PAGE_SIZE.toString());
     const userId = searchParams.get("userId");
 
     const where: any = {};
@@ -7681,6 +7845,20 @@ FILE: ./src/app/globals.css
 ================================================
 @import "tailwindcss";
 
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+}
+
 /* CSS Custom Properties - Single Source of Truth for Design Tokens */
 :root {
   /* Neutral / Base Colors - Paper */
@@ -7787,7 +7965,21 @@ FILE: ./src/app/globals.css
   --surface-elevated: #ffffff;
   --surface-overlay: rgba(0, 0, 0, 0.5);
 
+  /* Semantic Theme Tokens (Tailwind v4 / shadcn-style aliases) */
+  --background: var(--bg-primary);
+  --foreground: var(--ink);
+  --card: var(--surface);
+  --card-foreground: var(--ink);
+  --primary: var(--mint);
+  --primary-foreground: var(--paper);
+  --muted: var(--paper-100);
+  --muted-foreground: var(--ink-400);
+  --accent: var(--paper-100);
+  --accent-foreground: var(--ink);
+
   /* Typography Scale - Semantic Font Sizes */
+
+
   
   /* Headings */
   --font-size-heading-xl: 2.25rem;    /* 36px */
@@ -7863,6 +8055,16 @@ FILE: ./src/app/globals.css
     --ink-800: #171717;
     --ink-900: #0a0a0a;
     --ink-950: #050505;
+
+    --bg-primary: #0a0a0a;
+    --bg-secondary: #171717;
+    --bg-tertiary: #262626;
+    --bg-muted: #404040;
+    --surface: #0a0a0a;
+    --surface-elevated: #171717;
+    --border: #262626;
+    --border-light: #171717;
+    --border-dark: #404040;
   }
 }
 
@@ -12407,8 +12609,10 @@ export interface CreateInterviewInput {
 ================================================
 FILE: ./src/features/interview/types/TranscriptMessage.ts
 ================================================
+import { TranscriptRole } from "@/shared/config/common-constants";
+
 export interface TranscriptMessage {
-  role: "assistant" | "user";
+  role: TranscriptRole;
   content: string;
 }
 ================================================
@@ -13622,11 +13826,12 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { ProblemsResponseSchema, type Problem } from "./problemSchema";
 import { logger } from "@/lib/logger";
 import { Difficulty } from "@prisma/client";
+import { DEFAULT_PAGE_SIZE } from "@/shared/config/common-constants";
 
 const INTERVIEW_TYPES = ["hld", "lld", "dsa", "pr_review", "deep_dive", "tech_doc_review", "task_breakdown"] as const;
 const DIFFICULTIES = ["All", ...Object.values(Difficulty)] as const;
 const SORT_OPTIONS = ["interviewCount", "title", "difficulty", "estimatedMinutes"] as const;
-const PAGE_SIZE = 20;
+const PAGE_SIZE = DEFAULT_PAGE_SIZE;
 
 type FilterState = {
   selectedType: (typeof INTERVIEW_TYPES)[number];
@@ -15498,6 +15703,83 @@ export const MAX_OUTPUT_TOKENS =
 export const REQUEST_TIMEOUT_MS =
   env.REQUEST_TIMEOUT_MS;
 ================================================
+FILE: ./src/shared/config/common-constants.ts
+================================================
+// Common constants used across the application
+
+// ---------------------------------------------------------------------------
+// Difficulty Levels
+// ---------------------------------------------------------------------------
+
+export const DIFFICULTY_LEVELS = ["easy", "medium", "hard"] as const;
+export type DifficultyLevel = (typeof DIFFICULTY_LEVELS)[number];
+
+export const DIFFICULTY_ORDER: Record<DifficultyLevel, number> = {
+  easy: 0,
+  medium: 1,
+  hard: 2,
+};
+
+// ---------------------------------------------------------------------------
+// Problem/Interview Types
+// ---------------------------------------------------------------------------
+
+export const PROBLEM_TYPES = ["hld", "lld", "dsa"] as const;
+export type ProblemType = (typeof PROBLEM_TYPES)[number];
+
+// ---------------------------------------------------------------------------
+// Status Filters
+// ---------------------------------------------------------------------------
+
+export const STATUS_FILTERS = ["all", "done", "pending"] as const;
+export type StatusFilter = (typeof STATUS_FILTERS)[number];
+
+// ---------------------------------------------------------------------------
+// Sort Options
+// ---------------------------------------------------------------------------
+
+export const SORT_OPTIONS = ["popularity", "alpha", "difficulty", "time"] as const;
+export type SortOption = (typeof SORT_OPTIONS)[number];
+
+// ---------------------------------------------------------------------------
+// Common Filter Values
+// ---------------------------------------------------------------------------
+
+export const ALL_FILTER = "all" as const;
+
+// ---------------------------------------------------------------------------
+// Transcript Roles
+// ---------------------------------------------------------------------------
+
+export const TRANSCRIPT_ROLES = ["assistant", "user"] as const;
+export type TranscriptRole = (typeof TRANSCRIPT_ROLES)[number];
+
+// ---------------------------------------------------------------------------
+// Time Constants (in milliseconds)
+// ---------------------------------------------------------------------------
+
+export const ONE_SECOND_MS = 1000;
+export const ONE_MINUTE_MS = 60 * ONE_SECOND_MS;
+export const ONE_HOUR_MS = 60 * ONE_MINUTE_MS;
+
+// ---------------------------------------------------------------------------
+// Duration Constants (in minutes)
+// ---------------------------------------------------------------------------
+
+export const DURATION_SHORT = 30;
+export const DURATION_MEDIUM = 45;
+export const DURATION_LONG = 60;
+export const DURATION_EXTENDED = 90;
+export const DURATION_MAX = 180;
+
+// ---------------------------------------------------------------------------
+// UI Constants
+// ---------------------------------------------------------------------------
+
+export const DEFAULT_PAGE_SIZE = 10;
+export const MAX_PAGE_SIZE = 100;
+
+================================================
 FILE: ./src/shared/config/env.ts
 ================================================
 import { z } from "zod";
@@ -16266,6 +16548,20 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 Input.displayName = 'Input';
 
 ================================================
+FILE: ./src/components/ui/Skeleton.tsx
+================================================
+import { cn } from "@/lib/utils";
+
+export function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      className={cn("animate-pulse rounded-md bg-[var(--ink-100)]", className)}
+      {...props}
+    />
+  );
+}
+
+================================================
 FILE: ./src/components/layout/ActionRail.tsx
 ================================================
 import React from 'react';
@@ -16788,6 +17084,41 @@ class Logger {
 }
 
 export const logger = new Logger();
+
+================================================
+FILE: ./src/lib/hooks/useClickOutside.ts
+================================================
+import { useEffect, RefObject } from "react";
+
+/**
+ * Hook to detect clicks outside a referenced element
+ * @param ref - Reference to the element to check clicks against
+ * @param handler - Callback function to execute when click outside is detected
+ * @param isActive - Optional boolean to enable/disable the hook
+ */
+export function useClickOutside<T extends HTMLElement>(
+  ref: RefObject<T | null>,
+  handler: () => void,
+  isActive: boolean = true
+) {
+  useEffect(() => {
+    if (!isActive) return;
+
+    const handleClickOutside = (event: Event) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        handler();
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [ref, handler, isActive]);
+}
 
 ================================================
 FILE: ./src/modules/auth/getCurrentUserId.ts

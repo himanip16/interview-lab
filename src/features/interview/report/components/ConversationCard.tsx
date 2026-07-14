@@ -1,5 +1,5 @@
-import { Card } from "@/components/ui/Card";
-import { Text } from "@/components/ui/Text";
+import Card from "@/components/ui/Card";
+import Text from "@/components/ui/Text";
 
 type EvidenceItem = {
   dimension: string;
