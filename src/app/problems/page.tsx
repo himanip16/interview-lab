@@ -6,6 +6,7 @@ import { Panel } from "@/components/ui/Panel";
 import { Search } from "@/components/ui/Search";
 import { Pill } from "@/components/ui/Pill";
 import { Badge } from "@/components/ui/Badge";
+import { useSearchParams } from "next/navigation"; 
 
 type Problem = {
   title: string;
@@ -32,10 +33,18 @@ const MOCK_PROBLEMS: Problem[] = [
 
 export default function ProblemsPage() {
   const [problems, setProblems] = useState<Problem[]>(MOCK_PROBLEMS);
-  const [state, setState] = useState({ type:'all', diff:'all', status:'all', sort:'popularity' });
   const [isSortMenuOpen, setIsSortMenuOpen] = useState(false);
+  const searchParams = useSearchParams();
+  const categoryFromUrl = searchParams.get("category"); 
 
   const DIFF_ORDER = { easy:0, medium:1, hard:2 };
+  const [state, setState] = useState({ 
+    type: "all", 
+    diff: "all", 
+    status: "all", 
+    sort: "popularity",
+    category: categoryFromUrl || "all"  // ADD THIS
+  });
 
   const filteredProblems = problems.filter(p =>
     (state.type==='all' || p.type===state.type) &&
@@ -56,6 +65,7 @@ export default function ProblemsPage() {
       default: return 'bg-[var(--violet)]';
     }
   };
+  
 
   const getTagClass = (type: string) => {
     switch(type) {
@@ -74,6 +84,7 @@ export default function ProblemsPage() {
       default: return 'text-[var(--mint-deep)] bg-[rgba(0,168,126,0.1)]';
     }
   };
+  
 
   return (
     <div className="min-h-screen bg-[var(--paper)] py-10 px-6">
