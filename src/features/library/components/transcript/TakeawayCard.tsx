@@ -1,6 +1,4 @@
 // src/features/library/components/transcript/TakeawayCard.tsx
-"use client";
-
 import { type ContentBlock } from "../../types/transcript";
 import { cleanTranscriptText } from "../../utils/textCleaner";
 

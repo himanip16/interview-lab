@@ -1,6 +1,4 @@
 // src/features/library/components/transcript/DialogueBubble.tsx
-"use client";
-
 import { type ContentBlock } from "../../types/transcript";
 import Highlight from "./Highlight";
 import TakeawayCard from "./TakeawayCard";
@@ -70,9 +68,13 @@ export default function DialogueBubble({
   }
 
   return (
-    <div className={`mb-8 ${isInterviewer ? "max-w-xl" : "max-w-2xl ml-auto"}`}>
-      <div className={`mb-2 flex items-baseline ${isInterviewer ? "justify-start" : "justify-end"}`}>
-        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+    <div className={`mb-10 ${isInterviewer ? "max-w-xl" : "max-w-2xl ml-auto"}`}>
+      <div className={`mb-3 flex items-baseline ${isInterviewer ? "justify-start" : "justify-end"}`}>
+        <span className={`text-xs uppercase tracking-wider ${
+          isInterviewer 
+            ? "font-normal text-gray-400" 
+            : "font-semibold text-gray-600"
+        }`}>
           {role === "interviewer" ? "Interviewer" : "Candidate"}
         </span>
         {elapsedSeconds !== undefined && (
@@ -88,7 +90,7 @@ export default function DialogueBubble({
             : "bg-white shadow-sm border border-gray-200"
         }`}
       >
-        <p className="text-gray-800">
+        <p className={`text-gray-800 ${isInterviewer ? "font-normal" : "font-medium"}`}>
           {renderContentBlocks(content)}
         </p>
       </div>
