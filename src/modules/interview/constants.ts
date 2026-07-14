@@ -59,6 +59,14 @@ export const PhaseId = {
   KnowledgeAssessment: "knowledge_assessment",
   ArchitectureExploration: "architecture_exploration",
   ImplementationDetails: "implementation_details",
+  ScalabilityReliability: "scalability_reliability",
+  StructureReview: "structure_review",
+  ContentReview: "content_review",
+  ImprovementSuggestions: "improvement_suggestions",
+  RequirementAnalysis: "requirement_analysis",
+  DependencyAnalysis: "dependency_analysis",
+  TaskDecomposition: "task_decomposition",
+  ExecutionPlanning: "execution_planning",
 } as const;
 
 export type PhaseId = (typeof PhaseId)[keyof typeof PhaseId];
@@ -91,7 +99,7 @@ export const Goal = {
   FinalTradeoffSummary: "final_tradeoff_summary",
   
   // LLD goals
-  UseCases: "use_cases",
+  LLD_UseCases: "use_cases",
   Actors: "actors",
   EdgeCases: "edge_cases",
   CoreEntities: "core_entities",
@@ -122,7 +130,7 @@ export const Goal = {
   CandidateUnderstandsPrContext: "candidate_understands_pr_context",
   PrPurpose: "pr_purpose",
   AffectedAreas: "affected_areas",
-  Dependencies: "dependencies",
+  PR_Dependencies: "dependencies",
   Correctness: "correctness",
   CodeQuality: "code_quality",
   DesignPatterns: "design_patterns",
@@ -136,9 +144,61 @@ export const Goal = {
   CandidateUnderstandsTopic: "candidate_understands_topic",
   CoreConcepts: "core_concepts",
   Internals: "internals",
+  DeepDive_UseCases: "use_cases",
   SystemComponents: "system_components",
+  DeepDive_DataFlow: "data_flow",
+  DesignDecisions: "design_decisions",
   ImplementationApproach: "implementation_approach",
   PerformanceConsiderations: "performance_considerations",
+  ScalingChallenges: "scaling_challenges",
+  DeepDive_FailureModes: "failure_modes",
+  OperationalConsiderations: "operational_considerations",
+  TopicSummary: "topic_summary",
+  KeyTakeaways: "key_takeaways",
+  
+  // Tech Doc Review goals
+  CandidateUnderstandsDocContext: "candidate_understands_doc_context",
+  DocPurpose: "doc_purpose",
+  TargetAudience: "target_audience",
+  DocScope: "scope",
+  Organization: "organization",
+  Flow: "flow",
+  Navigation: "navigation",
+  Clarity: "clarity",
+  Completeness: "completeness",
+  Accuracy: "accuracy",
+  ActionableFeedback: "actionable_feedback",
+  PriorityRanking: "priority_ranking",
+  KeyImprovements: "key_improvements",
+  
+  // Task Breakdown goals
+  CandidateUnderstandsTask: "candidate_understands_task",
+  Task_FunctionalRequirements: "functional_requirements",
+  Task_Constraints: "constraints",
+  SuccessCriteria: "success_criteria",
+  Dependencies: "dependencies",
+  BlockingTasks: "blocking_tasks",
+  ParallelOpportunities: "parallel_opportunities",
+  SubtaskDefinition: "subtask_definition",
+  Independence: "independence",
+  Estimation: "estimation",
+  Sequencing: "sequencing",
+  RiskMitigation: "risk_mitigation",
+  ResourceAllocation: "resource_allocation",
+  BreakdownSummary: "breakdown_summary",
+  CriticalPath: "critical_path",
 } as const;
 
 export type Goal = (typeof Goal)[keyof typeof Goal];
+
+// ---------------------------------------------------------------------------
+// Helper function for creating goal definitions
+// ---------------------------------------------------------------------------
+
+export function goal(
+  id: Goal,
+  required: boolean = true,
+  weight: number = 1.0
+): { id: Goal; required: boolean; weight: number } {
+  return { id, required, weight };
+}
