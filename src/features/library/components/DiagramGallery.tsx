@@ -4,6 +4,7 @@
 import Link from "next/link";
 import Heading from "@/components/ui/Heading";
 import Text from "@/components/ui/Text";
+import Card from "@/components/ui/Card";
 
 type Diagram = {
   href: string;
@@ -69,7 +70,7 @@ const COLOR_CLASSES: Record<string, string> = {
 
 export default function DiagramGallery() {
   return (
-    <div className="rounded-lg border border-border bg-card p-6">
+    <Card className="p-6">
       <Heading level="h4">System Design Blueprints</Heading>
       <Text variant="small" className="mt-2">
         Explore an interactive, clickable architecture diagram to see
@@ -98,6 +99,6 @@ export default function DiagramGallery() {
           </Link>
         ))}
       </div>
-    </div>
+    </Card>
   );
 }

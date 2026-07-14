@@ -195,6 +195,7 @@ PROJECT STRUCTURE
 │   │       ├── Bubble.tsx
 │   │       ├── Button.tsx
 │   │       ├── Card.tsx
+│   │       ├── Heading.tsx
 │   │       ├── IconButton.tsx
 │   │       ├── Input.tsx
 │   │       ├── Panel.tsx
@@ -202,15 +203,22 @@ PROJECT STRUCTURE
 │   │       ├── Search.tsx
 │   │       ├── Stepper.tsx
 │   │       ├── Tag.tsx
+│   │       ├── Text.tsx
 │   │       └── Timer.tsx
 │   ├── contexts
 │   │   └── ThemeContext.tsx
 │   ├── features
 │   │   ├── dashboard
 │   │   │   └── components
+│   │   │       ├── CurrentStandingCard.tsx
 │   │   │       ├── DashboardView.tsx
+│   │   │       ├── ExploreProblems.tsx
+│   │   │       ├── LiveFeedbackCard.tsx
 │   │   │       ├── NextRecommendedInterview.tsx
-│   │   │       └── SkillGraphView.tsx
+│   │   │       ├── RecommendationCard.tsx
+│   │   │       ├── SkillGraphView.tsx
+│   │   │       ├── Stars.tsx
+│   │   │       └── constants.ts
 │   │   ├── diagram
 │   │   │   └── components
 │   │   │       └── SystemDiagram.tsx
@@ -307,8 +315,15 @@ PROJECT STRUCTURE
 │   │   │       └── learning.ts
 │   │   ├── library
 │   │   │   ├── components
-│   │   │   │   └── LibraryView.tsx
-│   │   │   └── page.tsx
+│   │   │   │   ├── DiagramGallery.tsx
+│   │   │   │   ├── EmptyState.tsx
+│   │   │   │   ├── ExperienceList.tsx
+│   │   │   │   ├── LibraryTabs.tsx
+│   │   │   │   ├── LibraryView.tsx
+│   │   │   │   ├── TranscriptDetail.tsx
+│   │   │   │   └── TranscriptList.tsx
+│   │   │   ├── page.tsx
+│   │   │   └── types.ts
 │   │   └── shared
 │   ├── frontend
 │   │   ├── actionCorousel.html
@@ -343,6 +358,7 @@ PROJECT STRUCTURE
 │   │   ├── container.ts
 │   │   └── interview
 │   │       ├── application
+│   │       ├── constants.ts
 │   │       ├── dto
 │   │       ├── engine
 │   │       │   ├── InterviewEngine.ts
@@ -422,7 +438,7 @@ PROJECT STRUCTURE
 ├── tsconfig.json
 └── tsconfig.tsbuildinfo
 
-167 directories, 254 files
+167 directories, 270 files
 
 FILE CONTENTS
 
@@ -1124,8 +1140,52 @@ import {
   ProblemCategory,
   LearningActionType,
 } from "@prisma/client";
+import { EvaluationDimension, PhaseId, Goal } from "../src/modules/interview/constants";
+import { z } from "zod";
 
 const prisma = new PrismaClient();
+
+// ---------------------------------------------------------------------------
+// Zod schemas for JSON field validation
+// ---------------------------------------------------------------------------
+
+const GoalDefinitionSchema = z.object({
+  id: z.string(),
+  required: z.boolean(),
+  weight: z.number(),
+});
+
+const EvaluationDimensionArraySchema = z.array(z.string());
+const GoalDefinitionArraySchema = z.array(GoalDefinitionSchema);
+const JsonValueSchema = z.any(); // Generic JSON validation for other fields
+
+// ---------------------------------------------------------------------------
+// Safe validation helpers for JSON fields
+// ---------------------------------------------------------------------------
+
+function validateEvaluationDimensions(data: unknown): Prisma.InputJsonValue {
+  const result = EvaluationDimensionArraySchema.safeParse(data);
+  if (!result.success) {
+    throw new Error(`Invalid evaluationDimensions: ${result.error.message}`);
+  }
+  return result.data as Prisma.InputJsonValue;
+}
+
+function validateGoals(data: unknown): Prisma.InputJsonValue {
+  const result = GoalDefinitionArraySchema.safeParse(data);
+  if (!result.success) {
+    throw new Error(`Invalid goals: ${result.error.message}`);
+  }
+  return result.data as Prisma.InputJsonValue;
+}
+
+function validateJson(data: unknown): Prisma.InputJsonValue {
+  const result = JsonValueSchema.safeParse(data);
+  if (!result.success) {
+    throw new Error(`Invalid JSON: ${result.error.message}`);
+  }
+  return result.data as Prisma.InputJsonValue;
+}
 
 // ---------------------------------------------------------------------------
 // Problems - Expanded to 50+ focused problems by interview type
@@ -1770,8 +1830,8 @@ Return reasoning.
 `.trim();
 }
 
-const RUBRICS: Record<string, string> = {
-  communication: rubric(
+const RUBRICS: Record<EvaluationDimension, string> = {
+  [EvaluationDimension.Communication]: rubric(
     [
       "Explains reasoning out loud before committing to decisions",
       "Structures the conversation (states assumptions, checks in, summarizes)",
@@ -1780,7 +1840,7 @@ const RUBRICS: Record<string, string> = {
     ],
     "is silent for long stretches or jumps to conclusions without narrating why"
   ),
-  requirement_clarity: rubric(
+  [EvaluationDimension.RequirementClarity]: rubric(
     [
       "Distinguishes functional vs non-functional requirements",
       "Asks about scale, latency, and consistency expectations",
@@ -1788,14 +1848,14 @@ const RUBRICS: Record<string, string> = {
     ],
     "starts designing before requirements are clarified"
   ),
-  scope_management: rubric(
+  [EvaluationDimension.ScopeManagement]: rubric(
     [
       "Keeps requirement gathering time-boxed and focused",
       "Avoids over-scoping into unrelated features",
     ],
     "spends excessive time on requirements or scope-creeps the problem"
   ),
-  architecture: rubric(
+  [EvaluationDimension.Architecture]: rubric(
     [
       "Identifies the right core components and service boundaries",
       "Justifies storage/database choices",
@@ -1803,28 +1863,28 @@ const RUBRICS: Record<string, string> = {
     ],
     "proposes an architecture without justifying key decisions"
   ),
-  technical_reasoning: rubric(
+  [EvaluationDimension.TechnicalReasoning]: rubric(
     [
       "Backs design choices with concrete reasoning, not buzzwords",
       "Considers more than one option before choosing",
     ],
     "name-drops technologies without explaining why they fit"
   ),
-  technical_depth: rubric(
+  [EvaluationDimension.TechnicalDepth]: rubric(
     [
       "Goes beyond the surface level when probed on a component",
       "Handles follow-up questions about internals confidently",
     ],
     "gives shallow answers when pushed for detail"
   ),
-  tradeoffs: rubric(
+  [EvaluationDimension.Tradeoffs]: rubric(
     [
       "Explicitly names tradeoffs (e.g. consistency vs availability, latency vs cost)",
       "Justifies a choice given the stated requirements",
     ],
     "presents a design as if it has no downsides"
   ),
-  scalability: rubric(
+  [EvaluationDimension.Scalability]: rubric(
     [
       "Horizontal Scaling",
       "Load Balancer",
@@ -1837,7 +1897,7 @@ const RUBRICS: Record<string, string> = {
     ],
     "ignores scaling completely"
   ),
-  reliability: rubric(
+  [EvaluationDimension.Reliability]: rubric(
     [
       "Identifies single points of failure",
       "Discusses retries, timeouts, and graceful degradation",
@@ -1845,21 +1905,21 @@ const RUBRICS: Record<string, string> = {
     ],
     "assumes components never fail"
   ),
-  object_modeling: rubric(
+  [EvaluationDimension.ObjectModeling]: rubric(
     [
       "Identifies the right core entities and their responsibilities",
       "Models relationships (composition vs association vs inheritance) correctly",
     ],
     "produces a single god object or unclear ownership"
   ),
-  abstraction: rubric(
+  [EvaluationDimension.Abstraction]: rubric(
     [
       "Hides implementation details behind clean interfaces",
       "Avoids leaking internal state",
     ],
     "exposes internal implementation details unnecessarily"
   ),
-  class_design: rubric(
+  [EvaluationDimension.ClassDesign]: rubric(
     [
       "Defines clear method boundaries",
       "Applies encapsulation appropriately",
@@ -1867,46 +1927,46 @@ const RUBRICS: Record<string, string> = {
     ],
     "produces classes with unclear or overlapping responsibilities"
   ),
-  code_quality: rubric(
+  [EvaluationDimension.CodeQuality]: rubric(
     ["Names things clearly", "Keeps methods small and focused"],
     "writes code that is hard to follow or overly clever"
   ),
-  design_patterns: rubric(
+  [EvaluationDimension.DesignPatterns]: rubric(
     [
       "Applies a design pattern where it genuinely fits",
       "Explains why the pattern was chosen",
     ],
     "forces a pattern where it doesn't fit, or can't explain the choice"
   ),
-  maintainability: rubric(
+  [EvaluationDimension.Maintainability]: rubric(
     [
       "Design accommodates realistic future requirement changes",
       "Includes consideration for testability",
     ],
     "produces a design that would require a rewrite for small changes"
   ),
-  problem_solving: rubric(
+  [EvaluationDimension.ProblemSolving]: rubric(
     [
       "Breaks the problem into a clear approach before coding",
       "Considers brute force then optimizes",
     ],
     "jumps straight to code without a stated approach"
   ),
-  code_correctness: rubric(
+  [EvaluationDimension.CodeCorrectness]: rubric(
     [
       "Produces working code for the stated approach",
       "Handles edge cases (empty input, single element, duplicates)",
     ],
     "leaves obvious bugs or off-by-one errors unaddressed"
   ),
-  complexity_analysis: rubric(
+  [EvaluationDimension.ComplexityAnalysis]: rubric(
     [
       "States time and space complexity accurately",
       "Recognizes when a better complexity is possible",
     ],
     "cannot state or justify the complexity of their own solution"
   ),
-  edge_case_handling: rubric(
+  [EvaluationDimension.EdgeCaseHandling]: rubric(
     [
       "Proactively identifies edge cases before being prompted",
       "Adjusts the solution to handle them",
@@ -1914,46 +1974,46 @@ const RUBRICS: Record<string, string> = {
     "only handles edge cases after being explicitly told to"
   ),
   // Reverse-mode rubrics — evaluating the interviewer's technique
-  rapport_building: rubric(
+  [EvaluationDimension.RapportBuilding]: rubric(
     [
       "Opens with a clear, welcoming introduction",
       "Sets expectations for the session",
     ],
     "jumps into technical questions with no framing"
   ),
-  requirement_elicitation: rubric(
+  [EvaluationDimension.RequirementElicitation]: rubric(
     [
       "Asks open-ended questions to surface functional/non-functional requirements",
       "Doesn't spoon-feed the answer",
     ],
     "tells the candidate the requirements instead of drawing them out"
   ),
-  probing_depth: rubric(
+  [EvaluationDimension.ProbingDepth]: rubric(
     [
       "Follows up on vague or surface-level answers",
       "Pushes for specifics (numbers, tradeoffs, edge cases)",
     ],
     "accepts shallow answers without pushing further"
   ),
-  technical_listening: rubric(
+  [EvaluationDimension.TechnicalListening]: rubric(
     [
       "Picks up on what the candidate actually said and builds the next question from it",
     ],
     "asks a pre-scripted next question ignoring the candidate's last answer"
   ),
-  challenging_appropriately: rubric(
+  [EvaluationDimension.ChallengingAppropriately]: rubric(
     [
       "Introduces realistic pressure (scale, failure, edge cases) at the right moments",
     ],
     "never challenges the candidate's design, or challenges too aggressively to be useful"
   ),
-  time_management: rubric(
+  [EvaluationDimension.TimeManagement]: rubric(
     [
       "Keeps the session moving, doesn't get stuck on one topic too long",
     ],
     "lets one phase consume the entire interview"
   ),
-  summarizing_and_wrap_up: rubric(
+  [EvaluationDimension.SummarizingAndWrapUp]: rubric(
     [
       "Closes with a clear summary and gives the candidate a chance to ask questions",
     ],
@@ -1996,97 +2056,97 @@ const templates: TemplateSeed[] = [
     whiteboardPreset: "hld",
     phases: [
       {
-        phaseKey: "introduction",
+        phaseKey: PhaseId.Introduction,
         order: 0,
-        goals: ["candidate_understands_problem"],
-        evaluationDimensions: ["communication"],
+        goals: [Goal.CandidateUnderstandsProblem],
+        evaluationDimensions: [EvaluationDimension.Communication],
         targetDurationRatio: 0.05,
         transitionThreshold: 0.7,
         instructions:
           "Introduce the problem briefly. Do not reveal requirements. Ask the candidate to begin by clarifying the problem. Move forward once the candidate demonstrates that they understand the problem and begins requirement discovery.",
-        reverseEvaluationDimensions: ["rapport_building"],
+        reverseEvaluationDimensions: [EvaluationDimension.RapportBuilding],
       },
       {
-        phaseKey: "requirements",
+        phaseKey: PhaseId.Requirements,
         order: 1,
         goals: [
-          "functional_requirements",
-          "non_functional_requirements",
-          "scale",
-          "constraints",
+          Goal.FunctionalRequirements,
+          Goal.NonFunctionalRequirements,
+          Goal.Scale,
+          Goal.Constraints,
         ],
         evaluationDimensions: [
-          "requirement_clarity",
-          "scope_management",
-          "communication",
+          EvaluationDimension.RequirementClarity,
+          EvaluationDimension.ScopeManagement,
+          EvaluationDimension.Communication,
         ],
         targetDurationRatio: 0.15,
         transitionThreshold: 0.75,
         instructions:
           "Evaluate requirement gathering. Answer requirement questions when directly asked. Do not volunteer every requirement. Probe missing functional requirements, non-functional requirements, scale, and constraints. Do not discuss architecture yet.",
-        reverseEvaluationDimensions: ["requirement_elicitation", "technical_listening"],
+        reverseEvaluationDimensions: [EvaluationDimension.RequirementElicitation, EvaluationDimension.TechnicalListening],
       },
       {
-        phaseKey: "high_level_design",
+        phaseKey: PhaseId.HighLevelDesign,
         order: 2,
         goals: [
-          "core_components",
-          "service_boundaries",
-          "data_flow",
-          "storage_choice",
+          Goal.CoreComponents,
+          Goal.ServiceBoundaries,
+          Goal.DataFlow,
+          Goal.StorageChoice,
         ],
-        evaluationDimensions: ["architecture", "technical_reasoning"],
+        evaluationDimensions: [EvaluationDimension.Architecture, EvaluationDimension.TechnicalReasoning],
         targetDurationRatio: 0.25,
         transitionThreshold: 0.75,
         instructions:
           "Ask the candidate to propose a high-level architecture. Evaluate major components, service boundaries, data flow, and storage decisions. Challenge unclear architectural choices. Do not design the system for the candidate.",
         showWhiteboard: true,
-        reverseEvaluationDimensions: ["technical_listening", "time_management"],
+        reverseEvaluationDimensions: [EvaluationDimension.TechnicalListening, EvaluationDimension.TimeManagement],
       },
       {
-        phaseKey: "deep_dive",
+        phaseKey: PhaseId.DeepDive,
         order: 3,
         goals: [
-          "critical_component",
-          "data_model",
-          "consistency",
-          "technical_tradeoffs",
+          Goal.CriticalComponent,
+          Goal.DataModel,
+          Goal.Consistency,
+          Goal.TechnicalTradeoffs,
         ],
-        evaluationDimensions: ["technical_depth", "tradeoffs"],
+        evaluationDimensions: [EvaluationDimension.TechnicalDepth, EvaluationDimension.Tradeoffs],
         targetDurationRatio: 0.3,
         transitionThreshold: 0.7,
         instructions:
           "Choose important areas from the candidate's design for deeper discussion. Probe implementation details, data modeling, consistency, and tradeoffs. Prefer areas where the candidate's reasoning is incomplete or weak.",
         showWhiteboard: true,
-        reverseEvaluationDimensions: ["probing_depth", "challenging_appropriately"],
+        reverseEvaluationDimensions: [EvaluationDimension.ProbingDepth, EvaluationDimension.ChallengingAppropriately],
       },
       {
-        phaseKey: "scalability",
+        phaseKey: PhaseId.Scalability,
         order: 4,
         goals: [
-          "bottlenecks",
-          "failure_modes",
-          "scaling_strategy",
-          "reliability",
+          Goal.Bottlenecks,
+          Goal.FailureModes,
+          Goal.ScalingStrategy,
+          Goal.Reliability,
         ],
-        evaluationDimensions: ["scalability", "reliability"],
+        evaluationDimensions: [EvaluationDimension.Scalability, EvaluationDimension.Reliability],
         targetDurationRatio: 0.2,
         transitionThreshold: 0.7,
         instructions:
           "Probe scalability and reliability. Ask about bottlenecks, failure scenarios, capacity pressure, and scaling strategies. Challenge assumptions using realistic production scenarios.",
         showWhiteboard: true,
-        reverseEvaluationDimensions: ["challenging_appropriately", "probing_depth"],
+        reverseEvaluationDimensions: [EvaluationDimension.ChallengingAppropriately, EvaluationDimension.ProbingDepth],
       },
       {
-        phaseKey: "closing",
+        phaseKey: PhaseId.Closing,
         order: 5,
-        goals: ["final_tradeoff_summary"],
-        evaluationDimensions: ["communication", "tradeoffs"],
+        goals: [Goal.FinalTradeoffSummary],
+        evaluationDimensions: [EvaluationDimension.Communication, EvaluationDimension.Tradeoffs],
         targetDurationRatio: 0.05,
         transitionThreshold: 1,
         instructions:
           "Conclude the interview naturally. Ask the candidate to summarize their design and the most important tradeoffs. Do not begin another technical phase.",
-        reverseEvaluationDimensions: ["summarizing_and_wrap_up"],
+        reverseEvaluationDimensions: [EvaluationDimension.SummarizingAndWrapUp],
       },
     ],
   },
@@ -2097,87 +2157,87 @@ const templates: TemplateSeed[] = [
     whiteboardPreset: "lld",
     phases: [
       {
-        phaseKey: "introduction",
+        phaseKey: PhaseId.Introduction,
         order: 0,
-        goals: ["candidate_understands_problem"],
-        evaluationDimensions: ["communication"],
+        goals: [Goal.CandidateUnderstandsProblem],
+        evaluationDimensions: [EvaluationDimension.Communication],
         targetDurationRatio: 0.05,
         transitionThreshold: 0.7,
         instructions:
           "Introduce the object-oriented design problem. Ask the candidate to clarify the expected behaviour and scope.",
-        reverseEvaluationDimensions: ["rapport_building"],
+        reverseEvaluationDimensions: [EvaluationDimension.RapportBuilding],
       },
       {
-        phaseKey: "requirements",
+        phaseKey: PhaseId.Requirements,
         order: 1,
-        goals: ["use_cases", "actors", "constraints", "edge_cases"],
-        evaluationDimensions: ["requirement_clarity", "scope_management"],
+        goals: [Goal.LLD_UseCases, Goal.Actors, Goal.Constraints, Goal.EdgeCases],
+        evaluationDimensions: [EvaluationDimension.RequirementClarity, EvaluationDimension.ScopeManagement],
         targetDurationRatio: 0.15,
         transitionThreshold: 0.75,
         instructions:
           "Evaluate whether the candidate identifies important use cases, actors, constraints, and edge cases. Answer clarification questions. Do not propose classes or interfaces.",
-        reverseEvaluationDimensions: ["requirement_elicitation", "technical_listening"],
+        reverseEvaluationDimensions: [EvaluationDimension.RequirementElicitation, EvaluationDimension.TechnicalListening],
       },
       {
-        phaseKey: "domain_modeling",
+        phaseKey: PhaseId.DomainModeling,
         order: 2,
-        goals: ["core_entities", "responsibilities", "relationships"],
-        evaluationDimensions: ["object_modeling", "abstraction"],
+        goals: [Goal.CoreEntities, Goal.Responsibilities, Goal.Relationships],
+        evaluationDimensions: [EvaluationDimension.ObjectModeling, EvaluationDimension.Abstraction],
         targetDurationRatio: 0.2,
         transitionThreshold: 0.75,
         instructions:
           "Ask the candidate to identify the core entities. Evaluate responsibilities and relationships. Challenge god objects, unclear ownership, and weak abstractions.",
         showWhiteboard: true,
-        reverseEvaluationDimensions: ["technical_listening", "time_management"],
+        reverseEvaluationDimensions: [EvaluationDimension.TechnicalListening, EvaluationDimension.TimeManagement],
       },
       {
-        phaseKey: "class_design",
+        phaseKey: PhaseId.ClassDesign,
         order: 3,
         goals: [
-          "classes",
-          "interfaces",
-          "method_boundaries",
-          "encapsulation",
+          Goal.Classes,
+          Goal.Interfaces,
+          Goal.MethodBoundaries,
+          Goal.Encapsulation,
         ],
-        evaluationDimensions: ["class_design", "code_quality"],
+        evaluationDimensions: [EvaluationDimension.ClassDesign, EvaluationDimension.CodeQuality],
         targetDurationRatio: 0.3,
         transitionThreshold: 0.75,
         instructions:
           "Probe concrete class and interface design. Evaluate method boundaries, encapsulation, and separation of concerns. Ask focused questions about design decisions.",
         showWhiteboard: true,
-        reverseEvaluationDimensions: ["probing_depth", "challenging_appropriately"],
+        reverseEvaluationDimensions: [EvaluationDimension.ProbingDepth, EvaluationDimension.ChallengingAppropriately],
       },
       {
-        phaseKey: "extensibility",
+        phaseKey: PhaseId.Extensibility,
         order: 4,
         goals: [
-          "change_scenarios",
-          "design_tradeoffs",
-          "extensibility",
-          "testability",
+          Goal.ChangeScenarios,
+          Goal.DesignTradeoffs,
+          Goal.Extensibility,
+          Goal.Testability,
         ],
         evaluationDimensions: [
-          "design_patterns",
-          "tradeoffs",
-          "maintainability",
+          EvaluationDimension.DesignPatterns,
+          EvaluationDimension.Tradeoffs,
+          EvaluationDimension.Maintainability,
         ],
         targetDurationRatio: 0.25,
         transitionThreshold: 0.7,
         instructions:
           "Introduce realistic requirement changes. Evaluate whether the design is extensible and testable. Probe design patterns only when relevant. Do not force pattern usage.",
         showWhiteboard: true,
-        reverseEvaluationDimensions: ["challenging_appropriately", "probing_depth"],
+        reverseEvaluationDimensions: [EvaluationDimension.ChallengingAppropriately, EvaluationDimension.ProbingDepth],
       },
       {
-        phaseKey: "closing",
+        phaseKey: PhaseId.Closing,
         order: 5,
-        goals: ["final_design_summary"],
-        evaluationDimensions: ["communication"],
+        goals: [Goal.FinalDesignSummary],
+        evaluationDimensions: [EvaluationDimension.Communication],
         targetDurationRatio: 0.05,
         transitionThreshold: 1,
         instructions:
           "Ask the candidate to summarize their final design and major tradeoffs. Conclude the interview naturally.",
-        reverseEvaluationDimensions: ["summarizing_and_wrap_up"],
+        reverseEvaluationDimensions: [EvaluationDimension.SummarizingAndWrapUp],
       },
     ],
   },
@@ -2189,50 +2249,50 @@ const templates: TemplateSeed[] = [
     description: "Coding interview focused on problem solving and complexity analysis.",
     phases: [
       {
-        phaseKey: "clarification",
+        phaseKey: PhaseId.Clarification,
         order: 0,
-        goals: ["input_constraints", "edge_cases_identified"],
-        evaluationDimensions: ["communication", "edge_case_handling"],
+        goals: [Goal.InputConstraints, Goal.EdgeCasesIdentified],
+        evaluationDimensions: [EvaluationDimension.Communication, EvaluationDimension.EdgeCaseHandling],
         targetDurationRatio: 0.15,
         transitionThreshold: 0.7,
         instructions:
           "Present the problem statement. Ask the candidate to restate the problem and clarify input size, constraints, and edge cases before coding.",
       },
       {
-        phaseKey: "approach",
+        phaseKey: PhaseId.Approach,
         order: 1,
-        goals: ["brute_force_stated", "optimization_direction"],
-        evaluationDimensions: ["problem_solving", "complexity_analysis"],
+        goals: [Goal.BruteForceStated, Goal.OptimizationDirection],
+        evaluationDimensions: [EvaluationDimension.ProblemSolving, EvaluationDimension.ComplexityAnalysis],
         targetDurationRatio: 0.2,
         transitionThreshold: 0.7,
         instructions:
           "Ask the candidate to describe their approach and its complexity before writing code. Push for a brute-force baseline if skipped, then an optimization direction.",
       },
       {
-        phaseKey: "implementation",
+        phaseKey: PhaseId.Implementation,
         order: 2,
-        goals: ["working_code", "clean_structure"],
-        evaluationDimensions: ["code_correctness", "communication"],
+        goals: [Goal.WorkingCode, Goal.CleanStructure],
+        evaluationDimensions: [EvaluationDimension.CodeCorrectness, EvaluationDimension.Communication],
         targetDurationRatio: 0.45,
         transitionThreshold: 0.75,
         instructions:
           "Let the candidate implement their approach. Ask clarifying questions about their code as they write it. Do not write code for them.",
       },
       {
-        phaseKey: "testing",
+        phaseKey: PhaseId.Testing,
         order: 3,
-        goals: ["dry_run", "edge_case_verification"],
-        evaluationDimensions: ["edge_case_handling", "code_correctness"],
+        goals: [Goal.DryRun, Goal.EdgeCaseVerification],
+        evaluationDimensions: [EvaluationDimension.EdgeCaseHandling, EvaluationDimension.CodeCorrectness],
         targetDurationRatio: 0.15,
         transitionThreshold: 0.7,
         instructions:
           "Ask the candidate to dry-run their solution against a normal case and at least one edge case.",
       },
       {
-        phaseKey: "closing",
+        phaseKey: PhaseId.Closing,
         order: 4,
-        goals: ["final_complexity_summary"],
-        evaluationDimensions: ["complexity_analysis"],
+        goals: [Goal.FinalComplexitySummary],
+        evaluationDimensions: [EvaluationDimension.ComplexityAnalysis],
         targetDurationRatio: 0.05,
         transitionThreshold: 1,
         instructions:
@@ -2246,72 +2306,72 @@ const templates: TemplateSeed[] = [
     description: "Review a pull request with focus on code quality, design patterns, and maintainability.",
     phases: [
       {
-        phaseKey: "introduction",
+        phaseKey: PhaseId.Introduction,
         order: 0,
-        goals: ["candidate_understands_pr_context"],
-        evaluationDimensions: ["communication"],
+        goals: [Goal.CandidateUnderstandsPrContext],
+        evaluationDimensions: [EvaluationDimension.Communication],
         targetDurationRatio: 0.05,
         transitionThreshold: 0.7,
         instructions:
           "Introduce the PR context briefly. Ask the candidate to begin by understanding the purpose and scope of the changes.",
-        reverseEvaluationDimensions: ["rapport_building"],
+        reverseEvaluationDimensions: [EvaluationDimension.RapportBuilding],
       },
       {
-        phaseKey: "context_understanding",
+        phaseKey: PhaseId.ContextUnderstanding,
         order: 1,
-        goals: ["pr_purpose", "affected_areas", "dependencies"],
-        evaluationDimensions: ["requirement_clarity", "communication"],
+        goals: [Goal.PrPurpose, Goal.AffectedAreas, Goal.PR_Dependencies],
+        evaluationDimensions: [EvaluationDimension.RequirementClarity, EvaluationDimension.Communication],
         targetDurationRatio: 0.15,
         transitionThreshold: 0.75,
         instructions:
           "Evaluate whether the candidate understands the PR's purpose, affected areas, and dependencies. Answer clarification questions about the codebase context.",
-        reverseEvaluationDimensions: ["requirement_elicitation", "technical_listening"],
+        reverseEvaluationDimensions: [EvaluationDimension.RequirementElicitation, EvaluationDimension.TechnicalListening],
       },
       {
-        phaseKey: "code_review",
+        phaseKey: PhaseId.CodeReview,
         order: 2,
-        goals: ["correctness", "code_quality", "design_patterns"],
-        evaluationDimensions: ["code_correctness", "code_quality", "design_patterns"],
+        goals: [Goal.Correctness, Goal.CodeQuality, Goal.DesignPatterns],
+        evaluationDimensions: [EvaluationDimension.CodeCorrectness, EvaluationDimension.CodeQuality, EvaluationDimension.DesignPatterns],
         targetDurationRatio: 0.35,
         transitionThreshold: 0.75,
         instructions:
           "Ask the candidate to review the code changes. Evaluate their ability to identify bugs, code quality issues, and design pattern usage. Challenge missed issues.",
         showWhiteboard: true,
-        reverseEvaluationDimensions: ["probing_depth", "technical_listening"],
+        reverseEvaluationDimensions: [EvaluationDimension.ProbingDepth, EvaluationDimension.TechnicalListening],
       },
       {
-        phaseKey: "design_review",
+        phaseKey: PhaseId.DesignReview,
         order: 3,
-        goals: ["architecture_impact", "extensibility", "maintainability"],
-        evaluationDimensions: ["architecture", "maintainability", "tradeoffs"],
+        goals: [Goal.ArchitectureImpact, Goal.Extensibility, Goal.Maintainability],
+        evaluationDimensions: [EvaluationDimension.Architecture, EvaluationDimension.Maintainability, EvaluationDimension.Tradeoffs],
         targetDurationRatio: 0.25,
         transitionThreshold: 0.7,
         instructions:
           "Probe the architectural impact of the changes. Evaluate whether the candidate considers extensibility, maintainability, and design tradeoffs.",
         showWhiteboard: true,
-        reverseEvaluationDimensions: ["probing_depth", "challenging_appropriately"],
+        reverseEvaluationDimensions: [EvaluationDimension.ProbingDepth, EvaluationDimension.ChallengingAppropriately],
       },
       {
-        phaseKey: "feedback_delivery",
+        phaseKey: PhaseId.FeedbackDelivery,
         order: 4,
-        goals: ["constructive_feedback", "actionable_suggestions"],
-        evaluationDimensions: ["communication", "tradeoffs"],
+        goals: [Goal.ConstructiveFeedback, Goal.ActionableSuggestions],
+        evaluationDimensions: [EvaluationDimension.Communication, EvaluationDimension.Tradeoffs],
         targetDurationRatio: 0.15,
         transitionThreshold: 0.7,
         instructions:
           "Ask the candidate to provide feedback as if they were reviewing this PR. Evaluate the constructiveness and actionability of their feedback.",
-        reverseEvaluationDimensions: ["technical_listening", "time_management"],
+        reverseEvaluationDimensions: [EvaluationDimension.TechnicalListening, EvaluationDimension.TimeManagement],
       },
       {
-        phaseKey: "closing",
+        phaseKey: PhaseId.Closing,
         order: 5,
-        goals: ["review_summary"],
-        evaluationDimensions: ["communication"],
+        goals: [Goal.ReviewSummary],
+        evaluationDimensions: [EvaluationDimension.Communication],
         targetDurationRatio: 0.05,
         transitionThreshold: 1,
         instructions:
           "Ask the candidate to summarize their review and the most important issues found. Conclude the interview naturally.",
-        reverseEvaluationDimensions: ["summarizing_and_wrap_up"],
+        reverseEvaluationDimensions: [EvaluationDimension.SummarizingAndWrapUp],
       },
     ],
   },
@@ -2321,72 +2381,72 @@ const templates: TemplateSeed[] = [
     description: "Deep technical exploration of a specific system or technology.",
     phases: [
       {
-        phaseKey: "introduction",
+        phaseKey: PhaseId.Introduction,
         order: 0,
-        goals: ["candidate_understands_topic"],
-        evaluationDimensions: ["communication"],
+        goals: [Goal.CandidateUnderstandsTopic],
+        evaluationDimensions: [EvaluationDimension.Communication],
         targetDurationRatio: 0.05,
         transitionThreshold: 0.7,
         instructions:
           "Introduce the deep dive topic. Ask the candidate to begin by explaining their understanding of the system or technology.",
-        reverseEvaluationDimensions: ["rapport_building"],
+        reverseEvaluationDimensions: [EvaluationDimension.RapportBuilding],
       },
       {
-        phaseKey: "knowledge_assessment",
+        phaseKey: PhaseId.KnowledgeAssessment,
         order: 1,
-        goals: ["core_concepts", "internals", "use_cases"],
-        evaluationDimensions: ["technical_depth", "technical_reasoning"],
+        goals: [Goal.CoreConcepts, Goal.Internals, Goal.DeepDive_UseCases],
+        evaluationDimensions: [EvaluationDimension.TechnicalDepth, EvaluationDimension.TechnicalReasoning],
         targetDurationRatio: 0.2,
         transitionThreshold: 0.75,
         instructions:
           "Assess the candidate's depth of knowledge. Probe core concepts, internal workings, and practical use cases. Challenge superficial answers.",
-        reverseEvaluationDimensions: ["probing_depth", "technical_listening"],
+        reverseEvaluationDimensions: [EvaluationDimension.ProbingDepth, EvaluationDimension.TechnicalListening],
       },
       {
-        phaseKey: "architecture_exploration",
+        phaseKey: PhaseId.ArchitectureExploration,
         order: 2,
-        goals: ["system_components", "data_flow", "design_decisions"],
-        evaluationDimensions: ["architecture", "technical_reasoning"],
+        goals: [Goal.SystemComponents, Goal.DataFlow, Goal.DesignDecisions],
+        evaluationDimensions: [EvaluationDimension.Architecture, EvaluationDimension.TechnicalReasoning],
         targetDurationRatio: 0.25,
         transitionThreshold: 0.75,
         instructions:
           "Explore the architecture and design decisions. Evaluate understanding of component interactions, data flow, and key design choices.",
         showWhiteboard: true,
-        reverseEvaluationDimensions: ["technical_listening", "challenging_appropriately"],
+        reverseEvaluationDimensions: [EvaluationDimension.TechnicalListening, EvaluationDimension.ChallengingAppropriately],
       },
       {
-        phaseKey: "implementation_details",
+        phaseKey: PhaseId.ImplementationDetails,
         order: 3,
-        goals: ["implementation_approach", "performance_considerations", "edge_cases"],
-        evaluationDimensions: ["technical_depth", "tradeoffs"],
+        goals: [Goal.ImplementationApproach, Goal.PerformanceConsiderations, Goal.EdgeCases],
+        evaluationDimensions: [EvaluationDimension.TechnicalDepth, EvaluationDimension.Tradeoffs],
         targetDurationRatio: 0.3,
         transitionThreshold: 0.7,
         instructions:
           "Dive into implementation details. Probe performance considerations, edge cases, and practical implementation challenges.",
         showWhiteboard: true,
-        reverseEvaluationDimensions: ["probing_depth", "challenging_appropriately"],
+        reverseEvaluationDimensions: [EvaluationDimension.ProbingDepth, EvaluationDimension.ChallengingAppropriately],
       },
       {
-        phaseKey: "scalability_reliability",
+        phaseKey: PhaseId.ScalabilityReliability,
         order: 4,
-        goals: ["scaling_challenges", "failure_modes", "operational_considerations"],
-        evaluationDimensions: ["scalability", "reliability"],
+        goals: [Goal.ScalingChallenges, Goal.DeepDive_FailureModes, Goal.OperationalConsiderations],
+        evaluationDimensions: [EvaluationDimension.Scalability, EvaluationDimension.Reliability],
         targetDurationRatio: 0.15,
         transitionThreshold: 0.7,
         instructions:
           "Discuss scalability and reliability aspects. Ask about scaling challenges, failure modes, and operational considerations.",
-        reverseEvaluationDimensions: ["challenging_appropriately", "probing_depth"],
+        reverseEvaluationDimensions: [EvaluationDimension.ChallengingAppropriately, EvaluationDimension.ProbingDepth],
       },
       {
-        phaseKey: "closing",
+        phaseKey: PhaseId.Closing,
         order: 5,
-        goals: ["topic_summary", "key_takeaways"],
-        evaluationDimensions: ["communication"],
+        goals: [Goal.TopicSummary, Goal.KeyTakeaways],
+        evaluationDimensions: [EvaluationDimension.Communication],
         targetDurationRatio: 0.05,
         transitionThreshold: 1,
         instructions:
           "Ask the candidate to summarize the key takeaways from the deep dive. Conclude the interview naturally.",
-        reverseEvaluationDimensions: ["summarizing_and_wrap_up"],
+        reverseEvaluationDimensions: [EvaluationDimension.SummarizingAndWrapUp],
       },
     ],
   },
@@ -2396,72 +2456,72 @@ const templates: TemplateSeed[] = [
     description: "Review technical documentation with focus on clarity, completeness, and accuracy.",
     phases: [
       {
-        phaseKey: "introduction",
+        phaseKey: PhaseId.Introduction,
         order: 0,
-        goals: ["candidate_understands_doc_context"],
-        evaluationDimensions: ["communication"],
+        goals: [Goal.CandidateUnderstandsDocContext],
+        evaluationDimensions: [EvaluationDimension.Communication],
         targetDurationRatio: 0.05,
         transitionThreshold: 0.7,
         instructions:
           "Introduce the technical document briefly. Ask the candidate to begin by understanding the purpose and audience of the documentation.",
-        reverseEvaluationDimensions: ["rapport_building"],
+        reverseEvaluationDimensions: [EvaluationDimension.RapportBuilding],
       },
       {
-        phaseKey: "context_understanding",
+        phaseKey: PhaseId.ContextUnderstanding,
         order: 1,
-        goals: ["doc_purpose", "target_audience", "scope"],
-        evaluationDimensions: ["requirement_clarity", "communication"],
+        goals: [Goal.DocPurpose, Goal.TargetAudience, Goal.DocScope],
+        evaluationDimensions: [EvaluationDimension.RequirementClarity, EvaluationDimension.Communication],
         targetDurationRatio: 0.15,
         transitionThreshold: 0.75,
         instructions:
           "Evaluate whether the candidate understands the document's purpose, target audience, and scope. Answer clarification questions about the technical context.",
-        reverseEvaluationDimensions: ["requirement_elicitation", "technical_listening"],
+        reverseEvaluationDimensions: [EvaluationDimension.RequirementElicitation, EvaluationDimension.TechnicalListening],
       },
       {
-        phaseKey: "structure_review",
+        phaseKey: PhaseId.StructureReview,
         order: 2,
-        goals: ["organization", "flow", "navigation"],
-        evaluationDimensions: ["architecture", "technical_reasoning"],
+        goals: [Goal.Organization, Goal.Flow, Goal.Navigation],
+        evaluationDimensions: [EvaluationDimension.Architecture, EvaluationDimension.TechnicalReasoning],
         targetDurationRatio: 0.2,
         transitionThreshold: 0.75,
         instructions:
           "Ask the candidate to review the document structure. Evaluate organization, logical flow, and ease of navigation. Challenge structural issues.",
         showWhiteboard: true,
-        reverseEvaluationDimensions: ["technical_listening", "time_management"],
+        reverseEvaluationDimensions: [EvaluationDimension.TechnicalListening, EvaluationDimension.TimeManagement],
       },
       {
-        phaseKey: "content_review",
+        phaseKey: PhaseId.ContentReview,
         order: 3,
-        goals: ["clarity", "completeness", "accuracy"],
-        evaluationDimensions: ["technical_depth", "communication"],
+        goals: [Goal.Clarity, Goal.Completeness, Goal.Accuracy],
+        evaluationDimensions: [EvaluationDimension.TechnicalDepth, EvaluationDimension.Communication],
         targetDurationRatio: 0.35,
         transitionThreshold: 0.7,
         instructions:
           "Dive into content review. Evaluate clarity, completeness, and accuracy of technical information. Probe missing sections, unclear explanations, and potential errors.",
         showWhiteboard: true,
-        reverseEvaluationDimensions: ["probing_depth", "challenging_appropriately"],
+        reverseEvaluationDimensions: [EvaluationDimension.ProbingDepth, EvaluationDimension.ChallengingAppropriately],
       },
       {
-        phaseKey: "improvement_suggestions",
+        phaseKey: PhaseId.ImprovementSuggestions,
         order: 4,
-        goals: ["actionable_feedback", "priority_ranking"],
-        evaluationDimensions: ["tradeoffs", "communication"],
+        goals: [Goal.ActionableFeedback, Goal.PriorityRanking],
+        evaluationDimensions: [EvaluationDimension.Tradeoffs, EvaluationDimension.Communication],
         targetDurationRatio: 0.2,
         transitionThreshold: 0.7,
         instructions:
           "Ask the candidate to provide improvement suggestions with priorities. Evaluate the actionability and impact of their recommendations.",
-        reverseEvaluationDimensions: ["technical_listening", "time_management"],
+        reverseEvaluationDimensions: [EvaluationDimension.TechnicalListening, EvaluationDimension.TimeManagement],
       },
       {
-        phaseKey: "closing",
+        phaseKey: PhaseId.Closing,
         order: 5,
-        goals: ["review_summary", "key_improvements"],
-        evaluationDimensions: ["communication"],
+        goals: [Goal.ReviewSummary, Goal.KeyImprovements],
+        evaluationDimensions: [EvaluationDimension.Communication],
         targetDurationRatio: 0.05,
         transitionThreshold: 1,
         instructions:
           "Ask the candidate to summarize their review and the most important improvements. Conclude the interview naturally.",
-        reverseEvaluationDimensions: ["summarizing_and_wrap_up"],
+        reverseEvaluationDimensions: [EvaluationDimension.SummarizingAndWrapUp],
       },
     ],
   },
@@ -2471,72 +2531,72 @@ const templates: TemplateSeed[] = [
     description: "Break down a large task into small, independent, executable subtasks.",
     phases: [
       {
-        phaseKey: "introduction",
+        phaseKey: PhaseId.Introduction,
         order: 0,
-        goals: ["candidate_understands_task"],
-        evaluationDimensions: ["communication"],
+        goals: [Goal.CandidateUnderstandsTask],
+        evaluationDimensions: [EvaluationDimension.Communication],
         targetDurationRatio: 0.05,
         transitionThreshold: 0.7,
         instructions:
           "Introduce the large task briefly. Ask the candidate to begin by understanding the requirements and constraints.",
-        reverseEvaluationDimensions: ["rapport_building"],
+        reverseEvaluationDimensions: [EvaluationDimension.RapportBuilding],
       },
       {
-        phaseKey: "requirement_analysis",
+        phaseKey: PhaseId.RequirementAnalysis,
         order: 1,
-        goals: ["functional_requirements", "constraints", "success_criteria"],
-        evaluationDimensions: ["requirement_clarity", "scope_management"],
+        goals: [Goal.Task_FunctionalRequirements, Goal.Task_Constraints, Goal.SuccessCriteria],
+        evaluationDimensions: [EvaluationDimension.RequirementClarity, EvaluationDimension.ScopeManagement],
         targetDurationRatio: 0.15,
         transitionThreshold: 0.75,
         instructions:
           "Evaluate requirement gathering. Probe functional requirements, constraints, and success criteria. Ensure scope is well-defined.",
-        reverseEvaluationDimensions: ["requirement_elicitation", "technical_listening"],
+        reverseEvaluationDimensions: [EvaluationDimension.RequirementElicitation, EvaluationDimension.TechnicalListening],
       },
       {
-        phaseKey: "dependency_analysis",
+        phaseKey: PhaseId.DependencyAnalysis,
         order: 2,
-        goals: ["dependencies", "blocking_tasks", "parallel_opportunities"],
-        evaluationDimensions: ["architecture", "technical_reasoning"],
+        goals: [Goal.Dependencies, Goal.BlockingTasks, Goal.ParallelOpportunities],
+        evaluationDimensions: [EvaluationDimension.Architecture, EvaluationDimension.TechnicalReasoning],
         targetDurationRatio: 0.2,
         transitionThreshold: 0.75,
         instructions:
           "Ask the candidate to analyze dependencies. Evaluate identification of blocking tasks and opportunities for parallel execution.",
         showWhiteboard: true,
-        reverseEvaluationDimensions: ["technical_listening", "time_management"],
+        reverseEvaluationDimensions: [EvaluationDimension.TechnicalListening, EvaluationDimension.TimeManagement],
       },
       {
-        phaseKey: "task_decomposition",
+        phaseKey: PhaseId.TaskDecomposition,
         order: 3,
-        goals: ["subtask_definition", "independence", "estimation"],
-        evaluationDimensions: ["technical_depth", "problem_solving"],
+        goals: [Goal.SubtaskDefinition, Goal.Independence, Goal.Estimation],
+        evaluationDimensions: [EvaluationDimension.TechnicalDepth, EvaluationDimension.ProblemSolving],
         targetDurationRatio: 0.35,
         transitionThreshold: 0.7,
         instructions:
           "Dive into task decomposition. Evaluate whether subtasks are small, independent, and properly estimated. Challenge overly large or dependent tasks.",
         showWhiteboard: true,
-        reverseEvaluationDimensions: ["probing_depth", "challenging_appropriately"],
+        reverseEvaluationDimensions: [EvaluationDimension.ProbingDepth, EvaluationDimension.ChallengingAppropriately],
       },
       {
-        phaseKey: "execution_planning",
+        phaseKey: PhaseId.ExecutionPlanning,
         order: 4,
-        goals: ["sequencing", "risk_mitigation", "resource_allocation"],
-        evaluationDimensions: ["tradeoffs", "technical_reasoning"],
+        goals: [Goal.Sequencing, Goal.RiskMitigation, Goal.ResourceAllocation],
+        evaluationDimensions: [EvaluationDimension.Tradeoffs, EvaluationDimension.TechnicalReasoning],
         targetDurationRatio: 0.2,
         transitionThreshold: 0.7,
         instructions:
           "Discuss execution planning. Evaluate task sequencing, risk mitigation strategies, and resource allocation decisions.",
-        reverseEvaluationDimensions: ["challenging_appropriately", "probing_depth"],
+        reverseEvaluationDimensions: [EvaluationDimension.ChallengingAppropriately, EvaluationDimension.ProbingDepth],
       },
       {
-        phaseKey: "closing",
+        phaseKey: PhaseId.Closing,
         order: 5,
-        goals: ["breakdown_summary", "critical_path"],
-        evaluationDimensions: ["communication"],
+        goals: [Goal.BreakdownSummary, Goal.CriticalPath],
+        evaluationDimensions: [EvaluationDimension.Communication],
         targetDurationRatio: 0.05,
         transitionThreshold: 1,
         instructions:
           "Ask the candidate to summarize their breakdown and identify the critical path. Conclude the interview naturally.",
-        reverseEvaluationDimensions: ["summarizing_and_wrap_up"],
+        reverseEvaluationDimensions: [EvaluationDimension.SummarizingAndWrapUp],
       },
     ],
   },
@@ -2725,35 +2785,31 @@ async function seedTemplates() {
         },
         update: {
           order: phase.order,
-          goals: phase.goals as Prisma.InputJsonValue,
-          evaluationDimensions:
-            phase.evaluationDimensions as Prisma.InputJsonValue,
+          goals: validateGoals(phase.goals),
+          evaluationDimensions: validateEvaluationDimensions(phase.evaluationDimensions),
           targetDurationRatio: phase.targetDurationRatio,
           transitionThreshold: phase.transitionThreshold,
           instructions: phase.instructions,
           showWhiteboard: phase.showWhiteboard,
-          reverseEvaluationDimensions:
-            phase.reverseEvaluationDimensions as Prisma.InputJsonValue,
+          reverseEvaluationDimensions: validateEvaluationDimensions(phase.reverseEvaluationDimensions ?? []),
         },
         create: {
           templateId: saved.id,
           phaseKey: phase.phaseKey,
           order: phase.order,
-          goals: phase.goals as Prisma.InputJsonValue,
-          evaluationDimensions:
-            phase.evaluationDimensions as Prisma.InputJsonValue,
+          goals: validateGoals(phase.goals),
+          evaluationDimensions: validateEvaluationDimensions(phase.evaluationDimensions),
           targetDurationRatio: phase.targetDurationRatio,
           transitionThreshold: phase.transitionThreshold,
           instructions: phase.instructions,
           showWhiteboard: phase.showWhiteboard,
-          reverseEvaluationDimensions:
-            phase.reverseEvaluationDimensions as Prisma.InputJsonValue,
+          reverseEvaluationDimensions: validateEvaluationDimensions(phase.reverseEvaluationDimensions ?? []),
         },
       });
     }
 
     for (const dimension of dimensions) {
-      const content = RUBRICS[dimension];
+      const content = RUBRICS[dimension as EvaluationDimension];
 
       if (!content) {
         console.warn(
@@ -2963,13 +3019,13 @@ export async function seedLearningScenarios() {
     const segment = await prisma.learningSegment.upsert({
       where: { scenarioId_order: { scenarioId: scenario.id, order: segmentSeed.order } },
       update: {
-        conversation: segmentSeed.conversation as Prisma.InputJsonValue,
+        conversation: validateJson(segmentSeed.conversation),
         takeaway: segmentSeed.takeaway,
       },
       create: {
         scenarioId: scenario.id,
         order: segmentSeed.order,
-        conversation: segmentSeed.conversation as Prisma.InputJsonValue,
+        conversation: validateJson(segmentSeed.conversation),
         takeaway: segmentSeed.takeaway,
       },
     });
@@ -2999,7 +3055,7 @@ export async function seedLearningScenarios() {
         type: actionSeed.type,
         title: actionSeed.title,
         instructions: actionSeed.instructions,
-        content: actionSeed.content as Prisma.InputJsonValue,
+        content: validateJson(actionSeed.content),
       };
 
       if (existing) {
@@ -5507,39 +5563,31 @@ export default function TranscriptPage() {
 ================================================
 FILE: ./src/app/library/page.tsx
 ================================================
+// src/app/library/page.tsx
+
 import { InterviewStatus } from "@prisma/client";
 
 import { prisma } from "@/shared/prisma/client";
 import { getCurrentUserId } from "@/modules/auth/getCurrentUserId";
-import LibraryView, {
+import LibraryView from "@/features/library/components/LibraryView";
+import {
   type CompletedInterviewItem,
   type ExperienceItem,
-} from "@/features/library/components/LibraryView";
+  type DimensionScore,
+  type EvidenceEntry,
+  type EvaluationMetadata,
+} from "@/features/library/types";
 
-type DimensionScore = {
-  dimension: string;
-  score: number;
-  summary: string;
-};
+const EXPERIENCE_LIMIT = 30;
 
-type EvidenceEntry = {
-  dimension: string;
-  timestampSeconds: number;
-  quote: string;
-  comment: string;
-};
-
-type EvaluationMetadata = {
-  strengths?: string[];
-  weaknesses?: string[];
-};
+const dateFormatter = new Intl.DateTimeFormat("en-US", {
+  year: "numeric",
+  month: "short",
+  day: "numeric",
+});
 
 function formatDisplayDate(date: Date): string {
-  return new Intl.DateTimeFormat("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  }).format(date);
+  return dateFormatter.format(date);
 }
 
 export default async function LibraryPage() {
@@ -5549,30 +5597,66 @@ export default async function LibraryPage() {
     prisma.interviewExperience.findMany({
       include: {
         problem: {
-          select: { id: true, title: true, description: true, difficulty: true },
-        },
-        company: { select: { name: true } },
-      },
-      orderBy: { createdAt: "desc" },
-      take: 30,
-    }),
-    userId
-      ? prisma.interview.findMany({
-          where: { userId, status: InterviewStatus.COMPLETED },
-          include: {
-            problem: { select: { title: true } },
-            template: { select: { name: true } },
-            evaluation: true,
-            transcript: {
-              orderBy: { createdAt: "asc" },
-              select: { id: true, role: true, content: true, elapsedSeconds: true },
-            },
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            difficulty: true,
           },
-          // `completedAt` isn't currently set when an interview finishes, so
-          // order by `updatedAt` (which the finish flow does update) instead.
-          orderBy: { updatedAt: "desc" },
-        })
-      : Promise.resolve([]),
+        },
+        company: {
+          select: {
+            name: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: EXPERIENCE_LIMIT,
+    }),
+
+    prisma.interview.findMany({
+      where: {
+        userId,
+        status: InterviewStatus.COMPLETED,
+      },
+
+      include: {
+        problem: {
+          select: {
+            title: true,
+          },
+        },
+
+        template: {
+          select: {
+            name: true,
+          },
+        },
+
+        evaluation: true,
+
+        transcript: {
+          orderBy: {
+            createdAt: "asc",
+          },
+
+          select: {
+            id: true,
+            role: true,
+            content: true,
+            elapsedSeconds: true,
+          },
+        },
+      },
+
+      // completedAt is currently nullable.
+      // updatedAt is always refreshed when the interview finishes.
+      orderBy: {
+        updatedAt: "desc",
+      },
+    }),
   ]);
 
   const experiences: ExperienceItem[] = experiencesRaw.map((exp) => ({
@@ -5589,8 +5673,8 @@ export default async function LibraryPage() {
 
   const completedInterviews: CompletedInterviewItem[] = interviewsRaw.map(
     (interview) => {
-      const metadata = (interview.evaluation?.metadata ??
-        {}) as EvaluationMetadata;
+      const metadata =
+        (interview.evaluation?.metadata as EvaluationMetadata | null) ?? {};
 
       return {
         id: interview.id,
@@ -5598,22 +5682,28 @@ export default async function LibraryPage() {
         difficulty: interview.difficulty,
         duration: interview.duration,
         company: interview.company,
+
         displayDate: formatDisplayDate(
           interview.completedAt ?? interview.updatedAt
         ),
+
         problem: interview.problem,
         template: interview.template,
         transcript: interview.transcript,
+
         evaluation: interview.evaluation
           ? {
               overallScore: interview.evaluation.overallScore,
               feedback: interview.evaluation.feedback,
+
               dimensionScores:
                 (interview.evaluation.dimensionScores as unknown as DimensionScore[]) ??
                 [],
+
               evidence:
                 (interview.evaluation.evidence as unknown as EvidenceEntry[]) ??
                 [],
+
               metadata,
             }
           : null,
@@ -5751,6 +5841,7 @@ export default async function DashboardPage({ params }: Props) {
       exploreProblems={exploreProblems.map((problem) => ({
         id: problem.id,
         title: problem.title,
+        slug: problem.slug,
         difficulty: problem.difficulty,
         description: problem.description,
       }))}
@@ -8102,7 +8193,7 @@ FILE: ./src/features/landing/components/SmartMentor.tsx
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Card } from "@/components/ui/Card";
+import Card from "@/components/ui/Card";
 import Heading from "@/components/ui/Heading";
 import Text from "@/components/ui/Text";
 
@@ -8170,7 +8261,7 @@ export default function SmartMentor() {
         <Text variant="muted">What should I practice next?</Text>
       </div>
 
-      <Card rounded="xl" padding="8">
+      <Card className="rounded-xl p-8">
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <Text variant="muted">Loading recommendations...</Text>
@@ -8265,7 +8356,7 @@ FILE: ./src/features/landing/components/PersonalNotebooks.tsx
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Card } from "@/components/ui/Card";
+import Card from "@/components/ui/Card";
 import Heading from "@/components/ui/Heading";
 import Text from "@/components/ui/Text";
 
@@ -8277,6 +8368,7 @@ interface Problem {
   category: string;
   difficulty: string;
 }
+
 
 export default function PersonalNotebooks() {
   const [problems, setProblems] = useState<Problem[]>([]);
@@ -8507,7 +8599,7 @@ export default function SampleFeedback() {
 
             {!expanded && (
               <Button
-                variant="outline"
+                variant="secondary"
                 onClick={() => setExpanded(true)}
                 className="mt-4"
               >
@@ -8525,13 +8617,13 @@ export default function SampleFeedback() {
             <div className="grid gap-6 md:grid-cols-2">
               {/* Strengths */}
               <div>
-                <h5 className="mb-2 text-sm font-semibold text-green-400">
+                <h5 className="mb-2 text-sm font-semibold text-green-500">
                   Strengths
                 </h5>
                 <ul className="space-y-1 text-sm text-muted-foreground">
                   {sampleEvaluation.strengths.map((strength, idx) => (
                     <li key={idx} className="flex items-start gap-2">
-                      <span className="text-green-400">✓</span>
+                      <span className="text-green-500">✓</span>
                       {strength}
                     </li>
                   ))}
@@ -8540,13 +8632,13 @@ export default function SampleFeedback() {
 
               {/* Weaknesses */}
               <div>
-                <h5 className="mb-2 text-sm font-semibold text-red-400">
+                <h5 className="mb-2 text-sm font-semibold text-red-500">
                   Areas to Improve
                 </h5>
                 <ul className="space-y-1 text-sm text-muted-foreground">
                   {sampleEvaluation.weaknesses.map((weakness, idx) => (
                     <li key={idx} className="flex items-start gap-2">
-                      <span className="text-red-400">!</span>
+                      <span className="text-red-500">!</span>
                       {weakness}
                     </li>
                   ))}
@@ -8603,7 +8695,7 @@ export default function SampleFeedback() {
 FILE: ./src/features/landing/components/FeatureCard.tsx
 ================================================
 import type { FC } from "react";
-import { Card } from "@/components/ui/Card";
+import Card from "@/components/ui/Card";
 import Heading from "@/components/ui/Heading";
 import Text from "@/components/ui/Text";
 
@@ -10954,34 +11046,10 @@ export function useScenario(slug: string) {
 }
 
 ================================================
-FILE: ./src/features/library/components/LibraryView.tsx
+FILE: ./src/features/library/types.ts
 ================================================
-// src/features/library/components/LibraryView.tsx
-"use client";
-
-import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
-import Link from "next/link";
-import {
-  Difficulty,
-  ExperienceSource,
-  InterviewMode,
-} from "@prisma/client";
-
-import Heading from "@/components/ui/Heading";
-import Text from "@/components/ui/Text";
-import { Button } from "@/components/ui/Button";
-
-import OverallScoreCard from "@/features/interview/report/components/OverallScoreCard";
-import WhatHappenedCard from "@/features/interview/report/components/WhatHappenedCard";
-import EvidenceTimeline from "@/features/interview/report/components/EvidenceTimeline";
-import ProblemInventoryView from "@/features/interview/setup/components/ProblemInventoryView";
-
-// ---------------------------------------------------------------------------
-// Types — plain shapes matching the Prisma `include`s built in page.tsx.
-// Kept local rather than importing Prisma payload generics to keep this
-// component decoupled from the query shape.
-// ---------------------------------------------------------------------------
+// src/features/library/types.ts
+import { Difficulty, ExperienceSource, InterviewMode } from "@prisma/client";
 
 export type ExperienceItem = {
   id: string;
@@ -11009,20 +11077,20 @@ export type TranscriptMessage = {
   elapsedSeconds: number;
 };
 
-type DimensionScore = {
+export type DimensionScore = {
   dimension: string;
   score: number;
   summary: string;
 };
 
-type EvidenceEntry = {
+export type EvidenceEntry = {
   dimension: string;
   timestampSeconds: number;
   quote: string;
   comment: string;
 };
 
-type EvaluationMetadata = {
+export type EvaluationMetadata = {
   strengths?: string[];
   weaknesses?: string[];
 };
@@ -11050,12 +11118,166 @@ export type CompletedInterviewItem = {
   } | null;
 };
 
-type Props = {
-  experiences: ExperienceItem[];
-  completedInterviews: CompletedInterviewItem[];
+export type Tab = "problems" | "transcripts" | "diagrams" | "experiences";
+
+================================================
+FILE: ./src/features/library/components/DiagramGallery.tsx
+================================================
+// src/features/library/components/DiagramGallery.tsx
+"use client";
+
+import Link from "next/link";
+import Heading from "@/components/ui/Heading";
+import Text from "@/components/ui/Text";
+import Card from "@/components/ui/Card";
+
+type Diagram = {
+  href: string;
+  difficulty: string;
+  color: string;
+  title: string;
+  description: string;
 };
 
-type Tab = "problems" | "transcripts" | "diagrams" | "experiences";
+const DIAGRAMS: Diagram[] = [
+  {
+    href: "/learn/diagrams",
+    difficulty: "Medium HLD",
+    color: "blue",
+    title: "Design Dropbox",
+    description: "Metadata sync, block-level storage, and S3-backed durability.",
+  },
+  {
+    href: "/learn/diagrams/twitter",
+    difficulty: "Hard HLD",
+    color: "green",
+    title: "Design Twitter/X",
+    description: "Timeline generation, fanout writes, and eventual consistency.",
+  },
+  {
+    href: "/learn/diagrams/netflix",
+    difficulty: "Hard HLD",
+    color: "purple",
+    title: "Design Netflix",
+    description: "Video streaming, CDN distribution, and personalized recommendations.",
+  },
+  {
+    href: "/learn/diagrams/uber",
+    difficulty: "Medium HLD",
+    color: "orange",
+    title: "Design Uber",
+    description: "Real-time matching, geospatial indexing, and surge pricing.",
+  },
+  {
+    href: "/learn/diagrams/instagram",
+    difficulty: "Hard HLD",
+    color: "red",
+    title: "Design Instagram",
+    description: "Photo upload, feed generation, and story expiration.",
+  },
+  {
+    href: "/learn/diagrams/whatsapp",
+    difficulty: "Medium HLD",
+    color: "cyan",
+    title: "Design WhatsApp",
+    description: "Real-time messaging, message queues, and end-to-end encryption.",
+  },
+];
+
+const COLOR_CLASSES: Record<string, string> = {
+  blue: "bg-blue-500/10 text-blue-400",
+  green: "bg-green-500/10 text-green-400",
+  purple: "bg-purple-500/10 text-purple-400",
+  orange: "bg-orange-500/10 text-orange-400",
+  red: "bg-red-500/10 text-red-400",
+  cyan: "bg-cyan-500/10 text-cyan-400",
+};
+
+export default function DiagramGallery() {
+  return (
+    <Card className="p-6">
+      <Heading level="h4">System Design Blueprints</Heading>
+      <Text variant="small" className="mt-2">
+        Explore an interactive, clickable architecture diagram to see
+        how each component's role, failure modes, and tradeoffs fit
+        together.
+      </Text>
+
+      <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {DIAGRAMS.map((diagram) => (
+          <Link
+            key={diagram.href}
+            href={diagram.href}
+            className="rounded border border-border bg-muted p-4 text-left transition hover:border-foreground/40"
+          >
+            <span
+              className={`inline-block rounded px-2 py-0.5 font-mono text-[9px] font-bold uppercase ${COLOR_CLASSES[diagram.color]}`}
+            >
+              {diagram.difficulty}
+            </span>
+            <h4 className="mt-2 text-xs font-bold text-foreground">
+              {diagram.title}
+            </h4>
+            <p className="mt-1 line-clamp-1 text-[10px] text-muted-foreground">
+              {diagram.description}
+            </p>
+          </Link>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
+================================================
+FILE: ./src/features/library/components/LibraryTabs.tsx
+================================================
+// src/features/library/components/LibraryTabs.tsx
+"use client";
+
+import { Tab } from "../types";
+
+type Props = {
+  activeTab: Tab;
+  onTabChange: (tab: Tab) => void;
+};
+
+export default function LibraryTabs({ activeTab, onTabChange }: Props) {
+  return (
+    <div className="flex overflow-x-auto rounded-md border border-border bg-muted p-0.5">
+      {(
+        [
+          ["problems", "Problem Library"],
+          ["transcripts", "Completed Interviews"],
+          ["experiences", "Interview Experiences"],
+          ["diagrams", "Interactive Diagrams"],
+        ] as [Tab, string][]
+      ).map(([tab, label]) => (
+        <button
+          key={tab}
+          onClick={() => onTabChange(tab)}
+          className={`whitespace-nowrap rounded px-4 py-1.5 font-mono text-xs transition ${
+            activeTab === tab
+              ? "bg-card text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+================================================
+FILE: ./src/features/library/components/ExperienceList.tsx
+================================================
+// src/features/library/components/ExperienceList.tsx
+"use client";
+
+import { Difficulty, ExperienceSource } from "@prisma/client";
+import { ExperienceItem } from "../types";
+import Card from "@/components/ui/Card";
+import EmptyState from "./EmptyState";
 
 const DIFFICULTY_STYLES: Record<Difficulty, string> = {
   EASY: "border-green-800 text-green-400",
@@ -11070,6 +11292,96 @@ const SOURCE_LABELS: Record<ExperienceSource, string> = {
   USER_SUBMISSION: "Community Submission",
 };
 
+type Props = {
+  experiences: ExperienceItem[];
+};
+
+export default function ExperienceList({ experiences }: Props) {
+  return (
+    <div className="space-y-4">
+      {experiences.length > 0 ? (
+        experiences.map((exp) => (
+          <a
+            key={exp.id}
+            href={exp.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block"
+          >
+            <Card className="p-5 hover:border-foreground/40 transition cursor-pointer">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3">
+                    <h3 className="text-sm font-bold text-foreground">
+                      {exp.problem.title}
+                    </h3>
+                    <span
+                      className={`rounded border px-2 py-0.5 text-xs font-mono uppercase tracking-wider ${DIFFICULTY_STYLES[exp.problem.difficulty]}`}
+                    >
+                      {exp.problem.difficulty}
+                    </span>
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <span className="font-mono text-xs text-muted-foreground">
+                      {exp.company.name}
+                    </span>
+                    {exp.role && (
+                      <span className="font-mono text-xs text-muted-foreground">
+                        • {exp.role}
+                      </span>
+                    )}
+                    {exp.level && (
+                      <span className="font-mono text-xs text-muted-foreground">
+                        • {exp.level}
+                      </span>
+                    )}
+                    {exp.year && (
+                      <span className="font-mono text-xs text-muted-foreground">
+                        • {exp.year}
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-2 flex items-center gap-2">
+                    <span className="inline-block rounded bg-muted px-2 py-0.5 font-mono text-[10px] font-bold uppercase text-muted-foreground">
+                      {SOURCE_LABELS[exp.source]}
+                    </span>
+                  </div>
+                  {exp.notes && (
+                    <p className="mt-2 text-xs text-muted-foreground line-clamp-2">
+                      {exp.notes}
+                    </p>
+                  )}
+                </div>
+                <span className="text-muted-foreground">↗</span>
+              </div>
+            </Card>
+          </a>
+        ))
+      ) : (
+        <EmptyState message="No interview experiences collected yet. These are gathered from various sources to help you prepare for real interviews." />
+      )}
+    </div>
+  );
+}
+
+================================================
+FILE: ./src/features/library/components/TranscriptDetail.tsx
+================================================
+// src/features/library/components/TranscriptDetail.tsx
+"use client";
+
+import { CompletedInterviewItem } from "../types";
+import Text from "@/components/ui/Text";
+import Card from "@/components/ui/Card";
+import OverallScoreCard from "@/features/interview/report/components/OverallScoreCard";
+import WhatHappenedCard from "@/features/interview/report/components/WhatHappenedCard";
+import EvidenceTimeline from "@/features/interview/report/components/EvidenceTimeline";
+
+type Props = {
+  interview: CompletedInterviewItem;
+  onBack: () => void;
+};
+
 function formatTimestamp(seconds: number): string {
   const minutes = Math.floor(seconds / 60);
   const remaining = Math.floor(seconds % 60);
@@ -11078,7 +11390,120 @@ function formatTimestamp(seconds: number): string {
     .padStart(2, "0")}`;
 }
 
+export default function TranscriptDetail({ interview, onBack }: Props) {
+  return (
+    <div className="space-y-6">
+      <button
+        onClick={onBack}
+        className="font-mono text-xs text-muted-foreground hover:text-foreground"
+      >
+        ← Back to completed interviews
+      </button>
+
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
+        {/* Transcript */}
+        <div className="space-y-4 lg:col-span-2">
+          <Card className="p-6">
+            <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+              Live conversation log
+            </span>
+            <h3 className="mt-1 text-base font-bold text-foreground">
+              {interview.problem.title} Transcript
+            </h3>
+
+            <div className="mt-6 max-h-[480px] space-y-4 divide-y divide-border overflow-y-auto pr-2">
+              {interview.transcript.map((message, idx) => (
+                <div key={message.id ?? idx} className="pt-4 first:pt-0">
+                  <div className="mb-1 flex items-baseline justify-between">
+                    <span
+                      className={`font-mono text-[10px] font-bold uppercase tracking-wide ${
+                        message.role === "assistant"
+                          ? "text-muted-foreground"
+                          : "text-foreground"
+                      }`}
+                    >
+                      {message.role === "assistant" ? "Interviewer" : "Candidate"}
+                    </span>
+                    <span className="font-mono text-[10px] text-muted-foreground">
+                      {formatTimestamp(message.elapsedSeconds)}
+                    </span>
+                  </div>
+                  <p className="text-sm leading-relaxed text-foreground">
+                    {message.content}
+                  </p>
+                </div>
+              ))}
+
+              {interview.transcript.length === 0 && (
+                <Text variant="muted">No messages recorded for this session.</Text>
+              )}
+            </div>
+          </Card>
+        </div>
+
+        {/* Evaluation */}
+        <div className="space-y-4">
+          {interview.evaluation ? (
+            <>
+              <OverallScoreCard score={interview.evaluation.overallScore} />
+              <WhatHappenedCard
+                observations={[]}
+                strengths={interview.evaluation.metadata.strengths ?? []}
+                weaknesses={interview.evaluation.metadata.weaknesses ?? []}
+              />
+            </>
+          ) : (
+            <Card className="p-6 text-center">
+              <Text variant="muted">Evaluation still generating — check back shortly.</Text>
+            </Card>
+          )}
+        </div>
+      </div>
+
+      {interview.evaluation &&
+        interview.evaluation.evidence.length > 0 && (
+          <EvidenceTimeline evidence={interview.evaluation.evidence} />
+        )}
+    </div>
+  );
+}
+
+================================================
+FILE: ./src/features/library/components/LibraryView.tsx
+================================================
+// src/features/library/components/LibraryView.tsx
+"use client";
+
+import { useState, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+
+import {
+  type ExperienceItem,
+  type CompletedInterviewItem,
+  type Tab,
+} from "../types";
+
+const VALID_TABS = new Set<Tab>([
+  "problems",
+  "transcripts",
+  "experiences",
+  "diagrams",
+]);
+
+import LibraryTabs from "./LibraryTabs";
+import TranscriptList from "./TranscriptList";
+import TranscriptDetail from "./TranscriptDetail";
+import ExperienceList from "./ExperienceList";
+import DiagramGallery from "./DiagramGallery";
+import ProblemInventoryView from "@/features/interview/setup/components/ProblemInventoryView";
+
+type Props = {
+  experiences: ExperienceItem[];
+  completedInterviews: CompletedInterviewItem[];
+};
+
 export default function LibraryView({ experiences, completedInterviews }: Props) {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<Tab>("problems");
   const [selectedInterview, setSelectedInterview] =
@@ -11087,7 +11512,7 @@ export default function LibraryView({ experiences, completedInterviews }: Props)
   // Initialize tab from URL parameter
   useEffect(() => {
     const tabParam = searchParams.get("tab");
-    if (tabParam === "problems" || tabParam === "transcripts" || tabParam === "diagrams" || tabParam === "experiences") {
+    if (tabParam && VALID_TABS.has(tabParam as Tab)) {
       setActiveTab(tabParam as Tab);
     }
   }, [searchParams]);
@@ -11110,106 +11535,18 @@ export default function LibraryView({ experiences, completedInterviews }: Props)
           </h1>
         </div>
 
-        <div className="flex overflow-x-auto rounded-md border border-border bg-muted p-0.5">
-          {(
-            [
-              ["problems", "Problem Library"],
-              ["transcripts", "Completed Interviews"],
-              ["experiences", "Interview Experiences"],
-              ["diagrams", "Interactive Diagrams"],
-            ] as [Tab, string][]
-          ).map(([tab, label]) => (
-            <button
-              key={tab}
-              onClick={() => switchTab(tab)}
-              className={`whitespace-nowrap rounded px-4 py-1.5 font-mono text-xs transition ${
-                activeTab === tab
-                  ? "bg-card text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+        <LibraryTabs activeTab={activeTab} onTabChange={switchTab} />
       </div>
 
       {/* ---------------------------------------------------------------- */}
       {/* Transcript detail                                                 */}
       {/* ---------------------------------------------------------------- */}
       {selectedInterview && (
-        <div className="mt-8 space-y-6">
-          <button
-            onClick={() => setSelectedInterview(null)}
-            className="font-mono text-xs text-muted-foreground hover:text-foreground"
-          >
-            ← Back to completed interviews
-          </button>
-
-          <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
-            {/* Transcript */}
-            <div className="space-y-4 lg:col-span-2">
-              <div className="rounded-lg border border-border bg-card p-6">
-                <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-                  Live conversation log
-                </span>
-                <h3 className="mt-1 text-base font-bold text-foreground">
-                  {selectedInterview.problem.title} Transcript
-                </h3>
-
-                <div className="mt-6 max-h-[480px] space-y-4 divide-y divide-border overflow-y-auto pr-2">
-                  {selectedInterview.transcript.map((message, idx) => (
-                    <div key={message.id ?? idx} className="pt-4 first:pt-0">
-                      <div className="mb-1 flex items-baseline justify-between">
-                        <span
-                          className={`font-mono text-[10px] font-bold uppercase tracking-wide ${
-                            message.role === "assistant"
-                              ? "text-muted-foreground"
-                              : "text-foreground"
-                          }`}
-                        >
-                          {message.role === "assistant" ? "Interviewer" : "Candidate"}
-                        </span>
-                        <span className="font-mono text-[10px] text-muted-foreground">
-                          {formatTimestamp(message.elapsedSeconds)}
-                        </span>
-                      </div>
-                      <p className="text-sm leading-relaxed text-foreground">
-                        {message.content}
-                      </p>
-                    </div>
-                  ))}
-
-                  {selectedInterview.transcript.length === 0 && (
-                    <Text variant="muted">No messages recorded for this session.</Text>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Evaluation */}
-            <div className="space-y-4">
-              {selectedInterview.evaluation ? (
-                <>
-                  <OverallScoreCard score={selectedInterview.evaluation.overallScore} />
-                  <WhatHappenedCard
-                    observations={[]}
-                    strengths={selectedInterview.evaluation.metadata.strengths ?? []}
-                    weaknesses={selectedInterview.evaluation.metadata.weaknesses ?? []}
-                  />
-                </>
-              ) : (
-                <div className="rounded-lg border border-border bg-card p-6 text-center">
-                  <Text variant="muted">Evaluation still generating — check back shortly.</Text>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {selectedInterview.evaluation &&
-            selectedInterview.evaluation.evidence.length > 0 && (
-              <EvidenceTimeline evidence={selectedInterview.evaluation.evidence} />
-            )}
+        <div className="mt-8">
+          <TranscriptDetail
+            interview={selectedInterview}
+            onBack={() => setSelectedInterview(null)}
+          />
         </div>
       )}
 
@@ -11220,227 +11557,105 @@ export default function LibraryView({ experiences, completedInterviews }: Props)
         <div className="mt-8 space-y-6">
           {activeTab === "problems" && (
             <ProblemInventoryView onSelectProblem={(problemId) => {
-              window.location.href = `/interview/setup?problemId=${problemId}`;
+              router.push(`/interview/setup?problemId=${problemId}`);
             }} />
           )}
 
           {activeTab === "transcripts" && (
-            <div className="space-y-4">
-              {completedInterviews.length > 0 ? (
-                completedInterviews.map((session) => (
-                  <button
-                    key={session.id}
-                    onClick={() => setSelectedInterview(session)}
-                    className="flex w-full items-center justify-between rounded-lg border border-border bg-card p-5 text-left transition hover:border-foreground/40"
-                  >
-                    <div>
-                      <h3 className="text-sm font-bold text-foreground">
-                        {session.problem.title} Transcript
-                      </h3>
-                      <span className="font-mono text-xs text-muted-foreground">
-                        {session.template.name} •{" "}
-                        {session.mode === "REVERSE" ? "Reverse mode" : "Candidate mode"} •{" "}
-                        {session.transcript.length} exchanges • {session.displayDate}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-4">
-                      {session.evaluation && (
-                        <div className="rounded border border-border bg-muted px-2.5 py-1">
-                          <span className="font-mono text-xs font-bold text-foreground">
-                            {session.evaluation.overallScore}/100
-                          </span>
-                        </div>
-                      )}
-                      <span className="text-muted-foreground">→</span>
-                    </div>
-                  </button>
-                ))
-              ) : (
-                <div className="rounded-lg border border-border bg-card p-12 text-center">
-                  <Text variant="muted">
-                    No session transcripts yet. Start a practice interview to
-                    generate an evaluation log.
-                  </Text>
-                </div>
-              )}
-            </div>
+            <TranscriptList
+              completedInterviews={completedInterviews}
+              onSelectInterview={setSelectedInterview}
+            />
           )}
 
           {activeTab === "experiences" && (
-            <div className="space-y-4">
-              {experiences.length > 0 ? (
-                experiences.map((exp) => (
-                  <a
-                    key={exp.id}
-                    href={exp.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex w-full items-center justify-between rounded-lg border border-border bg-card p-5 text-left transition hover:border-foreground/40"
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        <h3 className="text-sm font-bold text-foreground">
-                          {exp.problem.title}
-                        </h3>
-                        <span
-                          className={`rounded border px-2 py-0.5 text-xs font-mono uppercase tracking-wider ${DIFFICULTY_STYLES[exp.problem.difficulty]}`}
-                        >
-                          {exp.problem.difficulty}
-                        </span>
-                      </div>
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        <span className="font-mono text-xs text-muted-foreground">
-                          {exp.company.name}
-                        </span>
-                        {exp.role && (
-                          <span className="font-mono text-xs text-muted-foreground">
-                            • {exp.role}
-                          </span>
-                        )}
-                        {exp.level && (
-                          <span className="font-mono text-xs text-muted-foreground">
-                            • {exp.level}
-                          </span>
-                        )}
-                        {exp.year && (
-                          <span className="font-mono text-xs text-muted-foreground">
-                            • {exp.year}
-                          </span>
-                        )}
-                      </div>
-                      <div className="mt-2 flex items-center gap-2">
-                        <span className="inline-block rounded bg-muted px-2 py-0.5 font-mono text-[10px] font-bold uppercase text-muted-foreground">
-                          {SOURCE_LABELS[exp.source]}
-                        </span>
-                      </div>
-                      {exp.notes && (
-                        <p className="mt-2 text-xs text-muted-foreground line-clamp-2">
-                          {exp.notes}
-                        </p>
-                      )}
-                    </div>
-                    <span className="text-muted-foreground">↗</span>
-                  </a>
-                ))
-              ) : (
-                <div className="rounded-lg border border-border bg-card p-12 text-center">
-                  <Text variant="muted">
-                    No interview experiences collected yet. These are gathered from
-                    various sources to help you prepare for real interviews.
-                  </Text>
-                </div>
-              )}
-            </div>
+            <ExperienceList experiences={experiences} />
           )}
 
-          {activeTab === "diagrams" && (
-            <div className="rounded-lg border border-border bg-card p-6">
-              <Heading level="h4">System Design Blueprints</Heading>
-              <Text variant="small" className="mt-2">
-                Explore an interactive, clickable architecture diagram to see
-                how each component's role, failure modes, and tradeoffs fit
-                together.
-              </Text>
-
-              <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                <Link
-                  href="/learn/diagrams"
-                  className="rounded border border-border bg-muted p-4 text-left transition hover:border-foreground/40"
-                >
-                  <span className="inline-block rounded bg-blue-500/10 px-2 py-0.5 font-mono text-[9px] font-bold uppercase text-blue-400">
-                    Medium HLD
-                  </span>
-                  <h4 className="mt-2 text-xs font-bold text-foreground">
-                    Design Dropbox
-                  </h4>
-                  <p className="mt-1 line-clamp-1 text-[10px] text-muted-foreground">
-                    Metadata sync, block-level storage, and S3-backed durability.
-                  </p>
-                </Link>
-
-                <Link
-                  href="/learn/diagrams/twitter"
-                  className="rounded border border-border bg-muted p-4 text-left transition hover:border-foreground/40"
-                >
-                  <span className="inline-block rounded bg-green-500/10 px-2 py-0.5 font-mono text-[9px] font-bold uppercase text-green-400">
-                    Hard HLD
-                  </span>
-                  <h4 className="mt-2 text-xs font-bold text-foreground">
-                    Design Twitter/X
-                  </h4>
-                  <p className="mt-1 line-clamp-1 text-[10px] text-muted-foreground">
-                    Timeline generation, fanout writes, and eventual consistency.
-                  </p>
-                </Link>
-
-                <Link
-                  href="/learn/diagrams/netflix"
-                  className="rounded border border-border bg-muted p-4 text-left transition hover:border-foreground/40"
-                >
-                  <span className="inline-block rounded bg-purple-500/10 px-2 py-0.5 font-mono text-[9px] font-bold uppercase text-purple-400">
-                    Hard HLD
-                  </span>
-                  <h4 className="mt-2 text-xs font-bold text-foreground">
-                    Design Netflix
-                  </h4>
-                  <p className="mt-1 line-clamp-1 text-[10px] text-muted-foreground">
-                    Video streaming, CDN distribution, and personalized recommendations.
-                  </p>
-                </Link>
-
-                <Link
-                  href="/learn/diagrams/uber"
-                  className="rounded border border-border bg-muted p-4 text-left transition hover:border-foreground/40"
-                >
-                  <span className="inline-block rounded bg-orange-500/10 px-2 py-0.5 font-mono text-[9px] font-bold uppercase text-orange-400">
-                    Medium HLD
-                  </span>
-                  <h4 className="mt-2 text-xs font-bold text-foreground">
-                    Design Uber
-                  </h4>
-                  <p className="mt-1 line-clamp-1 text-[10px] text-muted-foreground">
-                    Real-time matching, geospatial indexing, and surge pricing.
-                  </p>
-                </Link>
-
-                <Link
-                  href="/learn/diagrams/instagram"
-                  className="rounded border border-border bg-muted p-4 text-left transition hover:border-foreground/40"
-                >
-                  <span className="inline-block rounded bg-red-500/10 px-2 py-0.5 font-mono text-[9px] font-bold uppercase text-red-400">
-                    Hard HLD
-                  </span>
-                  <h4 className="mt-2 text-xs font-bold text-foreground">
-                    Design Instagram
-                  </h4>
-                  <p className="mt-1 line-clamp-1 text-[10px] text-muted-foreground">
-                    Photo upload, feed generation, and story expiration.
-                  </p>
-                </Link>
-
-                <Link
-                  href="/learn/diagrams/whatsapp"
-                  className="rounded border border-border bg-muted p-4 text-left transition hover:border-foreground/40"
-                >
-                  <span className="inline-block rounded bg-cyan-500/10 px-2 py-0.5 font-mono text-[9px] font-bold uppercase text-cyan-400">
-                    Medium HLD
-                  </span>
-                  <h4 className="mt-2 text-xs font-bold text-foreground">
-                    Design WhatsApp
-                  </h4>
-                  <p className="mt-1 line-clamp-1 text-[10px] text-muted-foreground">
-                    Real-time messaging, message queues, and end-to-end encryption.
-                  </p>
-                </Link>
-              </div>
-            </div>
-          )}
+          {activeTab === "diagrams" && <DiagramGallery />}
         </div>
       )}
     </main>
   );
 }
+================================================
+FILE: ./src/features/library/components/TranscriptList.tsx
+================================================
+// src/features/library/components/TranscriptList.tsx
+"use client";
+
+import { CompletedInterviewItem } from "../types";
+import Card from "@/components/ui/Card";
+import EmptyState from "./EmptyState";
+
+type Props = {
+  completedInterviews: CompletedInterviewItem[];
+  onSelectInterview: (interview: CompletedInterviewItem) => void;
+};
+
+export default function TranscriptList({ completedInterviews, onSelectInterview }: Props) {
+  return (
+    <div className="space-y-4">
+      {completedInterviews.length > 0 ? (
+        completedInterviews.map((session) => (
+          <Card
+            key={session.id}
+            className="p-5 cursor-pointer hover:border-foreground/40"
+            onClick={() => onSelectInterview(session)}
+          >
+            <div className="flex w-full items-center justify-between">
+              <div>
+              <h3 className="text-sm font-bold text-foreground">
+                {session.problem.title} Transcript
+              </h3>
+              <span className="font-mono text-xs text-muted-foreground">
+                {session.template.name} •{" "}
+                {session.mode === "REVERSE" ? "Reverse mode" : "Candidate mode"} •{" "}
+                {session.transcript.length} exchanges • {session.displayDate}
+              </span>
+              </div>
+
+              <div className="flex items-center gap-4">
+                {session.evaluation && (
+                  <div className="rounded border border-border bg-muted px-2.5 py-1">
+                    <span className="font-mono text-xs font-bold text-foreground">
+                      {session.evaluation.overallScore}/100
+                    </span>
+                  </div>
+                )}
+                <span className="text-muted-foreground">→</span>
+              </div>
+            </div>
+          </Card>
+        ))
+      ) : (
+        <EmptyState message="No session transcripts yet. Start a practice interview to generate an evaluation log." />
+      )}
+    </div>
+  );
+}
+
+================================================
+FILE: ./src/features/library/components/EmptyState.tsx
+================================================
+// src/features/library/components/EmptyState.tsx
+"use client";
+
+import Text from "@/components/ui/Text";
+import Card from "@/components/ui/Card";
+
+type Props = {
+  message: string;
+};
+
+export default function EmptyState({ message }: Props) {
+  return (
+    <Card className="p-12 text-center">
+      <Text variant="muted">{message}</Text>
+    </Card>
+  );
+}
+
 ================================================
 FILE: ./src/features/library/page.tsx
 ================================================
@@ -11449,35 +11664,25 @@ import { InterviewStatus } from "@prisma/client";
 
 import { prisma } from "@/shared/prisma/client";
 import { getCurrentUserId } from "@/modules/auth/getCurrentUserId";
-import LibraryView, {
+import LibraryView from "@/features/library/components/LibraryView";
+import {
   type CompletedInterviewItem,
   type ExperienceItem,
-} from "@/features/library/components/LibraryView";
+  type DimensionScore,
+  type EvidenceEntry,
+  type EvaluationMetadata,
+} from "@/features/library/types";
 
-type DimensionScore = {
-  dimension: string;
-  score: number;
-  summary: string;
-};
+const EXPERIENCE_LIMIT = 30;
 
-type EvidenceEntry = {
-  dimension: string;
-  timestampSeconds: number;
-  quote: string;
-  comment: string;
-};
-
-type EvaluationMetadata = {
-  strengths?: string[];
-  weaknesses?: string[];
-};
+const dateFormatter = new Intl.DateTimeFormat("en-US", {
+  year: "numeric",
+  month: "short",
+  day: "numeric",
+});
 
 function formatDisplayDate(date: Date): string {
-  return new Intl.DateTimeFormat("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  }).format(date);
+  return dateFormatter.format(date);
 }
 
 export default async function LibraryPage() {
@@ -11492,7 +11697,7 @@ export default async function LibraryPage() {
         company: { select: { name: true } },
       },
       orderBy: { createdAt: "desc" },
-      take: 30,
+      take: EXPERIENCE_LIMIT,
     }),
     prisma.interview.findMany({
       where: { userId, status: InterviewStatus.COMPLETED },
@@ -11616,26 +11821,175 @@ export default function NextRecommendedInterview({ recommendation }: Props) {
   );
 }
 ================================================
-FILE: ./src/features/dashboard/components/DashboardView.tsx
+FILE: ./src/features/dashboard/components/LiveFeedbackCard.tsx
 ================================================
-// src/features/dashboard/components/DashboardView.tsx
-import Link from "next/link";
-
-import { Card } from "@/components/ui/Card";
-import { Heading } from "@/components/ui/Heading";
-import { Text } from "@/components/ui/Text";
-import { Button } from "@/components/ui/Button";
-
+// src/features/dashboard/components/LiveFeedbackCard.tsx
+import Card from "@/components/ui/Card";
+import Text from "@/components/ui/Text";
 import type { SkillGraph } from "@/modules/interview/services/mastery/SkillGraphService";
+
+type Props = {
+  hasData: boolean;
+  skillGraph: SkillGraph;
+};
+
+export default function LiveFeedbackCard({ hasData, skillGraph }: Props) {
+  const strengthNames = skillGraph.strengths.slice(0, 3).map((s) => s.name);
+  const weaknessNames = skillGraph.weaknesses.slice(0, 3).map((w) => w.name);
+
+  return (
+    <Card className="p-6 flex h-[230px] flex-col justify-between">
+      {hasData && (strengthNames.length > 0 || weaknessNames.length > 0) ? (
+        <div className="grid h-full grid-cols-2 gap-4">
+          <div className="space-y-3 overflow-y-auto border-r border-border pr-2">
+            <span className="block text-xs font-semibold uppercase tracking-wide text-green-500">
+              Recently Improved
+            </span>
+            <ul className="space-y-1.5">
+              {strengthNames.length > 0 ? (
+                strengthNames.map((name, i) => (
+                  <li
+                    key={i}
+                    className="flex items-start gap-1 text-xs leading-snug text-foreground"
+                  >
+                    <span className="mt-0.5 text-green-500">✓</span>
+                    {name}
+                  </li>
+                ))
+              ) : (
+                <li className="text-xs italic text-muted-foreground">
+                  None yet
+                </li>
+              )}
+            </ul>
+          </div>
+
+          <div className="space-y-3 overflow-y-auto pl-2">
+            <span className="block text-xs font-semibold uppercase tracking-wide text-amber-500">
+              Needs Attention
+            </span>
+            <ul className="space-y-1.5">
+              {weaknessNames.length > 0 ? (
+                weaknessNames.map((name, i) => (
+                  <li
+                    key={i}
+                    className="flex items-start gap-1 text-xs leading-snug text-foreground"
+                  >
+                    <span className="mt-0.5 text-amber-500">•</span>
+                    {name}
+                  </li>
+                ))
+              ) : (
+                <li className="text-xs italic text-muted-foreground">
+                  None yet
+                </li>
+              )}
+            </ul>
+          </div>
+        </div>
+      ) : (
+        <div className="flex h-full flex-col items-center justify-center p-4 text-center">
+          <Text variant="small" className="italic">
+            Practice more problems to surface strengths and growth
+            areas.
+          </Text>
+        </div>
+      )}
+    </Card>
+  );
+}
+
+================================================
+FILE: ./src/features/dashboard/components/RecommendationCard.tsx
+================================================
+// src/features/dashboard/components/RecommendationCard.tsx
+import Link from "next/link";
+import Card from "@/components/ui/Card";
+import Text from "@/components/ui/Text";
+import { Button } from "@/components/ui/Button";
 import type { Recommendation } from "@/modules/interview/services/recommendation/RecommendationService";
 import type { Difficulty } from "@prisma/client";
 
-export type ExploreProblem = {
-  id: string;
-  title: string;
-  difficulty: Difficulty;
-  description: string | null;
+const DIFFICULTY_STYLES: Record<Difficulty, string> = {
+  EASY: "border-green-600 text-green-500",
+  MEDIUM: "border-amber-600 text-amber-500",
+  HARD: "border-red-600 text-red-500",
 };
+
+type Props = {
+  recommendation: Recommendation | null;
+};
+
+export default function RecommendationCard({ recommendation }: Props) {
+  if (!recommendation) {
+    return (
+      <Card className="p-6">
+        <Text variant="muted">
+          Complete a few interviews to unlock personalized
+          recommendations.
+        </Text>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="overflow-hidden rounded-xl border border-primary/40 bg-card">
+      <div className="flex items-center justify-between bg-primary/10 p-4">
+        <div>
+          <span className="block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            Recommended Practice Session
+          </span>
+          <span className="text-base font-semibold text-foreground">
+            {recommendation.title}
+          </span>
+        </div>
+
+        <span
+          className={`rounded border px-2 py-0.5 font-mono text-xs ${DIFFICULTY_STYLES[recommendation.difficulty]}`}
+        >
+          {recommendation.difficulty}
+        </span>
+      </div>
+
+      <div className="space-y-4 p-6">
+        <div className="space-y-1">
+          <span className="block font-mono text-xs uppercase tracking-widest text-muted-foreground">
+            Mentor Assessment
+          </span>
+          <ul className="space-y-1 text-sm text-foreground">
+            {recommendation.reasons.map((reason, i) => (
+              <li key={i}>• {reason}</li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="flex items-center justify-end pt-2">
+          <Link
+            href={`/interview/setup?problemId=${recommendation.problemId}&type=${recommendation.slug}`}
+          >
+            <Button variant="primary" className="text-sm">
+              Start Interview →
+            </Button>
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+================================================
+FILE: ./src/features/dashboard/components/DashboardView.tsx
+================================================
+// src/features/dashboard/components/DashboardView.tsx
+import Heading  from "@/components/ui/Heading";
+
+import type { SkillGraph } from "@/modules/interview/services/mastery/SkillGraphService";
+import type { Recommendation } from "@/modules/interview/services/recommendation/RecommendationService";
+
+import CurrentStandingCard from "./CurrentStandingCard";
+import LiveFeedbackCard from "./LiveFeedbackCard";
+import RecommendationCard from "./RecommendationCard";
+import ExploreProblems, { type ExploreProblem } from "./ExploreProblems";
 
 type Props = {
   hasData: boolean;
@@ -11646,35 +12000,6 @@ type Props = {
   exploreProblems: ExploreProblem[];
 };
 
-const TEMPLATE_LABELS: Record<string, string> = {
-  hld: "High-Level Design",
-  lld: "Low-Level Design",
-  dsa: "Data Structures & Algorithms",
-};
-
-function Stars({ rating }: { rating: number | undefined }) {
-  if (!rating) {
-    return (
-      <span className="text-sm italic text-muted-foreground">
-        Not assessed
-      </span>
-    );
-  }
-
-  return (
-    <span className="font-mono text-lg tracking-wider text-amber-500">
-      {"★".repeat(rating)}
-      {"☆".repeat(5 - rating)}
-    </span>
-  );
-}
-
-const DIFFICULTY_STYLES: Record<Difficulty, string> = {
-  EASY: "border-green-800 text-green-400",
-  MEDIUM: "border-amber-800 text-amber-400",
-  HARD: "border-red-800 text-red-400",
-};
-
 export default function DashboardView({
   hasData,
   overallReadiness,
@@ -11683,9 +12008,6 @@ export default function DashboardView({
   recommendation,
   exploreProblems,
 }: Props) {
-  const strengthNames = skillGraph.strengths.slice(0, 3).map((s) => s.name);
-  const weaknessNames = skillGraph.weaknesses.slice(0, 3).map((w) => w.name);
-
   return (
     <main className="mx-auto max-w-5xl px-6 py-12 text-foreground">
       <div className="flex flex-col gap-4 border-b border-border pb-6 md:flex-row md:items-end md:justify-between">
@@ -11711,45 +12033,11 @@ export default function DashboardView({
             </Heading>
           </div>
 
-          <Card padding="6" className="space-y-6">
-            <div>
-              <div className="mb-2 flex items-baseline justify-between">
-                <Text variant="small" className="font-medium">
-                  Interview Readiness
-                </Text>
-                <span className="font-mono text-2xl font-bold text-foreground">
-                  {hasData && overallReadiness !== null
-                    ? `${overallReadiness}%`
-                    : "—"}
-                </span>
-              </div>
-
-              {hasData && overallReadiness !== null ? (
-                <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-                  <div
-                    className="h-full rounded-full bg-primary transition-all duration-1000"
-                    style={{ width: `${overallReadiness}%` }}
-                  />
-                </div>
-              ) : (
-                <Text variant="small" className="italic">
-                  Not enough data yet. Complete an interview to calculate
-                  readiness.
-                </Text>
-              )}
-            </div>
-
-            <div className="space-y-3 border-t border-border pt-4">
-              {Object.entries(TEMPLATE_LABELS).map(([slug, label]) => (
-                <div key={slug} className="flex items-center justify-between">
-                  <span className="font-mono text-sm text-muted-foreground">
-                    {label}
-                  </span>
-                  <Stars rating={categoryRatings[slug]} />
-                </div>
-              ))}
-            </div>
-          </Card>
+          <CurrentStandingCard
+            hasData={hasData}
+            overallReadiness={overallReadiness}
+            categoryRatings={categoryRatings}
+          />
         </div>
 
         {/* 02 — Live feedback */}
@@ -11763,64 +12051,7 @@ export default function DashboardView({
             </Heading>
           </div>
 
-          <Card padding="6" className="flex h-[230px] flex-col justify-between">
-            {hasData && (strengthNames.length > 0 || weaknessNames.length > 0) ? (
-              <div className="grid h-full grid-cols-2 gap-4">
-                <div className="space-y-3 overflow-y-auto border-r border-border pr-2">
-                  <span className="block text-xs font-semibold uppercase tracking-wide text-green-500">
-                    Recently Improved
-                  </span>
-                  <ul className="space-y-1.5">
-                    {strengthNames.length > 0 ? (
-                      strengthNames.map((name, i) => (
-                        <li
-                          key={i}
-                          className="flex items-start gap-1 text-xs leading-snug text-foreground"
-                        >
-                          <span className="mt-0.5 text-green-500">✓</span>
-                          {name}
-                        </li>
-                      ))
-                    ) : (
-                      <li className="text-xs italic text-muted-foreground">
-                        None yet
-                      </li>
-                    )}
-                  </ul>
-                </div>
-
-                <div className="space-y-3 overflow-y-auto pl-2">
-                  <span className="block text-xs font-semibold uppercase tracking-wide text-amber-500">
-                    Needs Attention
-                  </span>
-                  <ul className="space-y-1.5">
-                    {weaknessNames.length > 0 ? (
-                      weaknessNames.map((name, i) => (
-                        <li
-                          key={i}
-                          className="flex items-start gap-1 text-xs leading-snug text-foreground"
-                        >
-                          <span className="mt-0.5 text-amber-500">•</span>
-                          {name}
-                        </li>
-                      ))
-                    ) : (
-                      <li className="text-xs italic text-muted-foreground">
-                        None yet
-                      </li>
-                    )}
-                  </ul>
-                </div>
-              </div>
-            ) : (
-              <div className="flex h-full flex-col items-center justify-center p-4 text-center">
-                <Text variant="small" className="italic">
-                  Practice more problems to surface strengths and growth
-                  areas.
-                </Text>
-              </div>
-            )}
-          </Card>
+          <LiveFeedbackCard hasData={hasData} skillGraph={skillGraph} />
         </div>
 
         {/* 03 — Smart mentor recommendation */}
@@ -11834,108 +12065,40 @@ export default function DashboardView({
             </Heading>
           </div>
 
-          {recommendation ? (
-            <div className="overflow-hidden rounded-xl border border-primary/40 bg-card">
-              <div className="flex items-center justify-between bg-primary/10 p-4">
-                <div>
-                  <span className="block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                    Recommended Practice Session
-                  </span>
-                  <span className="text-base font-semibold text-foreground">
-                    {recommendation.title}
-                  </span>
-                </div>
-
-                <span
-                  className={`rounded border px-2 py-0.5 font-mono text-xs ${DIFFICULTY_STYLES[recommendation.difficulty]}`}
-                >
-                  {recommendation.difficulty}
-                </span>
-              </div>
-
-              <div className="space-y-4 p-6">
-                <div className="space-y-1">
-                  <span className="block font-mono text-xs uppercase tracking-widest text-muted-foreground">
-                    Mentor Assessment
-                  </span>
-                  <ul className="space-y-1 text-sm text-foreground">
-                    {recommendation.reasons.map((reason, i) => (
-                      <li key={i}>• {reason}</li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="flex items-center justify-end pt-2">
-                  <Link
-                    href={`/interview/setup?problemId=${recommendation.problemId}&type=hld`}
-                  >
-                    <Button variant="primary" className="text-sm">
-                      Start Interview →
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <Card padding="6">
-              <Text variant="muted">
-                Complete a few interviews to unlock personalized
-                recommendations.
-              </Text>
-            </Card>
-          )}
+          <RecommendationCard recommendation={recommendation} />
         </div>
       </div>
 
       {/* 04 — Explore more problems */}
-      <div className="mt-12 space-y-4">
-        <div className="flex items-end justify-between">
-          <div>
-            <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-              04. Explore
-            </span>
-            <Heading level="h3" className="mt-1">
-              More problems to try
-            </Heading>
-          </div>
-
-          <Link
-            href="/#interviews"
-            className="font-mono text-xs text-muted-foreground hover:text-foreground"
-          >
-            Browse all →
-          </Link>
-        </div>
-
-        <div className="-mx-1 flex gap-4 overflow-x-auto px-1 pb-2 pt-1">
-          {exploreProblems.map((problem) => (
-            <Link
-              key={problem.id}
-              href={`/interview/setup?problemId=${problem.id}&type=hld`}
-              className="flex h-[140px] w-64 flex-shrink-0 flex-col justify-between rounded-lg border border-border bg-card p-5 transition hover:border-foreground/40"
-            >
-              <div>
-                <span className="mb-1 block font-mono text-[10px] uppercase text-muted-foreground">
-                  {problem.difficulty}
-                </span>
-                <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground">
-                  {problem.title}
-                </h3>
-              </div>
-
-              <div className="flex items-center justify-between border-t border-border pt-2 text-[10px] font-mono text-muted-foreground">
-                <span className="line-clamp-1">
-                  {problem.description ?? "System Design"}
-                </span>
-                <span className="flex-shrink-0 text-foreground">Start →</span>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </div>
+      <ExploreProblems exploreProblems={exploreProblems} />
     </main>
   );
 }
+================================================
+FILE: ./src/features/dashboard/components/constants.ts
+================================================
+// src/features/dashboard/components/constants.ts
+
+// Card padding
+export const CARD_PADDING = "p-6";
+export const CARD_PADDING_COMPACT = "p-5";
+
+// Card heights
+export const CARD_HEIGHT_FEEDBACK = "h-[230px]";
+export const CARD_HEIGHT_PROBLEM = "h-[140px]";
+
+// Card widths
+export const CARD_WIDTH_PROBLEM = "w-64";
+
+// Spacing
+export const SPACING_SECTION = "mt-12";
+export const SPACING_CARD = "space-y-4";
+export const SPACING_CARD_LARGE = "space-y-6";
+export const SPACING_ITEM = "space-y-3";
+
+// Limits
+export const TOP_ITEMS_LIMIT = 3;
+
 ================================================
 FILE: ./src/features/dashboard/components/SkillGraphView.tsx
 ================================================
@@ -12036,6 +12199,165 @@ export default function SkillGraphView({ skillGraph }: Props) {
     </div>
   );
 }
+================================================
+FILE: ./src/features/dashboard/components/ExploreProblems.tsx
+================================================
+// src/features/dashboard/components/ExploreProblems.tsx
+import Link from "next/link";
+import Heading from "@/components/ui/Heading";
+import type { Difficulty } from "@prisma/client";
+
+export type ExploreProblem = {
+  id: string;
+  title: string;
+  slug: string;
+  difficulty: Difficulty;
+  description: string | null;
+};
+
+type Props = {
+  exploreProblems: ExploreProblem[];
+};
+
+export default function ExploreProblems({ exploreProblems }: Props) {
+  return (
+    <div className="mt-12 space-y-4">
+      <div className="flex items-end justify-between">
+        <div>
+          <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+            04. Explore
+          </span>
+          <Heading level="h3" className="mt-1">
+            More problems to try
+          </Heading>
+        </div>
+
+        <Link
+          href="/#interviews"
+          className="font-mono text-xs text-muted-foreground hover:text-foreground"
+        >
+          Browse all →
+        </Link>
+      </div>
+
+      <div className="-mx-1 flex gap-4 overflow-x-auto px-1 pb-2 pt-1">
+        {exploreProblems.map((problem) => (
+          <Link
+            key={problem.id}
+            href={`/interview/setup?problemId=${problem.id}&type=${problem.slug}`}
+            className="flex h-[140px] w-64 flex-shrink-0 flex-col justify-between rounded-lg border border-border bg-card p-5 transition hover:border-foreground/40"
+          >
+            <div>
+              <span className="mb-1 block font-mono text-[10px] uppercase text-muted-foreground">
+                {problem.difficulty}
+              </span>
+              <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground">
+                {problem.title}
+              </h3>
+            </div>
+
+            <div className="flex items-center justify-between border-t border-border pt-2 text-[10px] font-mono text-muted-foreground">
+              <span className="line-clamp-1">
+                {problem.description ?? "System Design"}
+              </span>
+              <span className="flex-shrink-0 text-foreground">Start →</span>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+================================================
+FILE: ./src/features/dashboard/components/CurrentStandingCard.tsx
+================================================
+// src/features/dashboard/components/CurrentStandingCard.tsx
+import Card from "@/components/ui/Card";
+import Text from "@/components/ui/Text";
+import { Stars } from "./Stars";
+
+const TEMPLATE_LABELS: Record<string, string> = {
+  hld: "High-Level Design",
+  lld: "Low-Level Design",
+  dsa: "Data Structures & Algorithms",
+};
+
+type Props = {
+  hasData: boolean;
+  overallReadiness: number | null;
+  categoryRatings: Record<string, number>;
+};
+
+export default function CurrentStandingCard({
+  hasData,
+  overallReadiness,
+  categoryRatings,
+}: Props) {
+  return (
+    <Card className="p-6 space-y-6">
+      <div>
+        <div className="mb-2 flex items-baseline justify-between">
+          <Text variant="small" className="font-medium">
+            Interview Readiness
+          </Text>
+          <span className="font-mono text-2xl font-bold text-foreground">
+            {hasData && overallReadiness !== null
+              ? `${overallReadiness}%`
+              : "—"}
+          </span>
+        </div>
+
+        {hasData && overallReadiness !== null ? (
+          <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+            <div
+              className="h-full rounded-full bg-primary transition-all duration-1000"
+              style={{ width: `${overallReadiness}%` }}
+            />
+          </div>
+        ) : (
+          <Text variant="small" className="italic">
+            Not enough data yet. Complete an interview to calculate
+            readiness.
+          </Text>
+        )}
+      </div>
+
+      <div className="space-y-3 border-t border-border pt-4">
+        {Object.entries(TEMPLATE_LABELS).map(([slug, label]) => (
+          <div key={slug} className="flex items-center justify-between">
+            <span className="font-mono text-sm text-muted-foreground">
+              {label}
+            </span>
+            <Stars rating={categoryRatings[slug]} />
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
+================================================
+FILE: ./src/features/dashboard/components/Stars.tsx
+================================================
+// src/features/dashboard/components/Stars.tsx
+export function Stars({ rating }: { rating: number | undefined }) {
+  if (!rating) {
+    return (
+      <span className="text-sm italic text-muted-foreground">
+        Not assessed
+      </span>
+    );
+  }
+
+  return (
+    <span className="font-mono text-lg tracking-wider text-amber-500">
+      {"★".repeat(rating)}
+      {"☆".repeat(5 - rating)}
+    </span>
+  );
+}
+
 ================================================
 FILE: ./src/features/interview/types/CreateInterviewInput.ts
 ================================================
@@ -15222,28 +15544,34 @@ export type Env = z.infer<typeof envSchema>;
 ================================================
 FILE: ./src/components/ui/Card.tsx
 ================================================
-import React from 'react';
-import { cn } from '@/lib/utils';
+import React from "react";
+import { cn } from "@/lib/utils";
 
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: 'default' | 'elevated' | 'hover';
+  variant?: "default" | "elevated" | "hover";
   children: React.ReactNode;
 }
 
-export const Card = React.forwardRef<HTMLDivElement, CardProps>(
-  ({ variant = 'default', className, children, ...props }, ref) => {
-    const baseStyles = 'bg-[var(--surface)]';
-    
+const Card = React.forwardRef<HTMLDivElement, CardProps>(
+  ({ variant = "default", className, children, ...props }, ref) => {
+    const baseStyles = "bg-[var(--surface)]";
+
     const variants = {
-      default: 'border border-[var(--border)]',
-      elevated: 'shadow-panel',
-      hover: 'border border-[var(--border)] hover:shadow-hover transition-shadow',
+      default: "border border-[var(--border)]",
+      elevated: "shadow-panel",
+      hover:
+        "border border-[var(--border)] hover:shadow-hover transition-shadow",
     };
 
     return (
       <div
         ref={ref}
-        className={cn(baseStyles, variants[variant], 'radius-card', className)}
+        className={cn(
+          baseStyles,
+          variants[variant],
+          "radius-card",
+          className
+        )}
         {...props}
       >
         {children}
@@ -15252,8 +15580,9 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
   }
 );
 
-Card.displayName = 'Card';
+Card.displayName = "Card";
 
+export default Card;
 ================================================
 FILE: ./src/components/ui/Search.tsx
 ================================================
@@ -15329,6 +15658,46 @@ export const Bubble = React.forwardRef<HTMLDivElement, BubbleProps>(
 
 Bubble.displayName = 'Bubble';
 
+================================================
+FILE: ./src/components/ui/Heading.tsx
+================================================
+import React from "react";
+import { cn } from "@/lib/utils";
+
+interface HeadingProps extends React.HTMLAttributes<HTMLHeadingElement> {
+  level?: "h1" | "h2" | "h3" | "h4";
+}
+
+const Heading = ({
+  level = "h2",
+  className,
+  children,
+  ...props
+}: HeadingProps) => {
+  const Tag = level;
+
+  const sizes = {
+    h1: "heading-xl",
+    h2: "heading-l",
+    h3: "heading-m",
+    h4: "heading-s",
+  };
+
+  return (
+    <Tag
+      className={cn(
+        "font-poppins text-[var(--ink)] tracking-tight",
+        sizes[level],
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </Tag>
+  );
+};
+
+export default Heading;
 ================================================
 FILE: ./src/components/ui/Tag.tsx
 ================================================
@@ -15705,6 +16074,43 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
 Button.displayName = 'Button';
 
+================================================
+FILE: ./src/components/ui/Text.tsx
+================================================
+import React from "react";
+import { cn } from "@/lib/utils";
+
+interface TextProps extends React.HTMLAttributes<HTMLParagraphElement> {
+  variant?: "body" | "muted" | "small";
+}
+
+const Text = ({
+  variant = "body",
+  className,
+  children,
+  ...props
+}: TextProps) => {
+  const variants = {
+    body: "body-m text-[var(--ink)]",
+    muted: "body-m text-[var(--ink-400)]",
+    small: "body-s text-[var(--ink-400)]",
+  };
+
+  return (
+    <p
+      className={cn(
+        "font-inter leading-relaxed",
+        variants[variant],
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </p>
+  );
+};
+
+export default Text;
 ================================================
 FILE: ./src/components/ui/Stepper.tsx
 ================================================
@@ -17649,6 +18055,214 @@ FILE: ./src/modules/interview/prompt/templates/evaluation.md
 ================================================
 
 ================================================
+FILE: ./src/modules/interview/constants.ts
+================================================
+// ---------------------------------------------------------------------------
+// Evaluation Dimensions
+// ---------------------------------------------------------------------------
+
+export const EvaluationDimension = {
+  Communication: "communication",
+  RequirementClarity: "requirement_clarity",
+  ScopeManagement: "scope_management",
+  Architecture: "architecture",
+  TechnicalReasoning: "technical_reasoning",
+  TechnicalDepth: "technical_depth",
+  Tradeoffs: "tradeoffs",
+  Scalability: "scalability",
+  Reliability: "reliability",
+  ObjectModeling: "object_modeling",
+  Abstraction: "abstraction",
+  ClassDesign: "class_design",
+  CodeQuality: "code_quality",
+  DesignPatterns: "design_patterns",
+  Maintainability: "maintainability",
+  ProblemSolving: "problem_solving",
+  CodeCorrectness: "code_correctness",
+  ComplexityAnalysis: "complexity_analysis",
+  EdgeCaseHandling: "edge_case_handling",
+  // Reverse-mode evaluation dimensions
+  RapportBuilding: "rapport_building",
+  RequirementElicitation: "requirement_elicitation",
+  ProbingDepth: "probing_depth",
+  TechnicalListening: "technical_listening",
+  ChallengingAppropriately: "challenging_appropriately",
+  TimeManagement: "time_management",
+  SummarizingAndWrapUp: "summarizing_and_wrap_up",
+} as const;
+
+export type EvaluationDimension = (typeof EvaluationDimension)[keyof typeof EvaluationDimension];
+
+// ---------------------------------------------------------------------------
+// Phase IDs
+// ---------------------------------------------------------------------------
+
+export const PhaseId = {
+  Introduction: "introduction",
+  Requirements: "requirements",
+  HighLevelDesign: "high_level_design",
+  DeepDive: "deep_dive",
+  Scalability: "scalability",
+  Closing: "closing",
+  DomainModeling: "domain_modeling",
+  ClassDesign: "class_design",
+  Extensibility: "extensibility",
+  Clarification: "clarification",
+  Approach: "approach",
+  Implementation: "implementation",
+  Testing: "testing",
+  ContextUnderstanding: "context_understanding",
+  CodeReview: "code_review",
+  DesignReview: "design_review",
+  FeedbackDelivery: "feedback_delivery",
+  KnowledgeAssessment: "knowledge_assessment",
+  ArchitectureExploration: "architecture_exploration",
+  ImplementationDetails: "implementation_details",
+  ScalabilityReliability: "scalability_reliability",
+  StructureReview: "structure_review",
+  ContentReview: "content_review",
+  ImprovementSuggestions: "improvement_suggestions",
+  RequirementAnalysis: "requirement_analysis",
+  DependencyAnalysis: "dependency_analysis",
+  TaskDecomposition: "task_decomposition",
+  ExecutionPlanning: "execution_planning",
+} as const;
+
+export type PhaseId = (typeof PhaseId)[keyof typeof PhaseId];
+
+// ---------------------------------------------------------------------------
+// Goals
+// ---------------------------------------------------------------------------
+
+export const Goal = {
+  // Common goals
+  CandidateUnderstandsProblem: "candidate_understands_problem",
+  
+  // HLD goals
+  FunctionalRequirements: "functional_requirements",
+  NonFunctionalRequirements: "non_functional_requirements",
+  Scale: "scale",
+  Constraints: "constraints",
+  CoreComponents: "core_components",
+  ServiceBoundaries: "service_boundaries",
+  DataFlow: "data_flow",
+  StorageChoice: "storage_choice",
+  CriticalComponent: "critical_component",
+  DataModel: "data_model",
+  Consistency: "consistency",
+  TechnicalTradeoffs: "technical_tradeoffs",
+  Bottlenecks: "bottlenecks",
+  FailureModes: "failure_modes",
+  ScalingStrategy: "scaling_strategy",
+  Reliability: "reliability",
+  FinalTradeoffSummary: "final_tradeoff_summary",
+  
+  // LLD goals
+  LLD_UseCases: "use_cases",
+  Actors: "actors",
+  EdgeCases: "edge_cases",
+  CoreEntities: "core_entities",
+  Responsibilities: "responsibilities",
+  Relationships: "relationships",
+  Classes: "classes",
+  Interfaces: "interfaces",
+  MethodBoundaries: "method_boundaries",
+  Encapsulation: "encapsulation",
+  ChangeScenarios: "change_scenarios",
+  DesignTradeoffs: "design_tradeoffs",
+  Extensibility: "extensibility",
+  Testability: "testability",
+  FinalDesignSummary: "final_design_summary",
+  
+  // DSA goals
+  InputConstraints: "input_constraints",
+  EdgeCasesIdentified: "edge_cases_identified",
+  BruteForceStated: "brute_force_stated",
+  OptimizationDirection: "optimization_direction",
+  WorkingCode: "working_code",
+  CleanStructure: "clean_structure",
+  DryRun: "dry_run",
+  EdgeCaseVerification: "edge_case_verification",
+  FinalComplexitySummary: "final_complexity_summary",
+  
+  // PR Review goals
+  CandidateUnderstandsPrContext: "candidate_understands_pr_context",
+  PrPurpose: "pr_purpose",
+  AffectedAreas: "affected_areas",
+  PR_Dependencies: "dependencies",
+  Correctness: "correctness",
+  CodeQuality: "code_quality",
+  DesignPatterns: "design_patterns",
+  ArchitectureImpact: "architecture_impact",
+  Maintainability: "maintainability",
+  ConstructiveFeedback: "constructive_feedback",
+  ActionableSuggestions: "actionable_suggestions",
+  ReviewSummary: "review_summary",
+  
+  // Deep Dive goals
+  CandidateUnderstandsTopic: "candidate_understands_topic",
+  CoreConcepts: "core_concepts",
+  Internals: "internals",
+  DeepDive_UseCases: "use_cases",
+  SystemComponents: "system_components",
+  DeepDive_DataFlow: "data_flow",
+  DesignDecisions: "design_decisions",
+  ImplementationApproach: "implementation_approach",
+  PerformanceConsiderations: "performance_considerations",
+  ScalingChallenges: "scaling_challenges",
+  DeepDive_FailureModes: "failure_modes",
+  OperationalConsiderations: "operational_considerations",
+  TopicSummary: "topic_summary",
+  KeyTakeaways: "key_takeaways",
+  
+  // Tech Doc Review goals
+  CandidateUnderstandsDocContext: "candidate_understands_doc_context",
+  DocPurpose: "doc_purpose",
+  TargetAudience: "target_audience",
+  DocScope: "scope",
+  Organization: "organization",
+  Flow: "flow",
+  Navigation: "navigation",
+  Clarity: "clarity",
+  Completeness: "completeness",
+  Accuracy: "accuracy",
+  ActionableFeedback: "actionable_feedback",
+  PriorityRanking: "priority_ranking",
+  KeyImprovements: "key_improvements",
+  
+  // Task Breakdown goals
+  CandidateUnderstandsTask: "candidate_understands_task",
+  Task_FunctionalRequirements: "functional_requirements",
+  Task_Constraints: "constraints",
+  SuccessCriteria: "success_criteria",
+  Dependencies: "dependencies",
+  BlockingTasks: "blocking_tasks",
+  ParallelOpportunities: "parallel_opportunities",
+  SubtaskDefinition: "subtask_definition",
+  Independence: "independence",
+  Estimation: "estimation",
+  Sequencing: "sequencing",
+  RiskMitigation: "risk_mitigation",
+  ResourceAllocation: "resource_allocation",
+  BreakdownSummary: "breakdown_summary",
+  CriticalPath: "critical_path",
+} as const;
+
+export type Goal = (typeof Goal)[keyof typeof Goal];
+
+// ---------------------------------------------------------------------------
+// Helper function for creating goal definitions
+// ---------------------------------------------------------------------------
+
+export function goal(
+  id: Goal,
+  required: boolean = true,
+  weight: number = 1.0
+): { id: Goal; required: boolean; weight: number } {
+  return { id, required, weight };
+}
+
+================================================
 FILE: ./src/modules/interview/profiles/InterviewProfileService.ts
 ================================================
 import { prisma } from "@/shared/prisma/client";
@@ -17763,179 +18377,275 @@ FILE: ./src/modules/interview/profiles/DSAInterviewProfile.ts
 FILE: ./src/modules/interview/profiles/HLDInterviewProfile.ts
 ================================================
 import { InterviewProfile } from "./InterviewProfile";
+import { PhaseId, Goal, EvaluationDimension, goal } from "../constants";
 
 export const HLDInterviewProfile: InterviewProfile = {
   type: "HLD",
 
+  metadata: {
+    difficulty: "Hard",
+    estimatedQuestions: 18,
+    maxRetries: 2,
+    allowBacktracking: true,
+    supportsInterruptions: true,
+  },
+
   phases: [
     {
-      id: "introduction",
+      id: PhaseId.Introduction,
 
       goals: [
-        "candidate_understands_problem",
+        goal(Goal.CandidateUnderstandsProblem, true, 1.0),
       ],
 
       evaluationDimensions: [
-        "communication",
+        EvaluationDimension.Communication,
       ],
+
+      continuousEvaluation: [
+        EvaluationDimension.Communication,
+      ],
+
+      phaseEvaluation: [],
 
       targetDurationRatio: 0.05,
 
       transitionThreshold: 0.7,
 
-      instructions: `
-Introduce the problem briefly.
+      prompt: {
+        objective: "Introduce the problem and get the candidate to clarify their understanding",
+        rules: [
+          "Do not reveal requirements",
+          "Ask the candidate to begin by clarifying the problem",
+        ],
+        exitCriteria: [
+          "Candidate demonstrates understanding of the problem",
+          "Candidate begins requirement discovery",
+        ],
+      },
 
-Do not reveal requirements.
-
-Ask the candidate to begin by clarifying the problem.
-
-Move forward once the candidate demonstrates that they understand the problem and begins requirement discovery.
-`.trim(),
+      showWhiteboard: false,
     },
 
     {
-      id: "requirements",
+      id: PhaseId.Requirements,
 
       goals: [
-        "functional_requirements",
-        "non_functional_requirements",
-        "scale",
-        "constraints",
+        goal(Goal.FunctionalRequirements, true, 0.25),
+        goal(Goal.NonFunctionalRequirements, true, 0.25),
+        goal(Goal.Scale, true, 0.25),
+        goal(Goal.Constraints, true, 0.25),
       ],
 
       evaluationDimensions: [
-        "requirement_clarity",
-        "scope_management",
-        "communication",
+        EvaluationDimension.RequirementClarity,
+        EvaluationDimension.ScopeManagement,
+        EvaluationDimension.Communication,
+      ],
+
+      continuousEvaluation: [
+        EvaluationDimension.Communication,
+      ],
+
+      phaseEvaluation: [
+        EvaluationDimension.RequirementClarity,
+        EvaluationDimension.ScopeManagement,
       ],
 
       targetDurationRatio: 0.15,
 
       transitionThreshold: 0.75,
 
-      instructions: `
-Evaluate requirement gathering.
+      prompt: {
+        objective: "Evaluate requirement gathering and ensure scope is well-defined",
+        rules: [
+          "Answer requirement questions when directly asked",
+          "Do not volunteer every requirement",
+          "Probe missing functional requirements, non-functional requirements, scale, and constraints",
+          "Do not discuss architecture yet",
+        ],
+        exitCriteria: [
+          "Functional requirements identified",
+          "Non-functional requirements identified",
+          "Scale and constraints clarified",
+        ],
+      },
 
-Answer requirement questions when directly asked.
-
-Do not volunteer every requirement.
-
-Probe missing functional requirements, non-functional requirements, scale, and constraints.
-
-Do not discuss architecture yet.
-`.trim(),
+      showWhiteboard: false,
     },
 
     {
-      id: "high_level_design",
+      id: PhaseId.HighLevelDesign,
 
       goals: [
-        "core_components",
-        "service_boundaries",
-        "data_flow",
-        "storage_choice",
+        goal(Goal.CoreComponents, true, 0.25),
+        goal(Goal.ServiceBoundaries, true, 0.25),
+        goal(Goal.DataFlow, true, 0.25),
+        goal(Goal.StorageChoice, true, 0.25),
       ],
 
       evaluationDimensions: [
-        "architecture",
-        "technical_reasoning",
+        EvaluationDimension.Architecture,
+        EvaluationDimension.TechnicalReasoning,
+      ],
+
+      continuousEvaluation: [
+        EvaluationDimension.TechnicalReasoning,
+      ],
+
+      phaseEvaluation: [
+        EvaluationDimension.Architecture,
       ],
 
       targetDurationRatio: 0.25,
 
       transitionThreshold: 0.75,
 
-      instructions: `
-Ask the candidate to propose a high-level architecture.
+      prompt: {
+        objective: "Evaluate the candidate's high-level architecture proposal",
+        rules: [
+          "Ask the candidate to propose a high-level architecture",
+          "Evaluate major components, service boundaries, data flow, and storage decisions",
+          "Challenge unclear architectural choices",
+          "Do not design the system for the candidate",
+        ],
+        exitCriteria: [
+          "Major components identified",
+          "Service boundaries defined",
+          "Data flow described",
+          "Storage decisions justified",
+        ],
+      },
 
-Evaluate major components, service boundaries, data flow, and storage decisions.
-
-Challenge unclear architectural choices.
-
-Do not design the system for the candidate.
-`.trim(),
+      showWhiteboard: true,
     },
 
     {
-      id: "deep_dive",
+      id: PhaseId.DeepDive,
 
       goals: [
-        "critical_component",
-        "data_model",
-        "consistency",
-        "technical_tradeoffs",
+        goal(Goal.CriticalComponent, true, 0.5),
+        goal(Goal.DataModel, false, 0.15),
+        goal(Goal.Consistency, false, 0.15),
+        goal(Goal.TechnicalTradeoffs, true, 0.2),
       ],
 
       evaluationDimensions: [
-        "technical_depth",
-        "tradeoffs",
+        EvaluationDimension.TechnicalDepth,
+        EvaluationDimension.Tradeoffs,
+      ],
+
+      continuousEvaluation: [
+        EvaluationDimension.Tradeoffs,
+      ],
+
+      phaseEvaluation: [
+        EvaluationDimension.TechnicalDepth,
       ],
 
       targetDurationRatio: 0.3,
 
       transitionThreshold: 0.7,
 
-      instructions: `
-Choose important areas from the candidate's design for deeper discussion.
+      prompt: {
+        objective: "Deep dive into critical components and implementation details",
+        rules: [
+          "Choose important areas from the candidate's design for deeper discussion",
+          "Probe implementation details, data modeling, consistency, and tradeoffs",
+          "Prefer areas where the candidate's reasoning is incomplete or weak",
+        ],
+        exitCriteria: [
+          "Critical component implementation discussed",
+          "Data modeling evaluated",
+          "Consistency considerations addressed",
+          "Technical tradeoffs identified",
+        ],
+      },
 
-Probe implementation details, data modeling, consistency, and tradeoffs.
-
-Prefer areas where the candidate's reasoning is incomplete or weak.
-`.trim(),
+      showWhiteboard: true,
     },
 
     {
-      id: "scalability",
+      id: PhaseId.Scalability,
 
       goals: [
-        "bottlenecks",
-        "failure_modes",
-        "scaling_strategy",
-        "reliability",
+        goal(Goal.Bottlenecks, true, 0.4),
+        goal(Goal.FailureModes, false, 0.2),
+        goal(Goal.ScalingStrategy, true, 0.3),
+        goal(Goal.Reliability, false, 0.1),
       ],
 
       evaluationDimensions: [
-        "scalability",
-        "reliability",
+        EvaluationDimension.Scalability,
+        EvaluationDimension.Reliability,
+      ],
+
+      continuousEvaluation: [],
+
+      phaseEvaluation: [
+        EvaluationDimension.Scalability,
+        EvaluationDimension.Reliability,
       ],
 
       targetDurationRatio: 0.2,
 
       transitionThreshold: 0.7,
 
-      instructions: `
-Probe scalability and reliability.
+      prompt: {
+        objective: "Evaluate scalability and reliability considerations",
+        rules: [
+          "Probe scalability and reliability",
+          "Ask about bottlenecks, failure scenarios, capacity pressure, and scaling strategies",
+          "Challenge assumptions using realistic production scenarios",
+        ],
+        exitCriteria: [
+          "Bottlenecks identified",
+          "Failure modes considered",
+          "Scaling strategies proposed",
+          "Reliability mechanisms discussed",
+        ],
+      },
 
-Ask about bottlenecks, failure scenarios, capacity pressure, and scaling strategies.
-
-Challenge assumptions using realistic production scenarios.
-`.trim(),
+      showWhiteboard: true,
     },
 
     {
-      id: "closing",
+      id: PhaseId.Closing,
 
       goals: [
-        "final_tradeoff_summary",
+        goal(Goal.FinalTradeoffSummary, true, 1.0),
       ],
 
       evaluationDimensions: [
-        "communication",
-        "tradeoffs",
+        EvaluationDimension.Communication,
+        EvaluationDimension.Tradeoffs,
       ],
+
+      continuousEvaluation: [
+        EvaluationDimension.Communication,
+        EvaluationDimension.Tradeoffs,
+      ],
+
+      phaseEvaluation: [],
 
       targetDurationRatio: 0.05,
 
       transitionThreshold: 1,
 
-      instructions: `
-Conclude the interview naturally.
+      prompt: {
+        objective: "Conclude the interview with a summary",
+        rules: [
+          "Conclude the interview naturally",
+          "Ask the candidate to summarize their design and the most important tradeoffs",
+          "Do not begin another technical phase",
+        ],
+        exitCriteria: [
+          "Design summary provided",
+          "Key tradeoffs articulated",
+        ],
+      },
 
-Ask the candidate to summarize their design and the most important tradeoffs.
-
-Do not begin another technical phase.
-`.trim(),
+      showWhiteboard: false,
     },
   ],
 };
@@ -17943,26 +18653,53 @@ Do not begin another technical phase.
 ================================================
 FILE: ./src/modules/interview/profiles/InterviewProfile.ts
 ================================================
-export type PhaseId = string;
+import { PhaseId, Goal, EvaluationDimension } from "../constants";
+
+export interface PhasePrompt {
+  objective: string;
+  rules?: string[];
+  examples?: string[];
+  exitCriteria?: string[];
+}
+
+export interface GoalDefinition {
+  id: Goal;
+  required: boolean;
+  weight: number;
+}
 
 export interface InterviewPhaseDefinition {
   id: PhaseId;
 
-  goals: string[];
+  goals: GoalDefinition[];
 
-  evaluationDimensions: string[];
+  evaluationDimensions: EvaluationDimension[];
+
+  continuousEvaluation: EvaluationDimension[];
+
+  phaseEvaluation: EvaluationDimension[];
 
   targetDurationRatio: number;
 
   transitionThreshold: number;
 
-  instructions: string;
+  prompt: PhasePrompt;
 
   showWhiteboard: boolean;
 }
 
+export interface InterviewProfileMetadata {
+  difficulty: "Easy" | "Medium" | "Hard";
+  estimatedQuestions: number;
+  maxRetries: number;
+  allowBacktracking: boolean;
+  supportsInterruptions: boolean;
+}
+
 export interface InterviewProfile {
   type: string;
+
+  metadata: InterviewProfileMetadata;
 
   phases: InterviewPhaseDefinition[];
 }
@@ -17971,167 +18708,267 @@ export interface InterviewProfile {
 FILE: ./src/modules/interview/profiles/LLDInterviewProfile.ts
 ================================================
 import { InterviewProfile } from "./InterviewProfile";
+import { PhaseId, Goal, EvaluationDimension, goal } from "../constants";
 
 export const LLDInterviewProfile: InterviewProfile = {
   type: "LLD",
 
+  metadata: {
+    difficulty: "Medium",
+    estimatedQuestions: 15,
+    maxRetries: 2,
+    allowBacktracking: true,
+    supportsInterruptions: true,
+  },
+
   phases: [
     {
-      id: "introduction",
+      id: PhaseId.Introduction,
 
       goals: [
-        "candidate_understands_problem",
+        goal(Goal.CandidateUnderstandsProblem, true, 1.0),
       ],
 
       evaluationDimensions: [
-        "communication",
+        EvaluationDimension.Communication,
       ],
+
+      continuousEvaluation: [
+        EvaluationDimension.Communication,
+      ],
+
+      phaseEvaluation: [],
 
       targetDurationRatio: 0.05,
 
       transitionThreshold: 0.7,
 
-      instructions: `
-Introduce the object-oriented design problem.
+      prompt: {
+        objective: "Introduce the object-oriented design problem and clarify scope",
+        rules: [
+          "Ask the candidate to clarify the expected behaviour and scope",
+        ],
+        exitCriteria: [
+          "Candidate understands the problem",
+          "Scope is clarified",
+        ],
+      },
 
-Ask the candidate to clarify the expected behaviour and scope.
-`.trim(),
+      showWhiteboard: false,
     },
 
     {
-      id: "requirements",
+      id: PhaseId.Requirements,
 
       goals: [
-        "use_cases",
-        "actors",
-        "constraints",
-        "edge_cases",
+        goal(Goal.LLD_UseCases, true, 0.25),
+        goal(Goal.Actors, true, 0.25),
+        goal(Goal.Constraints, true, 0.25),
+        goal(Goal.EdgeCases, true, 0.25),
       ],
 
       evaluationDimensions: [
-        "requirement_clarity",
-        "scope_management",
+        EvaluationDimension.RequirementClarity,
+        EvaluationDimension.ScopeManagement,
+      ],
+
+      continuousEvaluation: [
+        EvaluationDimension.Communication,
+      ],
+
+      phaseEvaluation: [
+        EvaluationDimension.RequirementClarity,
+        EvaluationDimension.ScopeManagement,
       ],
 
       targetDurationRatio: 0.15,
 
       transitionThreshold: 0.75,
 
-      instructions: `
-Evaluate whether the candidate identifies important use cases, actors, constraints, and edge cases.
+      prompt: {
+        objective: "Evaluate whether the candidate identifies important use cases, actors, constraints, and edge cases",
+        rules: [
+          "Answer clarification questions",
+          "Do not propose classes or interfaces",
+        ],
+        exitCriteria: [
+          "Use cases identified",
+          "Actors identified",
+          "Constraints identified",
+          "Edge cases identified",
+        ],
+      },
 
-Answer clarification questions.
-
-Do not propose classes or interfaces.
-`.trim(),
+      showWhiteboard: false,
     },
 
     {
-      id: "domain_modeling",
+      id: PhaseId.DomainModeling,
 
       goals: [
-        "core_entities",
-        "responsibilities",
-        "relationships",
+        goal(Goal.CoreEntities, true, 0.33),
+        goal(Goal.Responsibilities, true, 0.33),
+        goal(Goal.Relationships, true, 0.34),
       ],
 
       evaluationDimensions: [
-        "object_modeling",
-        "abstraction",
+        EvaluationDimension.ObjectModeling,
+        EvaluationDimension.Abstraction,
+      ],
+
+      continuousEvaluation: [
+        EvaluationDimension.Abstraction,
+      ],
+
+      phaseEvaluation: [
+        EvaluationDimension.ObjectModeling,
       ],
 
       targetDurationRatio: 0.2,
 
       transitionThreshold: 0.75,
 
-      instructions: `
-Ask the candidate to identify the core entities.
+      prompt: {
+        objective: "Evaluate core entities, responsibilities, and relationships",
+        rules: [
+          "Ask the candidate to identify the core entities",
+          "Evaluate responsibilities and relationships",
+          "Challenge god objects, unclear ownership, and weak abstractions",
+        ],
+        exitCriteria: [
+          "Core entities identified",
+          "Responsibilities defined",
+          "Relationships modeled correctly",
+        ],
+      },
 
-Evaluate responsibilities and relationships.
-
-Challenge god objects, unclear ownership, and weak abstractions.
-`.trim(),
+      showWhiteboard: true,
     },
 
     {
-      id: "class_design",
+      id: PhaseId.ClassDesign,
 
       goals: [
-        "classes",
-        "interfaces",
-        "method_boundaries",
-        "encapsulation",
+        goal(Goal.Classes, true, 0.3),
+        goal(Goal.Interfaces, true, 0.3),
+        goal(Goal.MethodBoundaries, false, 0.1),
+        goal(Goal.Encapsulation, true, 0.3),
       ],
 
       evaluationDimensions: [
-        "class_design",
-        "code_quality",
+        EvaluationDimension.ClassDesign,
+        EvaluationDimension.CodeQuality,
+      ],
+
+      continuousEvaluation: [
+        EvaluationDimension.CodeQuality,
+      ],
+
+      phaseEvaluation: [
+        EvaluationDimension.ClassDesign,
       ],
 
       targetDurationRatio: 0.3,
 
       transitionThreshold: 0.75,
 
-      instructions: `
-Probe concrete class and interface design.
+      prompt: {
+        objective: "Probe concrete class and interface design",
+        rules: [
+          "Evaluate method boundaries, encapsulation, and separation of concerns",
+          "Ask focused questions about design decisions",
+        ],
+        exitCriteria: [
+          "Classes defined with clear boundaries",
+          "Interfaces designed appropriately",
+          "Encapsulation applied correctly",
+          "Separation of concerns achieved",
+        ],
+      },
 
-Evaluate method boundaries, encapsulation, and separation of concerns.
-
-Ask focused questions about design decisions.
-`.trim(),
+      showWhiteboard: true,
     },
 
     {
-      id: "extensibility",
+      id: PhaseId.Extensibility,
 
       goals: [
-        "change_scenarios",
-        "design_tradeoffs",
-        "extensibility",
-        "testability",
+        goal(Goal.ChangeScenarios, false, 0.2),
+        goal(Goal.DesignTradeoffs, false, 0.2),
+        goal(Goal.Extensibility, true, 0.3),
+        goal(Goal.Testability, true, 0.3),
       ],
 
       evaluationDimensions: [
-        "design_patterns",
-        "tradeoffs",
-        "maintainability",
+        EvaluationDimension.DesignPatterns,
+        EvaluationDimension.Tradeoffs,
+        EvaluationDimension.Maintainability,
+      ],
+
+      continuousEvaluation: [
+        EvaluationDimension.Tradeoffs,
+        EvaluationDimension.Maintainability,
+      ],
+
+      phaseEvaluation: [
+        EvaluationDimension.DesignPatterns,
       ],
 
       targetDurationRatio: 0.25,
 
       transitionThreshold: 0.7,
 
-      instructions: `
-Introduce realistic requirement changes.
+      prompt: {
+        objective: "Evaluate whether the design is extensible and testable",
+        rules: [
+          "Introduce realistic requirement changes",
+          "Probe design patterns only when relevant",
+          "Do not force pattern usage",
+        ],
+        exitCriteria: [
+          "Design accommodates requirement changes",
+          "Testability considered",
+          "Design patterns used appropriately",
+        ],
+      },
 
-Evaluate whether the design is extensible and testable.
-
-Probe design patterns only when relevant.
-
-Do not force pattern usage.
-`.trim(),
+      showWhiteboard: true,
     },
 
     {
-      id: "closing",
+      id: PhaseId.Closing,
 
       goals: [
-        "final_design_summary",
+        goal(Goal.FinalDesignSummary, true, 1.0),
       ],
 
       evaluationDimensions: [
-        "communication",
+        EvaluationDimension.Communication,
       ],
+
+      continuousEvaluation: [
+        EvaluationDimension.Communication,
+      ],
+
+      phaseEvaluation: [],
 
       targetDurationRatio: 0.05,
 
       transitionThreshold: 1,
 
-      instructions: `
-Ask the candidate to summarize their final design and major tradeoffs.
+      prompt: {
+        objective: "Conclude the interview with a summary",
+        rules: [
+          "Ask the candidate to summarize their final design and major tradeoffs",
+          "Conclude the interview naturally",
+        ],
+        exitCriteria: [
+          "Final design summary provided",
+          "Major tradeoffs articulated",
+        ],
+      },
 
-Conclude the interview naturally.
-`.trim(),
+      showWhiteboard: false,
     },
   ],
 };
@@ -19861,12 +20698,13 @@ FILE: ./src/modules/interview/services/interview/InterviewFactory.ts
 ================================================
 import { InterviewStatus, InterviewMode } from "@prisma/client";
 import { CreateInterviewInput } from "@/features/interview/types/CreateInterviewInput";
+import { PhaseId } from "../../constants";
 
 export function createInterview(input: CreateInterviewInput) {
   return {
     ...input,
     status: InterviewStatus.SETUP,
-    currentPhase: "introduction",
+    currentPhase: PhaseId.Introduction,
     summary: "Interview has not started yet.",
     promptVersion: "v1",
     mode: input.mode ?? InterviewMode.CANDIDATE,

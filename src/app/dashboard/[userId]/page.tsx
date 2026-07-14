@@ -81,6 +81,7 @@ export default async function DashboardPage({ params }: Props) {
       exploreProblems={exploreProblems.map((problem) => ({
         id: problem.id,
         title: problem.title,
+        slug: problem.slug,
         difficulty: problem.difficulty,
         description: problem.description,
       }))}

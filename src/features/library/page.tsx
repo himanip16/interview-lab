@@ -12,12 +12,16 @@ import {
   type EvaluationMetadata,
 } from "@/features/library/types";
 
+const EXPERIENCE_LIMIT = 30;
+
+const dateFormatter = new Intl.DateTimeFormat("en-US", {
+  year: "numeric",
+  month: "short",
+  day: "numeric",
+});
+
 function formatDisplayDate(date: Date): string {
-  return new Intl.DateTimeFormat("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  }).format(date);
+  return dateFormatter.format(date);
 }
 
 export default async function LibraryPage() {
@@ -32,7 +36,7 @@ export default async function LibraryPage() {
         company: { select: { name: true } },
       },
       orderBy: { createdAt: "desc" },
-      take: 30,
+      take: EXPERIENCE_LIMIT,
     }),
     prisma.interview.findMany({
       where: { userId, status: InterviewStatus.COMPLETED },

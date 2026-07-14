@@ -111,7 +111,7 @@ export default function SampleFeedback() {
 
             {!expanded && (
               <Button
-                variant="outline"
+                variant="secondary"
                 onClick={() => setExpanded(true)}
                 className="mt-4"
               >
@@ -129,13 +129,13 @@ export default function SampleFeedback() {
             <div className="grid gap-6 md:grid-cols-2">
               {/* Strengths */}
               <div>
-                <h5 className="mb-2 text-sm font-semibold text-green-400">
+                <h5 className="mb-2 text-sm font-semibold text-green-500">
                   Strengths
                 </h5>
                 <ul className="space-y-1 text-sm text-muted-foreground">
                   {sampleEvaluation.strengths.map((strength, idx) => (
                     <li key={idx} className="flex items-start gap-2">
-                      <span className="text-green-400">✓</span>
+                      <span className="text-green-500">✓</span>
                       {strength}
                     </li>
                   ))}
@@ -144,13 +144,13 @@ export default function SampleFeedback() {
 
               {/* Weaknesses */}
               <div>
-                <h5 className="mb-2 text-sm font-semibold text-red-400">
+                <h5 className="mb-2 text-sm font-semibold text-red-500">
                   Areas to Improve
                 </h5>
                 <ul className="space-y-1 text-sm text-muted-foreground">
                   {sampleEvaluation.weaknesses.map((weakness, idx) => (
                     <li key={idx} className="flex items-start gap-2">
-                      <span className="text-red-400">!</span>
+                      <span className="text-red-500">!</span>
                       {weakness}
                     </li>
                   ))}

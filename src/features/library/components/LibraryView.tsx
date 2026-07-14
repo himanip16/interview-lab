@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 
 import {
   type ExperienceItem,
@@ -30,6 +30,7 @@ type Props = {
 };
 
 export default function LibraryView({ experiences, completedInterviews }: Props) {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<Tab>("problems");
   const [selectedInterview, setSelectedInterview] =
@@ -83,7 +84,7 @@ export default function LibraryView({ experiences, completedInterviews }: Props)
         <div className="mt-8 space-y-6">
           {activeTab === "problems" && (
             <ProblemInventoryView onSelectProblem={(problemId) => {
-              window.location.href = `/interview/setup?problemId=${problemId}`;
+              router.push(`/interview/setup?problemId=${problemId}`);
             }} />
           )}
 

@@ -3,6 +3,7 @@
 
 import { CompletedInterviewItem } from "../types";
 import Text from "@/components/ui/Text";
+import Card from "@/components/ui/Card";
 import OverallScoreCard from "@/features/interview/report/components/OverallScoreCard";
 import WhatHappenedCard from "@/features/interview/report/components/WhatHappenedCard";
 import EvidenceTimeline from "@/features/interview/report/components/EvidenceTimeline";
@@ -33,7 +34,7 @@ export default function TranscriptDetail({ interview, onBack }: Props) {
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
         {/* Transcript */}
         <div className="space-y-4 lg:col-span-2">
-          <div className="rounded-lg border border-border bg-card p-6">
+          <Card className="p-6">
             <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
               Live conversation log
             </span>
@@ -68,7 +69,7 @@ export default function TranscriptDetail({ interview, onBack }: Props) {
                 <Text variant="muted">No messages recorded for this session.</Text>
               )}
             </div>
-          </div>
+          </Card>
         </div>
 
         {/* Evaluation */}
@@ -83,9 +84,9 @@ export default function TranscriptDetail({ interview, onBack }: Props) {
               />
             </>
           ) : (
-            <div className="rounded-lg border border-border bg-card p-6 text-center">
+            <Card className="p-6 text-center">
               <Text variant="muted">Evaluation still generating — check back shortly.</Text>
-            </div>
+            </Card>
           )}
         </div>
       </div>
