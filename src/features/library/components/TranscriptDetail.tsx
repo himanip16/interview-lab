@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { type ContentBlock, type TranscriptData } from "../types/transcript";
+import { cleanContentBlocks } from "../utils/textCleaner";
 import Text from "@/components/ui/Text";
 import Card from "@/components/ui/Card";
 import DialogueBubble from "./transcript/DialogueBubble";
@@ -31,7 +32,17 @@ export default function TranscriptDetail({ onBack }: Props) {
       try {
         const response = await fetch("/mockTranscript.json");
         const data = await response.json();
-        setTranscriptData(data);
+        
+        // Clean unicode content from all messages
+        const cleanedMessages = data.messages.map((message: any) => ({
+          ...message,
+          content: cleanContentBlocks(message.content)
+        }));
+        
+        setTranscriptData({
+          ...data,
+          messages: cleanedMessages
+        });
       } catch (error) {
         console.error("Failed to load mock transcript data:", error);
       } finally {

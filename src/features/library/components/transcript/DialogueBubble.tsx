@@ -3,6 +3,7 @@
 
 import { type ContentBlock } from "../../types/transcript";
 import Highlight from "./Highlight";
+import TakeawayCard from "./TakeawayCard";
 
 type Props = {
   role: "interviewer" | "candidate" | "takeaway";
@@ -65,16 +66,7 @@ export default function DialogueBubble({
   }
 
   if (isTakeaway) {
-    return (
-      <div className="border-l-4 border-emerald-500 bg-emerald-50/30 p-6 my-8 rounded-r-xl">
-        <span className="text-xs font-bold text-emerald-600 uppercase mb-2 block">
-          Takeaway
-        </span>
-        <p className="text-gray-700 font-medium italic leading-relaxed">
-          {typeof content === "string" ? content : renderContentBlocks(content)}
-        </p>
-      </div>
-    );
+    return <TakeawayCard content={content} />;
   }
 
   return (
