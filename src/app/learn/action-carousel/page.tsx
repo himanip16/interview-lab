@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { Search } from '@/components/ui/Search';
 import { Panel } from '@/components/ui/Panel';
 import { cn } from '@/lib/utils';
@@ -11,6 +12,7 @@ const CARDS = [
     title: 'Bug hunting',
     meta: 'Practice · 15 min',
     gradient: 'from-[#FF6B4A] to-[#E0432A]',
+    href: '/bug-hunting/checkout-timeout',
     icon: (
       <svg viewBox="0 0 84 84" fill="none">
         <circle cx="42" cy="42" r="40" fill="#fff"/>
@@ -27,6 +29,7 @@ const CARDS = [
     title: 'Review a PR',
     meta: 'Practice · 30 min',
     gradient: 'from-[#3E6BFF] to-[#213FCC]',
+    href: '/learn/pr-review', // TODO: Create PR review practice page
     icon: (
       <svg viewBox="0 0 84 84" fill="none">
         <circle cx="42" cy="42" r="40" fill="#fff"/>
@@ -40,6 +43,7 @@ const CARDS = [
     title: 'Read a transcript',
     meta: 'Library · Full session',
     gradient: 'from-[#262832] to-[#121319]',
+    href: '/library/transcript',
     icon: (
       <svg viewBox="0 0 84 84" fill="none">
         <circle cx="42" cy="42" r="40" fill="#fff"/>
@@ -54,6 +58,7 @@ const CARDS = [
     title: 'Learn whiteboarding',
     meta: 'Learn · Guided',
     gradient: 'from-[#00E0AB] to-[#00A87E]',
+    href: '/learn/whiteboard',
     icon: (
       <svg viewBox="0 0 84 84" fill="none">
         <circle cx="42" cy="42" r="40" fill="#fff"/>
@@ -68,6 +73,7 @@ const CARDS = [
     title: 'Live interview with AI',
     meta: 'Live · 45 min',
     gradient: 'from-[#FFB930] to-[#E8940A]',
+    href: '/interview/setup',
     icon: (
       <svg viewBox="0 0 84 84" fill="none">
         <circle cx="42" cy="42" r="40" fill="#fff"/>
@@ -82,6 +88,7 @@ const CARDS = [
     title: 'Deep dives',
     meta: 'Learn · Topic-based',
     gradient: 'from-[#7A6BFF] to-[#4C3FD6]',
+    href: '/interview/setup?type=deep_dive',
     icon: (
       <svg viewBox="0 0 84 84" fill="none">
         <circle cx="42" cy="42" r="40" fill="#fff"/>
@@ -96,6 +103,7 @@ const CARDS = [
     title: 'Build it',
     meta: 'Hands-on · Self-paced',
     gradient: 'from-[#FF4D93] to-[#D62568]',
+    href: '/learn/build', // TODO: Create hands-on coding workspace page
     icon: (
       <svg viewBox="0 0 84 84" fill="none">
         <circle cx="42" cy="42" r="40" fill="#fff"/>
@@ -109,6 +117,7 @@ const CARDS = [
 
 export default function ActionCarouselPage() {
   const railRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   const scroll = (direction: 'left' | 'right') => {
     if (railRef.current) {
@@ -153,6 +162,12 @@ export default function ActionCarouselPage() {
             {CARDS.map((card) => (
               <div
                 key={card.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => router.push(card.href)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') router.push(card.href);
+                }}
                 className="relative flex-0-0-[216px] h-[300px] radius-card p-5.5 scroll-snap-start cursor-pointer overflow-visible transition-transform duration-[0.35s] ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:-translate-y-[-8px] flex flex-col justify-end bg-gradient-to-br"
                 style={{ background: `linear-gradient(160deg, ${card.gradient.split(' ')[0]}, ${card.gradient.split(' ')[1]})` }}
               >
