@@ -27,13 +27,20 @@ export async function POST(request: Request) {
       );
     }
 
-    const template = await prisma.interviewTemplate.findUnique({
+    let template = await prisma.interviewTemplate.findUnique({
       where: { slug: type },
     });
 
+    // FIX: Fallback if the specific type (like "general") doesn't exist
+    if (!template) {
+      template = await prisma.interviewTemplate.findUnique({
+        where: { slug: "hld" },
+      });
+    }
+
     if (!template) {
       return NextResponse.json(
-        { error: "Invalid interview type." },
+        { error: "No valid interview templates found. Please run seed." },
         { status: 400 }
       );
     }

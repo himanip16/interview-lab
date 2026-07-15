@@ -33,7 +33,7 @@ const CARDS = [
     meta: "Practice · 30 min",
     from: "#3E6BFF",
     to: "#213FCC",
-    href: "/learn/pr-review", // TODO: Create PR review practice page
+    href: "#", // Disabled - route doesn't exist yet
     icon: (
       <svg viewBox="0 0 84 84" fill="none">
         <circle cx="42" cy="42" r="40" fill="#fff"/>
@@ -112,7 +112,7 @@ const CARDS = [
     meta: "Hands-on · Self-paced",
     from: "#FF4D93",
     to: "#D62568",
-    href: "/learn/build", // TODO: Create hands-on coding workspace page
+    href: "#", // Disabled - route doesn't exist yet
     icon: (
       <svg viewBox="0 0 84 84" fill="none">
         <circle cx="42" cy="42" r="40" fill="#fff"/>

@@ -20,8 +20,8 @@ export async function POST(
     const body = await req.json();
 
     const message =
-      typeof body.message === "string"
-        ? body.message.trim()
+      typeof body.text === "string"
+        ? body.text.trim()
         : "";
 
     if (!id || !message) {
@@ -43,22 +43,6 @@ export async function POST(
         id,
         message
       );
-      // POST /api/interviews/[id]/message
-Request body:
-{
-  text: string;
-  phase: string;
-}
-
-Response:
-{
-  messageId: string;
-  response: string;           // AI interviewer's response
-  timestamp: Date;
-  summary?: string[];         // Updated design summary (optional)
-  status: "success" | "error";
-  error?: string;
-}
 
     return NextResponse.json(
       result,

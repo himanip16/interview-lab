@@ -8,7 +8,6 @@ import { useProblemFilters } from "@/features/problems/hooks/useProblemFilters";
 import { filterByStatus, filterBySearch } from "@/features/problems/utils/filterProblems";
 import ProblemFilters from "@/features/problems/components/ProblemFilters";
 import ProblemList from "@/features/problems/components/ProblemList";
-import { getCurrentUserId } from "@/modules/auth/getCurrentUserId"; // server-only — see note below
 
 export default function ProblemsPage({ userId }: { userId: string | null }) {
   const router = useRouter();
@@ -33,19 +32,34 @@ export default function ProblemsPage({ userId }: { userId: string | null }) {
           error={error}
           onRetry={refetch}
           onSelect={async (problemId) => {
-            const res = await fetch("/api/interviews/start", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                type: filters.type === "all" ? "hld" : filters.type,
-                difficulty: filters.difficulty === "ALL" ? "MEDIUM" : filters.difficulty,
-                duration: 45,
-                company: "General",
-                problemId,
-              }),
-            });
-            const { id } = await res.json();
-            router.push(`/interview/live/${id}`);
+            try {
+              const res = await fetch("/api/interviews/start", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  type: filters.type === "all" ? "hld" : filters.type,
+                  difficulty: filters.difficulty === "ALL" ? "MEDIUM" : filters.difficulty,
+                  duration: 45,
+                  company: "General",
+                  problemId,
+                }),
+              });
+
+              const data = await res.json();
+
+              if (!res.ok) {
+                alert(`Failed to start interview: ${data.error}`);
+                return;
+              }
+
+              if (data.id) {
+                router.push(`/interview/live/${data.id}`);
+              } else {
+                console.error("No ID returned from API", data);
+              }
+            } catch (err) {
+              console.error("Network error starting interview:", err);
+            }
           }}
         />
       </Panel>
