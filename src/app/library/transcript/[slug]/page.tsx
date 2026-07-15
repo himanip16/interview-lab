@@ -5,13 +5,14 @@ import { getTranscript } from "@/content/transcripts";
 import TranscriptDetail from "@/features/library/components/TranscriptDetail";
 
 type Props = {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 };
 
-export default function TranscriptPage({ params }: Props) {
-  const transcript = getTranscript(params.slug);
+export default async function TranscriptPage({ params }: Props) {
+  const { slug } = await params;
+  const transcript = getTranscript(slug);
 
   if (!transcript) {
     notFound();
@@ -37,7 +38,8 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: Props) {
-  const transcript = getTranscript(params.slug);
+  const { slug } = await params;
+  const transcript = getTranscript(slug);
 
   if (!transcript) {
     return {

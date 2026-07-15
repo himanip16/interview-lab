@@ -33,7 +33,7 @@ const CARDS = [
     meta: "Practice · 30 min",
     from: "#3E6BFF",
     to: "#213FCC",
-    href: "/interview/setup?type=pr_review", // matches InterviewTemplate slug "pr_review"
+    href: "#", // disabled - setup removed
     icon: (
       <svg viewBox="0 0 84 84" fill="none">
         <circle cx="42" cy="42" r="40" fill="#fff"/>
