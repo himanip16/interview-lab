@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Review a PR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{ --paper:#FAF9F6; --ink:#15161C; --ink-soft:#5A5B66; --mint:#00D9A3; --mint-deep:#00A87E; --coral:#FF5A3C; --amber:#E8940A; --violet:#6A5AE0; }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; padding:32px 20px 0; }
+  h1,h2,h3{ font-family:'Poppins',sans-serif; letter-spacing:-0.02em; }
+  .mono{ font-family:'JetBrains Mono',monospace; }
+
+  .app{ max-width:900px; margin:0 auto 0; background:#fff; border-radius:28px 28px 0 0; overflow:hidden;
+    box-shadow:0 24px 60px rgba(21,22,28,0.06); border:1px solid rgba(21,22,28,0.06); border-bottom:none; }
+
+  .head{ padding:20px 30px; border-bottom:1px solid rgba(21,22,28,0.06); }
+  .crumb{ display:flex; align-items:center; gap:9px; font-size:13px; color:var(--ink-soft); font-weight:500; margin-bottom:12px; }
+  .back{ width:28px; height:28px; border-radius:50%; border:1px solid rgba(21,22,28,0.1); background:none; color:var(--ink); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; }
+  .pr-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:20px; }
+  .pr-title h1{ font-size:19px; font-weight:700; }
+  .pr-sub{ display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--ink-soft); margin-top:7px; flex-wrap:wrap; }
+  .branch{ font-family:'JetBrains Mono',monospace; background:var(--paper); padding:3px 8px; border-radius:6px; font-size:11px; }
+  .status-pill{ font-size:11px; font-weight:700; padding:4px 11px; border-radius:999px; background:rgba(0,217,163,0.12); color:var(--mint-deep); text-transform:uppercase; }
+  .timer{ position:relative; width:44px; height:44px; flex-shrink:0; }
+  .timer .aura{ position:absolute; inset:-8px; border-radius:50%; background:radial-gradient(circle, rgba(0,217,163,0.28), transparent 70%); animation:breathe 3.2s ease-in-out infinite; }
+  @keyframes breathe{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.15); } }
+  .timer .ring{ position:absolute; inset:0; border-radius:50%; background:var(--ink); display:flex; align-items:center; justify-content:center; border:1.5px solid rgba(0,217,163,0.4); }
+  .timer .t{ font-family:'Poppins',sans-serif; font-size:10px; font-weight:600; color:var(--mint); }
+
+  /* ---------- PAGE TABS ---------- */
+  .pagetabs{ display:flex; gap:4px; padding:0 30px; border-bottom:1px solid rgba(21,22,28,0.06); }
+  .pt{ font-size:13.5px; font-weight:600; color:var(--ink-soft); padding:14px 4px; margin-right:26px; cursor:pointer; border-bottom:2.5px solid transparent; }
+  .pt.active{ color:var(--ink); border-bottom-color:var(--ink); }
+  .pt .badge{ font-size:10px; background:var(--paper); color:var(--ink-soft); padding:1px 7px; border-radius:999px; margin-left:6px; }
+
+  .page{ display:none; padding:26px 30px 40px; max-height:560px; overflow-y:auto; }
+  .page.active{ display:block; }
+
+  .sec-label{ font-size:10.5px; font-weight:700; letter-spacing:.06em; color:var(--mint-deep); text-transform:uppercase; margin-bottom:8px; }
+  .summary-text{ font-size:13.5px; color:var(--ink-soft); line-height:1.7; }
+  .intent{ margin-top:14px; padding:16px 18px; border-radius:16px; background:var(--paper); border-left:3px solid var(--violet); }
+  .intent .lbl{ font-size:10.5px; font-weight:700; color:var(--violet); text-transform:uppercase; letter-spacing:.05em; margin-bottom:6px; }
+  .intent p{ font-size:13px; color:var(--ink); line-height:1.6; }
+  .stat-row{ display:flex; gap:10px; margin-top:20px; }
+  .stat{ flex:1; background:var(--paper); border-radius:14px; padding:14px 16px; }
+  .stat .n{ font-family:'Poppins',sans-serif; font-size:20px; font-weight:700; }
+  .stat .k{ font-size:11px; color:var(--ink-soft); margin-top:2px; }
+  .stat.add .n{ color:var(--mint-deep); } .stat.rm .n{ color:var(--coral); }
+
+  /* ---------- EVIDENCE PAGE ---------- */
+  .shot-row{ display:flex; gap:14px; margin-top:10px; }
+  .shot{ flex:1; }
+  .shot .lbl{ font-size:11.5px; font-weight:600; color:var(--ink-soft); margin-bottom:8px; }
+  .shot-frame{ border-radius:14px; border:1px solid rgba(21,22,28,0.08); overflow:hidden; background:var(--paper); }
+  .link-row{ display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:14px; border:1px solid rgba(21,22,28,0.07); margin-bottom:8px; }
+  .link-row .li{ flex:1; min-width:0; } .link-row .lt{ font-size:12.5px; font-weight:600; } .link-row .lu{ font-size:11px; color:var(--ink-soft); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .chip{ font-size:10px; font-weight:700; padding:3px 9px; border-radius:999px; white-space:nowrap; }
+  .chip.ok{ background:rgba(0,168,126,0.1); color:var(--mint-deep); }
+  .chip.warn{ background:rgba(232,148,10,0.12); color:var(--amber); }
+  .chip.bad{ background:rgba(255,90,60,0.12); color:var(--coral); }
+  .chip-row{ display:flex; gap:6px; flex-shrink:0; }
+
+  /* ---------- CODE PAGE ---------- */
+  .file-tabs{ display:flex; gap:6px; overflow-x:auto; margin-bottom:14px; }
+  .file-tab{ font-size:12px; font-weight:600; padding:7px 13px; border-radius:999px; color:var(--ink-soft); cursor:pointer; white-space:nowrap; border:1px solid rgba(21,22,28,0.1); }
+  .file-tab.active{ background:var(--ink); color:#fff; border-color:var(--ink); }
+  .filepane{ display:none; } .filepane.active{ display:block; }
+  .diff{ background:var(--ink); border-radius:14px; overflow:hidden; padding:6px 0; }
+  .diff-line-wrap{ position:relative; }
+  .diff-line{ display:flex; font-size:12px; padding:3px 16px; align-items:center; gap:10px; cursor:text; }
+  .diff-line .ln{ width:24px; color:rgba(255,255,255,0.3); flex-shrink:0; user-select:none; }
+  .diff-line .add-c{ margin-left:auto; width:18px; height:18px; border-radius:5px; background:rgba(0,217,163,0.25); color:#00D9A3; font-size:12px; font-weight:700; display:none; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; }
+  .diff-line-wrap:hover .add-c{ display:flex; }
+  .diff-line.add{ background:rgba(0,217,163,0.14); color:#B7F3E3; }
+  .diff-line.rm{ background:rgba(255,90,60,0.14); color:#FFC5B8; }
+  .diff-line.ctx{ color:rgba(255,255,255,0.55); }
+
+  .inline-composer{ background:#fff; margin:2px 16px 8px 40px; border-radius:12px; padding:12px 14px; border:1px solid rgba(21,22,28,0.08); }
+  .inline-thread{ margin:0 16px 6px 40px; padding:10px 14px; border-radius:12px; background:#F1EFEA; }
+  .thread-head{ display:flex; align-items:center; gap:7px; font-size:11.5px; font-weight:600; margin-bottom:4px; }
+  .thread-text{ font-size:12.5px; color:var(--ink-soft); line-height:1.5; }
+  .mention{ color:var(--violet); font-weight:600; }
+
+  .tiny-textarea{ width:100%; min-height:56px; border:1px solid rgba(21,22,28,0.1); border-radius:10px; padding:8px 10px; font-size:12.5px; font-family:'Inter',sans-serif; resize:none; outline:none; }
+  .tiny-textarea:focus{ border-color:var(--mint-deep); }
+  .composer-actions{ display:flex; align-items:center; justify-content:space-between; margin-top:8px; }
+  .tag-wrap{ position:relative; }
+  .tag-btn{ font-size:11px; font-weight:600; background:var(--paper); border:none; padding:6px 10px; border-radius:999px; cursor:pointer; color:var(--ink-soft); }
+  .tag-dropdown{ position:absolute; top:calc(100% + 4px); left:0; background:#fff; border-radius:10px; border:1px solid rgba(21,22,28,0.08); box-shadow:0 12px 28px rgba(21,22,28,0.1); padding:5px; display:none; z-index:5; min-width:130px; }
+  .tag-dropdown.open{ display:block; }
+  .tag-opt{ font-size:12px; padding:7px 10px; border-radius:7px; cursor:pointer; display:flex; align-items:center; gap:8px; }
+  .tag-opt:hover{ background:var(--paper); }
+  .tag-opt .av{ width:20px; height:20px; border-radius:50%; background:var(--ink); color:#fff; font-size:9px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .post-btn{ font-size:11.5px; font-weight:600; background:var(--mint-deep); color:#fff; border:none; padding:7px 14px; border-radius:999px; cursor:pointer; }
+
+  .select-hint{ font-size:11.5px; color:var(--ink-soft); margin-bottom:10px; display:flex; align-items:center; gap:7px; background:var(--paper); padding:8px 12px; border-radius:10px; }
+  .float-btn{ position:fixed; background:var(--ink); color:#fff; font-size:11.5px; font-weight:600; padding:7px 12px; border-radius:999px; cursor:pointer; display:none; z-index:20; box-shadow:0 10px 24px rgba(0,0,0,0.2); }
+  .snippet-quote{ font-size:11.5px; font-family:'JetBrains Mono',monospace; background:var(--paper); padding:8px 10px; border-radius:8px; border-left:2px solid var(--mint-deep); margin-bottom:8px; color:var(--ink-soft); }
+
+  /* ---------- DECISION BAR ---------- */
+  .decision-bar{ position:sticky; bottom:0; max-width:900px; margin:0 auto; background:#fff; border-top:1px solid rgba(21,22,28,0.08); padding:16px 30px; display:flex; align-items:center; justify-content:space-between; border-radius:0 0 28px 28px; box-shadow:0 -10px 30px rgba(21,22,28,0.04); }
+  .decision-status{ font-size:12.5px; color:var(--ink-soft); }
+  .decision-status b{ color:var(--ink); }
+  .decision-actions{ display:flex; gap:8px; }
+  .dbtn{ font-size:13px; font-weight:600; padding:10px 18px; border-radius:999px; cursor:pointer; border:1.5px solid transparent; transition:transform .2s ease; }
+  .dbtn:hover{ transform:translateY(-2px); }
+  .dbtn.reject{ background:none; border-color:var(--coral); color:var(--coral); }
+  .dbtn.reject.selected{ background:var(--coral); color:#fff; }
+  .dbtn.wait{ background:none; border-color:var(--amber); color:var(--amber); }
+  .dbtn.wait.selected{ background:var(--amber); color:#fff; }
+  .dbtn.approve{ background:none; border-color:var(--mint-deep); color:var(--mint-deep); }
+  .dbtn.approve.selected{ background:var(--mint-deep); color:#fff; }
+
+  @media (max-width:640px){ .shot-row{ flex-direction:column; } .pr-top{ flex-direction:column; } .decision-bar{ flex-direction:column; gap:12px; align-items:stretch; } }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="head">
+    <div class="crumb">
+      <button class="back"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 6l-6 6 6 6"/></svg></button>
+      Review a PR &nbsp;/&nbsp; #482
+    </div>
+    <div class="pr-top">
+      <div class="pr-title">
+        <h1>Redesign order summary card for mobile checkout</h1>
+        <div class="pr-sub">
+          <span class="branch">feature/order-summary-consolidate</span> &rarr; <span class="branch">main</span>
+          <span class="status-pill">Open</span>
+          <span>opened by <b style="color:var(--ink)">R. Okafor</b></span>
+        </div>
+      </div>
+      <div class="timer"><div class="aura"></div><div class="ring"><div class="t">18:32</div></div></div>
+    </div>
+  </div>
+
+  <div class="pagetabs" id="pagetabs">
+    <div class="pt active" data-page="info">Info</div>
+    <div class="pt" data-page="evidence">Evidence</div>
+    <div class="pt" data-page="code">Code changes<span class="badge">3 files</span></div>
+  </div>
+
+  <!-- ================= PAGE 1: INFO ================= -->
+  <div class="page active" id="page-info">
+    <div class="sec-label">Summary of changes</div>
+    <p class="summary-text">Merges the three separate summary blocks (Items, Discounts, Tax) into a single collapsible card. Removes the standalone subtotal line since it's now redundant with the card total. No backend changes.</p>
+    <div class="intent">
+      <div class="lbl">Stated intention</div>
+      <p>"On mobile, the three separate blocks push the pay button below the fold. Consolidating into one card should cut vertical scroll by roughly 30% without losing any of the pricing detail."</p>
+    </div>
+    <div class="stat-row">
+      <div class="stat"><div class="n">3</div><div class="k">Files changed</div></div>
+      <div class="stat add"><div class="n">+18</div><div class="k">Additions</div></div>
+      <div class="stat rm"><div class="n">-24</div><div class="k">Deletions</div></div>
+    </div>
+  </div>
+
+  <!-- ================= PAGE 2: EVIDENCE ================= -->
+  <div class="page" id="page-evidence">
+    <div class="sec-label">Before &amp; after</div>
+    <div class="shot-row">
+      <div class="shot"><div class="lbl">Before</div><div class="shot-frame">
+        <svg viewBox="0 0 260 320" width="100%">
+          <rect width="260" height="320" fill="#FAF9F6"/>
+          <rect x="14" y="14" width="232" height="64" rx="10" fill="#fff" stroke="#e6e3dc"/>
+          <rect x="26" y="26" width="90" height="8" rx="4" fill="#5A5B66"/><rect x="26" y="42" width="140" height="6" rx="3" fill="#c9c6be"/>
+          <rect x="14" y="90" width="232" height="52" rx="10" fill="#fff" stroke="#e6e3dc"/>
+          <rect x="26" y="102" width="70" height="8" rx="4" fill="#5A5B66"/><rect x="26" y="118" width="120" height="6" rx="3" fill="#c9c6be"/>
+          <rect x="14" y="154" width="232" height="52" rx="10" fill="#fff" stroke="#e6e3dc"/>
+          <rect x="26" y="166" width="60" height="8" rx="4" fill="#5A5B66"/><rect x="26" y="182" width="100" height="6" rx="3" fill="#c9c6be"/>
+          <rect x="200" y="290" width="46" height="20" rx="6" fill="#e6e3dc"/>
+        </svg>
+      </div></div>
+      <div class="shot"><div class="lbl">After</div><div class="shot-frame">
+        <svg viewBox="0 0 260 320" width="100%">
+          <rect width="260" height="320" fill="#FAF9F6"/>
+          <rect x="14" y="14" width="232" height="150" rx="16" fill="#fff" stroke="#00A87E" stroke-width="1.5"/>
+          <rect x="28" y="30" width="90" height="8" rx="4" fill="#15161C"/><rect x="28" y="48" width="140" height="6" rx="3" fill="#c9c6be"/>
+          <rect x="28" y="66" width="70" height="6" rx="3" fill="#c9c6be"/><rect x="28" y="84" width="100" height="6" rx="3" fill="#c9c6be"/>
+          <rect x="28" y="106" width="204" height="1" fill="#eee"/>
+          <rect x="28" y="120" width="60" height="9" rx="4" fill="#00A87E"/><rect x="180" y="120" width="52" height="9" rx="4" fill="#00A87E"/>
+          <rect x="200" y="290" width="46" height="20" rx="6" fill="#00D9A3"/>
+        </svg>
+      </div></div>
+    </div>
+
+    <div class="sec-label" style="margin-top:24px;">Links in this PR</div>
+    <div class="link-row"><div class="li"><div class="lt">Figma &mdash; Consolidated summary card</div><div class="lu">figma.com/file/8k2j.../order-summary-v2</div></div><div class="chip-row"><span class="chip ok">Accessible</span><span class="chip ok">Public</span></div></div>
+    <div class="link-row"><div class="li"><div class="lt">Staging preview</div><div class="lu">pr-482.staging.internal.app</div></div><div class="chip-row"><span class="chip bad">Expired</span></div></div>
+    <div class="link-row"><div class="li"><div class="lt">Slack thread &mdash; design discussion</div><div class="lu">yourteam.slack.com/archives/C0.../p17...</div></div><div class="chip-row"><span class="chip warn">Internal only</span></div></div>
+  </div>
+
+  <!-- ================= PAGE 3: CODE CHANGES ================= -->
+  <div class="page" id="page-code">
+    <div class="select-hint">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>
+      Hover a line for the quick comment button, or select any text to comment on just that part.
+    </div>
+
+    <div class="file-tabs" id="fileTabs">
+      <div class="file-tab active" data-file="summary">OrderSummary.tsx</div>
+      <div class="file-tab" data-file="price">PriceBreakdown.tsx</div>
+      <div class="file-tab" data-file="css">checkout.module.css</div>
+    </div>
+
+    <div class="filepane active" id="pane-summary">
+      <div class="diff mono">
+        <div class="diff-line-wrap"><div class="diff-line ctx" data-line="41">41<span class="ln"></span>export function OrderSummary({ items, discounts, tax }: Props) {<div class="add-c" onclick="toggleComposer(this)">+</div></div></div>
+        <div class="diff-line-wrap"><div class="diff-line rm"><span class="ln">42</span>-  return (&lt;&gt;&lt;ItemsBlock items={items} /&gt;&lt;DiscountsBlock discounts={discounts} /&gt;&lt;TaxBlock tax={tax} /&gt;&lt;/&gt;);<div class="add-c" onclick="toggleComposer(this)">+</div></div></div>
+        <div class="diff-line-wrap"><div class="diff-line add"><span class="ln">42</span>+  return (&lt;SummaryCard items={items} discounts={discounts} tax={tax} collapsible /&gt;);<div class="add-c" onclick="toggleComposer(this)">+</div></div>
+          <div class="inline-thread"><div class="thread-head"><span>M. Patel</span></div><div class="thread-text">Does <span class="mention">@R. Okafor</span> collapsible default to open or closed? That changes my earlier concern about the tax breakdown.</div></div>
+        </div>
+        <div class="diff-line-wrap"><div class="diff-line ctx"><span class="ln">43</span>}<div class="add-c" onclick="toggleComposer(this)">+</div></div></div>
+      </div>
+    </div>
+
+    <div class="filepane" id="pane-price">
+      <div class="diff mono">
+        <div class="diff-line-wrap"><div class="diff-line rm"><span class="ln">18</span>-  &lt;div className="subtotal-row"&gt;Subtotal: {formatPrice(subtotal)}&lt;/div&gt;<div class="add-c" onclick="toggleComposer(this)">+</div></div></div>
+        <div class="diff-line-wrap"><div class="diff-line ctx"><span class="ln">19</span>  &lt;div className="total-row"&gt;Total: {formatPrice(total)}&lt;/div&gt;<div class="add-c" onclick="toggleComposer(this)">+</div></div></div>
+      </div>
+    </div>
+
+    <div class="filepane" id="pane-css">
+      <div class="diff mono">
+        <div class="diff-line-wrap"><div class="diff-line rm"><span class="ln">7</span>-  .summary-block { margin-bottom: 24px; padding: 16px; }<div class="add-c" onclick="toggleComposer(this)">+</div></div></div>
+        <div class="diff-line-wrap"><div class="diff-line add"><span class="ln">7</span>+  .summary-card { margin-bottom: 12px; padding: 20px; border-radius: 16px; }<div class="add-c" onclick="toggleComposer(this)">+</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="decision-bar">
+    <div class="decision-status" id="decisionStatus">No decision yet &mdash; leave any comments first.</div>
+    <div class="decision-actions">
+      <button class="dbtn reject" onclick="decide('reject', this)">Reject PR</button>
+      <button class="dbtn wait" onclick="decide('wait', this)">Request changes</button>
+      <button class="dbtn approve" onclick="decide('approve', this)">Approve</button>
+    </div>
+  </div>
+</div>
+
+<div class="float-btn" id="floatBtn">Comment on selection</div>
+
+<script>
+/* ---- page tabs ---- */
+document.querySelectorAll('.pt').forEach(t => {
+  t.onclick = () => {
+    document.querySelectorAll('.pt').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('page-'+t.dataset.page).classList.add('active');
+  };
+});
+/* ---- file tabs ---- */
+document.querySelectorAll('.file-tab').forEach(t => {
+  t.onclick = () => {
+    document.querySelectorAll('.file-tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.filepane').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('pane-'+t.dataset.file).classList.add('active');
+  };
+});
+
+const PEOPLE = ['R. Okafor','M. Patel','J. Lin','A. Kim'];
+let composerCount = 0;
+
+function composerHTML(quote){
+  composerCount++;
+  const id = 'cmp'+composerCount;
+  return `
+    <div class="inline-composer" id="${id}">
+      ${quote ? `<div class="snippet-quote">"${quote}"</div>` : ''}
+      <textarea class="tiny-textarea" placeholder="Leave a comment&hellip;"></textarea>
+      <div class="composer-actions">
+        <div class="tag-wrap">
+          <button class="tag-btn" onclick="toggleTagDropdown(this)">@ Tag someone</button>
+          <div class="tag-dropdown">
+            ${PEOPLE.map(p=>`<div class="tag-opt" onclick="insertMention(this,'${p}')"><span class="av">${p.split(' ').map(w=>w[0]).join('')}</span>${p}</div>`).join('')}
+          </div>
+        </div>
+        <button class="post-btn" onclick="postComment(this)">Post</button>
+      </div>
+    </div>`;
+}
+
+function toggleComposer(btn){
+  const wrap = btn.closest('.diff-line-wrap');
+  const existing = wrap.querySelector('.inline-composer');
+  if(existing){ existing.remove(); return; }
+  wrap.insertAdjacentHTML('beforeend', composerHTML(null));
+}
+
+function toggleTagDropdown(btn){
+  document.querySelectorAll('.tag-dropdown.open').forEach(d=>{ if(d!==btn.nextElementSibling) d.classList.remove('open'); });
+  btn.nextElementSibling.classList.toggle('open');
+}
+function insertMention(el, name){
+  const ta = el.closest('.inline-composer').querySelector('textarea');
+  ta.value += (ta.value && !ta.value.endsWith(' ') ? ' ' : '') + '@'+name+' ';
+  ta.focus();
+  el.closest('.tag-dropdown').classList.remove('open');
+}
+function postComment(btn){
+  const composer = btn.closest('.inline-composer');
+  const text = composer.querySelector('textarea').value.trim();
+  if(!text) return;
+  const withMentions = text.replace(/@([A-Za-z. ]+?)(?=\\s@|$)/g, '<span class="mention">@$1</span>');
+  const thread = document.createElement('div');
+  thread.className = 'inline-thread';
+  thread.innerHTML = `<div class="thread-head"><span>You</span></div><div class="thread-text">${withMentions}</div>`;
+  composer.replaceWith(thread);
+}
+
+/* ---- selection-to-comment ---- */
+const floatBtn = document.getElementById('floatBtn');
+let pendingSelection = null, pendingWrap = null;
+
+document.addEventListener('mouseup', (e) => {
+  const sel = window.getSelection();
+  const text = sel.toString().trim();
+  if(text.length > 1 && sel.anchorNode && e.target.closest('.diff-line')){
+    const range = sel.getRangeAt(0);
+    const rect = range.getBoundingClientRect();
+    floatBtn.style.top = (window.scrollY + rect.top - 38) + 'px';
+    floatBtn.style.left = (window.scrollX + rect.left) + 'px';
+    floatBtn.style.display = 'block';
+    pendingSelection = text;
+    pendingWrap = e.target.closest('.diff-line-wrap');
+  } else if(!e.target.closest('.float-btn')){
+    floatBtn.style.display = 'none';
+  }
+});
+floatBtn.onclick = () => {
+  if(pendingWrap && pendingSelection){
+    const existing = pendingWrap.querySelector('.inline-composer');
+    if(!existing) pendingWrap.insertAdjacentHTML('beforeend', composerHTML(pendingSelection));
+  }
+  floatBtn.style.display = 'none';
+  window.getSelection().removeAllRanges();
+};
+
+/* ---- decision bar ---- */
+function decide(type, btn){
+  document.querySelectorAll('.dbtn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  const label = type==='reject' ? 'You rejected this PR.' : type==='wait' ? 'You requested changes \u2014 waiting on the author.' : 'You approved this PR.';
+  document.getElementById('decisionStatus').innerHTML = '<b>'+label+'</b>';
+}
+</script>
+
+</body>
+</html>

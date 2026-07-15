@@ -1,7 +1,18 @@
-'use server'
+// src/app/interview/setup/actions.ts
+"use server";
 
-import { prisma } from "@/shared/prisma/client";
 import { redirect } from "next/navigation";
+import { Difficulty, InterviewMode } from "@prisma/client";
+import { prisma } from "@/shared/prisma/client";
+import { ensureGuestUser } from "@/modules/auth/getCurrentUserId";
+import { createInterview } from "@/modules/interview/services/interview/InterviewFactory";
+import { TranscriptService } from "@/modules/interview/services/TranscriptService";
+
+const difficultyMap: Record<string, Difficulty> = {
+  Easy: Difficulty.EASY,
+  Medium: Difficulty.MEDIUM,
+  Hard: Difficulty.HARD,
+};
 
 export async function createInterviewSession(data: {
   problemId: string;
@@ -9,43 +20,50 @@ export async function createInterviewSession(data: {
   userId: string | null;
   type: string;
 }) {
-
-  console.log("Server action started");
-  // 1. Create the session in the DB
-  const session = await prisma.interviewSession.create({
-    data: {
-      userId: data.userId,
-      problemId: data.problemId,
-      difficulty: data.difficulty,
-      status: "STARTED",
-      // We store a mock transcript for now. 
-      // In production, you'd fetch the actual content based on problemId.
-      transcript: [
-        {
-          id: "1",
-          type: "interviewer",
-          roleLabel: "Interviewer",
-          text: "The database commits, but the service crashes before Kafka publish. What happens?"
-        },
-        {
-          id: "2",
-          type: "candidate",
-          roleLabel: "Candidate",
-          content: [
-            { text: "I think " },
-            { text: "Kafka guarantees delivery", highlight: "missed", explanation: "Kafka only guarantees delivery once the message reaches the broker. If the service crashes before publishing, the message is lost forever." }
-          ]
-        },
-        {
-            id: "3",
-            type: "takeaway",
-            text: "Use the Transactional Outbox pattern to ensure atomicity between DB commits and Message publishing."
-        }
-      ]
-    }
+  const template = await prisma.interviewTemplate.findUnique({
+    where: { slug: data.type },
   });
-  console.log("Created session", session.id);
+  if (!template) throw new Error(`Invalid interview type: ${data.type}`);
 
-  // 2. Redirect to the unique session URL
-  redirect(`/interview/live/${session.id}`);
+  const problem = await prisma.problem.findUnique({
+    where: { id: data.problemId },
+  });
+  if (!problem) throw new Error("Problem not found");
+
+  const interviewDifficulty = difficultyMap[data.difficulty];
+  if (!interviewDifficulty) throw new Error(`Invalid difficulty: ${data.difficulty}`);
+
+  const userId = data.userId ?? (await ensureGuestUser());
+
+  const interviewData = createInterview({
+    templateId: template.id,
+    difficulty: interviewDifficulty,
+    duration: 45,
+    company: "General",
+    problemId: problem.id,
+    mode: InterviewMode.CANDIDATE,
+  });
+
+  const interview = await prisma.interview.create({
+    data: {
+      difficulty: interviewData.difficulty,
+      duration: interviewData.duration,
+      company: interviewData.company,
+      status: interviewData.status,
+      currentPhase: interviewData.currentPhase,
+      summary: interviewData.summary,
+      promptVersion: interviewData.promptVersion,
+      mode: interviewData.mode,
+      user: { connect: { id: userId } },
+      template: { connect: { id: template.id } },
+      problem: { connect: { id: problem.id } },
+    },
+  });
+
+  await new TranscriptService().addAssistantMessage(
+    interview.id,
+    `Welcome! Today we'll design "${problem.title}". Start by asking clarifying questions before proposing your design.`
+  );
+
+  redirect(`/interview/live/${interview.id}`);
 }
