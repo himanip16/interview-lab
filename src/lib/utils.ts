@@ -8,7 +8,7 @@ export function cn(...inputs: ClassValue[]) {
 const CARD_PALETTE = [
   { from: "#FF6B4A", to: "#E8940A" },
   { from: "#3E6BFF", to: "#213FCC" },
-  { from: "#00E0AB", to: "#00A87E" },
+  { from: "#00D9A3", to: "#00A87E" },
   { from: "#6A5AE0", to: "#4B3DB8" },
 ];
 

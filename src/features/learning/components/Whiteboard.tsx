@@ -63,7 +63,7 @@ export default function Whiteboard() {
       <div className="title-row flex items-center justify-between mt-4.5 mb-5">
         <h2 className="text-[23px] font-semibold text-[#15161C] font-['Poppins']">Design a URL shortener</h2>
         <div className="hint text-[12.5px] text-[#5A5B66] flex items-center gap-1.5">
-          <span className="pulse w-1.5 h-1.5 rounded-full bg-[#00D9A3]">
+          <span className="pulse w-1.5 h-1.5 rounded-full bg-[var(--mint)]">
             <style>{`
               @keyframes pulse {
                 0%, 100% { opacity: 1; }
@@ -196,22 +196,22 @@ export default function Whiteboard() {
               </div>
 
               <div className="ins-block mb-4">
-                <div className="ins-label text-[10.5px] font-bold tracking-[0.06em] text-[#00A87E] mb-1.5 text-transform:uppercase">Role &amp; duty</div>
+                <div className="ins-label text-[10.5px] font-bold tracking-[0.06em] text-[var(--mint-deep)] mb-1.5 text-transform:uppercase">Role &amp; duty</div>
                 <div className="ins-text text-[12.5px] text-[#5A5B66] leading-[1.6]">{DATA[selectedId as keyof typeof DATA].role}</div>
               </div>
 
               <div className="ins-block mb-4">
-                <div className="ins-label text-[10.5px] font-bold tracking-[0.06em] text-[#00A87E] mb-1.5 text-transform:uppercase">Deep dive</div>
+                <div className="ins-label text-[10.5px] font-bold tracking-[0.06em] text-[var(--mint-deep)] mb-1.5 text-transform:uppercase">Deep dive</div>
                 <div className="ins-text text-[12.5px] text-[#5A5B66] leading-[1.6]">{DATA[selectedId as keyof typeof DATA].deep}</div>
               </div>
 
               <div className="ins-block mb-4">
-                <div className="ins-label text-[10.5px] font-bold tracking-[0.06em] text-[#00A87E] mb-1.5 text-transform:uppercase">Failure modes</div>
+                <div className="ins-label text-[10.5px] font-bold tracking-[0.06em] text-[var(--mint-deep)] mb-1.5 text-transform:uppercase">Failure modes</div>
                 <div className="ins-text text-[12.5px] text-[#5A5B66] leading-[1.6]">{DATA[selectedId as keyof typeof DATA].failure}</div>
               </div>
 
               <div className="ins-block">
-                <div className="ins-label text-[10.5px] font-bold tracking-[0.06em] text-[#00A87E] mb-1.5 text-transform:uppercase">Tradeoffs</div>
+                <div className="ins-label text-[10.5px] font-bold tracking-[0.06em] text-[var(--mint-deep)] mb-1.5 text-transform:uppercase">Tradeoffs</div>
                 <div className="ins-text text-[12.5px] text-[#5A5B66] leading-[1.6]">{DATA[selectedId as keyof typeof DATA].tradeoffs}</div>
               </div>
             </>

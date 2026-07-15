@@ -143,7 +143,7 @@ export default function LearnPage() {
         {/* Top Navigation */}
         <div className="flex items-center justify-between mb-8.5 gap-6">
           <div className="heading-m font-semibold">
-            interview<span style={{ color: "#00A87E" }}>.</span>lab
+            interview<span style={{ color: "var(--mint-deep)" }}>.</span>lab
           </div>
           <Search
             placeholder="Search actions…"

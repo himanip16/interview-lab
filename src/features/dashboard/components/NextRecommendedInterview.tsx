@@ -37,12 +37,9 @@ export default function NextRecommendedInterview({ recommendation }: Props) {
         ))}
       </ul>
 
-      <Link
-        href={`/interview/setup?problemId=${recommendation.problemId}&type=hld`}
-        className="mt-6 inline-block rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium hover:bg-blue-500"
-      >
-        Start Interview →
-      </Link>
+      <div className="mt-6 text-sm text-zinc-400">
+        Interview setup coming soon
+      </div>
     </div>
   );
 }

@@ -99,11 +99,11 @@ export default function PersonalNotebooks() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {problems.map((problem) => (
-          <Link
+          <div
             key={problem.id}
-            href={`/interview/setup?problemId=${problem.id}&type=${getInterviewType(problem.category)}`}
+            className="hover:border-border transition-colors group h-full"
           >
-            <Card className="hover:border-border transition-colors cursor-pointer group h-full">
+            <Card className="h-full">
               <div className="flex items-center gap-2 mb-3">
                 <span className="px-2 py-1 bg-muted text-muted-foreground text-xs font-mono rounded-lg">
                   {getTypeLabel(problem.category)}
@@ -117,12 +117,10 @@ export default function PersonalNotebooks() {
               </Text>
               <div className="flex items-center justify-between">
                 <Text variant="small">{getReadTime(problem.difficulty)}</Text>
-                <svg className="w-4 h-4 text-muted-foreground group-hover:text-muted-foreground/80 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
+                <Text variant="small" className="text-muted-foreground">Coming soon</Text>
               </div>
             </Card>
-          </Link>
+          </div>
         ))}
       </div>
     </section>

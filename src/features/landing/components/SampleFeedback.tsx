@@ -189,13 +189,9 @@ export default function SampleFeedback() {
             <p className="text-sm text-muted-foreground">
               Get this level of detailed feedback after every practice interview
             </p>
-            <Button
-              variant="primary"
-              onClick={() => (window.location.href = "/interview/setup")}
-              className="mt-3"
-            >
-              Try a Practice Interview
-            </Button>
+            <div className="mt-3 text-sm text-muted-foreground">
+              Interview setup coming soon
+            </div>
           </div>
         </div>
       </div>

@@ -38,10 +38,9 @@ export default function ExploreProblems({ exploreProblems }: Props) {
 
       <div className="-mx-1 flex gap-4 overflow-x-auto px-1 pb-2 pt-1">
         {exploreProblems.map((problem) => (
-          <Link
+          <div
             key={problem.id}
-            href={`/interview/setup?problemId=${problem.id}&type=${problem.slug}`}
-            className="flex h-[140px] w-64 flex-shrink-0 flex-col justify-between rounded-lg border border-border bg-card p-5 transition hover:border-foreground/40"
+            className="flex h-[140px] w-64 flex-shrink-0 flex-col justify-between rounded-lg border border-border bg-card p-5"
           >
             <div>
               <span className="mb-1 block font-mono text-[10px] uppercase text-muted-foreground">
@@ -56,9 +55,9 @@ export default function ExploreProblems({ exploreProblems }: Props) {
               <span className="line-clamp-1">
                 {problem.description ?? "System Design"}
               </span>
-              <span className="flex-shrink-0 text-foreground">Start →</span>
+              <span className="flex-shrink-0 text-muted-foreground">Coming soon</span>
             </div>
-          </Link>
+          </div>
         ))}
       </div>
     </div>

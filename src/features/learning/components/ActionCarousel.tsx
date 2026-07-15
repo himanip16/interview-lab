@@ -20,7 +20,7 @@ export default function ActionCarousel() {
       {/* Top Section */}
       <div className="top flex items-center justify-between mb-[34px] gap-6">
         <div className="logo font-['Poppins'] font-bold text-[18px] whitespace-nowrap">
-          interview<span className="text-[#00A87E]">.</span>lab
+          interview<span className="text-[var(--mint-deep)]">.</span>lab
         </div>
         <div className="search flex-1 max-w-[340px] flex items-center gap-2.5 bg-[#FAF9F6] border border-[rgba(21,22,28,0.08)] rounded-[999px] p-[10px_18px] text-[13.5px] text-[#5A5B66]">
           <svg className="w-[15px] h-[15px] opacity-50 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

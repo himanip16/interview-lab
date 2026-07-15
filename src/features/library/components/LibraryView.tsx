@@ -14,10 +14,7 @@ import ExperienceList from "./ExperienceList";
 import DiagramGallery from "./DiagramGallery";
 import TranscriptCatalog from "./TranscriptCatalog";
 
-import ProblemInventoryView from "@/features/interview/setup/components/ProblemInventoryView";
-
 const VALID_TABS = new Set<Tab>([
-  "problems",
   "transcripts",
   "experiences",
   "diagrams",
@@ -35,7 +32,7 @@ export default function LibraryView({
   const searchParams = useSearchParams();
 
   const [activeTab, setActiveTab] =
-    useState<Tab>("problems");
+    useState<Tab>("transcripts");
 
   useEffect(() => {
     const tab = searchParams.get("tab");
@@ -71,14 +68,6 @@ export default function LibraryView({
       </div>
 
       <div className="mt-8">
-        {activeTab === "problems" && (
-          <ProblemInventoryView
-  onSelectProblem={(problemId) => {
-    router.push(`/interview?problemId=${problemId}`);
-  }}
-/>
-        )}
-
         {activeTab === "transcripts" && (
           <TranscriptCatalog />
         )}

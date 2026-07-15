@@ -60,13 +60,9 @@ export default function RecommendationCard({ recommendation }: Props) {
         </div>
 
         <div className="flex items-center justify-end pt-2">
-          <Link
-            href={`/interview/setup?problemId=${recommendation.problemId}&type=${recommendation.slug}`}
-          >
-            <Button variant="primary" className="text-sm">
-              Start Interview →
-            </Button>
-          </Link>
+          <Text variant="small" className="text-muted-foreground">
+            Interview setup coming soon
+          </Text>
         </div>
       </div>
     </div>
