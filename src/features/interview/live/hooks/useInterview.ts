@@ -33,6 +33,9 @@ export function useInterview(interviewId: string): UseInterviewReturn {
   const router = useRouter();
 
   const fetchInterview = useCallback(async () => {
+    // GUARD: Don't fetch if the ID is missing or literal "undefined"
+    if (!interviewId || interviewId === 'undefined') return;
+
     try {
       setLoading(true);
       setError(null);
@@ -42,7 +45,7 @@ export function useInterview(interviewId: string): UseInterviewReturn {
       const message = err instanceof Error ? err.message : 'Unknown error';
       setError(message);
 
-      // Redirect to dashboard if interview not found
+      // Only redirect if we are SURE the interview doesn't exist in the DB
       if (message.includes('not found')) {
         router.push('/dashboard');
       }

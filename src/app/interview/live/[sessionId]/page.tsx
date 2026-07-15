@@ -1,12 +1,15 @@
 'use client';
 
+import { use } from "react";
 import { LiveInterview } from '@/features/interview/live/components/LiveInterview';
-export default async function LiveInterviewPage({
+
+export default function LiveInterviewPage({
   params,
 }: {
   params: Promise<{ sessionId: string }>;
 }) {
-  const { sessionId } = await params;
+  const { sessionId } = use(params);
 
-  return <LiveInterview sessionId={sessionId} />;
+  // CHANGE: Pass 'interviewId' instead of 'sessionId' to match the component's expected props
+  return <LiveInterview interviewId={sessionId} />;
 }
