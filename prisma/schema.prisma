@@ -52,17 +52,17 @@ model User {
   learningRecommendations LearningRecommendation[]
 }
 model InterviewSession {
-  id                    String   @id @default(cuid())
-  userId                String?
-  problemId             String
-  difficulty            String
-  status                String   @default("STARTED")
-  transcript            Json     
-  duration              Int      // Add this (in seconds)
-  whiteboardState       Json?    // Add this
-  interviewTitle        String?  // Add this
-  designSummary         Json?    // Add this (array as JSON)
-  createdAt             DateTime @default(now()) @map("created_at")
+  id              String   @id @default(cuid())
+  userId          String?
+  problemId       String
+  difficulty      String
+  status          String   @default("STARTED")
+  transcript      Json
+  duration        Int
+  whiteboardState Json?
+  interviewTitle  String?
+  designSummary   Json?
+  createdAt       DateTime @default(now())
 }
 
 // ---------------------------------------------------------------------------

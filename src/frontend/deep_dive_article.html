@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Cassandra — article</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{ --paper:#FAF9F6; --ink:#15161C; --ink-soft:#5A5B66; --mint:#00D9A3; --mint-deep:#00A87E; --coral:#FF5A3C; }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; }
+  h1,h2,h3{ font-family:'Poppins',sans-serif; letter-spacing:-0.02em; }
+
+  .progress{ position:sticky; top:0; height:3px; background:rgba(21,22,28,0.06); z-index:10; }
+  .progress-fill{ height:100%; width:0%; background:var(--mint-deep); }
+
+  .wrap{ max-width:680px; margin:0 auto; padding:36px 24px 100px; }
+
+  .crumb{ display:flex; align-items:center; gap:8px; font-size:13px; color:var(--ink-soft); font-weight:500; margin-bottom:22px; }
+  .crumb b{ color:var(--ink); font-weight:600; }
+  .back{ width:30px; height:30px; border-radius:50%; border:1px solid rgba(21,22,28,0.1); background:none; color:var(--ink); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; }
+
+  .mark-sm{ width:56px; height:56px; margin-bottom:16px; }
+  h1.title{ font-size:32px; font-weight:800; }
+  .tags{ display:flex; gap:7px; margin:14px 0 26px; flex-wrap:wrap; }
+  .tag{ font-size:11px; font-weight:600; padding:5px 12px; border-radius:999px; background:rgba(21,22,28,0.06); color:var(--ink-soft); }
+
+  .lede{ font-size:16px; line-height:1.75; color:var(--ink); margin-bottom:8px; }
+
+  section{ margin-top:36px; }
+  h2{ font-size:19px; font-weight:600; display:flex; align-items:center; gap:9px; }
+  h2 .num{ width:26px; height:26px; border-radius:50%; background:var(--ink); color:#fff; font-size:11px; font-family:'Inter',sans-serif; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  section p{ font-size:14px; line-height:1.75; color:var(--ink-soft); margin-top:12px; }
+  section p b{ color:var(--ink); font-weight:600; }
+
+  .callout{ margin-top:16px; padding:18px 20px; border-radius:16px; background:#fff; border-left:3px solid var(--mint-deep); }
+  .callout .lbl{ font-size:10.5px; font-weight:700; letter-spacing:.06em; color:var(--mint-deep); text-transform:uppercase; margin-bottom:6px; }
+  .callout p{ color:var(--ink); font-size:13.5px; margin-top:0; }
+
+  .tradeoff-grid{ display:flex; gap:12px; margin-top:16px; }
+  .tog{ flex:1; padding:16px 18px; border-radius:16px; }
+  .tog.good{ background:rgba(0,217,163,0.08); }
+  .tog.bad{ background:rgba(255,90,60,0.08); }
+  .tog .k{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; margin-bottom:8px; }
+  .tog.good .k{ color:var(--mint-deep); } .tog.bad .k{ color:var(--coral); }
+  .tog li{ font-size:12.5px; color:var(--ink-soft); line-height:1.6; list-style:none; margin-bottom:6px; padding-left:14px; position:relative; }
+  .tog li::before{ content:'\2022'; position:absolute; left:0; }
+
+  .related{ margin-top:44px; padding-top:22px; border-top:1px solid rgba(21,22,28,0.08); }
+  .related .lbl{ font-size:11px; font-weight:600; color:var(--ink-soft); margin-bottom:12px; }
+  .rel-row{ display:flex; gap:12px; }
+  .rel-card{ flex:1; padding:16px; border-radius:16px; border:1px solid rgba(21,22,28,0.08); cursor:pointer; transition:transform .25s cubic-bezier(.34,1.56,.64,1); }
+  .rel-card:hover{ transform:translateY(-4px); }
+  .rel-card .rn{ font-size:13px; font-weight:600; }
+  .rel-card .rd{ font-size:11.5px; color:var(--ink-soft); margin-top:3px; }
+</style>
+</head>
+<body>
+
+<div class="progress"><div class="progress-fill" id="progFill"></div></div>
+
+<div class="wrap">
+  <div class="crumb">
+    <button class="back"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 6l-6 6 6 6"/></svg></button>
+    Deep dives &nbsp;/&nbsp; <b>Cassandra</b>
+  </div>
+
+  <svg class="mark-sm" viewBox="0 0 220 220" fill="none">
+    <circle cx="110" cy="110" r="88" stroke="#15161C" stroke-width="3" stroke-dasharray="5 9" opacity=".25"/>
+    <circle cx="110" cy="30" r="13" fill="#00D9A3"/><circle cx="182" cy="70" r="13" fill="#00A87E"/>
+    <circle cx="182" cy="150" r="13" fill="#15161C"/><circle cx="110" cy="190" r="13" fill="#00A87E"/>
+    <circle cx="38" cy="150" r="13" fill="#00D9A3"/><circle cx="38" cy="70" r="13" fill="#15161C"/>
+    <circle cx="110" cy="110" r="18" fill="#FF5A3C"/>
+  </svg>
+
+  <h1 class="title">Cassandra, and why writes are cheap but reads aren't</h1>
+  <div class="tags">
+    <span class="tag">Distributed</span><span class="tag">Wide-column</span><span class="tag">Eventually consistent</span><span class="tag">12 min read</span>
+  </div>
+
+  <p class="lede">Cassandra is the database people reach for when writes have to never fall over &mdash; sensor data, event logs, anything append-heavy at massive scale. Understanding why it's shaped that way makes the "when to use it" question answer itself.</p>
+
+  <section>
+    <h2><span class="num">1</span>No leader, no bottleneck</h2>
+    <p>Every node in a Cassandra ring is a peer. There's no primary to route writes through and no single node that becomes the ceiling on throughput. A write can land on <b>any</b> node, which forwards it to the replicas actually responsible for that data's partition.</p>
+    <p>This is the opposite of a traditional primary-replica setup, where writes fight for one primary's attention. It's also why Cassandra scales writes almost linearly &mdash; add nodes, get more write capacity, close to proportionally.</p>
+  </section>
+
+  <section>
+    <h2><span class="num">2</span>Why writes are fast</h2>
+    <p>A write does two things, in order: append to a <b>commit log</b> on disk (sequential I/O, cheap), then insert into an in-memory structure called a <b>memtable</b>. The write is acknowledged as soon as both are done &mdash; no read-before-write, no lock contention, no random disk seeks.</p>
+    <div class="callout">
+      <div class="lbl">Worth remembering</div>
+      <p>When the memtable fills up, it's flushed to disk as an immutable <b>SSTable</b>. Cassandra never edits data in place &mdash; it only ever appends. That single decision is responsible for most of its write performance.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">3</span>Why reads are slower</h2>
+    <p>Because writes are append-only, a single row's data can be scattered across the memtable and several SSTables &mdash; a read has to check all of them and merge the results, picking the most recent version of each column along the way.</p>
+    <p>Cassandra mitigates this with bloom filters (to skip SSTables that definitely don't contain the key) and periodic <b>compaction</b> (merging SSTables back together) &mdash; but the fundamental shape is still "gather and reconcile," which a B-tree-indexed row store doesn't have to do.</p>
+  </section>
+
+  <section>
+    <h2><span class="num">4</span>When to reach for it &mdash; and when not to</h2>
+    <div class="tradeoff-grid">
+      <div class="tog good">
+        <div class="k">Good fit</div>
+        <ul>
+          <li>Write-heavy, append-only data (logs, events, metrics)</li>
+          <li>Data naturally partitioned by a key you know in advance</li>
+          <li>Can tolerate eventual consistency</li>
+        </ul>
+      </div>
+      <div class="tog bad">
+        <div class="k">Poor fit</div>
+        <ul>
+          <li>Complex queries across many columns you didn't model for</li>
+          <li>Strong consistency requirements (financial transactions)</li>
+          <li>Small datasets where a single Postgres instance is simpler</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <div class="related">
+    <div class="lbl">Continue the thread</div>
+    <div class="rel-row">
+      <div class="rel-card"><div class="rn">Redis</div><div class="rd">In-memory, single-threaded, different tradeoffs entirely</div></div>
+      <div class="rel-card"><div class="rn">Kafka</div><div class="rd">Also append-only &mdash; but a log, not a database</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+window.addEventListener('scroll', () => {
+  const h = document.documentElement.scrollHeight - window.innerHeight;
+  document.getElementById('progFill').style.width = (window.scrollY / h * 100) + '%';
+});
+</script>
+
+</body>
+</html>

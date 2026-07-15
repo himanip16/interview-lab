@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Bug hunting</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{ --paper:#FAF9F6; --ink:#15161C; --ink-soft:#5A5B66; --mint:#00D9A3; --mint-deep:#00A87E; --coral:#FF5A3C; --amber:#E8940A; }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; padding:32px 20px; }
+  h1,h2,h3{ font-family:'Poppins',sans-serif; letter-spacing:-0.02em; }
+  code, .mono{ font-family:'JetBrains Mono',monospace; }
+
+  .app{ max-width:1180px; margin:0 auto; background:#fff; border-radius:28px; overflow:hidden;
+    box-shadow:0 24px 60px rgba(21,22,28,0.06); border:1px solid rgba(21,22,28,0.06); }
+
+  /* ---------- HEADER ---------- */
+  .head{ display:flex; align-items:center; justify-content:space-between; padding:18px 26px; border-bottom:1px solid rgba(21,22,28,0.06); }
+  .crumb{ display:flex; align-items:center; gap:10px; }
+  .back{ width:30px; height:30px; border-radius:50%; border:1px solid rgba(21,22,28,0.1); background:none; color:var(--ink); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; }
+  .crumb-text{ font-size:13px; color:var(--ink-soft); font-weight:500; }
+  .crumb-text b{ color:var(--ink); font-weight:600; }
+  .head-right{ display:flex; align-items:center; gap:14px; }
+  .timer{ position:relative; width:44px; height:44px; }
+  .timer .aura{ position:absolute; inset:-8px; border-radius:50%; background:radial-gradient(circle, rgba(0,217,163,0.28), transparent 70%); animation:breathe 3.2s ease-in-out infinite; }
+  @keyframes breathe{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.15); } }
+  .timer .ring{ position:absolute; inset:0; border-radius:50%; background:var(--ink); display:flex; align-items:center; justify-content:center; border:1.5px solid rgba(0,217,163,0.4); }
+  .timer .t{ font-family:'Poppins',sans-serif; font-size:10.5px; font-weight:600; color:var(--mint); }
+  .submit-btn{ background:var(--ink); color:#fff; border:none; padding:10px 18px; border-radius:999px; font-weight:600; font-size:13px; cursor:pointer; }
+
+  /* ---------- BODY ---------- */
+  .body{ display:flex; min-height:560px; }
+
+  /* ---- LEFT: REPORT ---- */
+  .report{ flex:0 0 260px; border-right:1px solid rgba(21,22,28,0.06); padding:22px 20px; display:flex; flex-direction:column; }
+  .report h2{ font-size:14px; font-weight:600; margin-bottom:12px; }
+  .sev{ display:inline-block; font-size:10.5px; font-weight:700; padding:4px 10px; border-radius:999px; background:rgba(255,90,60,0.1); color:var(--coral); margin-bottom:12px; }
+  .report p.symptom{ font-size:12.5px; color:var(--ink-soft); line-height:1.6; margin-bottom:16px; }
+  .meta-row{ display:flex; justify-content:space-between; font-size:11.5px; padding:8px 0; border-top:1px solid rgba(21,22,28,0.06); }
+  .meta-row .k{ color:var(--ink-soft); } .meta-row .v{ font-weight:600; }
+
+  .hyp-label{ font-size:10.5px; font-weight:700; letter-spacing:.05em; color:var(--mint-deep); text-transform:uppercase; margin:20px 0 8px; }
+  .hyp-box{ width:100%; border:1px solid rgba(21,22,28,0.1); border-radius:12px; padding:10px 12px; font-size:12.5px; font-family:'Inter',sans-serif; resize:none; min-height:80px; outline:none; }
+  .hyp-box:focus{ border-color:var(--mint-deep); }
+  .hyp-submit{ margin-top:10px; background:var(--mint-deep); color:#fff; border:none; padding:10px; border-radius:10px; font-weight:600; font-size:12.5px; cursor:pointer; }
+
+  /* ---- MAIN: TABS ---- */
+  .main{ flex:1; display:flex; flex-direction:column; }
+  .tabbar{ display:flex; gap:6px; padding:16px 20px 0; }
+  .tab{ font-size:12.5px; font-weight:600; padding:8px 15px; border-radius:999px 999px 0 0; color:var(--ink-soft); cursor:pointer; border-bottom:2px solid transparent; }
+  .tab.active{ color:var(--ink); background:var(--paper); border-bottom:2px solid var(--ink); }
+  .panel{ flex:1; background:var(--paper); margin:0 0 0 0; padding:20px; display:none; overflow-y:auto; max-height:480px; }
+  .panel.active{ display:block; }
+
+  /* LOGS */
+  .log-search{ display:flex; align-items:center; gap:8px; background:#fff; border:1px solid rgba(21,22,28,0.08); border-radius:999px; padding:8px 14px; font-size:12.5px; color:var(--ink-soft); margin-bottom:14px; max-width:320px; }
+  .log-line{ font-size:12px; padding:6px 4px; display:flex; gap:10px; border-bottom:1px solid rgba(21,22,28,0.05); }
+  .log-line .lvl{ font-weight:700; width:44px; flex-shrink:0; }
+  .log-line.error .lvl{ color:var(--coral); } .log-line.warn .lvl{ color:var(--amber); } .log-line.info .lvl{ color:var(--ink-soft); }
+  .log-line .ts{ color:var(--ink-soft); flex-shrink:0; }
+
+  /* SQL RUNNER */
+  .sql-box{ width:100%; min-height:80px; background:var(--ink); color:#00D9A3; border:none; border-radius:14px; padding:14px 16px; font-size:12.5px; resize:none; outline:none; }
+  .run-btn{ margin-top:10px; background:var(--mint-deep); color:#fff; border:none; padding:9px 18px; border-radius:999px; font-weight:600; font-size:12.5px; cursor:pointer; display:flex; align-items:center; gap:7px; }
+  table{ width:100%; border-collapse:collapse; margin-top:16px; font-size:12px; background:#fff; border-radius:12px; overflow:hidden; }
+  th{ text-align:left; padding:10px 12px; background:var(--ink); color:#fff; font-weight:600; }
+  td{ padding:9px 12px; border-bottom:1px solid rgba(21,22,28,0.06); }
+  td.flag{ color:var(--coral); font-weight:700; }
+
+  /* CODE */
+  .code-stage{ display:flex; gap:14px; }
+  .filetree{ flex:0 0 160px; display:flex; flex-direction:column; gap:4px; }
+  .ftitem{ font-size:12px; padding:7px 10px; border-radius:8px; cursor:pointer; color:var(--ink-soft); }
+  .ftitem.active{ background:#fff; color:var(--ink); font-weight:600; }
+  .code-view{ flex:1; background:var(--ink); border-radius:14px; padding:16px 18px; overflow-x:auto; }
+  .code-view pre{ font-size:12px; color:#E8E6E1; line-height:1.7; }
+  .kw{ color:#FF8A6E; } .str{ color:#00D9A3; } .cm{ color:#7A7B85; font-style:italic; } .ty{ color:#7A9BFF; }
+
+  /* DOCS */
+  .doc h3{ font-size:14.5px; font-weight:600; margin:18px 0 8px; }
+  .doc h3:first-child{ margin-top:0; }
+  .doc p{ font-size:12.5px; color:var(--ink-soft); line-height:1.7; }
+
+  /* DEPLOYS */
+  .timeline{ position:relative; padding-left:22px; }
+  .timeline::before{ content:''; position:absolute; left:5px; top:6px; bottom:6px; width:2px; background:rgba(21,22,28,0.1); }
+  .dep{ position:relative; margin-bottom:20px; }
+  .dep::before{ content:''; position:absolute; left:-22px; top:3px; width:11px; height:11px; border-radius:50%; }
+  .dep.rolled::before{ background:var(--coral); }
+  .dep.ok::before{ background:var(--mint-deep); }
+  .dep-top{ display:flex; align-items:center; gap:8px; }
+  .dep-ver{ font-size:13px; font-weight:600; }
+  .dep-status{ font-size:10px; font-weight:700; padding:3px 9px; border-radius:999px; text-transform:uppercase; }
+  .dep-status.rolled{ background:rgba(255,90,60,0.12); color:var(--coral); }
+  .dep-status.ok{ background:rgba(0,168,126,0.12); color:var(--mint-deep); }
+  .dep-msg{ font-size:12.5px; color:var(--ink-soft); margin-top:4px; }
+  .dep-time{ font-size:11px; color:var(--ink-soft); margin-top:2px; opacity:.7; }
+
+  @media (max-width:820px){ .body{ flex-direction:column; } .report{ flex:none; border-right:none; border-bottom:1px solid rgba(21,22,28,0.06); } }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="head">
+    <div class="crumb">
+      <button class="back"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 6l-6 6 6 6"/></svg></button>
+      <div class="crumb-text">Bug hunting &nbsp;/&nbsp; <b>Checkout returns 500 intermittently</b></div>
+    </div>
+    <div class="head-right">
+      <div class="timer"><div class="aura"></div><div class="ring"><div class="t">12:40</div></div></div>
+      <button class="submit-btn">Submit fix</button>
+    </div>
+  </div>
+
+  <div class="body">
+    <div class="report">
+      <h2>The report</h2>
+      <div class="sev">P1 &middot; Intermittent</div>
+      <p class="symptom">Customers report checkout failing with a generic error about 1 in every 20 attempts. Doesn't reproduce locally. Started sometime after Tuesday's deploy.</p>
+
+      <div class="meta-row"><span class="k">Service</span><span class="v">checkout-api</span></div>
+      <div class="meta-row"><span class="k">Endpoint</span><span class="v mono" style="font-size:11px;">POST /orders</span></div>
+      <div class="meta-row"><span class="k">Error rate</span><span class="v" style="color:var(--coral)">4.8%</span></div>
+      <div class="meta-row"><span class="k">First seen</span><span class="v">2 days ago</span></div>
+
+      <div class="hyp-label">Your hypothesis</div>
+      <textarea class="hyp-box" placeholder="What do you think is going on so far?"></textarea>
+      <button class="hyp-submit">Log hypothesis</button>
+    </div>
+
+    <div class="main">
+      <div class="tabbar" id="tabbar">
+        <div class="tab active" data-tab="logs">Logs</div>
+        <div class="tab" data-tab="sql">SQL runner</div>
+        <div class="tab" data-tab="code">Code</div>
+        <div class="tab" data-tab="docs">Tech docs</div>
+        <div class="tab" data-tab="deploys">Deployments</div>
+      </div>
+
+      <!-- LOGS -->
+      <div class="panel active" id="panel-logs">
+        <div class="log-search">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          Filter logs&hellip;
+        </div>
+        <div class="mono">
+          <div class="log-line info"><span class="ts">14:02:11.203</span><span class="lvl">INFO</span><span>order-svc: received POST /orders (order_id=88213)</span></div>
+          <div class="log-line info"><span class="ts">14:02:11.240</span><span class="lvl">INFO</span><span>payment-client: charging via provider=stripe (order_id=88213)</span></div>
+          <div class="log-line warn"><span class="ts">14:02:16.310</span><span class="lvl">WARN</span><span>payment-client: request exceeded 5000ms, retrying (attempt=1, order_id=88213)</span></div>
+          <div class="log-line info"><span class="ts">14:02:16.311</span><span class="lvl">INFO</span><span>connection-pool: acquiring connection (active=48, max=50)</span></div>
+          <div class="log-line warn"><span class="ts">14:02:21.402</span><span class="lvl">WARN</span><span>payment-client: request exceeded 5000ms, retrying (attempt=2, order_id=88213)</span></div>
+          <div class="log-line info"><span class="ts">14:02:21.403</span><span class="lvl">INFO</span><span>connection-pool: acquiring connection (active=50, max=50)</span></div>
+          <div class="log-line error"><span class="ts">14:02:26.501</span><span class="lvl">ERROR</span><span>connection-pool: timed out waiting for connection (order_id=88213)</span></div>
+          <div class="log-line error"><span class="ts">14:02:26.502</span><span class="lvl">ERROR</span><span>order-svc: 500 returned to client (order_id=88213, cause=PoolTimeoutException)</span></div>
+          <div class="log-line info"><span class="ts">14:02:31.108</span><span class="lvl">INFO</span><span>order-svc: received POST /orders (order_id=88214)</span></div>
+          <div class="log-line info"><span class="ts">14:02:31.140</span><span class="lvl">INFO</span><span>payment-client: charging via provider=stripe (order_id=88214)</span></div>
+        </div>
+      </div>
+
+      <!-- SQL -->
+      <div class="panel" id="panel-sql">
+        <textarea class="sql-box mono">SELECT order_id, status, retry_count, created_at
+FROM orders
+WHERE status = 'PENDING'
+  AND created_at < now() - interval '2 minutes'
+ORDER BY retry_count DESC
+LIMIT 5;</textarea>
+        <button class="run-btn"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>Run query</button>
+        <table>
+          <tr><th>order_id</th><th>status</th><th>retry_count</th><th>created_at</th></tr>
+          <tr><td>88213</td><td>PENDING</td><td class="flag">3</td><td>14:02:11</td></tr>
+          <tr><td>88201</td><td>PENDING</td><td class="flag">3</td><td>13:58:04</td></tr>
+          <tr><td>88189</td><td>PENDING</td><td>2</td><td>13:51:47</td></tr>
+          <tr><td>88177</td><td>PENDING</td><td>1</td><td>13:44:12</td></tr>
+        </table>
+      </div>
+
+      <!-- CODE -->
+      <div class="panel" id="panel-code">
+        <div class="code-stage">
+          <div class="filetree" id="filetree">
+            <div class="ftitem active" data-file="OrderService">OrderService.java</div>
+            <div class="ftitem" data-file="PaymentClient">PaymentClient.java</div>
+            <div class="ftitem" data-file="RetryPolicy">RetryPolicy.java</div>
+            <div class="ftitem" data-file="config">application.yml</div>
+          </div>
+          <div class="code-view"><pre id="codeContent"></pre></div>
+        </div>
+      </div>
+
+      <!-- DOCS -->
+      <div class="panel" id="panel-docs">
+        <div class="doc">
+          <h3>Checkout service overview</h3>
+          <p>checkout-api receives order requests, calls out to the payment provider via PaymentClient, and persists the order once payment is confirmed. It shares a single database connection pool across all endpoints (max 50 connections).</p>
+          <h3>Retry policy</h3>
+          <p>Payment calls are retried up to 3 times on timeout, with a fixed 5-second wait per attempt. Retries currently hold their database connection open for the entire retry sequence rather than releasing it between attempts.</p>
+          <h3>Known limitations</h3>
+          <p>The connection pool size was last tuned over a year ago, before checkout volume roughly tripled. There's an open ticket to move to a per-request-scoped connection instead of holding one for the whole retry loop.</p>
+        </div>
+      </div>
+
+      <!-- DEPLOYS -->
+      <div class="panel" id="panel-deploys">
+        <div class="timeline">
+          <div class="dep rolled">
+            <div class="dep-top"><span class="dep-ver">v2.4.1</span><span class="dep-status rolled">Rolled back</span></div>
+            <div class="dep-msg">Increase payment timeout retry attempts from 1 to 3</div>
+            <div class="dep-time">Tuesday, 9:14 AM</div>
+          </div>
+          <div class="dep ok">
+            <div class="dep-top"><span class="dep-ver">v2.4.0</span><span class="dep-status ok">Stable</span></div>
+            <div class="dep-msg">Add order confirmation email trigger</div>
+            <div class="dep-time">Monday, 3:02 PM</div>
+          </div>
+          <div class="dep ok">
+            <div class="dep-top"><span class="dep-ver">v2.3.9</span><span class="dep-status ok">Stable</span></div>
+            <div class="dep-msg">Bump payment SDK to 4.2.1</div>
+            <div class="dep-time">Last Friday, 11:20 AM</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.querySelectorAll('.tab').forEach(t => {
+  t.onclick = () => {
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('panel-'+t.dataset.tab).classList.add('active');
+  };
+});
+
+const FILES = {
+  OrderService: `<span class="kw">public class</span> <span class="ty">OrderService</span> {
+
+  <span class="kw">public</span> Order <span class="ty">createOrder</span>(OrderRequest req) {
+    <span class="cm">// acquires a connection for the WHOLE retry sequence below</span>
+    <span class="kw">try</span> (Connection conn = pool.<span class="ty">acquire</span>()) {
+      PaymentResult result = paymentClient.<span class="ty">charge</span>(req, conn);
+      <span class="kw">return</span> orderRepo.<span class="ty">save</span>(req, result, conn);
+    }
+  }
+}`,
+  PaymentClient: `<span class="kw">public class</span> <span class="ty">PaymentClient</span> {
+
+  <span class="kw">public</span> PaymentResult <span class="ty">charge</span>(OrderRequest req, Connection conn) {
+    <span class="kw">return</span> retryPolicy.<span class="ty">execute</span>(() -> {
+      <span class="kw">return</span> stripe.<span class="ty">charge</span>(req.amount(), <span class="str">5000</span>);
+    });
+    <span class="cm">// note: conn is held open across every retry attempt</span>
+  }
+}`,
+  RetryPolicy: `<span class="kw">public class</span> <span class="ty">RetryPolicy</span> {
+  <span class="kw">private static final int</span> MAX_ATTEMPTS = <span class="str">3</span>; <span class="cm">// was 1 before v2.4.1</span>
+  <span class="kw">private static final int</span> WAIT_MS = <span class="str">5000</span>;
+
+  <span class="kw">public</span> T <span class="ty">execute</span>(Supplier&lt;T&gt; op) {
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="str">0</span>; i &lt; MAX_ATTEMPTS; i++) {
+      <span class="kw">try</span> { <span class="kw">return</span> op.<span class="ty">get</span>(); }
+      <span class="kw">catch</span> (TimeoutException e) { Thread.<span class="ty">sleep</span>(WAIT_MS); }
+    }
+  }
+}`,
+  config: `<span class="kw">database</span>:
+  <span class="kw">pool</span>:
+    <span class="kw">max-connections</span>: <span class="str">50</span>  <span class="cm"># unchanged since ~14 months ago</span>
+  <span class="kw">timeout-ms</span>: <span class="str">30000</span>`
+};
+document.querySelectorAll('.ftitem').forEach(el => {
+  el.onclick = () => {
+    document.querySelectorAll('.ftitem').forEach(x=>x.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('codeContent').innerHTML = FILES[el.dataset.file];
+  };
+});
+document.getElementById('codeContent').innerHTML = FILES.OrderService;
+</script>
+
+</body>
+</html>

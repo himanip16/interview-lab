@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Cassandra — deep dive</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{ --paper:#FAF9F6; --ink:#15161C; --ink-soft:#5A5B66; --mint:#00D9A3; --mint-deep:#00A87E; --coral:#FF5A3C; }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ background:var(--paper); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; }
+  h1,h2,h3{ font-family:'Poppins',sans-serif; letter-spacing:-0.02em; }
+
+  .stage{ position:relative; min-height:100vh; overflow:hidden; color:var(--ink); }
+  .split{ position:absolute; inset:0; }
+  .split .left{ position:absolute; inset:0; clip-path:polygon(0 0, 62% 0, 38% 100%, 0 100%); background:linear-gradient(160deg,#EDEBE4,#F6F2E9); }
+  .split .right{ position:absolute; inset:0; clip-path:polygon(62% 0, 100% 0, 100% 100%, 38% 100%); background:linear-gradient(160deg,#FFE7DE,#FFF3EC); }
+  .blob{ position:absolute; border-radius:50%; filter:blur(50px); animation:breathe 8s ease-in-out infinite; }
+  .b1{ width:260px; height:260px; top:10%; left:8%; background:rgba(0,217,163,0.18); }
+  .b2{ width:300px; height:300px; bottom:-5%; right:10%; background:rgba(255,90,60,0.14); animation-delay:1.5s; }
+  @keyframes breathe{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.12); } }
+
+  .top{ position:relative; z-index:3; display:flex; align-items:center; justify-content:space-between; padding:30px 46px; }
+  .navlinks{ display:flex; gap:28px; font-size:13px; font-weight:500; color:var(--ink-soft); }
+  .navlinks b{ color:var(--ink); font-weight:600; border-bottom:2px solid var(--ink); padding-bottom:2px; }
+  .ham{ width:36px; height:36px; border-radius:50%; border:1px solid rgba(21,22,28,0.14); background:none; color:var(--ink); display:flex; align-items:center; justify-content:center; cursor:pointer; }
+
+  .content{ position:relative; z-index:3; display:flex; align-items:center; min-height:calc(100vh - 170px); padding:0 46px; gap:40px; }
+
+  .left-col{ flex:0 0 380px; }
+  .eyebrow{ font-size:13px; font-weight:700; letter-spacing:.1em; color:var(--mint-deep); }
+  .left-col h1{ font-size:58px; font-weight:800; line-height:1.02; margin-top:10px; }
+  .actions{ display:flex; align-items:center; gap:22px; margin-top:32px; }
+  .read-more{ display:flex; align-items:center; gap:10px; background:var(--ink); color:#fff; border:none; padding:13px 22px 13px 16px; border-radius:999px; font-weight:600; font-size:14px; cursor:pointer; }
+  .read-more .ic{ width:30px; height:30px; border-radius:50%; background:var(--mint); color:var(--ink); display:flex; align-items:center; justify-content:center; }
+  .docs-link{ font-size:13.5px; font-weight:600; color:var(--ink-soft); text-decoration:underline; cursor:pointer; }
+
+  .mark-col{ flex:1; display:flex; align-items:flex-end; justify-content:center; height:100%; }
+  .mark{ width:280px; animation:float 5s ease-in-out infinite; filter:drop-shadow(0 24px 30px rgba(21,22,28,0.12)); }
+  @keyframes float{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-14px); } }
+
+  .desc-col{ flex:0 0 300px; }
+  .desc-col p{ font-size:13.5px; color:var(--ink-soft); line-height:1.75; }
+  .tags{ display:flex; gap:7px; flex-wrap:wrap; margin-top:16px; }
+  .tag{ font-size:11px; font-weight:600; padding:5px 11px; border-radius:999px; background:rgba(21,22,28,0.06); color:var(--ink-soft); }
+  .credit{ font-size:12.5px; margin-top:18px; color:var(--ink-soft); }
+  .credit b{ color:var(--ink); font-weight:600; }
+
+  .bottom{ position:relative; z-index:3; display:flex; align-items:center; justify-content:space-between; padding:22px 46px; }
+  .nav-tool{ display:flex; align-items:center; gap:9px; font-size:13px; font-weight:600; color:var(--ink-soft); cursor:pointer; }
+  .nav-tool:hover{ color:var(--ink); }
+  .nav-tool .circ{ width:30px; height:30px; border-radius:50%; border:1px solid rgba(21,22,28,0.14); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+
+  @media (max-width:900px){
+    .content{ flex-direction:column; align-items:flex-start; padding-top:40px; gap:20px; }
+    .left-col h1{ font-size:40px; }
+    .mark{ width:180px; }
+    .mark-col{ align-self:center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="split"><div class="left"></div><div class="right"></div></div>
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+
+  <div class="top">
+    <div class="navlinks">
+      <span>About Learn</span><b>Deep Dives</b><span>Library</span>
+    </div>
+    <button class="ham"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </div>
+
+  <div class="content">
+    <div class="left-col">
+      <div class="eyebrow">WIDE-COLUMN &middot; NoSQL</div>
+      <h1>Cassandra</h1>
+      <div class="actions">
+        <button class="read-more">
+          <div class="ic"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+          READ MORE
+        </button>
+        <span class="docs-link">Official docs</span>
+      </div>
+    </div>
+
+    <div class="mark-col">
+      <svg class="mark" viewBox="0 0 220 220" fill="none">
+        <circle cx="110" cy="110" r="88" stroke="#15161C" stroke-width="2" stroke-dasharray="4 7" opacity=".25"/>
+        <circle cx="110" cy="30" r="11" fill="#00D9A3"/>
+        <circle cx="182" cy="70" r="11" fill="#00A87E"/>
+        <circle cx="182" cy="150" r="11" fill="#15161C"/>
+        <circle cx="110" cy="190" r="11" fill="#00A87E"/>
+        <circle cx="38" cy="150" r="11" fill="#00D9A3"/>
+        <circle cx="38" cy="70" r="11" fill="#15161C"/>
+        <circle cx="110" cy="110" r="16" fill="#FF5A3C"/>
+        <path d="M110 30L182 70M182 70L182 150M182 150L110 190M110 190L38 150M38 150L38 70M38 70L110 30" stroke="#15161C" stroke-width="1.5" opacity=".3"/>
+        <path d="M110 110L110 30M110 110L182 70M110 110L182 150M110 110L110 190M110 110L38 150M110 110L38 70" stroke="#FF5A3C" stroke-width="1.5" opacity=".35"/>
+      </svg>
+    </div>
+
+    <div class="desc-col">
+      <p><b style="color:var(--ink)">Cassandra</b> is a distributed, wide-column NoSQL database. Every node in the ring is an equal peer &mdash; there's no single leader to bottleneck writes or become a point of failure.</p>
+      <p style="margin-top:12px;">Writes go straight to a commit log and an in-memory table before being flushed, which is why write throughput is exceptional. Reads have to reconcile across replicas, which is why they're comparatively slower.</p>
+      <div class="tags">
+        <span class="tag">Distributed</span><span class="tag">High write throughput</span><span class="tag">Eventually consistent</span>
+      </div>
+      <div class="credit">Maintained by <b>Apache Software Foundation</b></div>
+    </div>
+  </div>
+
+  <div class="bottom">
+    <div class="nav-tool"><div class="circ"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M15 6l-6 6 6 6"/></svg></div>Redis</div>
+    <div class="nav-tool">Kafka<div class="circ"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M9 6l6 6-6 6"/></svg></div></div>
+  </div>
+</div>
+
+</body>
+</html>
