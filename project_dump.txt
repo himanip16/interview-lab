@@ -124,6 +124,9 @@ PROJECT STRUCTURE
 │   │   │           │   └── route.ts
 │   │   │           └── skill-graph
 │   │   │               └── route.ts
+│   │   ├── bug-hunting
+│   │   │   └── [scenarioId]
+│   │   │       └── page.tsx
 │   │   ├── dashboard
 │   │   │   ├── [userId]
 │   │   │   │   └── page.tsx
@@ -173,7 +176,6 @@ PROJECT STRUCTURE
 │   │   ├── login
 │   │   │   └── page.tsx
 │   │   ├── problems
-│   │   │   ├── actions.ts
 │   │   │   └── page.tsx
 │   │   └── register
 │   │       └── page.tsx
@@ -213,9 +215,41 @@ PROJECT STRUCTURE
 │   │       ├── Tag.tsx
 │   │       ├── Text.tsx
 │   │       └── Timer.tsx
+│   ├── content
+│   │   └── interview-library
+│   │       ├── behavioural
+│   │       ├── dsa
+│   │       ├── hld
+│   │       ├── lld
+│   │       └── shared
 │   ├── contexts
 │   │   └── ThemeContext.tsx
 │   ├── features
+│   │   ├── bug-hunting
+│   │   │   ├── components
+│   │   │   │   ├── BugHuntingWorkspace.tsx
+│   │   │   │   ├── Header
+│   │   │   │   │   ├── Header.tsx
+│   │   │   │   │   └── Timer.tsx
+│   │   │   │   ├── Sidebar
+│   │   │   │   │   └── ReportSidebar.tsx
+│   │   │   │   ├── Tabs
+│   │   │   │   │   ├── CodePanel.tsx
+│   │   │   │   │   ├── DeploymentsPanel.tsx
+│   │   │   │   │   ├── DocsPanel.tsx
+│   │   │   │   │   ├── LogsPanel.tsx
+│   │   │   │   │   └── SqlPanel.tsx
+│   │   │   │   └── shared
+│   │   │   │       ├── CodeBlock.tsx
+│   │   │   │       └── Tabs.tsx
+│   │   │   ├── data
+│   │   │   │   └── checkout-timeout.json
+│   │   │   ├── hooks
+│   │   │   │   ├── useInvestigation.ts
+│   │   │   │   ├── useScenario.ts
+│   │   │   │   └── useTimer.ts
+│   │   │   └── types
+│   │   │       └── Scenario.ts
 │   │   ├── dashboard
 │   │   │   └── components
 │   │   │       ├── CurrentStandingCard.tsx
@@ -244,8 +278,13 @@ PROJECT STRUCTURE
 │   │   │   │   │   ├── LiveInterview.tsx
 │   │   │   │   │   ├── Message.tsx
 │   │   │   │   │   ├── MessageList.tsx
+│   │   │   │   │   ├── PhaseProgress.tsx
+│   │   │   │   │   ├── PhaseSelector.tsx
 │   │   │   │   │   ├── Sidebar.tsx
-│   │   │   │   │   └── Timer.tsx
+│   │   │   │   │   ├── Timer.tsx
+│   │   │   │   │   └── sidebar
+│   │   │   │   │       ├── DesignSummary.tsx
+│   │   │   │   │       └── ProblemCard.tsx
 │   │   │   │   ├── hooks
 │   │   │   │   │   ├── useInterview.ts
 │   │   │   │   │   ├── useMessages.ts
@@ -344,18 +383,33 @@ PROJECT STRUCTURE
 │   │   │   │       └── TranscriptMetadata.tsx
 │   │   │   ├── data
 │   │   │   ├── types
-│   │   │   │   └── transcript.ts
 │   │   │   ├── types.ts
 │   │   │   └── utils
 │   │   │       └── textCleaner.ts
+│   │   ├── problems
+│   │   │   ├── components
+│   │   │   │   ├── ProblemCard.tsx
+│   │   │   │   ├── ProblemFilters.tsx
+│   │   │   │   ├── ProblemList.tsx
+│   │   │   │   └── SortDropdown.tsx
+│   │   │   ├── hooks
+│   │   │   │   ├── useProblemFilters.ts
+│   │   │   │   └── useProblems.ts
+│   │   │   ├── types
+│   │   │   │   └── problem.ts
+│   │   │   └── utils
+│   │   │       ├── filterProblems.ts
+│   │   │       └── sortProblems.ts
 │   │   └── shared
 │   ├── frontend
 │   │   ├── actionCorousel.html
+│   │   ├── bug_hunting.html
 │   │   ├── card.html
 │   │   ├── deep_dive.html
 │   │   ├── deep_dive_article.html
 │   │   ├── listAllProblems.html
 │   │   ├── liveInterview.html
+│   │   ├── pr_review.html
 │   │   ├── read_transcript.html
 │   │   └── whiteboard.html
 │   ├── lib
@@ -461,18 +515,24 @@ PROJECT STRUCTURE
 │   │       │   └── TranscriptService.ts
 │   │       └── domain
 │   │           └── TranscriptNode.ts
-│   └── shared
-│       ├── config
-│       │   ├── common-constants.ts
-│       │   ├── constants.ts
-│       │   └── env.ts
-│       └── logger
-│           └── logger.ts
+│   ├── shared
+│   │   ├── api
+│   │   │   └── InterviewApiClient.ts
+│   │   ├── config
+│   │   │   ├── common-constants.ts
+│   │   │   ├── constants.ts
+│   │   │   └── env.ts
+│   │   └── logger
+│   │       └── logger.ts
+│   ├── styles
+│   │   └── bug-hunting.css
+│   └── types
+│       └── interview.ts
 ├── tests
 ├── tsconfig.json
 └── tsconfig.tsbuildinfo
 
-175 directories, 296 files
+202 directories, 329 files
 
 FILE CONTENTS
 
@@ -544,17 +604,17 @@ model User {
   learningRecommendations LearningRecommendation[]
 }
 model InterviewSession {
-  id                    String   @id @default(cuid())
-  userId                String?
-  problemId             String
-  difficulty            String
-  status                String   @default("STARTED")
-  transcript            Json     
-  duration              Int      // Add this (in seconds)
-  whiteboardState       Json?    // Add this
-  interviewTitle        String?  // Add this
-  designSummary         Json?    // Add this (array as JSON)
-  createdAt             DateTime @default(now()) @map("created_at")
+  id              String   @id @default(cuid())
+  userId          String?
+  problemId       String
+  difficulty      String
+  status          String   @default("STARTED")
+  transcript      Json
+  duration        Int
+  whiteboardState Json?
+  interviewTitle  String?
+  designSummary   Json?
+  createdAt       DateTime @default(now())
 }
 
 // ---------------------------------------------------------------------------
@@ -4365,6 +4425,70 @@ const nextConfig: NextConfig = {
 export default nextConfig;
 
 ================================================
+FILE: ./src/types/interview.ts
+================================================
+/**
+ * Types aligned with your Prisma schema
+ * DO NOT invent new types — reuse existing @prisma/client exports
+ */
+
+export type { Interview, Message, Problem, InterviewStatus, MessageRole } from '@prisma/client';
+
+/**
+ * ProcessInterviewMessageResult - what your service layer returns
+ * Matches InterviewMessageService.processMessage()
+ */
+export interface ProcessInterviewMessageResult {
+  reply: string;
+  phase: string;
+  previousPhase: string;
+  transitioned: boolean;
+  confidence: number;
+  completed: boolean;
+  summary: string;
+}
+
+/**
+ * UI-specific derived type - never mutate, let backend provide source of truth
+ * This is what the GET /api/interviews/[id] endpoint returns
+ */
+export interface InterviewUIState {
+  id: string;
+  status: 'SETUP' | 'IN_PROGRESS' | 'COMPLETED';
+  template: {
+    id: string;
+    name: string;
+    slug: string;
+  };
+  difficulty: string;
+  duration: number;
+  company: string;
+  problem: {
+    id: string;
+    title: string;
+    description: string | null;
+  };
+  currentPhase: string;
+  summary: string;
+  transcript: Array<{
+    id: string;
+    role: 'assistant' | 'user';
+    content: string;
+    metadata?: Record<string, any>;
+    createdAt: string;
+    elapsedSeconds: number;
+    phase: string | null;
+  }>;
+  evaluation?: {
+    id: string;
+    scores?: Record<string, number>;
+  } | null;
+  createdAt: string;
+  updatedAt: string;
+  startedAt?: string;
+  completedAt?: string;
+}
+================================================
 FILE: ./src/contexts/ThemeContext.tsx
 ================================================
 "use client";
@@ -5014,23 +5138,23 @@ const GAP = 18; // px, matches gap-4.5
 
 const CARDS = [
   {
-    id: 1,
-    title: "Bug hunting",
-    meta: "Practice · 15 min",
-    from: "#FF6B4A",
-    to: "#E0432A",
-    href: "/learn/scenarios", // <-- no dedicated "bug hunting" page exists; closest match
-    icon: (
-      <svg viewBox="0 0 84 84" fill="none">
-        <circle cx="42" cy="42" r="40" fill="#fff"/>
-        <ellipse cx="42" cy="46" rx="14" ry="10" fill="#FF6B4A"/>
-        <circle cx="35" cy="42" r="3" fill="#26282F"/>
-        <circle cx="49" cy="42" r="3" fill="#26282F"/>
-        <path d="M28 34 Q22 26 16 30" stroke="#FF6B4A" strokeWidth="3" strokeLinecap="round" fill="none"/>
-        <path d="M56 34 Q62 26 68 30" stroke="#FF6B4A" strokeWidth="3" strokeLinecap="round" fill="none"/>
-      </svg>
-    ),
-  },
+  id: 1,
+  title: "Bug hunting",
+  meta: "Practice · 15 min",
+  from: "#FF6B4A",
+  to: "#E0432A",
+  href: "/bug-hunting/checkout-timeout",
+  icon: (
+    <svg viewBox="0 0 84 84" fill="none">
+      <circle cx="42" cy="42" r="40" fill="#fff"/>
+      <ellipse cx="42" cy="46" rx="14" ry="10" fill="#FF6B4A"/>
+      <circle cx="35" cy="42" r="3" fill="#26282F"/>
+      <circle cx="49" cy="42" r="3" fill="#26282F"/>
+      <path d="M28 34 Q22 26 16 30" stroke="#FF6B4A" strokeWidth="3" strokeLinecap="round" fill="none"/>
+      <path d="M56 34 Q62 26 68 30" stroke="#FF6B4A" strokeWidth="3" strokeLinecap="round" fill="none"/>
+    </svg>
+  ),
+},
   {
     id: 2,
     title: "Review a PR",
@@ -5433,446 +5557,62 @@ export default function ActionCarouselPage() {
 }
 
 ================================================
-FILE: ./src/app/problems/actions.ts
-================================================
-// src/app/problems/actions.ts
-"use server";
-
-import { prisma } from "@/shared/prisma/client";
-import { getCurrentUserId } from "@/modules/auth/getCurrentUserId";
-import { redirect } from "next/navigation";
-
-export async function startInterview(problemId: string) {
-  const userId = await getCurrentUserId();
-
-  const interview = await prisma.interviewSession.create({
-    data: {
-      userId: userId ?? null,
-      problemId,
-      status: "STARTED",
-      transcript: [],
-    },
-  });
-
-  redirect(`/interview/live/${interview.id}`);
-}
-================================================
 FILE: ./src/app/problems/page.tsx
 ================================================
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
-import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 import { Panel } from "@/components/ui/Panel";
 import { Search } from "@/components/ui/Search";
-import { Skeleton } from "@/components/ui/Skeleton";
-import { useSearchParams, useRouter } from "next/navigation";
-import { useClickOutside } from "@/lib/hooks/useClickOutside";
-import {
-  DIFFICULTY_LEVELS,
-  DIFFICULTY_ORDER,
-  PROBLEM_TYPES,
-  SORT_OPTIONS,
-  STATUS_FILTERS,
-  ALL_FILTER,
-  type DifficultyLevel,
-  type ProblemType,
-  type SortOption,
-  type StatusFilter,
-} from "@/shared/config/common-constants"; 
+import { useProblems } from "@/features/problems/hooks/useProblems";
+import { useProblemFilters } from "@/features/problems/hooks/useProblemFilters";
+import { filterByStatus, filterBySearch } from "@/features/problems/utils/filterProblems";
+import ProblemFilters from "@/features/problems/components/ProblemFilters";
+import ProblemList from "@/features/problems/components/ProblemList";
+import { getCurrentUserId } from "@/modules/auth/getCurrentUserId"; // server-only — see note below
 
-
-type Problem = {
-  id: string;
-  title: string;
-  crux: string;
-  type: ProblemType;
-  diff: DifficultyLevel;
-  mins: number;
-  done: boolean;
-  pop: number;
-};
-
-const MOCK_PROBLEMS: Problem[] = [
-  { id:'1', title:'Design a chat system', crux:'Message ordering, presence, and delivery guarantees', type:'hld', diff:'hard', mins:45, done:false, pop:9 },
-  { id:'2', title:'Design an LRU cache', crux:'Hash map plus doubly linked list, O(1) get and put', type:'dsa', diff:'medium', mins:30, done:true, pop:8 },
-  { id:'3', title:'Design a rate limiter', crux:'Distributed state, sliding windows, fairness under load', type:'hld', diff:'hard', mins:30, done:false, pop:7 },
-  { id:'4', title:'Design a shopping cart', crux:'Cart persistence, price consistency, session handling', type:'lld', diff:'easy', mins:30, done:true, pop:6 },
-  { id:'5', title:'Design a URL shortener', crux:'Unique ID generation and redirect performance', type:'hld', diff:'medium', mins:30, done:true, pop:9 },
-  { id:'6', title:'Design a booking system', crux:'Availability checking, concurrency, double-booking', type:'lld', diff:'medium', mins:30, done:false, pop:5 },
-  { id:'7', title:'Binary search variations', crux:'Search space reduction and boundary conditions', type:'dsa', diff:'medium', mins:30, done:false, pop:6 },
-  { id:'8', title:'Design cache invalidation', crux:'Invalidation propagation, consistency, performance', type:'lld', diff:'hard', mins:45, done:false, pop:4 },
-  { id:'9', title:'Design event sourcing', crux:'Event storage, snapshotting, replay performance', type:'lld', diff:'hard', mins:45, done:false, pop:3 },
-  { id:'10', title:'Two pointers technique', crux:'Pointer movement and termination conditions', type:'dsa', diff:'easy', mins:30, done:true, pop:7 },
-];
-
-const DIFF_ORDER = DIFFICULTY_ORDER;
-const TYPE_COLORS: Record<ProblemType, string> = {
-  hld: "bg-[var(--violet)]",
-  lld: "bg-[var(--coral)]",
-  dsa: "bg-[var(--mint-deep)]",
-};
-
-const DIFF_CLASSES: Record<DifficultyLevel, string> = {
-  easy: "text-[var(--mint-deep)] bg-[rgba(0,168,126,0.1)]",
-  medium: "text-[var(--amber)] bg-[rgba(232,148,10,0.1)]",
-  hard: "text-[var(--coral)] bg-[rgba(255,90,60,0.1)]",
-};
-
-export default function ProblemsPage() {
-  const [problems, setProblems] = useState<Problem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isSortMenuOpen, setIsSortMenuOpen] = useState(false);
-  const searchParams = useSearchParams();
+export default function ProblemsPage({ userId }: { userId: string | null }) {
   const router = useRouter();
-  const categoryFromUrl = searchParams.get("category");
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
+  const { filters, setFilters } = useProblemFilters();
+  const { problems, totalPages, loading, error, refetch } = useProblems(filters, userId);
 
-  // Fetch problems from API
-  const fetchProblems = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await fetch('/api/problems');
-      if (!response.ok) {
-        throw new Error('Failed to fetch problems');
-      }
-      const data = await response.json();
-      setProblems(data.problems || MOCK_PROBLEMS); // Fallback to mock if API returns empty
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load problems');
-      // Fallback to mock data on error
-      setProblems(MOCK_PROBLEMS);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchProblems();
-  }, []);
-
-  const [state, setState] = useState({
-    type: ALL_FILTER as ProblemType | typeof ALL_FILTER,
-    diff: ALL_FILTER as DifficultyLevel | typeof ALL_FILTER,
-    status: ALL_FILTER as StatusFilter,
-    sort: "popularity" as SortOption,
-    category: categoryFromUrl || ALL_FILTER,
-    searchQuery: "",
-  });
-
-  const filteredProblems = useMemo(() => {
-    let result = problems.filter(p =>
-      (state.type === ALL_FILTER || p.type === state.type) &&
-      (state.diff === ALL_FILTER || p.diff === state.diff) &&
-      (state.status === ALL_FILTER || (state.status === 'done' ? p.done : !p.done)) &&
-      (state.category === ALL_FILTER || p.type === state.category) &&
-      (state.searchQuery === "" || p.title.toLowerCase().includes(state.searchQuery.toLowerCase()) || p.crux.toLowerCase().includes(state.searchQuery.toLowerCase()))
-    );
-
-    if (state.sort === 'popularity') {
-      result = [...result].sort((a, b) => b.pop - a.pop);
-    } else if (state.sort === 'alpha') {
-      result = [...result].sort((a, b) => a.title.localeCompare(b.title));
-    } else if (state.sort === 'difficulty') {
-      result = [...result].sort((a, b) => DIFF_ORDER[a.diff] - DIFF_ORDER[b.diff]);
-    } else if (state.sort === 'time') {
-      result = [...result].sort((a, b) => a.mins - b.mins);
-    }
-
-    return result;
-  }, [problems, state]);
-
-  const getBarClass = (type: ProblemType): string => TYPE_COLORS[type] || TYPE_COLORS.hld;
-  const getTagClass = (type: ProblemType): string => TYPE_COLORS[type] || TYPE_COLORS.hld;
-  const getDiffClass = (diff: DifficultyLevel): string => DIFF_CLASSES[diff] || DIFF_CLASSES.easy;
-
-  // Close dropdown on Escape key or click outside
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && isSortMenuOpen) {
-        setIsSortMenuOpen(false);
-        triggerRef.current?.focus();
-      }
-    };
-
-    if (isSortMenuOpen) {
-      document.addEventListener('keydown', handleKeyDown);
-    }
-
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [isSortMenuOpen]);
-
-  // Handle click outside using custom hook
-  useClickOutside(dropdownRef, () => setIsSortMenuOpen(false), isSortMenuOpen);
-
-  // Handle arrow key navigation
-  const handleKeyDown = (event: React.KeyboardEvent, index: number) => {
-    const options = SORT_OPTIONS;
-    
-    switch (event.key) {
-      case 'ArrowDown':
-        event.preventDefault();
-        const nextIndex = (index + 1) % options.length;
-        const nextButton = dropdownRef.current?.querySelectorAll('button')[nextIndex] as HTMLButtonElement;
-        nextButton?.focus();
-        break;
-      case 'ArrowUp':
-        event.preventDefault();
-        const prevIndex = (index - 1 + options.length) % options.length;
-        const prevButton = dropdownRef.current?.querySelectorAll('button')[prevIndex] as HTMLButtonElement;
-        prevButton?.focus();
-        break;
-      case 'Enter':
-      case ' ':
-        event.preventDefault();
-        setState(prev => ({ ...prev, sort: options[index] as SortOption }));
-        setIsSortMenuOpen(false);
-        triggerRef.current?.focus();
-        break;
-    }
-  };
-  
+  const visible = filterBySearch(filterByStatus(problems, filters.status), filters.search);
 
   return (
     <div className="min-h-screen bg-[var(--paper)] py-10 px-6">
       <Panel variant="default" className="max-w-[960px] mx-auto p-[32px_36px_40px]">
-        
-        {/* Top Section */}
         <div className="flex items-center justify-between mb-6">
-          <h2 className="heading-m text-[var(--ink)]">
-            Problem library
-          </h2>
-          <Search 
-            placeholder="Search problems..." 
-            className="w-[220px]"
-            onSearch={(value) => setState(prev => ({ ...prev, searchQuery: value }))}
-          />
+          <h2 className="heading-m text-[var(--ink)]">Problem library</h2>
+          <Search placeholder="Search problems..." className="w-[220px]" onSearch={(search) => setFilters({ search })} />
         </div>
 
-        {/* Filter Section */}
-        <div className="mb-2">
-          {/* Type Filter Row */}
-          <div className="flex items-center gap-4.5 flex-wrap mb-3.5">
-            <span className="label text-[var(--ink-400)] mr-0.5">
-              Type
-            </span>
-            <div className="flex gap-1.5" id="typeGroup">
-              {[ALL_FILTER, ...PROBLEM_TYPES].map((type) => (
-                <button
-                  key={type}
-                  onClick={() => setState(prev => ({ ...prev, type: type as ProblemType | typeof ALL_FILTER }))}
-                  className={cn(
-                    "body-s font-semibold p-[6px_13px] radius-pill border border-[var(--border)] text-[var(--ink-400)] cursor-pointer transition-all duration-200 whitespace-nowrap",
-                    state.type === type && "bg-[var(--ink)] text-white border-[var(--ink)]",
-                    state.type === 'hld' && state.type === type && "bg-[var(--violet)] border-[var(--violet)]",
-                    state.type === 'lld' && state.type === type && "bg-[var(--coral)] border-[var(--coral)]",
-                    state.type === 'dsa' && state.type === type && "bg-[var(--mint-deep)] border-[var(--mint-deep)]"
-                  )}
-                >
-                  {type === ALL_FILTER ? "All" : type.toUpperCase()}
-                </button>
-              ))}
-            </div>
-          </div>
+        <ProblemFilters filters={filters} onChange={setFilters} count={visible.length} />
 
-          {/* Difficulty & Status Filter Row */}
-          <div className="flex items-center gap-4.5 flex-wrap mb-3.5">
-            <span className="label text-[var(--ink-400)] mr-0.5">
-              Difficulty
-            </span>
-            <div className="flex gap-1.5" id="diffGroup">
-              {[ALL_FILTER, ...DIFFICULTY_LEVELS].map((diff) => (
-                <button
-                  key={diff}
-                  onClick={() => setState(prev => ({ ...prev, diff: diff as DifficultyLevel | typeof ALL_FILTER }))}
-                  className={cn(
-                    "body-s font-semibold p-[6px_13px] radius-pill border border-[var(--border)] text-[var(--ink-400)] cursor-pointer transition-all duration-200 whitespace-nowrap",
-                    state.diff === diff && "bg-[var(--ink)] text-white border-[var(--ink)]"
-                  )}
-                >
-                  {diff === ALL_FILTER ? "All" : diff.charAt(0).toUpperCase() + diff.slice(1)}
-                </button>
-              ))}
-            </div>
-            <span className="label text-[var(--ink-400)] ml-2 mr-0.5">
-              Status
-            </span>
-            <div className="flex gap-1.5" id="statusGroup">
-              {STATUS_FILTERS.map((status) => (
-                <button
-                  key={status}
-                  onClick={() => setState(prev => ({ ...prev, status: status as StatusFilter }))}
-                  className={cn(
-                    "body-s font-semibold p-[6px_13px] radius-pill border border-[var(--border)] text-[var(--ink-400)] cursor-pointer transition-all duration-200 whitespace-nowrap",
-                    state.status === status && "bg-[var(--ink)] text-white border-[var(--ink)]"
-                  )}
-                >
-                  {status === ALL_FILTER ? "All" : status === "done" ? "Completed" : "Not started"}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Bottom Bar */}
-          <div className="flex items-center justify-between pt-3.5 border-t border-[var(--border)] mb-1.5">
-            <div className="body-s text-[var(--ink-400)]">
-              <b className="text-[var(--ink)]">{filteredProblems.length}</b> problem{filteredProblems.length !== 1 ? "s" : ""}
-            </div>
-
-            {/* Sort Dropdown */}
-            <div className="relative" ref={dropdownRef}>
-              <button
-                ref={triggerRef}
-                onClick={() => setIsSortMenuOpen(prev => !prev)}
-                onKeyDown={(e) => {
-                  if (e.key === 'ArrowDown' && !isSortMenuOpen) {
-                    e.preventDefault();
-                    setIsSortMenuOpen(true);
-                    setTimeout(() => {
-                      const firstOption = dropdownRef.current?.querySelectorAll('button')[0] as HTMLButtonElement;
-                      firstOption?.focus();
-                    }, 0);
-                  }
-                }}
-                aria-haspopup="true"
-                aria-expanded={isSortMenuOpen}
-                aria-controls="sort-menu"
-                className="flex items-center gap-1.75 body-s font-semibold p-[8px_14px] radius-pill border border-[var(--border)] bg-[var(--surface)] cursor-pointer text-[var(--ink)]"
-              >
-                <svg className="w-[13px] h-[13px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-                  <path d="M4 7h10M4 12h7M4 17h4"/>
-                  <path d="M16 6v13M16 19l-3-3M16 19l3-3"/>
-                </svg>
-                <span id="sortLabel">
-                  {state.sort === "popularity" ? "Popularity" : 
-                   state.sort === "alpha" ? "Alphabetical" : 
-                   state.sort === "difficulty" ? "Difficulty" : "Time estimate"}
-                </span>
-                <svg className="w-[11px] h-[11px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
-                  <path d="M6 9l6 6 6-6"/>
-                </svg>
-              </button>
-
-              {isSortMenuOpen && (
-                <div
-                  id="sort-menu"
-                  role="menu"
-                  aria-labelledby="sortLabel"
-                  className="absolute right-0 top-[calc(100%+6px)] bg-[var(--surface)] radius-card border border-[var(--border)] shadow-floating p-1.5 z-10 min-w-[170px]"
-                >
-                  {SORT_OPTIONS.map((option, index) => (
-                    <button
-                      key={option}
-                      role="menuitem"
-                      tabIndex={index === 0 ? 0 : -1}
-                      onClick={() => {
-                        setState(prev => ({ ...prev, sort: option as SortOption }));
-                        setIsSortMenuOpen(false);
-                        triggerRef.current?.focus();
-                      }}
-                      onKeyDown={(e) => handleKeyDown(e, index)}
-                      aria-selected={state.sort === option}
-                      className={cn(
-                        "block w-full text-left body-s p-[8px_12px] radius-small cursor-pointer text-[var(--ink-400)] font-medium",
-                        state.sort === option ? "text-[var(--ink)] font-semibold" : "hover:bg-[var(--paper-100)]"
-                      )}
-                    >
-                      {option === "popularity" ? "Popularity" : 
-                       option === "alpha" ? "Alphabetical" : 
-                       option === "difficulty" ? "Difficulty" : "Time estimate"}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Problem List */}
-        <div className="flex flex-col gap-2.5 mt-4.5">
-          {loading ? (
-            // Loading skeleton
-            Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-4 p-[16px_18px] radius-card border border-[var(--border)]">
-                <Skeleton className="w-[5px] h-12 radius-small flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <Skeleton className="h-5 w-2/3 mb-2" />
-                  <Skeleton className="h-4 w-full" />
-                </div>
-                <Skeleton className="h-6 w-16 radius-pill" />
-                <Skeleton className="h-5 w-12" />
-                <Skeleton className="w-[22px] h-[22px] radius-pill" />
-              </div>
-            ))
-          ) : error ? (
-            // Error state with retry
-            <div className="text-center py-12">
-              <div className="body-s text-[var(--ink-400)] mb-4">
-                {error}
-              </div>
-              <button
-                onClick={fetchProblems}
-                className="body-s font-semibold p-[8px_16px] radius-pill border border-[var(--border)] bg-[var(--surface)] cursor-pointer text-[var(--ink)] hover:bg-[var(--paper-100)] transition-all"
-              >
-                Retry
-              </button>
-            </div>
-          ) : filteredProblems.length === 0 ? (
-            <div className="text-center py-12 body-s text-[var(--ink-400)]">
-              No problems match these filters.
-            </div>
-          ) : (
-            filteredProblems.map((p) => (
-              <div
-  key={p.id}
-  className="flex items-center gap-4 p-[16px_18px] radius-card border border-[var(--border)] cursor-pointer transition-transform duration-[0.25s] ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:-translate-y-[-3px] hover:shadow-floating"
-                onClick={() => {
-                  router.push(`/interview/setup?problemId=${encodeURIComponent(p.id)}`);
-                }}
->
-                <div className={`w-[5px] self-stretch radius-small flex-shrink-0 ${getBarClass(p.type)}`} />
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h3 className="body-s font-semibold text-[var(--ink)]">{p.title}</h3>
-                    <span className={`caption font-bold tracking-[0.03em] p-[2px_8px] radius-small text-white uppercase ${getTagClass(p.type)}`}>
-                      {p.type}
-                    </span>
-                  </div>
-                  <div className="body-s text-[var(--ink-400)] mt-0.75 overflow-hidden text-ellipsis whitespace-nowrap">
-                    {p.crux}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3.5 flex-shrink-0">
-                  <span className={`caption font-semibold p-[4px_10px] radius-pill ${getDiffClass(p.diff)}`}>
-                    {p.diff}
-                  </span>
-                  <span className="body-s text-[var(--ink-400)] w-12 text-right">
-                    {p.mins}m
-                  </span>
-                  <div className={`w-[22px] h-[22px] radius-pill flex items-center justify-center flex-shrink-0 ${p.done ? 'bg-[var(--mint-deep)] text-white' : 'border-[1.5px] border-[var(--border)]'}`}>
-                    {p.done && (
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                        <path d="M5 12l5 5L20 7"/>
-                      </svg>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
+        <ProblemList
+          problems={visible}
+          loading={loading}
+          error={error}
+          onRetry={refetch}
+          onSelect={async (problemId) => {
+            const res = await fetch("/api/interviews/start", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                type: filters.type === "all" ? "hld" : filters.type,
+                difficulty: filters.difficulty === "ALL" ? "MEDIUM" : filters.difficulty,
+                duration: 45,
+                company: "General",
+                problemId,
+              }),
+            });
+            const { id } = await res.json();
+            router.push(`/interview/live/${id}`);
+          }}
+        />
       </Panel>
     </div>
   );
 }
-
 ================================================
 FILE: ./src/app/library/transcript/page.tsx
 ================================================
@@ -6341,23 +6081,19 @@ export default function MarketingLayout({
 ================================================
 FILE: ./src/app/(marketing)/page.tsx
 ================================================
+// src/app/(marketing)/page.tsx
 import PageContainer from "@/components/layout/PageContainer";
 
 import Hero from "@/features/landing/components/Hero";
-import SampleFeedback from "@/features/landing/components/SampleFeedback";
 import SmartMentor from "@/features/landing/components/SmartMentor";
-import PersonalNotebooks from "@/features/landing/components/PersonalNotebooks";
-
 import ActionCards from "@/features/landing/components/ActionCards";
 
 export default function Home() {
   return (
     <PageContainer>
       <Hero />
-      <ActionCards />  {/* ADD THIS */}
+      <ActionCards />
       <SmartMentor />
-      <PersonalNotebooks />
-      <SampleFeedback />
     </PageContainer>
   );
 }
@@ -6549,10 +6285,21 @@ export default function RegisterPage() {
 ================================================
 FILE: ./src/app/interview/setup/actions.ts
 ================================================
-'use server'
+// src/app/interview/setup/actions.ts
+"use server";
 
-import { prisma } from "@/shared/prisma/client";
 import { redirect } from "next/navigation";
+import { Difficulty, InterviewMode } from "@prisma/client";
+import { prisma } from "@/shared/prisma/client";
+import { ensureGuestUser } from "@/modules/auth/getCurrentUserId";
+import { createInterview } from "@/modules/interview/services/interview/InterviewFactory";
+import { TranscriptService } from "@/modules/interview/services/TranscriptService";
+
+const difficultyMap: Record<string, Difficulty> = {
+  Easy: Difficulty.EASY,
+  Medium: Difficulty.MEDIUM,
+  Hard: Difficulty.HARD,
+};
 
 export async function createInterviewSession(data: {
   problemId: string;
@@ -6560,45 +6307,52 @@ export async function createInterviewSession(data: {
   userId: string | null;
   type: string;
 }) {
-
-  console.log("Server action started");
-  // 1. Create the session in the DB
-  const session = await prisma.interviewSession.create({
-    data: {
-      userId: data.userId,
-      problemId: data.problemId,
-      difficulty: data.difficulty,
-      status: "STARTED",
-      // We store a mock transcript for now. 
-      // In production, you'd fetch the actual content based on problemId.
-      transcript: [
-        {
-          id: "1",
-          type: "interviewer",
-          roleLabel: "Interviewer",
-          text: "The database commits, but the service crashes before Kafka publish. What happens?"
-        },
-        {
-          id: "2",
-          type: "candidate",
-          roleLabel: "Candidate",
-          content: [
-            { text: "I think " },
-            { text: "Kafka guarantees delivery", highlight: "missed", explanation: "Kafka only guarantees delivery once the message reaches the broker. If the service crashes before publishing, the message is lost forever." }
-          ]
-        },
-        {
-            id: "3",
-            type: "takeaway",
-            text: "Use the Transactional Outbox pattern to ensure atomicity between DB commits and Message publishing."
-        }
-      ]
-    }
+  const template = await prisma.interviewTemplate.findUnique({
+    where: { slug: data.type },
   });
-  console.log("Created session", session.id);
+  if (!template) throw new Error(`Invalid interview type: ${data.type}`);
 
-  // 2. Redirect to the unique session URL
-  redirect(`/interview/live/${session.id}`);
+  const problem = await prisma.problem.findUnique({
+    where: { id: data.problemId },
+  });
+  if (!problem) throw new Error("Problem not found");
+
+  const interviewDifficulty = difficultyMap[data.difficulty];
+  if (!interviewDifficulty) throw new Error(`Invalid difficulty: ${data.difficulty}`);
+
+  const userId = data.userId ?? (await ensureGuestUser());
+
+  const interviewData = createInterview({
+    templateId: template.id,
+    difficulty: interviewDifficulty,
+    duration: 45,
+    company: "General",
+    problemId: problem.id,
+    mode: InterviewMode.CANDIDATE,
+  });
+
+  const interview = await prisma.interview.create({
+    data: {
+      difficulty: interviewData.difficulty,
+      duration: interviewData.duration,
+      company: interviewData.company,
+      status: interviewData.status,
+      currentPhase: interviewData.currentPhase,
+      summary: interviewData.summary,
+      promptVersion: interviewData.promptVersion,
+      mode: interviewData.mode,
+      user: { connect: { id: userId } },
+      template: { connect: { id: template.id } },
+      problem: { connect: { id: problem.id } },
+    },
+  });
+
+  await new TranscriptService().addAssistantMessage(
+    interview.id,
+    `Welcome! Today we'll design "${problem.title}". Start by asking clarifying questions before proposing your design.`
+  );
+
+  redirect(`/interview/live/${interview.id}`);
 }
 ================================================
 FILE: ./src/app/interview/setup/SetupPage.tsx
@@ -6719,34 +6473,16 @@ export default async function InterviewSetupPage() {
 ================================================
 FILE: ./src/app/interview/live/[sessionId]/page.tsx
 ================================================
-// app/interview/live/[sessionId]/page.tsx
-import { prisma } from "@/shared/prisma/client";
-import LiveInterview from "@/features/interview/live/components/LiveInterview";
-import { notFound } from "next/navigation";
+'use client';
 
-type Props = {
-  params: Promise<{ sessionId: string }>;
-};
-// app/interview/live/[sessionId]/page.tsx
-export default async function LivePage({ params }: Props) {
-  const { sessionId } = await params;
+import { LiveInterview } from '@/features/interview/live/components/LiveInterview';
 
-  const session = await prisma.interviewSession.findUnique({
-    where: { id: sessionId }
-  });
-
-  if (!session) notFound();
-
-  return (
-    <LiveInterview
-      interviewId={session.id}
-      duration={session.duration}
-      initialMessages={session.transcript as any}
-      interviewTitle={session.interviewTitle || 'System Design Interview'}
-      designSummary={session.designSummary as any || []}
-      initialWhiteboardState={session.whiteboardState}
-    />
-  );
+export default function LiveInterviewPage({
+  params,
+}: {
+  params: { sessionId: string };
+}) {
+  return <LiveInterview sessionId={params.sessionId} />;
 }
 ================================================
 FILE: ./src/app/interview/live/page.tsx
@@ -8483,6 +8219,32 @@ export async function POST(
   }
 }
 
+================================================
+FILE: ./src/app/bug-hunting/[scenarioId]/page.tsx
+================================================
+import "@/styles/bug-hunting.css";
+import { notFound } from "next/navigation";
+import BugHuntingWorkspace from "@/features/bug-hunting/components/BugHuntingWorkspace";
+import type { BugScenario } from "@/features/bug-hunting/types/Scenario";
+import checkoutTimeout from "@/features/bug-hunting/data/checkout-timeout.json";
+
+// Swap this map for a real DB/API lookup once bug-hunting scenarios are
+// modeled in Prisma (e.g. as PracticeActivityType.BUG_HUNT content).
+const SCENARIOS: Record<string, BugScenario> = {
+  "checkout-timeout": checkoutTimeout as BugScenario,
+};
+
+export default async function Page({ params }: { params: Promise<{ scenarioId: string }> }) {
+  const { scenarioId } = await params;
+  const scenario = SCENARIOS[scenarioId];
+  if (!scenario) notFound();
+
+  return (
+    <div style={{ background: "var(--paper)", padding: "32px 20px" }}>
+      <BugHuntingWorkspace scenario={scenario} />
+    </div>
+  );
+}
 ================================================
 FILE: ./src/app/globals.css
 ================================================
@@ -11923,44 +11685,609 @@ export function useScenario(slug: string) {
 }
 
 ================================================
-FILE: ./src/features/library/types/transcript.ts
+FILE: ./src/features/problems/types/problem.ts
 ================================================
-// src/features/library/types/transcript.ts
+import { z } from "zod";
+import { Difficulty, ProblemCategory } from "@prisma/client";
+
+// Single source of truth. features/interview/setup/components/problemSchema.ts
+// should be changed to `export * from "@/features/problems/types/problem"`
+// instead of redefining this — do that as a follow-up, not bundled here.
+
+export const ProblemSchema = z.object({
+  id: z.string(),
+  slug: z.string(),
+  title: z.string(),
+  description: z.string().nullable(),
+  category: z.nativeEnum(ProblemCategory),
+  difficulty: z.nativeEnum(Difficulty),
+  interviewType: z.string().nullable().optional(),
+  cruxOfProblem: z.string().nullable(),
+  estimatedMinutes: z.number().nullable(),
+  tags: z.array(z.string()).default([]),
+  completionHistory: z
+    .object({
+      completed: z.boolean(),
+      timesCompleted: z.number(),
+      lastCompletedAt: z.coerce.date().nullable(),
+    })
+    .optional(),
+});
+
+export const ProblemsResponseSchema = z.object({
+  problems: z.array(ProblemSchema),
+  total: z.number(),
+  page: z.number(),
+  limit: z.number(),
+  totalPages: z.number(),
+});
+
+export type Problem = z.infer<typeof ProblemSchema>;
+export type ProblemsResponse = z.infer<typeof ProblemsResponseSchema>;
+
+export const INTERVIEW_TYPES = [
+  "hld",
+  "lld",
+  "dsa",
+  "pr_review",
+  "deep_dive",
+  "tech_doc_review",
+  "task_breakdown",
+] as const;
+export type InterviewTypeFilter = (typeof INTERVIEW_TYPES)[number] | "all";
+
+export const STATUS_FILTERS = ["all", "done", "pending"] as const;
+export type StatusFilter = (typeof STATUS_FILTERS)[number];
+
+export const SORT_OPTIONS = [
+  "interviewCount",
+  "title",
+  "difficulty",
+  "estimatedMinutes",
+] as const;
+export type SortOption = (typeof SORT_OPTIONS)[number];
+
+export const SORT_LABELS: Record<SortOption, string> = {
+  interviewCount: "Popularity",
+  title: "Alphabetical",
+  difficulty: "Difficulty",
+  estimatedMinutes: "Time estimate",
+};
+================================================
+FILE: ./src/features/problems/utils/filterProblems.ts
+================================================
+import type { Problem, StatusFilter } from "../types/problem";
+
+export function filterByStatus(problems: Problem[], status: StatusFilter): Problem[] {
+  if (status === "all") return problems;
+  return problems.filter((p) => {
+    const done = p.completionHistory?.completed ?? false;
+    return status === "done" ? done : !done;
+  });
+}
+
+export function filterBySearch(problems: Problem[], query: string): Problem[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return problems;
+  return problems.filter(
+    (p) =>
+      p.title.toLowerCase().includes(q) ||
+      (p.cruxOfProblem?.toLowerCase().includes(q) ?? false)
+  );
+}
+================================================
+FILE: ./src/features/problems/utils/sortProblems.ts
+================================================
+import { Difficulty } from "@prisma/client";
+import type { Problem, SortOption } from "../types/problem";
+
+export { SORT_LABELS } from "../types/problem";
+
+const DIFF_ORDER: Record<Difficulty, number> = {
+  [Difficulty.EASY]: 0,
+  [Difficulty.MEDIUM]: 1,
+  [Difficulty.HARD]: 2,
+};
+
+export function sortProblems(problems: Problem[], sort: SortOption): Problem[] {
+  const copy = [...problems];
+  switch (sort) {
+    case "title":
+      return copy.sort((a, b) => a.title.localeCompare(b.title));
+    case "difficulty":
+      return copy.sort((a, b) => DIFF_ORDER[a.difficulty] - DIFF_ORDER[b.difficulty]);
+    case "estimatedMinutes":
+      return copy.sort((a, b) => (a.estimatedMinutes ?? 0) - (b.estimatedMinutes ?? 0));
+    case "interviewCount":
+    default:
+      return copy; // server already ordered by this
+  }
+}
+================================================
+FILE: ./src/features/problems/components/ProblemList.tsx
+================================================
+"use client";
+
+import ProblemCard from "./ProblemCard";
+import { Skeleton } from "@/components/ui/Skeleton";
+import type { Problem } from "../types/problem";
+
+type Props = {
+  problems: Problem[];
+  loading: boolean;
+  error: string | null;
+  onRetry: () => void;
+  onSelect: (problemId: string) => void;
+};
+
+export default function ProblemList({ problems, loading, error, onRetry, onSelect }: Props) {
+  if (loading) {
+    return (
+      <div className="flex flex-col gap-2.5 mt-4.5">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="flex items-center gap-4 p-[16px_18px] radius-card border border-[var(--border)]">
+            <Skeleton className="w-[5px] h-12 radius-small flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <Skeleton className="h-5 w-2/3 mb-2" />
+              <Skeleton className="h-4 w-full" />
+            </div>
+            <Skeleton className="h-6 w-16 radius-pill" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <div className="body-s text-[var(--coral)] mb-4">{error}</div>
+        <button
+          onClick={onRetry}
+          className="body-s font-semibold p-[8px_16px] radius-pill border border-[var(--border)] bg-[var(--surface)] cursor-pointer text-[var(--ink)] hover:bg-[var(--paper-100)] transition-all"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  if (problems.length === 0) {
+    return <div className="text-center py-12 body-s text-[var(--ink-400)]">No problems match these filters.</div>;
+  }
+
+  return (
+    <div className="flex flex-col gap-2.5 mt-4.5">
+      {problems.map((p) => (
+        <ProblemCard key={p.id} problem={p} onSelect={onSelect} />
+      ))}
+    </div>
+  );
+}
+================================================
+FILE: ./src/features/problems/components/ProblemFilters.tsx
+================================================
+"use client";
+
+import { cn } from "@/lib/utils";
+import { Difficulty } from "@prisma/client";
+import { INTERVIEW_TYPES, STATUS_FILTERS, type ProblemFilterState } from "../types/problem";
+import SortDropdown from "./SortDropdown";
+import type { SortOption } from "../types/problem";
+
+type Props = {
+  filters: ProblemFilterState;
+  onChange: (patch: Partial<ProblemFilterState>) => void;
+  count: number;
+};
+
+export default function ProblemFilters({ filters, onChange, count }: Props) {
+  return (
+    <div className="mb-2">
+      <div className="flex items-center gap-4.5 flex-wrap mb-3.5">
+        <span className="label text-[var(--ink-400)] mr-0.5">Type</span>
+        <div className="flex gap-1.5">
+          {(["all", ...INTERVIEW_TYPES] as const).map((type) => (
+            <button
+              key={type}
+              onClick={() => onChange({ type })}
+              className={cn(
+                "body-s font-semibold p-[6px_13px] radius-pill border border-[var(--border)] text-[var(--ink-400)] cursor-pointer whitespace-nowrap",
+                filters.type === type && "bg-[var(--ink)] text-white border-[var(--ink)]"
+              )}
+            >
+              {type === "all" ? "All" : type.toUpperCase()}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex items-center gap-4.5 flex-wrap mb-3.5">
+        <span className="label text-[var(--ink-400)] mr-0.5">Difficulty</span>
+        <div className="flex gap-1.5">
+          {(["ALL", ...Object.values(Difficulty)] as const).map((diff) => (
+            <button
+              key={diff}
+              onClick={() => onChange({ difficulty: diff })}
+              className={cn(
+                "body-s font-semibold p-[6px_13px] radius-pill border border-[var(--border)] text-[var(--ink-400)] cursor-pointer",
+                filters.difficulty === diff && "bg-[var(--ink)] text-white border-[var(--ink)]"
+              )}
+            >
+              {diff === "ALL" ? "All" : diff.charAt(0) + diff.slice(1).toLowerCase()}
+            </button>
+          ))}
+        </div>
+
+        <span className="label text-[var(--ink-400)] ml-2 mr-0.5">Status</span>
+        <div className="flex gap-1.5">
+          {STATUS_FILTERS.map((status) => (
+            <button
+              key={status}
+              onClick={() => onChange({ status })}
+              className={cn(
+                "body-s font-semibold p-[6px_13px] radius-pill border border-[var(--border)] text-[var(--ink-400)] cursor-pointer",
+                filters.status === status && "bg-[var(--ink)] text-white border-[var(--ink)]"
+              )}
+            >
+              {status === "all" ? "All" : status === "done" ? "Completed" : "Not started"}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between pt-3.5 border-t border-[var(--border)] mb-1.5">
+        <div className="body-s text-[var(--ink-400)]">
+          <b className="text-[var(--ink)]">{count}</b> problem{count !== 1 ? "s" : ""}
+        </div>
+        <SortDropdown value={filters.sort} onChange={(sort: SortOption) => onChange({ sort })} />
+      </div>
+    </div>
+  );
+}
+================================================
+FILE: ./src/features/problems/components/ProblemCard.tsx
+================================================
+"use client";
+
+import { cn } from "@/lib/utils";
+import type { Problem } from "../types/problem";
 import { Difficulty } from "@prisma/client";
 
-export type ContentBlock = 
-  | { type: "text"; value: string }
-  | { 
-      type: "highlight"; 
-      status: "strong" | "missed"; 
-      value: string; 
-      explanation: string;
-      id: string;
+const TYPE_COLORS: Record<string, string> = {
+  hld: "bg-[var(--violet)]",
+  lld: "bg-[var(--coral)]",
+  dsa: "bg-[var(--mint-deep)]",
+};
+
+const DIFF_CLASSES: Record<Difficulty, string> = {
+  [Difficulty.EASY]: "text-[var(--mint-deep)] bg-[rgba(0,168,126,0.1)]",
+  [Difficulty.MEDIUM]: "text-[var(--amber)] bg-[rgba(232,148,10,0.1)]",
+  [Difficulty.HARD]: "text-[var(--coral)] bg-[rgba(255,90,60,0.1)]",
+};
+
+type Props = {
+  problem: Problem;
+  onSelect: (problemId: string) => void;
+};
+
+export default function ProblemCard({ problem, onSelect }: Props) {
+  const typeKey = problem.interviewType ?? "hld";
+  const barClass = TYPE_COLORS[typeKey] ?? TYPE_COLORS.hld;
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => onSelect(problem.id)}
+      onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onSelect(problem.id)}
+      className="flex items-center gap-4 p-[16px_18px] radius-card border border-[var(--border)] cursor-pointer transition-transform duration-[0.25s] ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:-translate-y-[-3px] hover:shadow-floating"
+    >
+      <div className={cn("w-[5px] self-stretch radius-small flex-shrink-0", barClass)} />
+
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <h3 className="body-s font-semibold text-[var(--ink)]">{problem.title}</h3>
+          <span className={cn("caption font-bold tracking-[0.03em] p-[2px_8px] radius-small text-white uppercase", barClass)}>
+            {typeKey}
+          </span>
+        </div>
+        {problem.cruxOfProblem && (
+          <div className="body-s text-[var(--ink-400)] mt-0.75 overflow-hidden text-ellipsis whitespace-nowrap">
+            {problem.cruxOfProblem}
+          </div>
+        )}
+      </div>
+
+      <div className="flex items-center gap-3.5 flex-shrink-0">
+        <span className={cn("caption font-semibold p-[4px_10px] radius-pill", DIFF_CLASSES[problem.difficulty])}>
+          {problem.difficulty.toLowerCase()}
+        </span>
+        {problem.estimatedMinutes != null && (
+          <span className="body-s text-[var(--ink-400)] w-12 text-right">{problem.estimatedMinutes}m</span>
+        )}
+        <div
+          className={cn(
+            "w-[22px] h-[22px] radius-pill flex items-center justify-center flex-shrink-0",
+            problem.completionHistory?.completed
+              ? "bg-[var(--mint-deep)] text-white"
+              : "border-[1.5px] border-[var(--border)]"
+          )}
+        >
+          {problem.completionHistory?.completed && (
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+              <path d="M5 12l5 5L20 7" />
+            </svg>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+================================================
+FILE: ./src/features/problems/components/SortDropdown.tsx
+================================================
+"use client";
+
+import { useRef, useState, useEffect } from "react";
+import { cn } from "@/lib/utils";
+import { useClickOutside } from "@/lib/hooks/useClickOutside";
+import { SORT_OPTIONS, SORT_LABELS, type SortOption } from "../types/problem";
+
+type Props = {
+  value: SortOption;
+  onChange: (value: SortOption) => void;
+};
+
+export default function SortDropdown({ value, onChange }: Props) {
+  const [open, setOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  useClickOutside(dropdownRef, () => setOpen(false), open);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
     };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
 
-export type TranscriptMessage = {
-  id?: string;
-  role: "interviewer" | "candidate" | "takeaway";
-  content: ContentBlock[] | string;
-  elapsedSeconds?: number;
-  timestamp?: string;
-};
+  const handleArrowNav = (e: React.KeyboardEvent, index: number) => {
+    const buttons = dropdownRef.current?.querySelectorAll("button") ?? [];
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      (buttons[(index + 1) % SORT_OPTIONS.length] as HTMLButtonElement)?.focus();
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      (buttons[(index - 1 + SORT_OPTIONS.length) % SORT_OPTIONS.length] as HTMLButtonElement)?.focus();
+    } else if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onChange(SORT_OPTIONS[index]);
+      setOpen(false);
+      triggerRef.current?.focus();
+    }
+  };
 
-export type TranscriptMetadata = {
-  title: string;
-  difficulty: Difficulty;
-  duration: number;
-  template: string;
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button
+        ref={triggerRef}
+        onClick={() => setOpen((v) => !v)}
+        onKeyDown={(e) => {
+          if (e.key === "ArrowDown" && !open) {
+            e.preventDefault();
+            setOpen(true);
+            requestAnimationFrame(() => {
+              (dropdownRef.current?.querySelector("button") as HTMLButtonElement)?.focus();
+            });
+          }
+        }}
+        aria-haspopup="true"
+        aria-expanded={open}
+        className="flex items-center gap-1.75 body-s font-semibold p-[8px_14px] radius-pill border border-[var(--border)] bg-[var(--surface)] cursor-pointer text-[var(--ink)]"
+      >
+        {SORT_LABELS[value]}
+        <svg className="w-[11px] h-[11px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </button>
+
+      {open && (
+        <div
+          role="menu"
+          className="absolute right-0 top-[calc(100%+6px)] bg-[var(--surface)] radius-card border border-[var(--border)] shadow-floating p-1.5 z-10 min-w-[170px]"
+        >
+          {SORT_OPTIONS.map((option, i) => (
+            <button
+              key={option}
+              role="menuitem"
+              tabIndex={i === 0 ? 0 : -1}
+              onClick={() => {
+                onChange(option);
+                setOpen(false);
+                triggerRef.current?.focus();
+              }}
+              onKeyDown={(e) => handleArrowNav(e, i)}
+              className={cn(
+                "block w-full text-left body-s p-[8px_12px] radius-small cursor-pointer text-[var(--ink-400)] font-medium",
+                value === option ? "text-[var(--ink)] font-semibold" : "hover:bg-[var(--paper-100)]"
+              )}
+            >
+              {SORT_LABELS[option]}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+================================================
+FILE: ./src/features/problems/hooks/useProblemFilters.ts
+================================================
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Difficulty } from "@prisma/client";
+import {
+  type InterviewTypeFilter,
+  type StatusFilter,
+  type SortOption,
+} from "../types/problem";
+
+export interface ProblemFilterState {
+  type: InterviewTypeFilter;
+  difficulty: Difficulty | "ALL";
+  status: StatusFilter;
+  sort: SortOption;
   category: string;
+  search: string;
+  page: number;
+}
+
+const DEFAULT_STATE: ProblemFilterState = {
+  type: "all",
+  difficulty: "ALL",
+  status: "all",
+  sort: "interviewCount",
+  category: "all",
+  search: "",
+  page: 1,
 };
 
-export type TranscriptData = {
-  metadata: TranscriptMetadata;
-  messages: TranscriptMessage[];
-};
+export function useProblemFilters() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
-export type EnhancedTranscript = TranscriptMessage[];
+  const [filters, setFiltersState] = useState<ProblemFilterState>(() => ({
+    ...DEFAULT_STATE,
+    category: searchParams.get("category") ?? "all",
+  }));
 
+  // reacts to external URL change (e.g. nav from landing page cards),
+  // not just on first mount — this was the actual bug in the old page.
+  useEffect(() => {
+    const urlCategory = searchParams.get("category") ?? "all";
+    setFiltersState((prev) =>
+      prev.category === urlCategory ? prev : { ...prev, category: urlCategory, page: 1 }
+    );
+  }, [searchParams]);
+
+  const setFilters = useCallback((patch: Partial<ProblemFilterState>) => {
+    setFiltersState((prev) => ({
+      ...prev,
+      ...patch,
+      // any filter change except page itself resets pagination
+      page: "page" in patch ? patch.page! : 1,
+    }));
+  }, []);
+
+  const syncCategoryToUrl = useCallback(
+    (category: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (category === "all") params.delete("category");
+      else params.set("category", category);
+      router.replace(`?${params.toString()}`, { scroll: false });
+    },
+    [router, searchParams]
+  );
+
+  return { filters, setFilters, syncCategoryToUrl };
+}
+================================================
+FILE: ./src/features/problems/hooks/useProblems.ts
+================================================
+"use client";
+
+import { useEffect, useRef, useState, useCallback } from "react";
+import { ProblemsResponseSchema, type Problem, type ProblemFilterState } from "../types/problem";
+import { DEFAULT_PAGE_SIZE } from "@/shared/config/common-constants";
+
+interface UseProblemsResult {
+  problems: Problem[];
+  totalPages: number;
+  total: number;
+  loading: boolean;
+  error: string | null;
+  refetch: () => void;
+}
+
+export function useProblems(
+  filters: Pick<ProblemFilterState, "type" | "difficulty" | "category" | "sort" | "page">,
+  userId: string | null
+): UseProblemsResult {
+  const [problems, setProblems] = useState<Problem[]>([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const abortRef = useRef<AbortController | null>(null);
+  const requestIdRef = useRef(0);
+  const [tick, setTick] = useState(0); // manual refetch trigger
+
+  useEffect(() => {
+    const requestId = ++requestIdRef.current;
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    async function run() {
+      setLoading(true);
+      setError(null);
+
+      const params = new URLSearchParams();
+      if (filters.type !== "all") params.set("interviewType", filters.type);
+      if (filters.difficulty !== "ALL") params.set("difficulty", filters.difficulty);
+      if (filters.category !== "all") params.set("category", filters.category);
+      params.set("sort", filters.sort);
+      params.set("page", String(filters.page));
+      params.set("limit", String(DEFAULT_PAGE_SIZE));
+      if (userId) params.set("userId", userId);
+
+      try {
+        const res = await fetch(`/api/problems?${params.toString()}`, {
+          signal: controller.signal,
+        });
+
+        if (!res.ok) {
+          throw new Error(`Failed to load problems (${res.status})`);
+        }
+
+        const json = await res.json();
+        const parsed = ProblemsResponseSchema.parse(json);
+
+        if (requestId !== requestIdRef.current) return; // stale response, drop it
+
+        setProblems(parsed.problems);
+        setTotalPages(parsed.totalPages);
+        setTotal(parsed.total);
+      } catch (err) {
+        if (err instanceof Error && err.name === "AbortError") return;
+        if (requestId !== requestIdRef.current) return;
+
+        // NEVER fall back to mock data here — a real failure must stay visible.
+        setError(err instanceof Error ? err.message : "Failed to load problems");
+        setProblems([]);
+      } finally {
+        if (requestId === requestIdRef.current) setLoading(false);
+      }
+    }
+
+    run();
+    return () => controller.abort();
+  }, [filters.type, filters.difficulty, filters.category, filters.sort, filters.page, userId, tick]);
+
+  const refetch = useCallback(() => setTick((t) => t + 1), []);
+
+  return { problems, totalPages, total, loading, error, refetch };
+}
 ================================================
 FILE: ./src/features/library/utils/textCleaner.ts
 ================================================
@@ -13710,14 +14037,37 @@ export interface Message {
 ================================================
 FILE: ./src/features/interview/types/interview.ts
 ================================================
-export type Interview = {
+// types/interview.ts
+export interface Interview {
   id: string;
-  title: string;
-  description: string;
-  duration: number;
-  difficulty: "Easy" | "Medium" | "Hard";
-  category: string;
-};
+  sessionId: string;
+  problem: {
+    id: string;
+    title: string;
+    description: string;
+  };
+  currentPhase: string;
+  phases: Phase[];
+  status: 'active' | 'paused' | 'completed';
+  timeRemaining: number;
+  startedAt: Date;
+  phaseSummaries: Record<string, string[]>;
+}
+
+export interface Phase {
+  id: string;
+  name: string;
+  status: 'completed' | 'current' | 'upcoming';
+  durationSeconds?: number;
+}
+
+export interface Message {
+  id: string;
+  role: 'interviewer' | 'candidate';
+  content: string;
+  timestamp: Date;
+  phase: string;
+}
 ================================================
 FILE: ./src/features/interview/setup/types/setup.ts
 ================================================
@@ -15268,368 +15618,304 @@ export function NodeRenderer({ node }: { node: DialogueNode; isLast: boolean }) 
   );
 }
 ================================================
-FILE: ./src/features/interview/live/components/LiveInterview.tsx
+FILE: ./src/features/interview/live/components/sidebar/DesignSummary.tsx
 ================================================
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
+import React from 'react';
 
-type Props = {
-  interviewId: string;
-  duration: number;
-  initialMessages?: any[];
-  interviewTitle?: string;
-  designSummary?: string[];
-  initialWhiteboardState?: any;
-};
+interface DesignSummaryProps {
+  summary: string;
+}
 
-export default function LiveInterview({ interviewId, duration, initialMessages = [], interviewTitle = 'System Design Interview', designSummary = [], initialWhiteboardState }: Props) {
-  const [messages, setMessages] = useState(initialMessages);
-  const [isTyping, setIsTyping] = useState(false);
-  const [inputValue, setInputValue] = useState('');
-  const [whiteboardState, setWhiteboardState] = useState(initialWhiteboardState || null);
-  const [showWhiteboard, setShowWhiteboard] = useState(false);
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [currentPath, setCurrentPath] = useState<{x: number, y: number}[]>([]);
-
-  // Auto-save whiteboard state to backend
-  useEffect(() => {
-    if (whiteboardState) {
-      saveWhiteboardState(whiteboardState);
-    }
-  }, [whiteboardState]);
-
-  const saveWhiteboardState = async (state: any) => {
-    try {
-      await fetch(`/api/interviews/${interviewId}/whiteboard`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ whiteboardState: state }),
-      });
-    } catch (error) {
-      console.error('Failed to save whiteboard state:', error);
-    }
-  };
-
-  const handleWhiteboardChange = (newState: any) => {
-    setWhiteboardState(newState);
-  };
-
-  const handleWhiteboardDraw = (e: React.MouseEvent, action: 'down' | 'move' | 'up') => {
-    const canvas = e.currentTarget.querySelector('canvas');
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    if (action === 'down') {
-      setIsDrawing(true);
-      setCurrentPath([{x, y}]);
-      ctx.beginPath();
-      ctx.moveTo(x, y);
-      ctx.strokeStyle = '#15161C';
-      ctx.lineWidth = 2;
-      ctx.lineCap = 'round';
-    } else if (action === 'move') {
-      if (isDrawing && e.buttons === 1) {
-        setCurrentPath(prev => [...prev, {x, y}]);
-        ctx.lineTo(x, y);
-        ctx.stroke();
-      }
-    } else if (action === 'up') {
-      setIsDrawing(false);
-      ctx.closePath();
-      // Save the current path as a complete drawing
-      if (currentPath.length > 1) {
-        const currentDrawings = whiteboardState?.drawings || [];
-        handleWhiteboardChange({
-          ...whiteboardState,
-          drawings: [...currentDrawings, currentPath],
-          lastUpdated: new Date().toISOString(),
-        });
-        setCurrentPath([]);
-      }
-    }
-  };
-
-  const handleSend = () => {
-    if (inputValue.trim()) {
-      setMessages(prev => [...prev, { role: 'user', content: inputValue }]);
-      setInputValue('');
-    }
-  };
-
+/**
+ * DesignSummary - Shows the running interview summary
+ *
+ * This is the `interview.summary` field from your database.
+ * 
+ * Updated by:
+ * - IncrementalSummaryService (every 3 turns)
+ * - On phase transitions
+ * - On interview completion
+ * - Backend owns all summary generation
+ *
+ * Frontend just displays it.
+ * Never computes or modifies the summary.
+ *
+ * Format:
+ * - Usually a multi-line text block
+ * - Could be bullet points or prose
+ * - Updated by the LLM
+ */
+export function DesignSummary({ summary }: DesignSummaryProps) {
   return (
-    <div className="min-h-screen bg-[#FAF9F6] py-10 px-6">
-      <div className="panel max-w-[1080px] mx-auto bg-white rounded-[32px] overflow-hidden shadow-[0_24px_60px_rgba(21,22,28,0.06)] border border-[rgba(21,22,28,0.06)]">
-        
-        {/* Header */}
-        <div className="head flex items-center justify-between p-[22px_30px] border-b border-[rgba(21,22,28,0.06)]">
-          <div className="crumb flex items-center gap-2.5">
-            <button className="back w-8 h-8 rounded-full border border-[rgba(21,22,28,0.1)] bg-none text-[#15161C] flex items-center justify-center cursor-pointer flex-shrink-0">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
-                <path d="M15 6l-6 6 6 6"/>
-              </svg>
-            </button>
-            <div className="crumb-text text-[13px] text-[#5A5B66] font-medium">
-              Live interview &nbsp;/&nbsp; <b className="text-[#15161C] font-semibold">{interviewTitle}</b>
-            </div>
-          </div>
-          <div className="head-right flex items-center gap-4.5">
-            <button
-              onClick={() => setShowWhiteboard(!showWhiteboard)}
-              className="px-3 py-1.5 text-xs font-medium border border-[rgba(21,22,28,0.1)] rounded-full hover:bg-[rgba(21,22,28,0.05)] transition-colors"
-            >
-              {showWhiteboard ? 'Hide Whiteboard' : 'Show Whiteboard'}
-            </button>
-            <div className="live-badge flex items-center gap-1.75 text-[12px] font-semibold text-[#FF5A3C] bg-[rgba(255,90,60,0.1)] p-[6px_13px] rounded-[999px]">
-              <span className="dot w-1.5 h-1.5 rounded-full bg-[#FF5A3C]">
-                <style>{`
-                  @keyframes pulse {
-                    0%, 100% { opacity: 1; }
-                    50% { opacity: 0.25; }
-                  }
-                  .dot {
-                    animation: pulse 1.6s ease-in-out infinite;
-                  }
-                `}</style>
-              </span>
-              Live
-            </div>
-            <div className="timer relative w-[58px] h-[58px]">
-              <div className="aura absolute inset-[-10px] rounded-full bg-[radial-gradient(circle,rgba(0,217,163,0.28),transparent_70%)]">
-                <style>{`
-                  @keyframes breathe {
-                    0%, 100% { transform: scale(1); }
-                    50% { transform: scale(1.15); }
-                  }
-                  .aura {
-                    animation: breathe 3.2s ease-in-out infinite;
-                  }
-                `}</style>
-              </div>
-              <div className="ring absolute inset-0 rounded-full bg-[#15161C] flex items-center justify-center flex-col border-[1.5px] border-[rgba(0,217,163,0.4)]">
-                <div className="t font-['Poppins'] text-[13px] font-semibold text-[#00D9A3]">{Math.floor(duration / 60)}:{(duration % 60).toString().padStart(2, '0')}</div>
-                <div className="l text-[7px] text-white/50 tracking-[0.05em] mt-0.25">LEFT</div>
-              </div>
-            </div>
-          </div>
+    <div className="space-y-3">
+      <p className="text-xs font-semibold text-teal-600 uppercase tracking-wider">
+        Design Summary
+      </p>
+
+      {summary && summary !== 'Interview has not started yet.' ? (
+        <div className="text-sm text-gray-700 space-y-2 whitespace-pre-wrap">
+          {summary}
         </div>
+      ) : (
+        <p className="text-sm text-gray-400 italic">
+          Summary will appear as the interview progresses.
+        </p>
+      )}
+    </div>
+  );
+}
+================================================
+FILE: ./src/features/interview/live/components/sidebar/ProblemCard.tsx
+================================================
+'use client';
 
-        {/* Phase Stepper */}
-        <div className="stepper flex items-center gap-1.5 p-4 border-b border-[rgba(21,22,28,0.06)] overflow-x-auto">
-          <div className="step done flex items-center gap-1.5 flex-shrink-0">
-            <div className="node w-[9px] h-[9px] rounded-full bg-[#00A87E]"></div>
-            <span className="text-[11.5px] font-semibold text-[#5A5B66] whitespace-nowrap">Intro</span>
-          </div>
-          <div className="step-line w-5 h-[1px] bg-[rgba(21,22,28,0.12)] flex-shrink-0"></div>
-          <div className="step active flex items-center gap-1.5 flex-shrink-0">
-            <div className="node w-[9px] h-[9px] rounded-full bg-[#15161C] relative">
-              <style>{`
-                @keyframes breathe {
-                  0%, 100% { transform: scale(1); opacity: 0.7; }
-                  50% { transform: scale(1.18); opacity: 0; }
-                }
-                .node::after {
-                  content: '';
-                  position: absolute;
-                  inset: -5px;
-                  border-radius: 50%;
-                  border: 1.5px solid rgba(21,22,28,0.35);
-                  animation: breathe 2.4s ease-in-out infinite;
-                }
-              `}</style>
-            </div>
-            <span className="text-[11.5px] font-semibold text-[#15161C] whitespace-nowrap">Requirements</span>
-          </div>
-          <div className="step-line w-5 h-[1px] bg-[rgba(21,22,28,0.12)] flex-shrink-0"></div>
-          <div className="step upcoming flex items-center gap-1.5 flex-shrink-0">
-            <div className="node w-[9px] h-[9px] rounded-full border-[1.5px] border-[rgba(21,22,28,0.2)]"></div>
-            <span className="text-[11.5px] font-semibold text-[#5A5B66] whitespace-nowrap">High-level design</span>
-          </div>
-          <div className="step-line w-5 h-[1px] bg-[rgba(21,22,28,0.12)] flex-shrink-0"></div>
-          <div className="step upcoming flex items-center gap-1.5 flex-shrink-0">
-            <div className="node w-[9px] h-[9px] rounded-full border-[1.5px] border-[rgba(21,22,28,0.2)]"></div>
-            <span className="text-[11.5px] font-semibold text-[#5A5B66] whitespace-nowrap">Deep dive</span>
-          </div>
-          <div className="step-line w-5 h-[1px] bg-[rgba(21,22,28,0.12)] flex-shrink-0"></div>
-          <div className="step upcoming flex items-center gap-1.5 flex-shrink-0">
-            <div className="node w-[9px] h-[9px] rounded-full border-[1.5px] border-[rgba(21,22,28,0.2)]"></div>
-            <span className="text-[11.5px] font-semibold text-[#5A5B66] whitespace-nowrap">Scalability</span>
-          </div>
-          <div className="step-line w-5 h-[1px] bg-[rgba(21,22,28,0.12)] flex-shrink-0"></div>
-          <div className="step upcoming flex items-center gap-1.5 flex-shrink-0">
-            <div className="node w-[9px] h-[9px] rounded-full border-[1.5px] border-[rgba(21,22,28,0.2)]"></div>
-            <span className="text-[11.5px] font-semibold text-[#5A5B66] whitespace-nowrap">Closing</span>
-          </div>
-        </div>
+import React from 'react';
 
-        {/* Body */}
-        <div className="body flex h-[520px]">
-          {/* Chat */}
-          <div className={`chat flex flex-col ${showWhiteboard ? 'flex-1' : 'flex-1'}`}>
-            {showWhiteboard && (
-              <div className="h-64 border-b border-[rgba(21,22,28,0.06)] p-4 bg-[#FAF9F6]">
-                <div className="text-xs text-[#5A5B66] mb-2 font-medium">Whiteboard - Draw your system design</div>
-                <div 
-                  className="w-full h-48 bg-white rounded-lg border border-[rgba(21,22,28,0.1)] relative cursor-crosshair"
-                  onMouseDown={(e) => handleWhiteboardDraw(e, 'down')}
-                  onMouseMove={(e) => handleWhiteboardDraw(e, 'move')}
-                  onMouseUp={(e) => handleWhiteboardDraw(e, 'up')}
-                  onMouseLeave={(e) => handleWhiteboardDraw(e, 'up')}
-                >
-                  <canvas
-                    ref={(canvas) => {
-                      if (canvas) {
-                        const ctx = canvas.getContext('2d');
-                        if (ctx) {
-                          canvas.width = canvas.offsetWidth;
-                          canvas.height = canvas.offsetHeight;
-                          // Restore drawing from state if available
-                          if (whiteboardState && whiteboardState.drawings) {
-                            whiteboardState.drawings.forEach((drawing: any) => {
-                              ctx.beginPath();
-                              ctx.moveTo(drawing.startX, drawing.startY);
-                              ctx.lineTo(drawing.endX, drawing.endY);
-                              ctx.stroke();
-                            });
-                          }
-                        }
-                      }
-                    }}
-                    className="w-full h-full"
-                  />
-                </div>
-              </div>
-            )}
-            <div className="messages flex-1 overflow-y-auto p-[26px_30px] flex flex-col gap-4">
-              {messages.map((msg, idx) => (
-                <div key={idx} className={`msg max-w-[70%] flex flex-col gap-1 ${msg.role === 'ai' ? 'ai self-start' : 'user self-end items-end'}`}>
-                  <div className="who text-[10.5px] text-[#5A5B66] font-semibold p-0 1">{msg.role === 'ai' ? 'Interviewer' : 'Candidate'}</div>
-                  <div className={`bubble p-[13px_16px] rounded-[18px] text-[13.5px] leading-[1.55] ${msg.role === 'ai' ? 'bg-[#F1EFEA] text-[#15161C] rounded-bl-[4px]' : 'bg-[#15161C] text-white rounded-br-[4px]'}`}>
-                    {msg.content}
-                  </div>
-                </div>
-              ))}
-              
-              {isTyping && (
-                <div className="msg ai self-start">
-                  <div className="who text-[10.5px] text-[#5A5B66] font-semibold p-0 1">Interviewer</div>
-                  <div className="typing flex gap-1 p-[13px_16px] bg-[#F1EFEA] rounded-[18px] rounded-bl-[4px] w-fit">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#5A5B66]">
-                      <style>{`
-                        @keyframes tbounce {
-                          0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-                          30% { transform: translateY(-4px); opacity: 1; }
-                        }
-                        span {
-                          animation: tbounce 1.2s ease-in-out infinite;
-                        }
-                      `}</style>
-                    </span>
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#5A5B66]" style={{ animationDelay: '0.15s' }}></span>
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#5A5B66]" style={{ animationDelay: '0.3s' }}></span>
-                  </div>
-                </div>
-              )}
-            </div>
+interface ProblemCardProps {
+  title: string;
+  description: string | null;
+  difficulty: string;
+  company: string;
+}
 
-            {/* Input */}
-            <div className="input-row flex items-center gap-2.5 p-[18px_24px] border-t border-[rgba(21,22,28,0.06)]">
-              <button className="mic-btn w-[42px] h-[42px] rounded-full border border-[rgba(21,22,28,0.12)] bg-none text-[#5A5B66] flex items-center justify-center cursor-pointer flex-shrink-0">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="9" y="2" width="6" height="12" rx="3"/>
-                  <path d="M5 10a7 7 0 0014 0M12 19v3"/>
-                </svg>
-              </button>
-              <input
-                type="text"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-                placeholder="Explain your design&hellip;"
-                className="field flex-1 border border-[rgba(21,22,28,0.1)] rounded-[999px] p-[12px_18px] text-[13.5px] font-['Inter'] outline-none focus:border-[#00A87E]"
-              />
-              <button
-                onClick={handleSend}
-                className="send-btn w-[42px] h-[42px] rounded-full border-none bg-[#00A87E] text-white flex items-center justify-center cursor-pointer flex-shrink-0 transition-transform duration-200 hover:scale-[1.06]"
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
-                  <path d="M5 12h14M13 6l6 6-6 6"/>
-                </svg>
-              </button>
-            </div>
-          </div>
+/**
+ * ProblemCard - Shows the problem being solved
+ *
+ * Displays:
+ * - Problem title
+ * - Brief description (if available)
+ * - Difficulty level
+ * - Target company
+ *
+ * This is read-only context about the problem.
+ * Problem definition is immutable during the interview.
+ */
+export function ProblemCard({
+  title,
+  description,
+  difficulty,
+  company,
+}: ProblemCardProps) {
+  return (
+    <div className="space-y-3">
+      <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
 
-          {/* Sidebar */}
-          <div className="sidebar flex-0-0-[260px] border-l border-[rgba(21,22,28,0.06)] p-6 overflow-y-auto">
-            <div className="side-label text-[10.5px] font-bold tracking-[0.06em] text-[#00A87E] text-transform:uppercase mb-2.5">Current phase</div>
-            <div className="phase-pill inline-block text-[12px] font-semibold bg-[#15161C] text-white p-[5px_13px] rounded-[999px] mb-5.5">Requirements</div>
+      {description && (
+        <p className="text-sm text-gray-600 line-clamp-3">{description}</p>
+      )}
 
-            <div className="side-label text-[10.5px] font-bold tracking-[0.06em] text-[#00A87E] text-transform:uppercase mb-2.5">Design summary</div>
-            {designSummary.length > 0 ? (
-              designSummary.map((item, idx) => (
-                <div key={idx} className="summary-item text-[12.5px] text-[#5A5B66] leading-[1.6] pl-3.5 relative mb-2.5">
-                  <style>{`
-                    .summary-item::before {
-                      content: '';
-                      position: absolute;
-                      left: 0;
-                      top: 6px;
-                      width: 5px;
-                      height: 5px;
-                      border-radius: 50%;
-                      background: #00D9A3;
-                    }
-                  `}</style>
-                  {item}
-                </div>
-              ))
-            ) : (
-              <div className="text-[12.5px] text-[#5A5B66] leading-[1.6] pl-3.5 relative">
-                No design summary available yet.
-              </div>
-            )}
-          </div>
-        </div>
+      <div className="flex gap-2 text-xs">
+        <span className="inline-block px-2 py-1 rounded bg-gray-100 text-gray-700">
+          {difficulty}
+        </span>
+        <span className="inline-block px-2 py-1 rounded bg-gray-100 text-gray-700">
+          {company}
+        </span>
       </div>
     </div>
   );
 }
+================================================
+FILE: ./src/features/interview/live/components/LiveInterview.tsx
+================================================
+'use client';
 
+import { InterviewHeader } from './InterviewHeader';
+import { PhaseProgress } from './PhaseProgress';
+import { MessageList } from './MessageList';
+import { ChatInput } from './ChatInput';
+import { Sidebar } from './Sidebar';
+import { useInterview } from '../hooks/useInterview';
+import { useMessages } from '../hooks/useMessages';
+import { useTimer } from '../hooks/useTimer';
+
+interface LiveInterviewProps {
+  interviewId: string;
+}
+
+/**
+ * LiveInterview - Main container
+ *
+ * Orchestrates:
+ * - Interview state (from useInterview hook)
+ * - Message history (from useMessages hook)
+ * - Message sending (delegates to useMessages, then refetches interview state)
+ * - Layout and component composition
+ *
+ * Data flow:
+ * 1. Mount → fetch interview state and transcript
+ * 2. User sends message → POST to backend via useMessages
+ * 3. Message added to state optimistically
+ * 4. AI response returned immediately (no polling)
+ * 5. Refetch interview state to get updated phase/summary
+ *
+ * Backend owns:
+ * - Phase transitions
+ * - Summary updates
+ * - Interview completion
+ * - Evaluation queuing
+ *
+ * Frontend shows:
+ * - Messages from transcript
+ * - Current phase and progress
+ * - Design summary (from interview.summary)
+ * - Problem context
+ * - Timer (duration - elapsed)
+ */
+export function LiveInterview({ interviewId }: LiveInterviewProps) {
+  const { interview, loading, error, refetch } = useInterview(interviewId);
+  const { messages, sendMessage, isSending, error: messageError } = useMessages(
+    interviewId,
+    interview?.transcript.map((msg) => ({
+      id: msg.id,
+      role: msg.role,
+      content: msg.content,
+      metadata: msg.metadata,
+      createdAt: msg.createdAt,
+      elapsedSeconds: msg.elapsedSeconds,
+      phase: msg.phase,
+    })) || []
+  );
+
+  const handleSendMessage = async (text: string) => {
+    try {
+      // Send message (optimistically updates local state)
+      const result = await sendMessage(text);
+
+      // Refetch interview state to get:
+      // - Updated phase (if transition occurred)
+      // - Updated summary
+      // - Interview completion status
+      // - New evaluation state
+      await refetch();
+    } catch (err) {
+      console.error('Failed to send message:', err);
+      // Error is stored in hook, displayed in UI
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-gray-600">Loading interview...</p>
+      </div>
+    );
+  }
+
+  if (error || !interview) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-red-600">{error || 'Failed to load interview'}</p>
+      </div>
+    );
+  }
+
+  // Calculate elapsed time
+  const startedAt = interview.startedAt
+    ? new Date(interview.startedAt).getTime()
+    : new Date(interview.createdAt).getTime();
+  const elapsedSeconds = Math.floor((Date.now() - startedAt) / 1000);
+  const remainingSeconds = Math.max(0, interview.duration * 60 - elapsedSeconds);
+
+  return (
+    <div className="flex flex-col h-screen bg-white">
+      {/* Header */}
+      <InterviewHeader
+        title={interview.problem.title}
+        isLive={interview.status === 'IN_PROGRESS'}
+        remainingSeconds={remainingSeconds}
+      />
+
+      {/* Phase Progress */}
+      <PhaseProgress
+        currentPhase={interview.currentPhase}
+        isCompleted={interview.status === 'COMPLETED'}
+      />
+
+      {/* Main Content */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Chat Area */}
+        <div className="flex-1 flex flex-col">
+          <MessageList messages={messages} />
+          <ChatInput
+            onSendMessage={handleSendMessage}
+            isSending={isSending}
+            error={messageError}
+            isInterviewCompleted={interview.status === 'COMPLETED'}
+          />
+        </div>
+
+        {/* Sidebar */}
+        <Sidebar
+          problem={interview.problem}
+          currentPhase={interview.currentPhase}
+          summary={interview.summary}
+          difficulty={interview.difficulty}
+          company={interview.company}
+        />
+      </div>
+    </div>
+  );
+}
 ================================================
 FILE: ./src/features/interview/live/components/MessageList.tsx
 ================================================
-// components/interview/live/MessageList.tsx
-import React from 'react';
-import { TranscriptMessage } from '../../types/TranscriptMessage';
-import Message from './Message';
+'use client';
+
+import React, { useEffect, useRef } from 'react';
+import { Message } from './Message';
+import type { TranscriptMessage } from '../../types/TranscriptMessage';
 
 interface MessageListProps {
   messages: TranscriptMessage[];
 }
 
-const MessageList: React.FC<MessageListProps> = ({ messages }) => {
+/**
+ * MessageList - Renders conversation history
+ *
+ * Features:
+ * - Auto-scrolls to latest message
+ * - Handles empty state
+ * - Message ordering (oldest first)
+ *
+ * Note: Messages come from the interview's transcript,
+ * which is the source of truth on the backend.
+ */
+export function MessageList({ messages }: MessageListProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const endRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
   return (
-    <div className="space-y-4 min-h-full">
-      {messages.map((msg, index) => (
-        <Message key={index} message={msg} />
-      ))}
-      
-      {messages.length === 0 && (
-        <div className="flex items-center justify-center min-h-[200px] text-muted-foreground">
-          <p>No messages yet. The interviewer will start shortly.</p>
+    <div
+      ref={containerRef}
+      className="flex-1 overflow-y-auto px-6 py-6 space-y-4 bg-white"
+    >
+      {messages.length === 0 ? (
+        <div className="flex items-center justify-center h-full">
+          <p className="text-gray-400">No messages yet</p>
         </div>
+      ) : (
+        <>
+          {messages.map((msg) => (
+            <Message
+              key={msg.id}
+              role={msg.role}
+              content={msg.content}
+            />
+          ))}
+          <div ref={endRef} />
+        </>
       )}
     </div>
   );
-};
-
-export default MessageList;
+}
 ================================================
 FILE: ./src/features/interview/live/components/Timer.tsx
 ================================================
@@ -15667,80 +15953,167 @@ export default function Timer({ durationInMinutes, interviewId, onFinish }: Time
   );
 }
 ================================================
-FILE: ./src/features/interview/live/components/Sidebar.tsx
+FILE: ./src/features/interview/live/components/PhaseProgress.tsx
 ================================================
-// components/interview/live/Sidebar.tsx
-interface SidebarProps {
-  summary: string | null;
-  phase?: string;
-  isSummaryLoading?: boolean;
+'use client';
+
+import React from 'react';
+
+interface PhaseProgressProps {
+  currentPhase: string;
+  isCompleted: boolean;
 }
 
-export default function Sidebar({ summary, phase, isSummaryLoading = false }: SidebarProps) {
+/**
+ * PhaseProgress
+ *
+ * Shows which phase the interview is in
+ * 
+ * Phases are defined in the template and managed by the backend.
+ * This component just displays the current phase name.
+ *
+ * Common phases:
+ * - intro
+ * - requirements
+ * - high-level-design
+ * - deep-dive
+ * - scalability
+ * - closing
+ *
+ * Phase order and transitions are owned by InterviewEngine
+ */
+export function PhaseProgress({
+  currentPhase,
+  isCompleted,
+}: PhaseProgressProps) {
+  // Format phase name (e.g., "high-level-design" → "High-level design")
+  const formatPhaseName = (phase: string) => {
+    return phase
+      .split('-')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
   return (
-    <aside className="w-80 border-l border-border bg-card flex flex-col h-full">
-      <div className="p-6 border-b border-border bg-card">
-        <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">Current Phase</h2>
-        <div className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium inline-block capitalize">
-          {phase?.replace('_', ' ') || 'Intro'}
+    <div className="px-6 py-4 border-b border-gray-200">
+      <div className="flex items-center gap-3">
+        <div className="text-xs font-semibold text-teal-600 uppercase tracking-wider">
+          Current Phase
+        </div>
+        <div className="inline-block px-3 py-1 rounded-full bg-gray-900 text-white text-sm font-medium">
+          {isCompleted ? 'Completed' : formatPhaseName(currentPhase)}
         </div>
       </div>
+    </div>
+  );
+}
+================================================
+FILE: ./src/features/interview/live/components/Sidebar.tsx
+================================================
+'use client';
 
-      <div className="p-6 flex-1 overflow-y-auto">
-        <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-4">Design Summary</h2>
-        {isSummaryLoading || !summary ? (
-          <div className="flex flex-col items-center justify-center h-40 text-center">
-            <div className="w-8 h-8 border-2 border-border border-t-primary rounded-full animate-spin mb-2" />
-            <p className="text-xs text-muted-foreground italic">Analyzing design requirements...</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {summary.split('\n').map((line, i) => (
-              <p key={i} className="text-sm text-muted-foreground leading-relaxed">
-                {line.startsWith('-') ? line : `• ${line}`}
-              </p>
-            ))}
-          </div>
-        )}
-      </div>
-    </aside>
+import React from 'react';
+import { ProblemCard } from './sidebar/ProblemCard';
+import { DesignSummary } from './sidebar/DesignSummary';
+
+interface SidebarProps {
+  problem: {
+    id: string;
+    title: string;
+    description: string | null;
+  };
+  currentPhase: string;
+  summary: string;
+  difficulty: string;
+  company: string;
+}
+
+/**
+ * Sidebar - Right panel
+ *
+ * Composes smaller components:
+ * - ProblemCard (problem title, description, metadata)
+ * - DesignSummary (summary text from backend)
+ *
+ * Future components to add:
+ * - InterviewTips (phase-specific guidance)
+ * - EvaluationPreview (live scoring if available)
+ * - ResourceLinks (documentation links for this phase)
+ *
+ * All data flows down from backend.
+ * Backend owns phase transitions, summaries, evaluations.
+ */
+export function Sidebar({
+  problem,
+  currentPhase,
+  summary,
+  difficulty,
+  company,
+}: SidebarProps) {
+  return (
+    <div className="w-80 border-l border-gray-200 bg-white p-6 overflow-y-auto">
+      <ProblemCard
+        title={problem.title}
+        description={problem.description}
+        difficulty={difficulty}
+        company={company}
+      />
+
+      <div className="my-8" />
+
+      <DesignSummary summary={summary} />
+    </div>
   );
 }
 ================================================
 FILE: ./src/features/interview/live/components/Message.tsx
 ================================================
-// components/interview/live/Message.tsx
+'use client';
+
 import React from 'react';
-import { TranscriptMessage } from '../../types/TranscriptMessage';
 
 interface MessageProps {
-  message: TranscriptMessage;
+  role: 'assistant' | 'user';
+  content: string;
 }
 
-const Message: React.FC<MessageProps> = ({ message }) => {
-  const isAI = message.role === 'assistant';
+/**
+ * Message - Renders a single message bubble
+ *
+ * Props:
+ * - role: 'assistant' (interviewer) or 'user' (candidate)
+ * - content: The message text
+ *
+ * Styling:
+ * - User: black bubble, right-aligned
+ * - Assistant: gray bubble, left-aligned
+ */
+export function Message({ role, content }: MessageProps) {
+  const isUser = role === 'user';
 
   return (
-    <div className={`flex ${isAI ? 'justify-start' : 'justify-end'} mb-4`}>
+    <div className={`flex gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
+      {!isUser && (
+        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
+          <span className="text-xs font-semibold text-gray-700">I</span>
+        </div>
+      )}
+
       <div
-        className={`max-w-[80%] rounded-xl p-4 ${
-          isAI
-            ? 'bg-muted text-foreground border border-border shadow-sm'
-            : 'bg-primary text-primary-foreground shadow-md'
+        className={`max-w-md px-4 py-3 rounded-2xl ${
+          isUser
+            ? 'bg-black text-white rounded-tr-none'
+            : 'bg-gray-200 text-gray-900 rounded-tl-none'
         }`}
       >
-        <div className="text-xs mb-1 opacity-70 font-semibold uppercase">
-          {isAI ? 'Interviewer' : 'You'}
-        </div>
-        <div className="whitespace-pre-wrap leading-relaxed text-sm">
-          {message.content}
-        </div>
+        {!isUser && (
+          <p className="text-xs font-semibold text-gray-600 mb-1">Interviewer</p>
+        )}
+        <p className="text-sm leading-relaxed">{content}</p>
       </div>
     </div>
   );
-};
-
-export default Message;
+}
 ================================================
 FILE: ./src/features/interview/live/components/Chat.tsx
 ================================================
@@ -15794,39 +16167,92 @@ export default function Chat({ messages, onSendMessage, isLoading }: ChatProps) 
 ================================================
 FILE: ./src/features/interview/live/components/InterviewHeader.tsx
 ================================================
-import Timer from "./Timer";
+'use client';
+
+import React, { useEffect, useState } from 'react';
+import { ChevronLeft } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface InterviewHeaderProps {
-  duration: number;
-  interviewId: string;
+  title: string;
+  isLive: boolean;
+  remainingSeconds: number;
 }
 
-export default function InterviewHeader({
-  duration,
-  interviewId,
+/**
+ * InterviewHeader
+ *
+ * Shows:
+ * - Back button
+ * - Interview title
+ * - "Live" indicator (if IN_PROGRESS)
+ * - Timer with countdown
+ *
+ * Timer updates every second from remainingSeconds prop
+ */
+export function InterviewHeader({
+  title,
+  isLive,
+  remainingSeconds,
 }: InterviewHeaderProps) {
+  const router = useRouter();
+  const [displaySeconds, setDisplaySeconds] = useState(remainingSeconds);
+
+  // Update display seconds every second
+  useEffect(() => {
+    setDisplaySeconds(remainingSeconds);
+
+    if (remainingSeconds <= 0) {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setDisplaySeconds((prev) => Math.max(0, prev - 1));
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [remainingSeconds]);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
   return (
-    <header className="h-20 border-b border-border flex items-center justify-between px-6 bg-card">
-      <div className="flex items-center gap-2">
-        <div className="w-3 h-3 rounded-full bg-primary animate-pulse" />
-        <span className="font-semibold text-foreground">
-          Live Interview Session
-        </span>
-      </div>
-
-      <div className="flex items-center gap-6">
-        <div className="flex flex-col items-end">
-          <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">
-            Time Remaining
-          </span>
-
-          <Timer
-            durationInMinutes={duration}
-            interviewId={interviewId}
-          />
+    <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+      {/* Left: Back + Title */}
+      <div className="flex items-center gap-4">
+        <button
+          onClick={() => router.back()}
+          className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+          aria-label="Go back"
+        >
+          <ChevronLeft className="w-5 h-5 text-gray-600" />
+        </button>
+        <div>
+          <p className="text-sm text-gray-600">Live interview</p>
+          <h1 className="text-lg font-semibold text-gray-900">{title}</h1>
         </div>
       </div>
-    </header>
+
+      {/* Right: Live + Timer */}
+      <div className="flex items-center gap-4">
+        {isLive && (
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+            <span className="text-sm font-medium text-red-500">Live</span>
+          </div>
+        )}
+
+        <div className="flex flex-col items-center justify-center w-16 h-16 rounded-full bg-gray-900 text-white">
+          <span className="text-sm font-mono font-semibold">
+            {formatTime(displaySeconds)}
+          </span>
+          <span className="text-xs text-gray-400">LEFT</span>
+        </div>
+      </div>
+    </div>
   );
 }
 ================================================
@@ -15834,466 +16260,359 @@ FILE: ./src/features/interview/live/components/ChatInput.tsx
 ================================================
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  Mic,
-  MicOff,
-  SendHorizontal,
-  Loader2,
-  CheckCircle2,
-} from "lucide-react";
-
-const SUCCESS_TIMEOUT_MS = 2500;
-const DEFAULT_LANGUAGE = "en-US";
-const TEXTArea_MIN_HEIGHT = 44;
+import React, { useState } from 'react';
+import { Mic, ArrowRight } from 'lucide-react';
 
 interface ChatInputProps {
-  onSendMessage: (message: string) => void;
-  disabled?: boolean;
+  onSendMessage: (text: string) => void;
+  isSending?: boolean;
+  error?: string | null;
+  isInterviewCompleted?: boolean;
 }
 
-type RecordingStatus =
-  | "idle"
-  | "recording"
-  | "processing"
-  | "success"
-  | "error"
-  | "unsupported"
-  | "permissionDenied";
-
-interface SpeechRecognitionAlternative {
-  transcript: string;
-  confidence: number;
-}
-
-interface SpeechRecognitionResult {
-  length: number;
-  item(index: number): SpeechRecognitionAlternative;
-  [index: number]: SpeechRecognitionAlternative;
-  isFinal: boolean;
-}
-
-interface SpeechRecognitionResultList {
-  length: number;
-  item(index: number): SpeechRecognitionResult;
-  [index: number]: SpeechRecognitionResult;
-}
-
-interface SpeechRecognitionEvent extends Event {
-  resultIndex: number;
-  results: SpeechRecognitionResultList;
-}
-
-interface SpeechRecognitionErrorEvent extends Event {
-  error: "no-speech" | "audio-capture" | "not-allowed" | "network" | "aborted" | "language-not-supported" | "service-not-allowed";
-  message: string;
-}
-
-interface SpeechRecognition extends EventTarget {
-  continuous: boolean;
-  grammars?: any;
-  interimResults: boolean;
-  lang: string;
-  maxAlternatives: number;
-  serviceURI: string;
-
-  onstart: ((this: SpeechRecognition, ev: Event) => any) | null;
-  onend: ((this: SpeechRecognition, ev: Event) => any) | null;
-  onerror: ((this: SpeechRecognition, ev: SpeechRecognitionErrorEvent) => any) | null;
-  onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => any) | null;
-  onnomatch: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => any) | null;
-  onsoundstart: ((this: SpeechRecognition, ev: Event) => any) | null;
-  onsoundend: ((this: SpeechRecognition, ev: Event) => any) | null;
-  onspeechstart: ((this: SpeechRecognition, ev: Event) => any) | null;
-  onspeechend: ((this: SpeechRecognition, ev: Event) => any) | null;
-
-  start(): void;
-  stop(): void;
-  abort(): void;
-}
-
-interface SpeechRecognitionConstructor {
-  prototype: SpeechRecognition;
-  new (): SpeechRecognition;
-}
-
-declare global {
-  interface Window {
-    SpeechRecognition: SpeechRecognitionConstructor | undefined;
-    webkitSpeechRecognition: SpeechRecognitionConstructor | undefined;
-  }
-}
-
-export default function ChatInput({
+/**
+ * ChatInput - Message composition area
+ *
+ * Features:
+ * - Text input field
+ * - Mic button (placeholder for voice recording)
+ * - Send button
+ * - Error display
+ * - Disabled state when sending or interview complete
+ *
+ * Note: Does not call API directly.
+ * Delegates to parent via onSendMessage callback.
+ */
+export function ChatInput({
   onSendMessage,
-  disabled = false,
+  isSending = false,
+  error,
+  isInterviewCompleted = false,
 }: ChatInputProps) {
-  const [message, setMessage] = useState("");
-  const [status, setStatus] =
-    useState<RecordingStatus>("idle");
+  const [input, setInput] = useState('');
 
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const recognitionIdRef = useRef(0);
-
-  const speechSupported =
-    typeof window !== "undefined" &&
-    ("SpeechRecognition" in window ||
-     "webkitSpeechRecognition" in window);
-
-  const isEmpty = message.trim().length === 0;
-
-  useEffect(() => {
-    if (status !== "success") return;
-
-    const timer = setTimeout(() => {
-      setStatus("idle");
-    }, SUCCESS_TIMEOUT_MS);
-
-    return () => clearTimeout(timer);
-  }, [status]);
-
-  useEffect(() => {
-    if (!speechSupported) {
-      setStatus("unsupported");
-      return;
+  const handleSend = () => {
+    if (input.trim()) {
+      onSendMessage(input);
+      setInput('');
     }
+  };
 
-    const SpeechRecognitionConstructor =
-      window.SpeechRecognition ||
-      window.webkitSpeechRecognition;
-
-    if (!SpeechRecognitionConstructor) {
-      setStatus("unsupported");
-      return;
-    }
-
-    const recognition = new SpeechRecognitionConstructor();
-    const currentId = ++recognitionIdRef.current;
-
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.lang = DEFAULT_LANGUAGE;
-
-    recognition.onstart = () => {
-      if (recognitionIdRef.current !== currentId) return;
-      setStatus("recording");
-    };
-
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
-      if (recognitionIdRef.current !== currentId) return;
-      setStatus("processing");
-
-      const transcript =
-        event.results[0][0].transcript ?? "";
-
-      setMessage(transcript);
-
-      // Small delay to ensure processing state is visible
-      setTimeout(() => {
-        if (recognitionIdRef.current === currentId) {
-          setStatus("success");
-        }
-      }, 100);
-    };
-
-    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-      if (recognitionIdRef.current !== currentId) return;
-      switch (event.error) {
-        case "no-speech":
-          // User clicked record but didn't say anything.
-          break;
-
-        case "not-allowed":
-          setStatus("permissionDenied");
-          break;
-
-        case "audio-capture":
-        case "network":
-        default:
-          setStatus("error");
-      }
-    };
-
-    recognition.onend = () => {
-      if (recognitionIdRef.current !== currentId) return;
-      setStatus((current) =>
-        current === "recording" ? "idle" : current
-      );
-    };
-
-    recognitionRef.current = recognition;
-
-    return () => {
-      recognition.stop();
-    };
-  }, []);
-
-  useEffect(() => {
-    const textarea = textareaRef.current;
-
-    if (!textarea) return;
-
-    textarea.style.height = "0px";
-    textarea.style.height = `${textarea.scrollHeight}px`;
-  }, [message]);
-
-  const handleSend = useCallback(() => {
-    const text = message.trim();
-
-    if (!text || disabled) return;
-
-    onSendMessage(text);
-
-    setMessage("");
-    setStatus("idle");
-  }, [message, disabled, onSendMessage]);
-
-  const toggleListening = useCallback(() => {
-    if (disabled || !speechSupported) return;
-
-    if (status === "error" || status === "permissionDenied") {
-      setStatus("idle");
-      return;
-    }
-
-    if (status === "processing") return;
-
-    if (!recognitionRef.current) {
-      return;
-    }
-
-    if (status === "recording") {
-      recognitionRef.current.stop();
-      return;
-    }
-
-    recognitionRef.current.start();
-  }, [disabled, speechSupported, status]);
-
-  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey && !isSending) {
       e.preventDefault();
       handleSend();
     }
-  }, [handleSend]);
+  };
 
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setMessage(e.target.value);
-  }, []);
+  const isDisabled = isSending || isInterviewCompleted;
 
   return (
-    <div className="border-t border-border bg-card p-6">
-      <div
-        className="mb-3 flex h-6 items-center px-2"
-        role="status"
-        aria-live="polite"
-        aria-atomic="true"
-      >
-        {status === "recording" && (
-          <div className="flex items-center gap-2 text-sm font-medium text-red-600">
-            <div className="h-2 w-2 animate-pulse rounded-full bg-red-600" />
-            Recording... Click again to stop.
-          </div>
-        )}
+    <div className="px-6 py-4 border-t border-gray-200 bg-white">
+      {error && (
+        <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-700">
+          {error}
+        </div>
+      )}
 
-        {status === "processing" && (
-          <div className="flex items-center gap-2 text-sm text-primary">
-            <Loader2
-              size={14}
-              className="animate-spin"
-            />
-            Processing...
-          </div>
-        )}
-
-        {status === "success" && (
-          <div className="flex items-center gap-2 text-sm text-primary">
-            <CheckCircle2 size={14} />
-            Transcript ready. Review and press Send.
-          </div>
-        )}
-
-        {status === "error" && (
-          <div className="flex items-center gap-2 text-sm text-destructive">
-            Recording failed. Please try again.
-          </div>
-        )}
-
-        {status === "permissionDenied" && (
-          <div className="flex items-center gap-2 text-sm text-destructive">
-            Microphone access denied. Check browser permissions.
-          </div>
-        )}
-
-        {status === "unsupported" && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            Speech recognition not supported in this browser.
-          </div>
-        )}
-      </div>
-
-      <div className="flex items-end gap-3">
+      <div className="flex items-center gap-3">
+        {/* Mic button */}
         <button
-          type="button"
-          onClick={toggleListening}
-          disabled={
-            disabled || status === "processing" || !speechSupported
-          }
-          className={`flex items-center gap-2 rounded-full border px-4 py-2 transition shrink-0 ${
-            status === "recording"
-              ? "border-red-300 bg-red-50 text-red-600"
-              : "border-border bg-background hover:bg-muted"
-          } disabled:cursor-not-allowed disabled:opacity-50`}
+          disabled={isDisabled}
+          className="p-2 rounded-full hover:bg-gray-100 text-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          aria-label="Record message"
         >
-          {status === "recording" ? (
-            <>
-              <MicOff size={18} />
-              Stop
-            </>
-          ) : (
-            <>
-              <Mic size={18} />
-              Record
-            </>
-          )}
+          <Mic className="w-5 h-5" />
         </button>
 
-        <textarea
-          ref={textareaRef}
-          rows={1}
-          value={message}
-          disabled={disabled || status === "recording"}
-          placeholder={
-            status === "recording"
-              ? "Recording..."
-              : disabled
-              ? "AI is thinking..."
-              : "Explain your design..."
-          }
-          onChange={(e) => setMessage(e.target.value)}
-          onKeyDown={(e) => {
-            if (
-              e.key === "Enter" &&
-              !e.shiftKey
-            ) {
-              e.preventDefault();
-              handleSend();
-            }
-          }}
-          style={{ minHeight: `${TEXTArea_MIN_HEIGHT}px` }}
-          className="max-h-40 min-w-[200px] flex-1 resize-none rounded-xl border border-border px-4 py-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary disabled:bg-muted disabled:text-muted-foreground"
+        {/* Input field */}
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyPress={handleKeyPress}
+          disabled={isDisabled}
+          placeholder={isInterviewCompleted ? 'Interview completed' : 'Explain your design...'}
+          className="flex-1 px-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:border-gray-400 text-sm bg-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
         />
 
+        {/* Send button */}
         <button
-          type="button"
           onClick={handleSend}
-          disabled={disabled || isEmpty}
-          className="flex items-center gap-2 rounded-full bg-primary px-5 py-3 font-medium text-primary-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground shrink-0"
+          disabled={isDisabled || !input.trim()}
+          className={`p-3 rounded-full transition-colors ${
+            isDisabled || !input.trim()
+              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              : 'bg-green-600 text-white hover:bg-green-700'
+          }`}
+          aria-label="Send message"
         >
-          Send
-          <SendHorizontal size={18} />
+          <ArrowRight className="w-5 h-5" />
         </button>
       </div>
     </div>
   );
 }
 ================================================
-FILE: ./src/features/interview/live/hooks/useInterview.ts
+FILE: ./src/features/interview/live/components/PhaseSelector.tsx
 ================================================
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+'use client';
 
-export interface InterviewData {
+import React from 'react';
+
+interface Phase {
   id: string;
-  status: string;
-  currentPhase: string;
-  summary: string | null;
-  problem: {
-    title: string;
-  };
+  name: string;
+  status: 'completed' | 'current' | 'upcoming';
 }
 
-export function useInterview(interviewId: string) {
-  const [interview, setInterview] = useState<InterviewData | null>(null);
+interface PhaseSelectorProps {
+  phases: Phase[];
+  currentPhase: string;
+  onPhaseChange?: (phaseId: string) => void;
+}
+
+export const PhaseSelector: React.FC<PhaseSelectorProps> = ({
+  phases,
+  currentPhase,
+}) => {
+  return (
+    <div className="flex items-center gap-6 px-6 py-4 border-b border-gray-200 bg-white overflow-x-auto">
+      {phases.map((phase) => {
+        const isCompleted = phase.status === 'completed';
+        const isCurrent = phase.id === currentPhase;
+
+        return (
+          <button
+            key={phase.id}
+            className="flex items-center gap-2 whitespace-nowrap transition-all"
+            disabled={!isCompleted && !isCurrent}
+          >
+            {/* Indicator circle */}
+            <div className="flex items-center justify-center w-5 h-5 rounded-full border-2">
+              {isCompleted ? (
+                // Completed: filled green circle
+                <div className="w-5 h-5 rounded-full bg-green-600 border-green-600" />
+              ) : isCurrent ? (
+                // Current: filled black circle
+                <div className="w-5 h-5 rounded-full bg-black border-black" />
+              ) : (
+                // Upcoming: empty circle
+                <div className="w-5 h-5 rounded-full border-2 border-gray-300" />
+              )}
+            </div>
+
+            {/* Phase name */}
+            <span
+              className={`text-sm font-medium ${
+                isCurrent
+                  ? 'text-gray-900'
+                  : isCompleted
+                  ? 'text-gray-600'
+                  : 'text-gray-400'
+              }`}
+            >
+              {phase.name}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+================================================
+FILE: ./src/features/interview/live/hooks/useInterview.ts
+================================================
+'use client';
+
+import { useEffect, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import { interviewApiClient } from '@/shared/api/InterviewApiClient';
+import type { InterviewState } from "@/modules/interview/types";
+
+interface UseInterviewReturn {
+  interview: InterviewState | null;
+  loading: boolean;
+  error: string | null;
+  refetch: () => Promise<void>;
+}
+
+/**
+ * useInterview — Fetch interview state
+ *
+ * - Loads interview data on mount
+ * - Does NOT poll — polling is wasteful for chat apps
+ * - Data updates via explicit actions (sending messages, refetching)
+ * - Backend owns all state transitions (phases, summaries, completion)
+ *
+ * Why no polling?
+ * - User actions already trigger updates (POST /message)
+ * - Interview state only changes when backend updates it
+ * - Polling every second = wasted requests
+ * - For real-time features later: use SSE or WebSocket
+ */
+export function useInterview(interviewId: string): UseInterviewReturn {
+  const [interview, setInterview] = useState<InterviewState | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  useEffect(() => {
-    async function fetchInterview() {
-      try {
-        const response = await fetch(`/api/interviews/${interviewId}`);
-        if (!response.ok) {
-          if (response.status === 404) {
-            router.push('/dashboard');
-            return;
-          }
-          throw new Error('Failed to fetch interview');
-        }
-        const data = await response.json();
-        setInterview(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error');
-      } finally {
-        setLoading(false);
-      }
-    }
+  const fetchInterview = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await interviewApiClient.getInterview(interviewId);
+      setInterview(data);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      setError(message);
 
-    fetchInterview();
+      // Redirect to dashboard if interview not found
+      if (message.includes('not found')) {
+        router.push('/dashboard');
+      }
+    } finally {
+      setLoading(false);
+    }
   }, [interviewId, router]);
 
-  return { interview, loading, error };
+  // Fetch once on mount
+  useEffect(() => {
+    fetchInterview();
+  }, [fetchInterview]);
+
+  return {
+    interview,
+    loading,
+    error,
+    refetch: fetchInterview,
+  };
 }
 ================================================
 FILE: ./src/features/interview/live/hooks/useMessages.ts
 ================================================
-import { useState, useCallback } from 'react';
-import { TranscriptMessage } from '../../types/TranscriptMessage';
+'use client';
 
-export function useMessages(interviewId: string, initialMessages: TranscriptMessage[]) {
+import { useCallback, useState } from 'react';
+import { interviewApiClient } from '@/shared/api/InterviewApiClient';
+import type { ProcessInterviewMessageResult } from "@/modules/interview/types";
+
+/**
+ * Message data as stored in Prisma
+ * Matches the Message model with actual field names
+ */
+export interface TranscriptMessage {
+  id: string;
+  role: 'assistant' | 'user'; // MessageRole enum
+  content: string;
+  metadata?: Record<string, any>;
+  createdAt: string;
+  elapsedSeconds: number;
+  phase: string | null;
+}
+
+interface UseMessagesReturn {
+  messages: TranscriptMessage[];
+  sendMessage: (text: string) => Promise<ProcessInterviewMessageResult>;
+  isSending: boolean;
+  error: string | null;
+}
+
+/**
+ * useMessages — Manage conversation with the AI interviewer
+ *
+ * Flow:
+ * 1. User types message
+ * 2. Add optimistic message to state (role: 'user')
+ * 3. POST /api/interviews/[id]/message
+ * 4. Add AI response (role: 'assistant')
+ * 5. If backend updated phase/summary, parent component refetches interview state
+ *
+ * Why optimistic updates?
+ * - Instant feedback to user
+ * - No waiting for network
+ * - Rollback on error
+ *
+ * Why no polling?
+ * - Message list comes from the interview's transcript (refreshed via refetch())
+ * - Polling would duplicate messages already in state
+ * - Parent (LiveInterview) calls refetch() after sending to get latest state
+ */
+export function useMessages(
+  interviewId: string,
+  initialMessages: TranscriptMessage[] = []
+): UseMessagesReturn {
   const [messages, setMessages] = useState<TranscriptMessage[]>(initialMessages);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const sendMessage = useCallback(async (content: string) => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      // Add user message optimistically
-      const userMessage: TranscriptMessage = { role: 'user', content };
-      setMessages((prev) => [...prev, userMessage]);
-
-      const response = await fetch(`/api/interviews/${interviewId}/message`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: content }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to send message');
+  const sendMessage = useCallback(
+    async (text: string): Promise<ProcessInterviewMessageResult> => {
+      if (!text.trim()) {
+        throw new Error('Message cannot be empty');
       }
 
-      const data = await response.json();
+      setIsSending(true);
+      setError(null);
 
-      // Add assistant response
-      const assistantMessage: TranscriptMessage = { role: 'assistant', content: data.reply };
-      setMessages((prev) => [...prev, assistantMessage]);
+      try {
+        // Optimistic update: add user message immediately
+        const optimisticUserMessage: TranscriptMessage = {
+          id: `optimistic-${Date.now()}`,
+          role: 'user',
+          content: text.trim(),
+          createdAt: new Date().toISOString(),
+          elapsedSeconds: 0, // Calculated server-side
+          phase: null, // Determined server-side
+        };
 
-      return data;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
-      // Remove the optimistic user message on error
-      setMessages((prev) => prev.slice(0, -1));
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [interviewId]);
+        setMessages((prev) => [...prev, optimisticUserMessage]);
 
-  return { messages, sendMessage, isLoading, error };
+        // Send to backend
+        const result = await interviewApiClient.sendMessage(
+          interviewId,
+          text
+        );
+
+        // Add AI response (backend-provided content)
+        const assistantMessage: TranscriptMessage = {
+          id: `assistant-${Date.now()}`,
+          role: 'assistant',
+          content: result.reply,
+          metadata: {
+            transitioned: result.transitioned,
+            previousPhase: result.previousPhase,
+            confidence: result.confidence,
+          },
+          createdAt: new Date().toISOString(),
+          elapsedSeconds: 0, // Should come from backend in production
+          phase: result.phase,
+        };
+
+        setMessages((prev) => [...prev, assistantMessage]);
+
+        return result;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Unknown error';
+        setError(message);
+
+        // Remove optimistic message on error
+        setMessages((prev) => prev.slice(0, -1));
+
+        throw err;
+      } finally {
+        setIsSending(false);
+      }
+    },
+    [interviewId]
+  );
+
+  return {
+    messages,
+    sendMessage,
+    isSending,
+    error,
+  };
 }
 ================================================
 FILE: ./src/features/interview/live/hooks/useTimer.ts
@@ -16826,6 +17145,519 @@ export async function startInterview(
 }
 
 ================================================
+FILE: ./src/features/bug-hunting/types/Scenario.ts
+================================================
+export type LogLevel = "info" | "warn" | "error";
+
+export interface LogLine {
+  ts: string;
+  level: LogLevel;
+  message: string;
+}
+
+export interface CodeFile {
+  key: string;
+  label: string;
+  // pre-rendered HTML with <span class="kw|str|cm|ty"> spans, same as source
+  contentHtml: string;
+}
+
+export interface SqlResultRow {
+  order_id: string;
+  status: string;
+  retry_count: number;
+  flagged: boolean;
+  created_at: string;
+}
+
+export interface Deployment {
+  version: string;
+  status: "rolled" | "ok";
+  message: string;
+  time: string;
+}
+
+export interface DocSection {
+  title: string;
+  body: string;
+}
+
+export interface BugScenario {
+  id: string;
+  title: string;
+  severity: string;
+  service: string;
+  endpoint: string;
+  errorRate: string;
+  firstSeen: string;
+  symptom: string;
+  timerSeconds: number;
+  logs: LogLine[];
+  defaultSqlQuery: string;
+  sqlResults: SqlResultRow[];
+  files: CodeFile[];
+  docs: DocSection[];
+  deployments: Deployment[];
+}
+================================================
+FILE: ./src/features/bug-hunting/components/Tabs/DeploymentsPanel.tsx
+================================================
+import type { Deployment } from "../../types/Scenario";
+
+export default function DeploymentsPanel({ deployments, active }: { deployments: Deployment[]; active: boolean }) {
+  return (
+    <div className={`panel${active ? " active" : ""}`}>
+      <div className="timeline">
+        {deployments.map((d) => (
+          <div key={d.version} className={`dep ${d.status}`}>
+            <div className="dep-top">
+              <span className="dep-ver">{d.version}</span>
+              <span className={`dep-status ${d.status}`}>{d.status === "rolled" ? "Rolled back" : "Stable"}</span>
+            </div>
+            <div className="dep-msg">{d.message}</div>
+            <div className="dep-time">{d.time}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+================================================
+FILE: ./src/features/bug-hunting/components/Tabs/SqlPanel.tsx
+================================================
+import type { SqlResultRow } from "../../types/Scenario";
+
+type Props = {
+  active: boolean;
+  query: string;
+  onQueryChange: (v: string) => void;
+  onRun: () => void;
+  results: SqlResultRow[];
+};
+
+export default function SqlPanel({ active, query, onQueryChange, onRun, results }: Props) {
+  return (
+    <div className={`panel${active ? " active" : ""}`}>
+      <textarea
+        className="sql-box mono"
+        value={query}
+        onChange={(e) => onQueryChange(e.target.value)}
+      />
+      <button className="run-btn" onClick={onRun}>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
+        Run query
+      </button>
+      <table>
+        <tbody>
+          <tr><th>order_id</th><th>status</th><th>retry_count</th><th>created_at</th></tr>
+          {results.map((r) => (
+            <tr key={r.order_id}>
+              <td>{r.order_id}</td>
+              <td>{r.status}</td>
+              <td className={r.flagged ? "flag" : undefined}>{r.retry_count}</td>
+              <td>{r.created_at}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+================================================
+FILE: ./src/features/bug-hunting/components/Tabs/LogsPanel.tsx
+================================================
+import type { LogLine } from "../../types/Scenario";
+
+export default function LogsPanel({ logs, active }: { logs: LogLine[]; active: boolean }) {
+  return (
+    <div className={`panel${active ? " active" : ""}`}>
+      <div className="log-search">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" />
+        </svg>
+        Filter logs&hellip;
+      </div>
+      <div className="mono">
+        {logs.map((log, i) => (
+          <div key={i} className={`log-line ${log.level}`}>
+            <span className="ts">{log.ts}</span>
+            <span className="lvl">{log.level.toUpperCase()}</span>
+            <span>{log.message}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+================================================
+FILE: ./src/features/bug-hunting/components/Tabs/CodePanel.tsx
+================================================
+import CodeBlock from "../shared/CodeBlock";
+import type { CodeFile } from "../../types/Scenario";
+
+type Props = {
+  active: boolean;
+  files: CodeFile[];
+  activeFileKey: string;
+  onFileChange: (key: string) => void;
+};
+
+export default function CodePanel({ active, files, activeFileKey, onFileChange }: Props) {
+  const activeFile = files.find((f) => f.key === activeFileKey) ?? files[0];
+  return (
+    <div className={`panel${active ? " active" : ""}`}>
+      <div className="code-stage">
+        <div className="filetree">
+          {files.map((f) => (
+            <div
+              key={f.key}
+              className={`ftitem${f.key === activeFileKey ? " active" : ""}`}
+              onClick={() => onFileChange(f.key)}
+            >
+              {f.label}
+            </div>
+          ))}
+        </div>
+        <div className="code-view">
+          {activeFile && <CodeBlock html={activeFile.contentHtml} />}
+        </div>
+      </div>
+    </div>
+  );
+}
+================================================
+FILE: ./src/features/bug-hunting/components/Tabs/DocsPanel.tsx
+================================================
+import type { DocSection } from "../../types/Scenario";
+
+export default function DocsPanel({ docs, active }: { docs: DocSection[]; active: boolean }) {
+  return (
+    <div className={`panel${active ? " active" : ""}`}>
+      <div className="doc">
+        {docs.map((d, i) => (
+          <div key={i}>
+            <h3>{d.title}</h3>
+            <p>{d.body}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+================================================
+FILE: ./src/features/bug-hunting/components/Sidebar/ReportSidebar.tsx
+================================================
+import type { BugScenario } from "../../types/Scenario";
+
+type Props = {
+  scenario: BugScenario;
+  hypothesis: string;
+  onHypothesisChange: (v: string) => void;
+  onSubmitHypothesis: () => void;
+};
+
+export default function ReportSidebar({ scenario, hypothesis, onHypothesisChange, onSubmitHypothesis }: Props) {
+  return (
+    <div className="report">
+      <h2>The report</h2>
+      <div className="sev">{scenario.severity}</div>
+      <p className="symptom">{scenario.symptom}</p>
+
+      <div className="meta-row"><span className="k">Service</span><span className="v">{scenario.service}</span></div>
+      <div className="meta-row"><span className="k">Endpoint</span><span className="v mono" style={{ fontSize: 11 }}>{scenario.endpoint}</span></div>
+      <div className="meta-row"><span className="k">Error rate</span><span className="v" style={{ color: "var(--coral)" }}>{scenario.errorRate}</span></div>
+      <div className="meta-row"><span className="k">First seen</span><span className="v">{scenario.firstSeen}</span></div>
+
+      <div className="hyp-label">Your hypothesis</div>
+      <textarea
+        className="hyp-box"
+        placeholder="What do you think is going on so far?"
+        value={hypothesis}
+        onChange={(e) => onHypothesisChange(e.target.value)}
+      />
+      <button className="hyp-submit" onClick={onSubmitHypothesis}>Log hypothesis</button>
+    </div>
+  );
+}
+================================================
+FILE: ./src/features/bug-hunting/components/BugHuntingWorkspace.tsx
+================================================
+"use client";
+import { useRouter } from "next/navigation";
+import { useInvestigation } from "../hooks/useInvestigation";
+import type { BugScenario } from "../types/Scenario";
+
+import { Header } from "@/components/layout/Header";
+import ReportSidebar from "./Sidebar/ReportSidebar";
+import TabBar from "./shared/Tabs";
+import LogsPanel from "./Tabs/LogsPanel";
+import SqlPanel from "./Tabs/SqlPanel";
+import CodePanel from "./Tabs/CodePanel";
+import DocsPanel from "./Tabs/DocsPanel";
+import DeploymentsPanel from "./Tabs/DeploymentsPanel";
+
+export default function BugHuntingWorkspace({ scenario }: { scenario: BugScenario }) {
+  const router = useRouter();
+  const inv = useInvestigation(scenario);
+
+  return (
+    <div className="app">
+      <Header scenario={scenario} onBack={() => router.back()} />
+      <div className="body">
+        <ReportSidebar
+          scenario={scenario}
+          hypothesis={inv.hypothesis}
+          onHypothesisChange={inv.setHypothesis}
+          onSubmitHypothesis={() =>
+            fetch("/api/bug-hunting/hypothesis", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ scenarioId: scenario.id, hypothesis: inv.hypothesis }),
+            })
+          }
+        />
+        <div className="main">
+          <TabBar active={inv.activeTab} onChange={inv.setActiveTab} />
+          <LogsPanel logs={scenario.logs} active={inv.activeTab === "logs"} />
+          <SqlPanel
+            active={inv.activeTab === "sql"}
+            query={inv.sqlQuery}
+            onQueryChange={inv.setSqlQuery}
+            onRun={() => {
+              /* wire to /api/bug-hunting/query when backend exists;
+                 for now results are the scenario's canned sqlResults */
+            }}
+            results={scenario.sqlResults}
+          />
+          <CodePanel
+            active={inv.activeTab === "code"}
+            files={scenario.files}
+            activeFileKey={inv.activeFileKey}
+            onFileChange={inv.setActiveFileKey}
+          />
+          <DocsPanel docs={scenario.docs} active={inv.activeTab === "docs"} />
+          <DeploymentsPanel deployments={scenario.deployments} active={inv.activeTab === "deploys"} />
+        </div>
+      </div>
+    </div>
+  );
+}
+================================================
+FILE: ./src/features/bug-hunting/components/shared/Tabs.tsx
+================================================
+"use client";
+import type { TabId } from "../../hooks/useInvestigation";
+
+const TABS: { id: TabId; label: string }[] = [
+  { id: "logs", label: "Logs" },
+  { id: "sql", label: "SQL runner" },
+  { id: "code", label: "Code" },
+  { id: "docs", label: "Tech docs" },
+  { id: "deploys", label: "Deployments" },
+];
+
+export default function TabBar({ active, onChange }: { active: TabId; onChange: (t: TabId) => void }) {
+  return (
+    <div className="tabbar">
+      {TABS.map((t) => (
+        <div
+          key={t.id}
+          className={`tab${active === t.id ? " active" : ""}`}
+          onClick={() => onChange(t.id)}
+        >
+          {t.label}
+        </div>
+      ))}
+    </div>
+  );
+}
+================================================
+FILE: ./src/features/bug-hunting/components/shared/CodeBlock.tsx
+================================================
+export default function CodeBlock({ html }: { html: string }) {
+  // static, author-authored highlight markup — same trust boundary as the
+  // original innerHTML assignment in the source <script>
+  return <pre dangerouslySetInnerHTML={{ __html: html }} />;
+}
+================================================
+FILE: ./src/features/bug-hunting/components/Header/Timer.tsx
+================================================
+"use client";
+import { useTimer } from "../../hooks/useTimer";
+
+export default function Timer({ seconds }: { seconds: number }) {
+  const { formatted } = useTimer(seconds);
+  return (
+    <div className="timer">
+      <div className="aura" />
+      <div className="ring"><div className="t">{formatted}</div></div>
+    </div>
+  );
+}
+================================================
+FILE: ./src/features/bug-hunting/components/Header/Header.tsx
+================================================
+import Timer from "./Timer";
+import type { BugScenario } from "../../types/Scenario";
+
+export default function Header({ scenario, onBack }: { scenario: BugScenario; onBack: () => void }) {
+  return (
+    <div className="head">
+      <div className="crumb">
+        <button className="back" onClick={onBack}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+            <path d="M15 6l-6 6 6 6" />
+          </svg>
+        </button>
+        <div className="crumb-text">Bug hunting &nbsp;/&nbsp; <b>{scenario.title}</b></div>
+      </div>
+      <div className="head-right">
+        <Timer seconds={scenario.timerSeconds} />
+        <button className="submit-btn">Submit fix</button>
+      </div>
+    </div>
+  );
+}
+================================================
+FILE: ./src/features/bug-hunting/hooks/useScenario.ts
+================================================
+"use client";
+import { useEffect, useState } from "react";
+import type { BugScenario } from "../types/Scenario";
+
+export function useScenario(scenarioId: string) {
+  const [scenario, setScenario] = useState<BugScenario | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    setLoading(true);
+    setError(null);
+    fetch(`/api/bug-hunting/scenarios/${scenarioId}`, { signal: controller.signal })
+      .then((res) => {
+        if (!res.ok) throw new Error(`Failed to load scenario (${res.status})`);
+        return res.json();
+      })
+      .then((data: BugScenario) => setScenario(data))
+      .catch((err) => {
+        if (err.name === "AbortError") return;
+        setError(err.message);
+      })
+      .finally(() => setLoading(false));
+    return () => controller.abort();
+  }, [scenarioId]);
+
+  return { scenario, loading, error };
+}
+================================================
+FILE: ./src/features/bug-hunting/hooks/useInvestigation.ts
+================================================
+"use client";
+import { useState } from "react";
+import type { BugScenario } from "../types/Scenario";
+
+export type TabId = "logs" | "sql" | "code" | "docs" | "deploys";
+
+export function useInvestigation(scenario: BugScenario | null) {
+  const [activeTab, setActiveTab] = useState<TabId>("logs");
+  const [activeFileKey, setActiveFileKey] = useState<string>(scenario?.files[0]?.key ?? "");
+  const [hypothesis, setHypothesis] = useState("");
+  const [sqlQuery, setSqlQuery] = useState(scenario?.defaultSqlQuery ?? "");
+
+  return {
+    activeTab, setActiveTab,
+    activeFileKey, setActiveFileKey,
+    hypothesis, setHypothesis,
+    sqlQuery, setSqlQuery,
+  };
+}
+================================================
+FILE: ./src/features/bug-hunting/hooks/useTimer.ts
+================================================
+"use client";
+import { useEffect, useState } from "react";
+
+export function useTimer(initialSeconds: number) {
+  const [secondsLeft, setSecondsLeft] = useState(initialSeconds);
+
+  useEffect(() => {
+    const id = setInterval(() => setSecondsLeft((s) => Math.max(s - 1, 0)), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const minutes = Math.floor(secondsLeft / 60);
+  const seconds = secondsLeft % 60;
+  const formatted = `${minutes}:${seconds.toString().padStart(2, "0")}`;
+
+  return { secondsLeft, formatted };
+}
+================================================
+FILE: ./src/features/bug-hunting/data/checkout-timeout.json
+================================================
+{
+  "id": "checkout-timeout",
+  "title": "Checkout returns 500 intermittently",
+  "severity": "P1 · Intermittent",
+  "service": "checkout-api",
+  "endpoint": "POST /orders",
+  "errorRate": "4.8%",
+  "firstSeen": "2 days ago",
+  "symptom": "Customers report checkout failing with a generic error about 1 in every 20 attempts. Doesn't reproduce locally. Started sometime after Tuesday's deploy.",
+  "timerSeconds": 760,
+  "defaultSqlQuery": "SELECT order_id, status, retry_count, created_at\nFROM orders\nWHERE status = 'PENDING'\n  AND created_at < now() - interval '2 minutes'\nORDER BY retry_count DESC\nLIMIT 5;",
+  "logs": [
+    { "ts": "14:02:11.203", "level": "info", "message": "order-svc: received POST /orders (order_id=88213)" },
+    { "ts": "14:02:11.240", "level": "info", "message": "payment-client: charging via provider=stripe (order_id=88213)" },
+    { "ts": "14:02:16.310", "level": "warn", "message": "payment-client: request exceeded 5000ms, retrying (attempt=1, order_id=88213)" },
+    { "ts": "14:02:16.311", "level": "info", "message": "connection-pool: acquiring connection (active=48, max=50)" },
+    { "ts": "14:02:21.402", "level": "warn", "message": "payment-client: request exceeded 5000ms, retrying (attempt=2, order_id=88213)" },
+    { "ts": "14:02:21.403", "level": "info", "message": "connection-pool: acquiring connection (active=50, max=50)" },
+    { "ts": "14:02:26.501", "level": "error", "message": "connection-pool: timed out waiting for connection (order_id=88213)" },
+    { "ts": "14:02:26.502", "level": "error", "message": "order-svc: 500 returned to client (order_id=88213, cause=PoolTimeoutException)" },
+    { "ts": "14:02:31.108", "level": "info", "message": "order-svc: received POST /orders (order_id=88214)" },
+    { "ts": "14:02:31.140", "level": "info", "message": "payment-client: charging via provider=stripe (order_id=88214)" }
+  ],
+  "sqlResults": [
+    { "order_id": "88213", "status": "PENDING", "retry_count": 3, "flagged": true, "created_at": "14:02:11" },
+    { "order_id": "88201", "status": "PENDING", "retry_count": 3, "flagged": true, "created_at": "13:58:04" },
+    { "order_id": "88189", "status": "PENDING", "retry_count": 2, "flagged": false, "created_at": "13:51:47" },
+    { "order_id": "88177", "status": "PENDING", "retry_count": 1, "flagged": false, "created_at": "13:44:12" }
+  ],
+  "files": [
+    {
+      "key": "OrderService",
+      "label": "OrderService.java",
+      "contentHtml": "<span class=\"kw\">public class</span> <span class=\"ty\">OrderService</span> {\n\n  <span class=\"kw\">public</span> Order <span class=\"ty\">createOrder</span>(OrderRequest req) {\n    <span class=\"cm\">// acquires a connection for the WHOLE retry sequence below</span>\n    <span class=\"kw\">try</span> (Connection conn = pool.<span class=\"ty\">acquire</span>()) {\n      PaymentResult result = paymentClient.<span class=\"ty\">charge</span>(req, conn);\n      <span class=\"kw\">return</span> orderRepo.<span class=\"ty\">save</span>(req, result, conn);\n    }\n  }\n}"
+    },
+    {
+      "key": "PaymentClient",
+      "label": "PaymentClient.java",
+      "contentHtml": "<span class=\"kw\">public class</span> <span class=\"ty\">PaymentClient</span> {\n\n  <span class=\"kw\">public</span> PaymentResult <span class=\"ty\">charge</span>(OrderRequest req, Connection conn) {\n    <span class=\"kw\">return</span> retryPolicy.<span class=\"ty\">execute</span>(() -> {\n      <span class=\"kw\">return</span> stripe.<span class=\"ty\">charge</span>(req.amount(), <span class=\"str\">5000</span>);\n    });\n    <span class=\"cm\">// note: conn is held open across every retry attempt</span>\n  }\n}"
+    },
+    {
+      "key": "RetryPolicy",
+      "label": "RetryPolicy.java",
+      "contentHtml": "<span class=\"kw\">public class</span> <span class=\"ty\">RetryPolicy</span> {\n  <span class=\"kw\">private static final int</span> MAX_ATTEMPTS = <span class=\"str\">3</span>; <span class=\"cm\">// was 1 before v2.4.1</span>\n  <span class=\"kw\">private static final int</span> WAIT_MS = <span class=\"str\">5000</span>;\n\n  <span class=\"kw\">public</span> T <span class=\"ty\">execute</span>(Supplier&lt;T&gt; op) {\n    <span class=\"kw\">for</span> (<span class=\"kw\">int</span> i = <span class=\"str\">0</span>; i &lt; MAX_ATTEMPTS; i++) {\n      <span class=\"kw\">try</span> { <span class=\"kw\">return</span> op.<span class=\"ty\">get</span>(); }\n      <span class=\"kw\">catch</span> (TimeoutException e) { Thread.<span class=\"ty\">sleep</span>(WAIT_MS); }\n    }\n  }\n}"
+    },
+    {
+      "key": "config",
+      "label": "application.yml",
+      "contentHtml": "<span class=\"kw\">database</span>:\n  <span class=\"kw\">pool</span>:\n    <span class=\"kw\">max-connections</span>: <span class=\"str\">50</span>  <span class=\"cm\"># unchanged since ~14 months ago</span>\n  <span class=\"kw\">timeout-ms</span>: <span class=\"str\">30000</span>"
+    }
+  ],
+  "docs": [
+    { "title": "Checkout service overview", "body": "checkout-api receives order requests, calls out to the payment provider via PaymentClient, and persists the order once payment is confirmed. It shares a single database connection pool across all endpoints (max 50 connections)." },
+    { "title": "Retry policy", "body": "Payment calls are retried up to 3 times on timeout, with a fixed 5-second wait per attempt. Retries currently hold their database connection open for the entire retry sequence rather than releasing it between attempts." },
+    { "title": "Known limitations", "body": "The connection pool size was last tuned over a year ago, before checkout volume roughly tripled. There's an open ticket to move to a per-request-scoped connection instead of holding one for the whole retry loop." }
+  ],
+  "deployments": [
+    { "version": "v2.4.1", "status": "rolled", "message": "Increase payment timeout retry attempts from 1 to 3", "time": "Tuesday, 9:14 AM" },
+    { "version": "v2.4.0", "status": "ok", "message": "Add order confirmation email trigger", "time": "Monday, 3:02 PM" },
+    { "version": "v2.3.9", "status": "ok", "message": "Bump payment SDK to 4.2.1", "time": "Last Friday, 11:20 AM" }
+  ]
+}
+================================================
 FILE: ./src/shared/logger/logger.ts
 ================================================
 import pino from "pino";
@@ -17013,6 +17845,194 @@ const envSchema = z.object({
 export const env = envSchema.parse(process.env);
 
 export type Env = z.infer<typeof envSchema>;
+================================================
+FILE: ./src/shared/api/InterviewApiClient.ts
+================================================
+/**
+ * InterviewApiClient
+ * 
+ * Single source of truth for all API communication with the interview backend.
+ * Components should NEVER call fetch() directly or hardcode API URLs.
+ * 
+ * This layer abstracts:
+ * - URL construction
+ * - Request/response formatting
+ * - Error handling
+ * - Future changes to the API (polling → WebSocket/SSE)
+ * 
+ * Benefits:
+ * - Easy to swap backends (Polling → WebSocket)
+ * - Type-safe API calls
+ * - Testable in isolation
+ * - Centralized error handling
+ */
+
+import type { ProcessInterviewMessageResult } from "@/modules/interview/types";
+import type { InterviewState } from "@/modules/interview/types";
+export class InterviewApiClient {
+  private readonly baseUrl = '/api/interviews';
+
+  /**
+   * Get current interview state
+   * Called once on mount, then only after user actions
+   */
+  async getInterview(interviewId: string): Promise<InterviewState> {
+    const response = await fetch(`${this.baseUrl}/${interviewId}`);
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        throw new Error('Interview not found');
+      }
+      throw new Error(`Failed to fetch interview: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Send a message and get the interviewer's response
+   * Backend handles:
+   * - Phase transitions
+   * - Summary updates
+   * - Evaluation state
+   * - Interview completion
+   * 
+   * Request body DOES NOT include phase — backend owns that decision
+   */
+  async sendMessage(
+    interviewId: string,
+    message: string
+  ): Promise<ProcessInterviewMessageResult> {
+    if (!message.trim()) {
+      throw new Error('Message cannot be empty');
+    }
+
+    const response = await fetch(`${this.baseUrl}/${interviewId}/message`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: message.trim() }),
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(
+        data.error || `Failed to send message: ${response.statusText}`
+      );
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Finish the interview early
+   * Backend handles cleanup, evaluation queuing, etc.
+   */
+  async finishInterview(interviewId: string): Promise<void> {
+    const response = await fetch(`${this.baseUrl}/${interviewId}/finish`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to finish interview: ${response.statusText}`);
+    }
+  }
+
+  /**
+   * Save whiteboard state
+   * Called after each drawing/change
+   */
+  async saveWhiteboardState(
+    interviewId: string,
+    whiteboardState: Record<string, any>
+  ): Promise<void> {
+    const response = await fetch(`${this.baseUrl}/${interviewId}/whiteboard`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ whiteboardState }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to save whiteboard: ${response.statusText}`);
+    }
+  }
+}
+
+/**
+ * Singleton instance — use this throughout the app
+ * Alternative: pass via React context if needed
+ */
+export const interviewApiClient = new InterviewApiClient();
+================================================
+FILE: ./src/styles/bug-hunting.css
+================================================
+/* src/styles/bug-hunting.css — copied from source HTML, unmodified */
+.app{ max-width:1180px; margin:0 auto; background:#fff; border-radius:28px; overflow:hidden;
+  box-shadow:0 24px 60px rgba(21,22,28,0.06); border:1px solid rgba(21,22,28,0.06); }
+.head{ display:flex; align-items:center; justify-content:space-between; padding:18px 26px; border-bottom:1px solid rgba(21,22,28,0.06); }
+.crumb{ display:flex; align-items:center; gap:10px; }
+.back{ width:30px; height:30px; border-radius:50%; border:1px solid rgba(21,22,28,0.1); background:none; color:var(--ink); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; }
+.crumb-text{ font-size:13px; color:var(--ink-soft); font-weight:500; }
+.crumb-text b{ color:var(--ink); font-weight:600; }
+.head-right{ display:flex; align-items:center; gap:14px; }
+.timer{ position:relative; width:44px; height:44px; }
+.timer .aura{ position:absolute; inset:-8px; border-radius:50%; background:radial-gradient(circle, rgba(0,217,163,0.28), transparent 70%); animation:breathe 3.2s ease-in-out infinite; }
+@keyframes breathe{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.15); } }
+.timer .ring{ position:absolute; inset:0; border-radius:50%; background:var(--ink); display:flex; align-items:center; justify-content:center; border:1.5px solid rgba(0,217,163,0.4); }
+.timer .t{ font-family:'Poppins',sans-serif; font-size:10.5px; font-weight:600; color:var(--mint); }
+.submit-btn{ background:var(--ink); color:#fff; border:none; padding:10px 18px; border-radius:999px; font-weight:600; font-size:13px; cursor:pointer; }
+.body{ display:flex; min-height:560px; }
+.report{ flex:0 0 260px; border-right:1px solid rgba(21,22,28,0.06); padding:22px 20px; display:flex; flex-direction:column; }
+.report h2{ font-size:14px; font-weight:600; margin-bottom:12px; }
+.sev{ display:inline-block; font-size:10.5px; font-weight:700; padding:4px 10px; border-radius:999px; background:rgba(255,90,60,0.1); color:var(--coral); margin-bottom:12px; }
+.report p.symptom{ font-size:12.5px; color:var(--ink-soft); line-height:1.6; margin-bottom:16px; }
+.meta-row{ display:flex; justify-content:space-between; font-size:11.5px; padding:8px 0; border-top:1px solid rgba(21,22,28,0.06); }
+.meta-row .k{ color:var(--ink-soft); } .meta-row .v{ font-weight:600; }
+.hyp-label{ font-size:10.5px; font-weight:700; letter-spacing:.05em; color:var(--mint-deep); text-transform:uppercase; margin:20px 0 8px; }
+.hyp-box{ width:100%; border:1px solid rgba(21,22,28,0.1); border-radius:12px; padding:10px 12px; font-size:12.5px; font-family:'Inter',sans-serif; resize:none; min-height:80px; outline:none; }
+.hyp-box:focus{ border-color:var(--mint-deep); }
+.hyp-submit{ margin-top:10px; background:var(--mint-deep); color:#fff; border:none; padding:10px; border-radius:10px; font-weight:600; font-size:12.5px; cursor:pointer; }
+.main{ flex:1; display:flex; flex-direction:column; }
+.tabbar{ display:flex; gap:6px; padding:16px 20px 0; }
+.tab{ font-size:12.5px; font-weight:600; padding:8px 15px; border-radius:999px 999px 0 0; color:var(--ink-soft); cursor:pointer; border-bottom:2px solid transparent; }
+.tab.active{ color:var(--ink); background:var(--paper); border-bottom:2px solid var(--ink); }
+.panel{ flex:1; background:var(--paper); padding:20px; display:none; overflow-y:auto; max-height:480px; }
+.panel.active{ display:block; }
+.log-search{ display:flex; align-items:center; gap:8px; background:#fff; border:1px solid rgba(21,22,28,0.08); border-radius:999px; padding:8px 14px; font-size:12.5px; color:var(--ink-soft); margin-bottom:14px; max-width:320px; }
+.log-line{ font-size:12px; padding:6px 4px; display:flex; gap:10px; border-bottom:1px solid rgba(21,22,28,0.05); }
+.log-line .lvl{ font-weight:700; width:44px; flex-shrink:0; }
+.log-line.error .lvl{ color:var(--coral); } .log-line.warn .lvl{ color:var(--amber); } .log-line.info .lvl{ color:var(--ink-soft); }
+.log-line .ts{ color:var(--ink-soft); flex-shrink:0; }
+.sql-box{ width:100%; min-height:80px; background:var(--ink); color:#00D9A3; border:none; border-radius:14px; padding:14px 16px; font-size:12.5px; resize:none; outline:none; }
+.run-btn{ margin-top:10px; background:var(--mint-deep); color:#fff; border:none; padding:9px 18px; border-radius:999px; font-weight:600; font-size:12.5px; cursor:pointer; display:flex; align-items:center; gap:7px; }
+table{ width:100%; border-collapse:collapse; margin-top:16px; font-size:12px; background:#fff; border-radius:12px; overflow:hidden; }
+th{ text-align:left; padding:10px 12px; background:var(--ink); color:#fff; font-weight:600; }
+td{ padding:9px 12px; border-bottom:1px solid rgba(21,22,28,0.06); }
+td.flag{ color:var(--coral); font-weight:700; }
+.code-stage{ display:flex; gap:14px; }
+.filetree{ flex:0 0 160px; display:flex; flex-direction:column; gap:4px; }
+.ftitem{ font-size:12px; padding:7px 10px; border-radius:8px; cursor:pointer; color:var(--ink-soft); }
+.ftitem.active{ background:#fff; color:var(--ink); font-weight:600; }
+.code-view{ flex:1; background:var(--ink); border-radius:14px; padding:16px 18px; overflow-x:auto; }
+.code-view pre{ font-size:12px; color:#E8E6E1; line-height:1.7; }
+.kw{ color:#FF8A6E; } .str{ color:#00D9A3; } .cm{ color:#7A7B85; font-style:italic; } .ty{ color:#7A9BFF; }
+.doc h3{ font-size:14.5px; font-weight:600; margin:18px 0 8px; }
+.doc h3:first-child{ margin-top:0; }
+.doc p{ font-size:12.5px; color:var(--ink-soft); line-height:1.7; }
+.timeline{ position:relative; padding-left:22px; }
+.timeline::before{ content:''; position:absolute; left:5px; top:6px; bottom:6px; width:2px; background:rgba(21,22,28,0.1); }
+.dep{ position:relative; margin-bottom:20px; }
+.dep::before{ content:''; position:absolute; left:-22px; top:3px; width:11px; height:11px; border-radius:50%; }
+.dep.rolled::before{ background:var(--coral); }
+.dep.ok::before{ background:var(--mint-deep); }
+.dep-top{ display:flex; align-items:center; gap:8px; }
+.dep-ver{ font-size:13px; font-weight:600; }
+.dep-status{ font-size:10px; font-weight:700; padding:3px 9px; border-radius:999px; text-transform:uppercase; }
+.dep-status.rolled{ background:rgba(255,90,60,0.12); color:var(--coral); }
+.dep-status.ok{ background:rgba(0,168,126,0.12); color:var(--mint-deep); }
+.dep-msg{ font-size:12.5px; color:var(--ink-soft); margin-top:4px; }
+.dep-time{ font-size:11px; color:var(--ink-soft); margin-top:2px; opacity:.7; }
+@media (max-width:820px){ .body{ flex-direction:column; } .report{ flex:none; border-right:none; border-bottom:1px solid rgba(21,22,28,0.06); } }
 ================================================
 FILE: ./src/components/ui/Card.tsx
 ================================================
@@ -17755,13 +18775,22 @@ ActionRail.displayName = 'ActionRail';
 ================================================
 FILE: ./src/components/layout/Navbar.tsx
 ================================================
+// src/components/layout/Navbar.tsx
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
+import { useState, useRef } from "react";
+import { useClickOutside } from "@/lib/hooks/useClickOutside";
 
 export default function Navbar() {
   const pathname = usePathname();
+  const { data: session } = useSession();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useClickOutside(menuRef, () => setMenuOpen(false), menuOpen);
 
   const isActive = (path: string) => {
     if (path === "/" && pathname === "/") return true;
@@ -17775,6 +18804,9 @@ export default function Navbar() {
     { name: "Dashboard", path: "/dashboard" },
     { name: "Library", path: "/library" },
   ];
+
+  const email = session?.user?.email;
+  const initial = email ? email[0].toUpperCase() : "?";
 
   return (
     <nav className="border-b border-[var(--border)] bg-[var(--surface)]">
@@ -17790,21 +18822,51 @@ export default function Navbar() {
                 key={item.path}
                 href={item.path}
                 className={`body-m font-medium transition-colors hover:text-[var(--ink)] ${
-                  isActive(item.path)
-                    ? "text-[var(--ink)]"
-                    : "text-[var(--ink-400)]"
+                  isActive(item.path) ? "text-[var(--ink)]" : "text-[var(--ink-400)]"
                 }`}
               >
                 {item.name}
               </Link>
             ))}
+
+            {email ? (
+              <div className="relative" ref={menuRef}>
+                <button
+                  onClick={() => setMenuOpen((v) => !v)}
+                  className="w-8 h-8 rounded-full bg-[var(--ink)] text-white text-sm font-semibold flex items-center justify-center"
+                  aria-haspopup="true"
+                  aria-expanded={menuOpen}
+                >
+                  {initial}
+                </button>
+                {menuOpen && (
+                  <div className="absolute right-0 top-[calc(100%+8px)] bg-[var(--surface)] border border-[var(--border)] rounded-[14px] shadow-floating p-2 min-w-[180px] z-10">
+                    <div className="px-3 py-2 body-s text-[var(--ink-400)] truncate border-b border-[var(--border)] mb-1">
+                      {email}
+                    </div>
+                    <button
+                      onClick={() => signOut({ redirectTo: "/" })}
+                      className="w-full text-left px-3 py-2 body-s text-[var(--ink)] hover:bg-[var(--paper-100)] rounded-[8px]"
+                    >
+                      Sign out
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                className="body-m font-medium text-[var(--ink-400)] hover:text-[var(--ink)]"
+              >
+                Log in
+              </Link>
+            )}
           </div>
         </div>
       </div>
     </nav>
   );
 }
-
 ================================================
 FILE: ./src/components/layout/PageContainer.tsx
 ================================================
@@ -19377,6 +20439,15 @@ export interface TranscriptMessage {
   content: string;
 }
 
+export interface ProcessInterviewMessageResult {
+  reply: string;
+  phase: string;
+  previousPhase: string;
+  transitioned: boolean;
+  confidence: number;
+  completed: boolean;
+  summary: string;
+}
 export interface InterviewState {
   id: string;
 
@@ -22281,19 +23352,10 @@ import { ChatMessage } from "@/modules/ai/services/AIService";
 import { InterviewEngine } from "../../engine/InterviewEngine";
 import { InterviewRepository } from "../../repositories/InterviewRepository";
 import { InterviewProfileService } from "../../profiles/InterviewProfileService";
-import { WhiteboardSerializer } from "../whiteboard/WhiteboardSerializer";
 import { IncrementalSummaryService } from "../summary/IncrementalSummaryService";
 import { createEvaluationService } from "@/modules/container";
 
-export interface ProcessInterviewMessageResult {
-  reply: string;
-  phase: string;
-  previousPhase: string;
-  transitioned: boolean;
-  confidence: number;
-  completed: boolean;
-  summary: string;
-}
+
 
 export class InterviewMessageService {
   private readonly repository =
@@ -22304,9 +23366,6 @@ export class InterviewMessageService {
 
   private readonly profileService =
     new InterviewProfileService();
-
-  private readonly whiteboardSerializer =
-    new WhiteboardSerializer();
 
   private readonly summaryService =
     new IncrementalSummaryService();
@@ -22353,11 +23412,7 @@ export class InterviewMessageService {
       (p) => p.id === interview.currentPhase
     );
 
-    const whiteboardDescription = currentPhaseDef?.showWhiteboard
-      ? this.whiteboardSerializer.describe(
-          interview.whiteboardState as any
-        )
-      : undefined;
+
 
     const history =
       this.buildConversationHistory(
@@ -22398,7 +23453,6 @@ export class InterviewMessageService {
           interview.duration,
         interviewStartedAt,
         phaseStartedAt,
-        whiteboardDescription,
         mode: interview.mode,
         persona: interview.candidatePersona as any,
       });

@@ -1,32 +1,46 @@
-// components/interview/live/Message.tsx
+'use client';
+
 import React from 'react';
-import { TranscriptMessage } from '../../types/TranscriptMessage';
 
 interface MessageProps {
-  message: TranscriptMessage;
+  role: 'assistant' | 'user';
+  content: string;
 }
 
-const Message: React.FC<MessageProps> = ({ message }) => {
-  const isAI = message.role === 'assistant';
+/**
+ * Message - Renders a single message bubble
+ *
+ * Props:
+ * - role: 'assistant' (interviewer) or 'user' (candidate)
+ * - content: The message text
+ *
+ * Styling:
+ * - User: black bubble, right-aligned
+ * - Assistant: gray bubble, left-aligned
+ */
+export function Message({ role, content }: MessageProps) {
+  const isUser = role === 'user';
 
   return (
-    <div className={`flex ${isAI ? 'justify-start' : 'justify-end'} mb-4`}>
+    <div className={`flex gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
+      {!isUser && (
+        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
+          <span className="text-xs font-semibold text-gray-700">I</span>
+        </div>
+      )}
+
       <div
-        className={`max-w-[80%] rounded-xl p-4 ${
-          isAI
-            ? 'bg-muted text-foreground border border-border shadow-sm'
-            : 'bg-primary text-primary-foreground shadow-md'
+        className={`max-w-md px-4 py-3 rounded-2xl ${
+          isUser
+            ? 'bg-black text-white rounded-tr-none'
+            : 'bg-gray-200 text-gray-900 rounded-tl-none'
         }`}
       >
-        <div className="text-xs mb-1 opacity-70 font-semibold uppercase">
-          {isAI ? 'Interviewer' : 'You'}
-        </div>
-        <div className="whitespace-pre-wrap leading-relaxed text-sm">
-          {message.content}
-        </div>
+        {!isUser && (
+          <p className="text-xs font-semibold text-gray-600 mb-1">Interviewer</p>
+        )}
+        <p className="text-sm leading-relaxed">{content}</p>
       </div>
     </div>
   );
-};
-
-export default Message;
+}

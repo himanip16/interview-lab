@@ -1,26 +1,54 @@
-// components/interview/live/MessageList.tsx
-import React from 'react';
-import { TranscriptMessage } from '../../types/TranscriptMessage';
-import Message from './Message';
+'use client';
+
+import React, { useEffect, useRef } from 'react';
+import { Message } from './Message';
+import type { TranscriptMessage } from '../../types/TranscriptMessage';
 
 interface MessageListProps {
   messages: TranscriptMessage[];
 }
 
-const MessageList: React.FC<MessageListProps> = ({ messages }) => {
+/**
+ * MessageList - Renders conversation history
+ *
+ * Features:
+ * - Auto-scrolls to latest message
+ * - Handles empty state
+ * - Message ordering (oldest first)
+ *
+ * Note: Messages come from the interview's transcript,
+ * which is the source of truth on the backend.
+ */
+export function MessageList({ messages }: MessageListProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const endRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
   return (
-    <div className="space-y-4 min-h-full">
-      {messages.map((msg, index) => (
-        <Message key={index} message={msg} />
-      ))}
-      
-      {messages.length === 0 && (
-        <div className="flex items-center justify-center min-h-[200px] text-muted-foreground">
-          <p>No messages yet. The interviewer will start shortly.</p>
+    <div
+      ref={containerRef}
+      className="flex-1 overflow-y-auto px-6 py-6 space-y-4 bg-white"
+    >
+      {messages.length === 0 ? (
+        <div className="flex items-center justify-center h-full">
+          <p className="text-gray-400">No messages yet</p>
         </div>
+      ) : (
+        <>
+          {messages.map((msg) => (
+            <Message
+              key={msg.id}
+              role={msg.role}
+              content={msg.content}
+            />
+          ))}
+          <div ref={endRef} />
+        </>
       )}
     </div>
   );
-};
-
-export default MessageList;
+}

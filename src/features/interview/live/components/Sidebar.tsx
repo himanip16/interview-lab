@@ -1,37 +1,55 @@
-// components/interview/live/Sidebar.tsx
+'use client';
+
+import React from 'react';
+import { ProblemCard } from './sidebar/ProblemCard';
+import { DesignSummary } from './sidebar/DesignSummary';
+
 interface SidebarProps {
-  summary: string | null;
-  phase?: string;
-  isSummaryLoading?: boolean;
+  problem: {
+    id: string;
+    title: string;
+    description: string | null;
+  };
+  currentPhase: string;
+  summary: string;
+  difficulty: string;
+  company: string;
 }
 
-export default function Sidebar({ summary, phase, isSummaryLoading = false }: SidebarProps) {
+/**
+ * Sidebar - Right panel
+ *
+ * Composes smaller components:
+ * - ProblemCard (problem title, description, metadata)
+ * - DesignSummary (summary text from backend)
+ *
+ * Future components to add:
+ * - InterviewTips (phase-specific guidance)
+ * - EvaluationPreview (live scoring if available)
+ * - ResourceLinks (documentation links for this phase)
+ *
+ * All data flows down from backend.
+ * Backend owns phase transitions, summaries, evaluations.
+ */
+export function Sidebar({
+  problem,
+  currentPhase,
+  summary,
+  difficulty,
+  company,
+}: SidebarProps) {
   return (
-    <aside className="w-80 border-l border-border bg-card flex flex-col h-full">
-      <div className="p-6 border-b border-border bg-card">
-        <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">Current Phase</h2>
-        <div className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium inline-block capitalize">
-          {phase?.replace('_', ' ') || 'Intro'}
-        </div>
-      </div>
+    <div className="w-80 border-l border-gray-200 bg-white p-6 overflow-y-auto">
+      <ProblemCard
+        title={problem.title}
+        description={problem.description}
+        difficulty={difficulty}
+        company={company}
+      />
 
-      <div className="p-6 flex-1 overflow-y-auto">
-        <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-4">Design Summary</h2>
-        {isSummaryLoading || !summary ? (
-          <div className="flex flex-col items-center justify-center h-40 text-center">
-            <div className="w-8 h-8 border-2 border-border border-t-primary rounded-full animate-spin mb-2" />
-            <p className="text-xs text-muted-foreground italic">Analyzing design requirements...</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {summary.split('\n').map((line, i) => (
-              <p key={i} className="text-sm text-muted-foreground leading-relaxed">
-                {line.startsWith('-') ? line : `• ${line}`}
-              </p>
-            ))}
-          </div>
-        )}
-      </div>
-    </aside>
+      <div className="my-8" />
+
+      <DesignSummary summary={summary} />
+    </div>
   );
 }

@@ -9,19 +9,10 @@ import { ChatMessage } from "@/modules/ai/services/AIService";
 import { InterviewEngine } from "../../engine/InterviewEngine";
 import { InterviewRepository } from "../../repositories/InterviewRepository";
 import { InterviewProfileService } from "../../profiles/InterviewProfileService";
-import { WhiteboardSerializer } from "../whiteboard/WhiteboardSerializer";
 import { IncrementalSummaryService } from "../summary/IncrementalSummaryService";
 import { createEvaluationService } from "@/modules/container";
 
-export interface ProcessInterviewMessageResult {
-  reply: string;
-  phase: string;
-  previousPhase: string;
-  transitioned: boolean;
-  confidence: number;
-  completed: boolean;
-  summary: string;
-}
+
 
 export class InterviewMessageService {
   private readonly repository =
@@ -32,9 +23,6 @@ export class InterviewMessageService {
 
   private readonly profileService =
     new InterviewProfileService();
-
-  private readonly whiteboardSerializer =
-    new WhiteboardSerializer();
 
   private readonly summaryService =
     new IncrementalSummaryService();
@@ -81,11 +69,7 @@ export class InterviewMessageService {
       (p) => p.id === interview.currentPhase
     );
 
-    const whiteboardDescription = currentPhaseDef?.showWhiteboard
-      ? this.whiteboardSerializer.describe(
-          interview.whiteboardState as any
-        )
-      : undefined;
+
 
     const history =
       this.buildConversationHistory(
@@ -126,7 +110,6 @@ export class InterviewMessageService {
           interview.duration,
         interviewStartedAt,
         phaseStartedAt,
-        whiteboardDescription,
         mode: interview.mode,
         persona: interview.candidatePersona as any,
       });

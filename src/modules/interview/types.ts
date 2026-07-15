@@ -9,6 +9,15 @@ export interface TranscriptMessage {
   content: string;
 }
 
+export interface ProcessInterviewMessageResult {
+  reply: string;
+  phase: string;
+  previousPhase: string;
+  transitioned: boolean;
+  confidence: number;
+  completed: boolean;
+  summary: string;
+}
 export interface InterviewState {
   id: string;
 

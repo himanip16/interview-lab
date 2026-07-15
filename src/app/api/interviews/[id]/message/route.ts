@@ -43,6 +43,22 @@ export async function POST(
         id,
         message
       );
+      // POST /api/interviews/[id]/message
+Request body:
+{
+  text: string;
+  phase: string;
+}
+
+Response:
+{
+  messageId: string;
+  response: string;           // AI interviewer's response
+  timestamp: Date;
+  summary?: string[];         // Updated design summary (optional)
+  status: "success" | "error";
+  error?: string;
+}
 
     return NextResponse.json(
       result,
@@ -67,58 +83,3 @@ export async function POST(
   );
 }
 }
-//     logger.error(
-//       {
-//         err: error,
-//         message:
-//           error instanceof Error
-//             ? error.message
-//             : "Unknown error",
-//         stack:
-//           error instanceof Error
-//             ? error.stack
-//             : undefined,
-//       },
-//       "Failed to process interview message"
-//     );
-
-//     if (
-//       error instanceof Error &&
-//       error.message ===
-//         "Interview not found."
-//     ) {
-//       return NextResponse.json(
-//         {
-//           error: error.message,
-//         },
-//         {
-//           status: 404,
-//         }
-//       );
-//     }
-
-//     if (
-//       error instanceof Error &&
-//       error.message ===
-//         "Interview has already been completed."
-//     ) {
-//       return NextResponse.json(
-//         {
-//           error: error.message,
-//         },
-//         {
-//           status: 409,
-//         }
-//       );
-//     }
-
-//     return NextResponse.json(
-//       {
-//         error: "Internal server error.",
-//       },
-//       {
-//         status: 500,
-//       }
-//     );
-//   }
-// }

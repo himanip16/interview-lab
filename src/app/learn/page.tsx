@@ -10,23 +10,23 @@ const GAP = 18; // px, matches gap-4.5
 
 const CARDS = [
   {
-    id: 1,
-    title: "Bug hunting",
-    meta: "Practice · 15 min",
-    from: "#FF6B4A",
-    to: "#E0432A",
-    href: "/learn/scenarios", // <-- no dedicated "bug hunting" page exists; closest match
-    icon: (
-      <svg viewBox="0 0 84 84" fill="none">
-        <circle cx="42" cy="42" r="40" fill="#fff"/>
-        <ellipse cx="42" cy="46" rx="14" ry="10" fill="#FF6B4A"/>
-        <circle cx="35" cy="42" r="3" fill="#26282F"/>
-        <circle cx="49" cy="42" r="3" fill="#26282F"/>
-        <path d="M28 34 Q22 26 16 30" stroke="#FF6B4A" strokeWidth="3" strokeLinecap="round" fill="none"/>
-        <path d="M56 34 Q62 26 68 30" stroke="#FF6B4A" strokeWidth="3" strokeLinecap="round" fill="none"/>
-      </svg>
-    ),
-  },
+  id: 1,
+  title: "Bug hunting",
+  meta: "Practice · 15 min",
+  from: "#FF6B4A",
+  to: "#E0432A",
+  href: "/bug-hunting/checkout-timeout",
+  icon: (
+    <svg viewBox="0 0 84 84" fill="none">
+      <circle cx="42" cy="42" r="40" fill="#fff"/>
+      <ellipse cx="42" cy="46" rx="14" ry="10" fill="#FF6B4A"/>
+      <circle cx="35" cy="42" r="3" fill="#26282F"/>
+      <circle cx="49" cy="42" r="3" fill="#26282F"/>
+      <path d="M28 34 Q22 26 16 30" stroke="#FF6B4A" strokeWidth="3" strokeLinecap="round" fill="none"/>
+      <path d="M56 34 Q62 26 68 30" stroke="#FF6B4A" strokeWidth="3" strokeLinecap="round" fill="none"/>
+    </svg>
+  ),
+},
   {
     id: 2,
     title: "Review a PR",

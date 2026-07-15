@@ -1,329 +1,138 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
+import { InterviewHeader } from './InterviewHeader';
+import { PhaseProgress } from './PhaseProgress';
+import { MessageList } from './MessageList';
+import { ChatInput } from './ChatInput';
+import { Sidebar } from './Sidebar';
+import { useInterview } from '../hooks/useInterview';
+import { useMessages } from '../hooks/useMessages';
+import { useTimer } from '../hooks/useTimer';
 
-type Props = {
+interface LiveInterviewProps {
   interviewId: string;
-  duration: number;
-  initialMessages?: any[];
-  interviewTitle?: string;
-  designSummary?: string[];
-  initialWhiteboardState?: any;
-};
+}
 
-export default function LiveInterview({ interviewId, duration, initialMessages = [], interviewTitle = 'System Design Interview', designSummary = [], initialWhiteboardState }: Props) {
-  const [messages, setMessages] = useState(initialMessages);
-  const [isTyping, setIsTyping] = useState(false);
-  const [inputValue, setInputValue] = useState('');
-  const [whiteboardState, setWhiteboardState] = useState(initialWhiteboardState || null);
-  const [showWhiteboard, setShowWhiteboard] = useState(false);
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [currentPath, setCurrentPath] = useState<{x: number, y: number}[]>([]);
+/**
+ * LiveInterview - Main container
+ *
+ * Orchestrates:
+ * - Interview state (from useInterview hook)
+ * - Message history (from useMessages hook)
+ * - Message sending (delegates to useMessages, then refetches interview state)
+ * - Layout and component composition
+ *
+ * Data flow:
+ * 1. Mount → fetch interview state and transcript
+ * 2. User sends message → POST to backend via useMessages
+ * 3. Message added to state optimistically
+ * 4. AI response returned immediately (no polling)
+ * 5. Refetch interview state to get updated phase/summary
+ *
+ * Backend owns:
+ * - Phase transitions
+ * - Summary updates
+ * - Interview completion
+ * - Evaluation queuing
+ *
+ * Frontend shows:
+ * - Messages from transcript
+ * - Current phase and progress
+ * - Design summary (from interview.summary)
+ * - Problem context
+ * - Timer (duration - elapsed)
+ */
+export function LiveInterview({ interviewId }: LiveInterviewProps) {
+  const { interview, loading, error, refetch } = useInterview(interviewId);
+  const { messages, sendMessage, isSending, error: messageError } = useMessages(
+    interviewId,
+    interview?.transcript.map((msg) => ({
+      id: msg.id,
+      role: msg.role,
+      content: msg.content,
+      metadata: msg.metadata,
+      createdAt: msg.createdAt,
+      elapsedSeconds: msg.elapsedSeconds,
+      phase: msg.phase,
+    })) || []
+  );
 
-  // Auto-save whiteboard state to backend
-  useEffect(() => {
-    if (whiteboardState) {
-      saveWhiteboardState(whiteboardState);
-    }
-  }, [whiteboardState]);
-
-  const saveWhiteboardState = async (state: any) => {
+  const handleSendMessage = async (text: string) => {
     try {
-      await fetch(`/api/interviews/${interviewId}/whiteboard`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ whiteboardState: state }),
-      });
-    } catch (error) {
-      console.error('Failed to save whiteboard state:', error);
+      // Send message (optimistically updates local state)
+      const result = await sendMessage(text);
+
+      // Refetch interview state to get:
+      // - Updated phase (if transition occurred)
+      // - Updated summary
+      // - Interview completion status
+      // - New evaluation state
+      await refetch();
+    } catch (err) {
+      console.error('Failed to send message:', err);
+      // Error is stored in hook, displayed in UI
     }
   };
 
-  const handleWhiteboardChange = (newState: any) => {
-    setWhiteboardState(newState);
-  };
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-gray-600">Loading interview...</p>
+      </div>
+    );
+  }
 
-  const handleWhiteboardDraw = (e: React.MouseEvent, action: 'down' | 'move' | 'up') => {
-    const canvas = e.currentTarget.querySelector('canvas');
-    if (!canvas) return;
+  if (error || !interview) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-red-600">{error || 'Failed to load interview'}</p>
+      </div>
+    );
+  }
 
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    if (action === 'down') {
-      setIsDrawing(true);
-      setCurrentPath([{x, y}]);
-      ctx.beginPath();
-      ctx.moveTo(x, y);
-      ctx.strokeStyle = '#15161C';
-      ctx.lineWidth = 2;
-      ctx.lineCap = 'round';
-    } else if (action === 'move') {
-      if (isDrawing && e.buttons === 1) {
-        setCurrentPath(prev => [...prev, {x, y}]);
-        ctx.lineTo(x, y);
-        ctx.stroke();
-      }
-    } else if (action === 'up') {
-      setIsDrawing(false);
-      ctx.closePath();
-      // Save the current path as a complete drawing
-      if (currentPath.length > 1) {
-        const currentDrawings = whiteboardState?.drawings || [];
-        handleWhiteboardChange({
-          ...whiteboardState,
-          drawings: [...currentDrawings, currentPath],
-          lastUpdated: new Date().toISOString(),
-        });
-        setCurrentPath([]);
-      }
-    }
-  };
-
-  const handleSend = () => {
-    if (inputValue.trim()) {
-      setMessages(prev => [...prev, { role: 'user', content: inputValue }]);
-      setInputValue('');
-    }
-  };
+  // Calculate elapsed time
+  const startedAt = interview.startedAt
+    ? new Date(interview.startedAt).getTime()
+    : new Date(interview.createdAt).getTime();
+  const elapsedSeconds = Math.floor((Date.now() - startedAt) / 1000);
+  const remainingSeconds = Math.max(0, interview.duration * 60 - elapsedSeconds);
 
   return (
-    <div className="min-h-screen bg-[#FAF9F6] py-10 px-6">
-      <div className="panel max-w-[1080px] mx-auto bg-white rounded-[32px] overflow-hidden shadow-[0_24px_60px_rgba(21,22,28,0.06)] border border-[rgba(21,22,28,0.06)]">
-        
-        {/* Header */}
-        <div className="head flex items-center justify-between p-[22px_30px] border-b border-[rgba(21,22,28,0.06)]">
-          <div className="crumb flex items-center gap-2.5">
-            <button className="back w-8 h-8 rounded-full border border-[rgba(21,22,28,0.1)] bg-none text-[#15161C] flex items-center justify-center cursor-pointer flex-shrink-0">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
-                <path d="M15 6l-6 6 6 6"/>
-              </svg>
-            </button>
-            <div className="crumb-text text-[13px] text-[#5A5B66] font-medium">
-              Live interview &nbsp;/&nbsp; <b className="text-[#15161C] font-semibold">{interviewTitle}</b>
-            </div>
-          </div>
-          <div className="head-right flex items-center gap-4.5">
-            <button
-              onClick={() => setShowWhiteboard(!showWhiteboard)}
-              className="px-3 py-1.5 text-xs font-medium border border-[rgba(21,22,28,0.1)] rounded-full hover:bg-[rgba(21,22,28,0.05)] transition-colors"
-            >
-              {showWhiteboard ? 'Hide Whiteboard' : 'Show Whiteboard'}
-            </button>
-            <div className="live-badge flex items-center gap-1.75 text-[12px] font-semibold text-[#FF5A3C] bg-[rgba(255,90,60,0.1)] p-[6px_13px] rounded-[999px]">
-              <span className="dot w-1.5 h-1.5 rounded-full bg-[#FF5A3C]">
-                <style>{`
-                  @keyframes pulse {
-                    0%, 100% { opacity: 1; }
-                    50% { opacity: 0.25; }
-                  }
-                  .dot {
-                    animation: pulse 1.6s ease-in-out infinite;
-                  }
-                `}</style>
-              </span>
-              Live
-            </div>
-            <div className="timer relative w-[58px] h-[58px]">
-              <div className="aura absolute inset-[-10px] rounded-full bg-[radial-gradient(circle,rgba(0,217,163,0.28),transparent_70%)]">
-                <style>{`
-                  @keyframes breathe {
-                    0%, 100% { transform: scale(1); }
-                    50% { transform: scale(1.15); }
-                  }
-                  .aura {
-                    animation: breathe 3.2s ease-in-out infinite;
-                  }
-                `}</style>
-              </div>
-              <div className="ring absolute inset-0 rounded-full bg-[#15161C] flex items-center justify-center flex-col border-[1.5px] border-[rgba(0,217,163,0.4)]">
-                <div className="t font-['Poppins'] text-[13px] font-semibold text-[#00D9A3]">{Math.floor(duration / 60)}:{(duration % 60).toString().padStart(2, '0')}</div>
-                <div className="l text-[7px] text-white/50 tracking-[0.05em] mt-0.25">LEFT</div>
-              </div>
-            </div>
-          </div>
+    <div className="flex flex-col h-screen bg-white">
+      {/* Header */}
+      <InterviewHeader
+        title={interview.problem.title}
+        isLive={interview.status === 'IN_PROGRESS'}
+        remainingSeconds={remainingSeconds}
+      />
+
+      {/* Phase Progress */}
+      <PhaseProgress
+        currentPhase={interview.currentPhase}
+        isCompleted={interview.status === 'COMPLETED'}
+      />
+
+      {/* Main Content */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Chat Area */}
+        <div className="flex-1 flex flex-col">
+          <MessageList messages={messages} />
+          <ChatInput
+            onSendMessage={handleSendMessage}
+            isSending={isSending}
+            error={messageError}
+            isInterviewCompleted={interview.status === 'COMPLETED'}
+          />
         </div>
 
-        {/* Phase Stepper */}
-        <div className="stepper flex items-center gap-1.5 p-4 border-b border-[rgba(21,22,28,0.06)] overflow-x-auto">
-          <div className="step done flex items-center gap-1.5 flex-shrink-0">
-            <div className="node w-[9px] h-[9px] rounded-full bg-[#00A87E]"></div>
-            <span className="text-[11.5px] font-semibold text-[#5A5B66] whitespace-nowrap">Intro</span>
-          </div>
-          <div className="step-line w-5 h-[1px] bg-[rgba(21,22,28,0.12)] flex-shrink-0"></div>
-          <div className="step active flex items-center gap-1.5 flex-shrink-0">
-            <div className="node w-[9px] h-[9px] rounded-full bg-[#15161C] relative">
-              <style>{`
-                @keyframes breathe {
-                  0%, 100% { transform: scale(1); opacity: 0.7; }
-                  50% { transform: scale(1.18); opacity: 0; }
-                }
-                .node::after {
-                  content: '';
-                  position: absolute;
-                  inset: -5px;
-                  border-radius: 50%;
-                  border: 1.5px solid rgba(21,22,28,0.35);
-                  animation: breathe 2.4s ease-in-out infinite;
-                }
-              `}</style>
-            </div>
-            <span className="text-[11.5px] font-semibold text-[#15161C] whitespace-nowrap">Requirements</span>
-          </div>
-          <div className="step-line w-5 h-[1px] bg-[rgba(21,22,28,0.12)] flex-shrink-0"></div>
-          <div className="step upcoming flex items-center gap-1.5 flex-shrink-0">
-            <div className="node w-[9px] h-[9px] rounded-full border-[1.5px] border-[rgba(21,22,28,0.2)]"></div>
-            <span className="text-[11.5px] font-semibold text-[#5A5B66] whitespace-nowrap">High-level design</span>
-          </div>
-          <div className="step-line w-5 h-[1px] bg-[rgba(21,22,28,0.12)] flex-shrink-0"></div>
-          <div className="step upcoming flex items-center gap-1.5 flex-shrink-0">
-            <div className="node w-[9px] h-[9px] rounded-full border-[1.5px] border-[rgba(21,22,28,0.2)]"></div>
-            <span className="text-[11.5px] font-semibold text-[#5A5B66] whitespace-nowrap">Deep dive</span>
-          </div>
-          <div className="step-line w-5 h-[1px] bg-[rgba(21,22,28,0.12)] flex-shrink-0"></div>
-          <div className="step upcoming flex items-center gap-1.5 flex-shrink-0">
-            <div className="node w-[9px] h-[9px] rounded-full border-[1.5px] border-[rgba(21,22,28,0.2)]"></div>
-            <span className="text-[11.5px] font-semibold text-[#5A5B66] whitespace-nowrap">Scalability</span>
-          </div>
-          <div className="step-line w-5 h-[1px] bg-[rgba(21,22,28,0.12)] flex-shrink-0"></div>
-          <div className="step upcoming flex items-center gap-1.5 flex-shrink-0">
-            <div className="node w-[9px] h-[9px] rounded-full border-[1.5px] border-[rgba(21,22,28,0.2)]"></div>
-            <span className="text-[11.5px] font-semibold text-[#5A5B66] whitespace-nowrap">Closing</span>
-          </div>
-        </div>
-
-        {/* Body */}
-        <div className="body flex h-[520px]">
-          {/* Chat */}
-          <div className={`chat flex flex-col ${showWhiteboard ? 'flex-1' : 'flex-1'}`}>
-            {showWhiteboard && (
-              <div className="h-64 border-b border-[rgba(21,22,28,0.06)] p-4 bg-[#FAF9F6]">
-                <div className="text-xs text-[#5A5B66] mb-2 font-medium">Whiteboard - Draw your system design</div>
-                <div 
-                  className="w-full h-48 bg-white rounded-lg border border-[rgba(21,22,28,0.1)] relative cursor-crosshair"
-                  onMouseDown={(e) => handleWhiteboardDraw(e, 'down')}
-                  onMouseMove={(e) => handleWhiteboardDraw(e, 'move')}
-                  onMouseUp={(e) => handleWhiteboardDraw(e, 'up')}
-                  onMouseLeave={(e) => handleWhiteboardDraw(e, 'up')}
-                >
-                  <canvas
-                    ref={(canvas) => {
-                      if (canvas) {
-                        const ctx = canvas.getContext('2d');
-                        if (ctx) {
-                          canvas.width = canvas.offsetWidth;
-                          canvas.height = canvas.offsetHeight;
-                          // Restore drawing from state if available
-                          if (whiteboardState && whiteboardState.drawings) {
-                            whiteboardState.drawings.forEach((drawing: any) => {
-                              ctx.beginPath();
-                              ctx.moveTo(drawing.startX, drawing.startY);
-                              ctx.lineTo(drawing.endX, drawing.endY);
-                              ctx.stroke();
-                            });
-                          }
-                        }
-                      }
-                    }}
-                    className="w-full h-full"
-                  />
-                </div>
-              </div>
-            )}
-            <div className="messages flex-1 overflow-y-auto p-[26px_30px] flex flex-col gap-4">
-              {messages.map((msg, idx) => (
-                <div key={idx} className={`msg max-w-[70%] flex flex-col gap-1 ${msg.role === 'ai' ? 'ai self-start' : 'user self-end items-end'}`}>
-                  <div className="who text-[10.5px] text-[#5A5B66] font-semibold p-0 1">{msg.role === 'ai' ? 'Interviewer' : 'Candidate'}</div>
-                  <div className={`bubble p-[13px_16px] rounded-[18px] text-[13.5px] leading-[1.55] ${msg.role === 'ai' ? 'bg-[#F1EFEA] text-[#15161C] rounded-bl-[4px]' : 'bg-[#15161C] text-white rounded-br-[4px]'}`}>
-                    {msg.content}
-                  </div>
-                </div>
-              ))}
-              
-              {isTyping && (
-                <div className="msg ai self-start">
-                  <div className="who text-[10.5px] text-[#5A5B66] font-semibold p-0 1">Interviewer</div>
-                  <div className="typing flex gap-1 p-[13px_16px] bg-[#F1EFEA] rounded-[18px] rounded-bl-[4px] w-fit">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#5A5B66]">
-                      <style>{`
-                        @keyframes tbounce {
-                          0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-                          30% { transform: translateY(-4px); opacity: 1; }
-                        }
-                        span {
-                          animation: tbounce 1.2s ease-in-out infinite;
-                        }
-                      `}</style>
-                    </span>
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#5A5B66]" style={{ animationDelay: '0.15s' }}></span>
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#5A5B66]" style={{ animationDelay: '0.3s' }}></span>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Input */}
-            <div className="input-row flex items-center gap-2.5 p-[18px_24px] border-t border-[rgba(21,22,28,0.06)]">
-              <button className="mic-btn w-[42px] h-[42px] rounded-full border border-[rgba(21,22,28,0.12)] bg-none text-[#5A5B66] flex items-center justify-center cursor-pointer flex-shrink-0">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="9" y="2" width="6" height="12" rx="3"/>
-                  <path d="M5 10a7 7 0 0014 0M12 19v3"/>
-                </svg>
-              </button>
-              <input
-                type="text"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-                placeholder="Explain your design&hellip;"
-                className="field flex-1 border border-[rgba(21,22,28,0.1)] rounded-[999px] p-[12px_18px] text-[13.5px] font-['Inter'] outline-none focus:border-[#00A87E]"
-              />
-              <button
-                onClick={handleSend}
-                className="send-btn w-[42px] h-[42px] rounded-full border-none bg-[#00A87E] text-white flex items-center justify-center cursor-pointer flex-shrink-0 transition-transform duration-200 hover:scale-[1.06]"
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
-                  <path d="M5 12h14M13 6l6 6-6 6"/>
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          {/* Sidebar */}
-          <div className="sidebar flex-0-0-[260px] border-l border-[rgba(21,22,28,0.06)] p-6 overflow-y-auto">
-            <div className="side-label text-[10.5px] font-bold tracking-[0.06em] text-[#00A87E] text-transform:uppercase mb-2.5">Current phase</div>
-            <div className="phase-pill inline-block text-[12px] font-semibold bg-[#15161C] text-white p-[5px_13px] rounded-[999px] mb-5.5">Requirements</div>
-
-            <div className="side-label text-[10.5px] font-bold tracking-[0.06em] text-[#00A87E] text-transform:uppercase mb-2.5">Design summary</div>
-            {designSummary.length > 0 ? (
-              designSummary.map((item, idx) => (
-                <div key={idx} className="summary-item text-[12.5px] text-[#5A5B66] leading-[1.6] pl-3.5 relative mb-2.5">
-                  <style>{`
-                    .summary-item::before {
-                      content: '';
-                      position: absolute;
-                      left: 0;
-                      top: 6px;
-                      width: 5px;
-                      height: 5px;
-                      border-radius: 50%;
-                      background: #00D9A3;
-                    }
-                  `}</style>
-                  {item}
-                </div>
-              ))
-            ) : (
-              <div className="text-[12.5px] text-[#5A5B66] leading-[1.6] pl-3.5 relative">
-                No design summary available yet.
-              </div>
-            )}
-          </div>
-        </div>
+        {/* Sidebar */}
+        <Sidebar
+          problem={interview.problem}
+          currentPhase={interview.currentPhase}
+          summary={interview.summary}
+          difficulty={interview.difficulty}
+          company={interview.company}
+        />
       </div>
     </div>
   );
