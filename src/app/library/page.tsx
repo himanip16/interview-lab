@@ -88,9 +88,10 @@ export default async function LibraryPage() {
 
       // completedAt is currently nullable.
       // updatedAt is always refreshed when the interview finishes.
-      orderBy: {
-        updatedAt: "desc",
-      },
+      orderBy: [
+        { completedAt: { sort: "desc", nulls: "last" } },
+        { updatedAt: "desc" },
+      ],
     }),
   ]);
 
