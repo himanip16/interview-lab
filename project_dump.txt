@@ -142,8 +142,7 @@ PROJECT STRUCTURE
 │   │   │   │       └── page.tsx
 │   │   │   └── setup
 │   │   │       ├── SetupPage.tsx
-│   │   │       ├── actions.ts
-│   │   │       └── page.tsx
+│   │   │       └── actions.ts
 │   │   ├── layout.tsx
 │   │   ├── learn
 │   │   │   ├── action-carousel
@@ -172,6 +171,8 @@ PROJECT STRUCTURE
 │   │   ├── library
 │   │   │   ├── page.tsx
 │   │   │   └── transcript
+│   │   │       ├── [slug]
+│   │   │       │   └── page.tsx
 │   │   │       └── page.tsx
 │   │   ├── login
 │   │   │   └── page.tsx
@@ -216,12 +217,17 @@ PROJECT STRUCTURE
 │   │       ├── Text.tsx
 │   │       └── Timer.tsx
 │   ├── content
-│   │   └── interview-library
-│   │       ├── behavioural
-│   │       ├── dsa
+│   │   ├── interview-library
+│   │   │   ├── behavioural
+│   │   │   ├── dsa
+│   │   │   ├── hld
+│   │   │   ├── lld
+│   │   │   └── shared
+│   │   └── transcripts
 │   │       ├── hld
-│   │       ├── lld
-│   │       └── shared
+│   │       │   └── payment-system.ts
+│   │       ├── index.ts
+│   │       └── types.ts
 │   ├── contexts
 │   │   └── ThemeContext.tsx
 │   ├── features
@@ -371,6 +377,9 @@ PROJECT STRUCTURE
 │   │   │   │   ├── ExperienceList.tsx
 │   │   │   │   ├── LibraryTabs.tsx
 │   │   │   │   ├── LibraryView.tsx
+│   │   │   │   ├── TranscriptCard.tsx
+│   │   │   │   ├── TranscriptCatalog.tsx
+│   │   │   │   ├── TranscriptCategory.tsx
 │   │   │   │   ├── TranscriptDetail.tsx
 │   │   │   │   ├── TranscriptList.tsx
 │   │   │   │   └── transcript
@@ -533,7 +542,7 @@ PROJECT STRUCTURE
 ├── tsconfig.json
 └── tsconfig.tsbuildinfo
 
-202 directories, 330 files
+205 directories, 336 files
 
 FILE CONTENTS
 
@@ -5908,6 +5917,61 @@ export default function TranscriptPage() {
 }
 
 ================================================
+FILE: ./src/app/library/transcript/[slug]/page.tsx
+================================================
+import { notFound } from "next/navigation";
+
+import { getTranscript } from "@/content/transcripts";
+
+import TranscriptDetail from "@/features/library/components/TranscriptDetail";
+
+type Props = {
+  params: {
+    slug: string;
+  };
+};
+
+export default function TranscriptPage({ params }: Props) {
+  const transcript = getTranscript(params.slug);
+
+  if (!transcript) {
+    notFound();
+  }
+
+  return (
+    <main className="mx-auto max-w-7xl px-6 py-10">
+      <TranscriptDetail
+        transcript={transcript.transcript}
+        summary={transcript.summary}
+        showBackButton
+      />
+    </main>
+  );
+}
+
+export async function generateStaticParams() {
+  const { getAllTranscripts } = await import("@/content/transcripts");
+
+  return getAllTranscripts().map((transcript) => ({
+    slug: transcript.summary.slug,
+  }));
+}
+
+export async function generateMetadata({ params }: Props) {
+  const transcript = getTranscript(params.slug);
+
+  if (!transcript) {
+    return {
+      title: "Transcript Not Found",
+    };
+  }
+
+  return {
+    title: transcript.summary.title,
+    description: transcript.summary.description,
+  };
+}
+================================================
 FILE: ./src/app/library/page.tsx
 ================================================
 // src/app/library/page.tsx
@@ -6459,17 +6523,6 @@ export default function SetupPage({ userId }: Props) {
       </div>
     </SetupCard>
   );
-}
-================================================
-FILE: ./src/app/interview/setup/page.tsx
-================================================
-import { getCurrentUserId } from "@/modules/auth/getCurrentUserId";
-import SetupPage from "./SetupPage";
-
-export default async function InterviewSetupPage() {
-  const userId = await getCurrentUserId();
-
-  return <SetupPage userId={userId} />;
 }
 ================================================
 FILE: ./src/app/interview/live/[sessionId]/page.tsx
@@ -12770,42 +12823,27 @@ export default function TranscriptMetadata({
 ================================================
 FILE: ./src/features/library/components/transcript/TakeawayCard.tsx
 ================================================
-// src/features/library/components/transcript/TakeawayCard.tsx
-import { type ContentBlock } from "../../types/transcript";
-import { cleanTranscriptText } from "../../utils/textCleaner";
+"use client";
+
+import Card from "@/components/ui/Card";
 
 type Props = {
-  content: ContentBlock[] | string;
+  content: string;
 };
-
-function renderContentBlock(block: ContentBlock): React.ReactNode {
-  if (block.type === "text") {
-    return cleanTranscriptText(block.value);
-  }
-  if (block.type === "highlight") {
-    return cleanTranscriptText(block.value);
-  }
-  return String(block);
-}
 
 export default function TakeawayCard({ content }: Props) {
   return (
-    <div className="border-l-4 border-emerald-500 bg-emerald-50/50 p-6 my-8 rounded-r-xl">
-      <span className="text-xs font-bold text-emerald-600 uppercase mb-2 block tracking-wider">
+    <Card className="border-blue-500/20 bg-blue-500/5 p-5">
+      <div className="mb-2 text-xs font-mono uppercase tracking-wider text-blue-400">
         Takeaway
-      </span>
-      <p className="text-gray-700 font-medium italic leading-relaxed">
-        {typeof content === "string" 
-          ? cleanTranscriptText(content)
-          : content.map((block, index) => (
-              <span key={index}>{renderContentBlock(block)}</span>
-            ))
-        }
+      </div>
+
+      <p className="text-sm leading-7">
+        {content}
       </p>
-    </div>
+    </Card>
   );
 }
-
 ================================================
 FILE: ./src/features/library/components/transcript/Highlight.tsx
 ================================================
@@ -13017,161 +13055,234 @@ export default function HighlightExplanation({ highlight, onClose }: Props) {
 ================================================
 FILE: ./src/features/library/components/TranscriptDetail.tsx
 ================================================
-// src/features/library/components/TranscriptDetail.tsx
 "use client";
 
-import { useState, useEffect } from "react";
-import { type ContentBlock, type TranscriptData } from "../types/transcript";
-import { cleanContentBlocks } from "../utils/textCleaner";
-import Text from "@/components/ui/Text";
+import { useState } from "react";
+
+import {
+  type ContentBlock,
+  type TranscriptData,
+} from "../types/transcript";
+
+import { TranscriptSummary } from "@/content/transcripts/types";
+
 import Card from "@/components/ui/Card";
+import Text from "@/components/ui/Text";
+
 import DialogueBubble from "./transcript/DialogueBubble";
 import HighlightExplanation from "./transcript/HighlightExplanation";
-import TranscriptLegend from "./transcript/TranscriptLegend";
 import TranscriptHeader from "./transcript/TranscriptHeader";
+import TranscriptLegend from "./transcript/TranscriptLegend";
 
 type Props = {
-  onBack?: () => void;
+  transcript: TranscriptData;
+  summary: TranscriptSummary;
+  showBackButton?: boolean;
 };
 
-// Helper to find all highlights in content
-function findHighlights(content: ContentBlock[] | string): (ContentBlock & { type: "highlight" })[] {
-  if (typeof content === "string") return [];
-  return content.filter((block): block is ContentBlock & { type: "highlight" } => block.type === "highlight");
-}
-
-export default function TranscriptDetail({ onBack }: Props) {
-  const [transcriptData, setTranscriptData] = useState<TranscriptData | null>(null);
-  const [activeHighlightId, setActiveHighlightId] = useState<string | null>(null);
-  const [activeHighlight, setActiveHighlight] = useState<(ContentBlock & { type: "highlight" }) | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadMockData() {
-      try {
-        const response = await fetch("/mockTranscript.json");
-        const data = await response.json();
-        
-        // Clean unicode content from all messages
-        const cleanedMessages = data.messages.map((message: any) => ({
-          ...message,
-          content: cleanContentBlocks(message.content)
-        }));
-        
-        setTranscriptData({
-          ...data,
-          messages: cleanedMessages
-        });
-      } catch (error) {
-        console.error("Failed to load mock transcript data:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadMockData();
-  }, []);
-
-  const handleHighlightClick = (highlightId: string) => {
-    if (!transcriptData) return;
-    
-    // Find the highlight in all messages
-    for (const message of transcriptData.messages) {
-      const highlights = findHighlights(message.content);
-      const found = highlights.find((h) => h.id === highlightId);
-      if (found) {
-        if (activeHighlightId === highlightId) {
-          setActiveHighlightId(null);
-          setActiveHighlight(null);
-        } else {
-          setActiveHighlightId(highlightId);
-          setActiveHighlight(found);
-        }
-        return;
-      }
-    }
-  };
-
-  const handleCloseExplanation = () => {
-    setActiveHighlightId(null);
-    setActiveHighlight(null);
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Text variant="muted">Loading transcript...</Text>
-      </div>
-    );
+function findHighlights(
+  content: ContentBlock[] | string
+): (ContentBlock & { type: "highlight" })[] {
+  if (typeof content === "string") {
+    return [];
   }
 
-  if (!transcriptData) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Text variant="muted">Failed to load transcript data.</Text>
-      </div>
+  return content.filter(
+    (
+      block
+    ): block is ContentBlock & { type: "highlight" } =>
+      block.type === "highlight"
+  );
+}
+
+export default function TranscriptDetail({
+  transcript,
+  showBackButton = false,
+}: Props) {
+  const [activeHighlightId, setActiveHighlightId] =
+    useState<string | null>(null);
+
+  const [activeHighlight, setActiveHighlight] =
+    useState<(ContentBlock & { type: "highlight" }) | null>(
+      null
     );
+
+  function handleHighlightClick(highlightId: string) {
+    for (const message of transcript.messages) {
+      const highlights = findHighlights(message.content);
+
+      const found = highlights.find(
+        (h) => h.id === highlightId
+      );
+
+      if (!found) {
+        continue;
+      }
+
+      if (activeHighlightId === highlightId) {
+        setActiveHighlightId(null);
+        setActiveHighlight(null);
+      } else {
+        setActiveHighlightId(highlightId);
+        setActiveHighlight(found);
+      }
+
+      return;
+    }
+  }
+
+  function handleCloseExplanation() {
+    setActiveHighlightId(null);
+    setActiveHighlight(null);
   }
 
   return (
     <div className="space-y-6">
-      {onBack && (
+      {showBackButton && (
         <button
-          onClick={onBack}
+          onClick={() => history.back()}
           className="font-mono text-xs text-muted-foreground hover:text-foreground"
         >
-          ← Back to library
+          ← Back
         </button>
       )}
 
-      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
-        {/* Transcript */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
           <Card className="p-6">
-            <TranscriptHeader metadata={transcriptData.metadata} />
-            
+            <TranscriptHeader
+              metadata={transcript.metadata}
+            />
+
             <TranscriptLegend />
 
-            <div className="max-h-[600px] space-y-4 overflow-y-auto pr-2">
-              {transcriptData.messages.map((message, idx) => (
-                <div key={message.id ?? idx}>
-                  <DialogueBubble
-                    role={message.role}
-                    content={message.content}
-                    elapsedSeconds={message.elapsedSeconds}
-                    onHighlightClick={handleHighlightClick}
-                    activeHighlightId={activeHighlightId}
-                  />
-                  {activeHighlightId && activeHighlight && (
-                    <HighlightExplanation
-                      highlight={activeHighlight}
-                      onClose={handleCloseExplanation}
+            <div className="max-h-[700px] space-y-4 overflow-y-auto pr-2">
+              {transcript.messages.map(
+                (message, index) => (
+                  <div
+                    key={message.id ?? index}
+                  >
+                    <DialogueBubble
+                      role={message.role}
+                      content={message.content}
+                      elapsedSeconds={
+                        message.elapsedSeconds
+                      }
+                      onHighlightClick={
+                        handleHighlightClick
+                      }
+                      activeHighlightId={
+                        activeHighlightId
+                      }
                     />
-                  )}
-                </div>
-              ))}
 
-              {transcriptData.messages.length === 0 && (
-                <Text variant="muted">No messages in this transcript.</Text>
+                    {activeHighlight &&
+                      activeHighlightId && (
+                        <HighlightExplanation
+                          highlight={
+                            activeHighlight
+                          }
+                          onClose={
+                            handleCloseExplanation
+                          }
+                        />
+                      )}
+                  </div>
+                )
+              )}
+
+              {transcript.messages.length ===
+                0 && (
+                <Text variant="muted">
+                  No messages.
+                </Text>
               )}
             </div>
           </Card>
         </div>
 
-        {/* Evaluation Placeholder */}
         <div className="space-y-4">
           <Card className="p-6">
-            <Text variant="muted">Evaluation panel coming soon...</Text>
+            <h3 className="text-lg font-semibold">
+              About this interview
+            </h3>
+
+            <div className="mt-4 space-y-2 text-sm">
+              <div>
+                <strong>Category:</strong>{" "}
+                {transcript.metadata.category}
+              </div>
+
+              <div>
+                <strong>Difficulty:</strong>{" "}
+                {transcript.metadata.difficulty}
+              </div>
+
+              <div>
+                <strong>Duration:</strong>{" "}
+                {transcript.metadata.duration} min
+              </div>
+
+              <div>
+                <strong>Template:</strong>{" "}
+                {transcript.metadata.template}
+              </div>
+            </div>
           </Card>
         </div>
       </div>
     </div>
   );
 }
+================================================
+FILE: ./src/features/library/components/TranscriptCategory.tsx
+================================================
+"use client";
 
+import { TranscriptEntry } from "@/content/transcripts/types";
+
+import TranscriptCard from "@/features/library/components/TranscriptCard";
+
+type Props = {
+  title: string;
+  transcripts: TranscriptEntry[];
+};
+
+export default function TranscriptCategory({
+  title,
+  transcripts,
+}: Props) {
+  if (transcripts.length === 0) {
+    return null;
+  }
+
+  return (
+    <section className="space-y-5">
+      <div className="border-b border-border pb-3">
+        <h2 className="text-xl font-semibold tracking-tight">
+          {title}
+        </h2>
+
+        <p className="mt-1 text-sm text-muted-foreground">
+          {transcripts.length} transcript
+          {transcripts.length === 1 ? "" : "s"}
+        </p>
+      </div>
+
+      <div className="grid gap-4">
+        {transcripts.map((transcript) => (
+          <TranscriptCard
+            key={transcript.summary.slug}
+            transcript={transcript}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
 ================================================
 FILE: ./src/features/library/components/LibraryView.tsx
 ================================================
-// src/features/library/components/LibraryView.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -13183,6 +13294,13 @@ import {
   type Tab,
 } from "../types";
 
+import LibraryTabs from "./LibraryTabs";
+import ExperienceList from "./ExperienceList";
+import DiagramGallery from "./DiagramGallery";
+import TranscriptCatalog from "./TranscriptCatalog";
+
+import ProblemInventoryView from "@/features/interview/setup/components/ProblemInventoryView";
+
 const VALID_TABS = new Set<Tab>([
   "problems",
   "transcripts",
@@ -13190,90 +13308,76 @@ const VALID_TABS = new Set<Tab>([
   "diagrams",
 ]);
 
-import LibraryTabs from "./LibraryTabs";
-import TranscriptList from "./TranscriptList";
-import TranscriptDetail from "./TranscriptDetail";
-import ExperienceList from "./ExperienceList";
-import DiagramGallery from "./DiagramGallery";
-import ProblemInventoryView from "@/features/interview/setup/components/ProblemInventoryView";
-
 type Props = {
   experiences: ExperienceItem[];
   completedInterviews: CompletedInterviewItem[];
 };
 
-export default function LibraryView({ experiences, completedInterviews }: Props) {
+export default function LibraryView({
+  experiences,
+}: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState<Tab>("problems");
-  const [selectedInterview, setSelectedInterview] =
-    useState<CompletedInterviewItem | null>(null);
 
-  // Initialize tab from URL parameter
+  const [activeTab, setActiveTab] =
+    useState<Tab>("problems");
+
   useEffect(() => {
-    const tabParam = searchParams.get("tab");
-    if (tabParam && VALID_TABS.has(tabParam as Tab)) {
-      setActiveTab(tabParam as Tab);
+    const tab = searchParams.get("tab");
+
+    if (tab && VALID_TABS.has(tab as Tab)) {
+      setActiveTab(tab as Tab);
     }
   }, [searchParams]);
 
   function switchTab(tab: Tab) {
     setActiveTab(tab);
-    setSelectedInterview(null);
+
+    router.replace(`/library?tab=${tab}`);
   }
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-12 text-foreground">
-      {/* Header */}
+    <main className="mx-auto max-w-6xl px-6 py-12">
       <div className="flex flex-col gap-4 border-b border-border pb-6 md:flex-row md:items-end md:justify-between">
         <div>
           <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
             Knowledge Base
           </span>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight text-foreground">
+
+          <h1 className="mt-1 text-3xl font-bold tracking-tight">
             Personal Library
           </h1>
         </div>
 
-        <LibraryTabs activeTab={activeTab} onTabChange={switchTab} />
+        <LibraryTabs
+          activeTab={activeTab}
+          onTabChange={switchTab}
+        />
       </div>
 
-      {/* ---------------------------------------------------------------- */}
-      {/* Transcript detail                                                 */}
-      {/* ---------------------------------------------------------------- */}
-      {selectedInterview && (
-        <div className="mt-8">
-          <TranscriptDetail
-            onBack={() => setSelectedInterview(null)}
+      <div className="mt-8">
+        {activeTab === "problems" && (
+          <ProblemInventoryView
+  onSelectProblem={(problemId) => {
+    router.push(`/interview?problemId=${problemId}`);
+  }}
+/>
+        )}
+
+        {activeTab === "transcripts" && (
+          <TranscriptCatalog />
+        )}
+
+        {activeTab === "experiences" && (
+          <ExperienceList
+            experiences={experiences}
           />
-        </div>
-      )}
+        )}
 
-      {/* ---------------------------------------------------------------- */}
-      {/* List views                                                        */}
-      {/* ---------------------------------------------------------------- */}
-      {!selectedInterview && (
-        <div className="mt-8 space-y-6">
-          {activeTab === "problems" && (
-            <ProblemInventoryView onSelectProblem={(problemId) => {
-              router.push(`/interview/setup?problemId=${problemId}`);
-            }} />
-          )}
-
-          {activeTab === "transcripts" && (
-            <TranscriptList
-              completedInterviews={completedInterviews}
-              onSelectInterview={setSelectedInterview}
-            />
-          )}
-
-          {activeTab === "experiences" && (
-            <ExperienceList experiences={experiences} />
-          )}
-
-          {activeTab === "diagrams" && <DiagramGallery />}
-        </div>
-      )}
+        {activeTab === "diagrams" && (
+          <DiagramGallery />
+        )}
+      </div>
     </main>
   );
 }
@@ -13335,6 +13439,44 @@ export default function TranscriptList({ completedInterviews, onSelectInterview 
 }
 
 ================================================
+FILE: ./src/features/library/components/TranscriptCatalog.tsx
+================================================
+"use client";
+
+import {
+  getGroupedTranscripts,
+  TRANSCRIPT_CATEGORIES,
+} from "@/content/transcripts";
+
+import TranscriptCategory from "./TranscriptCategory";
+import EmptyState from "./EmptyState";
+
+export default function TranscriptCatalog() {
+  const grouped = getGroupedTranscripts();
+
+  const hasTranscripts = Object.values(grouped).some(
+    (items) => items.length > 0
+  );
+
+  if (!hasTranscripts) {
+    return (
+      <EmptyState message="No transcripts available yet." />
+    );
+  }
+
+  return (
+    <div className="space-y-10">
+      {TRANSCRIPT_CATEGORIES.map((category) => (
+        <TranscriptCategory
+          key={category.id}
+          title={category.label}
+          transcripts={grouped[category.id]}
+        />
+      ))}
+    </div>
+  );
+}
+================================================
 FILE: ./src/features/library/components/EmptyState.tsx
 ================================================
 // src/features/library/components/EmptyState.tsx
@@ -13355,6 +13497,94 @@ export default function EmptyState({ message }: Props) {
   );
 }
 
+================================================
+FILE: ./src/features/library/components/TranscriptCard.tsx
+================================================
+// src/features/library/components/TranscriptCard.tsx
+
+"use client";
+
+import { useRouter } from "next/navigation";
+
+import Card from "@/components/ui/Card";
+import { TranscriptEntry } from "@/content/transcripts/types";
+
+type Props = {
+  transcript: TranscriptEntry;
+};
+
+const CATEGORY_COLORS = {
+  hld: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+  lld: "bg-green-500/10 text-green-400 border-green-500/20",
+  dsa: "bg-purple-500/10 text-purple-400 border-purple-500/20",
+  behavioural: "bg-orange-500/10 text-orange-400 border-orange-500/20",
+} as const;
+
+export default function TranscriptCard({ transcript }: Props) {
+  const router = useRouter();
+
+  const { summary } = transcript;
+
+  return (
+    <Card
+      onClick={() => router.push(`/library/transcript/${summary.slug}`)}
+      className="cursor-pointer p-5 transition-all hover:-translate-y-0.5 hover:border-foreground/30 hover:shadow-md"
+    >
+      <div className="flex items-start justify-between gap-6">
+        <div className="min-w-0 flex-1 space-y-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <span
+              className={`rounded border px-2 py-1 font-mono text-[10px] uppercase tracking-wider ${
+                CATEGORY_COLORS[summary.category]
+              }`}
+            >
+              {summary.category}
+            </span>
+
+            <span className="rounded border border-border bg-muted px-2 py-1 font-mono text-[10px] uppercase">
+              {summary.difficulty}
+            </span>
+
+            <span className="rounded border border-border bg-muted px-2 py-1 font-mono text-[10px]">
+              {summary.duration} min
+            </span>
+
+            {summary.company && (
+              <span className="rounded border border-border bg-muted px-2 py-1 font-mono text-[10px]">
+                {summary.company}
+              </span>
+            )}
+          </div>
+
+          <div>
+            <h3 className="text-lg font-semibold text-foreground">
+              {summary.title}
+            </h3>
+
+            <p className="mt-2 text-sm text-muted-foreground">
+              {summary.description}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {summary.tags.map((tag) => (
+              <span
+                key={tag}
+                className="rounded-full bg-muted px-3 py-1 text-xs"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex shrink-0 items-center">
+          <span className="text-xl text-muted-foreground">→</span>
+        </div>
+      </div>
+    </Card>
+  );
+}
 ================================================
 FILE: ./src/features/dashboard/components/NextRecommendedInterview.tsx
 ================================================
@@ -17659,6 +17889,880 @@ FILE: ./src/features/bug-hunting/data/checkout-timeout.json
     { "version": "v2.3.9", "status": "ok", "message": "Bump payment SDK to 4.2.1", "time": "Last Friday, 11:20 AM" }
   ]
 }
+================================================
+FILE: ./src/content/transcripts/hld/payment-system.ts
+================================================
+import { Difficulty } from "@prisma/client";
+
+import { TranscriptEntry } from "../types";
+import { TranscriptData } from "@/features/library/types/transcript";
+
+const transcript: TranscriptData = {
+  metadata: {
+    title: "Design a Payment System",
+    difficulty: Difficulty.HARD,
+    duration: 45,
+    template: "High Level Design",
+    category: "HLD",
+  },
+
+  messages: [
+    {
+      id: "1",
+      role: "interviewer",
+      elapsedSeconds: 0,
+      content: [
+        {
+          type: "text",
+          value:
+            "Let's design a payment system capable of handling millions of transactions every day.",
+        },
+      ],
+    },
+
+    {
+      id: "2",
+      role: "candidate",
+      elapsedSeconds: 18,
+      content: [
+        {
+          type: "text",
+          value:
+            "Before jumping into architecture I'd like to clarify a few requirements.",
+        },
+      ],
+    },
+
+    {
+      id: "3",
+      role: "interviewer",
+      elapsedSeconds: 30,
+      content: [
+        {
+          type: "text",
+          value: "Sure.",
+        },
+      ],
+    },
+
+    {
+      id: "4",
+      role: "candidate",
+      elapsedSeconds: 48,
+      content: [
+        {
+          type: "text",
+          value:
+            "Are we only responsible for processing payments or should refunds, settlements and reconciliation also be part of the system?",
+        },
+      ],
+    },
+
+    {
+      id: "5",
+      role: "interviewer",
+      elapsedSeconds: 65,
+      content: [
+        {
+          type: "text",
+          value:
+            "Let's focus on payment processing first. We can extend later if needed.",
+        },
+      ],
+    },
+
+    {
+      id: "6",
+      role: "candidate",
+      elapsedSeconds: 82,
+      content: [
+        {
+          type: "text",
+          value:
+            "Great. Functional requirements would be creating payments, querying payment status and supporting retries safely.",
+        },
+      ],
+    },
+
+    {
+      id: "7",
+      role: "interviewer",
+      elapsedSeconds: 101,
+      content: [
+        {
+          type: "text",
+          value:
+            "Sounds good. Assume we integrate with external payment gateways.",
+        },
+      ],
+    },
+
+    {
+      id: "8",
+      role: "candidate",
+      elapsedSeconds: 118,
+      content: [
+        {
+          type: "text",
+          value:
+            "For non-functional requirements I'm optimizing for availability, durability and exactly-once user experience even if internally components retry.",
+        },
+      ],
+    },
+
+    {
+      id: "9",
+      role: "interviewer",
+      elapsedSeconds: 142,
+      content: [
+        {
+          type: "text",
+          value:
+            "How would you prevent duplicate charges when clients retry requests?",
+        },
+      ],
+    },
+
+    {
+      id: "10",
+      role: "candidate",
+      elapsedSeconds: 165,
+      content: [
+        {
+          type: "text",
+          value: "I'd introduce an ",
+        },
+        {
+          id: "highlight-idempotency",
+          type: "highlight",
+          status: "strong",
+          value: "idempotency key",
+          explanation:
+            "Excellent. Starts from the business guarantee instead of talking about databases first.",
+        },
+        {
+          type: "text",
+          value:
+            " supplied by the client. Every retry with the same key maps to the same logical payment instead of creating another charge.",
+        },
+      ],
+    },
+
+    {
+      id: "11",
+      role: "interviewer",
+      elapsedSeconds: 195,
+      content: [
+        {
+          type: "text",
+          value:
+            "Where would you store that information?",
+        },
+      ],
+    },
+
+    {
+      id: "12",
+      role: "candidate",
+      elapsedSeconds: 218,
+      content: [
+        {
+          type: "text",
+          value:
+            "Inside the payments database together with the payment record. The idempotency key should have a unique constraint so concurrent retries resolve to the same row.",
+        },
+      ],
+    },
+
+    {
+      id: "13",
+      role: "interviewer",
+      elapsedSeconds: 250,
+      content: [
+        {
+          type: "text",
+          value:
+            "The payment succeeded, but downstream services never receive the event. What happens?",
+        },
+      ],
+    },
+
+    {
+      id: "14",
+      role: "candidate",
+      elapsedSeconds: 272,
+      content: [
+        {
+          type: "text",
+          value: "I would first ",
+        },
+        {
+          id: "highlight-separate-state",
+          type: "highlight",
+          status: "strong",
+          value: "separate payment state from event delivery",
+          explanation:
+            "Correctly distinguishes the external side effect from event propagation. This separation drives the rest of the design.",
+        },
+        {
+          type: "text",
+          value:
+            ". The payment may already be successful even if another service hasn't observed it yet.",
+        },
+      ],
+    },
+
+    {
+      id: "15",
+      role: "interviewer",
+      elapsedSeconds: 305,
+      content: [
+        {
+          type: "text",
+          value:
+            "Interesting. Continue.",
+        },
+      ],
+    },    {
+      id: "16",
+      role: "candidate",
+      elapsedSeconds: 326,
+      content: [
+        {
+          type: "text",
+          value:
+            "Our payment service shouldn't assume that publishing an event is part of the same atomic operation as updating the database.",
+        },
+      ],
+    },
+
+    {
+      id: "17",
+      role: "interviewer",
+      elapsedSeconds: 346,
+      content: [
+        {
+          type: "text",
+          value:
+            "Suppose the database commit succeeds, but the application crashes before publishing to Kafka.",
+        },
+      ],
+    },
+
+    {
+      id: "18",
+      role: "candidate",
+      elapsedSeconds: 371,
+      content: [
+        {
+          type: "text",
+          value: "I'd use ",
+        },
+        {
+          id: "highlight-kafka-answer",
+          type: "highlight",
+          status: "missed",
+          value:
+            "Kafka because Kafka guarantees delivery and makes everything eventually consistent.",
+          explanation:
+            "This answer names a technology instead of explaining the failure window. Kafka cannot recover an event that was never published.",
+        },
+        {
+          type: "text",
+          value: ".",
+        },
+      ],
+    },
+
+    {
+      id: "19",
+      role: "interviewer",
+      elapsedSeconds: 395,
+      content: [
+        {
+          type: "text",
+          value:
+            "Kafka only guarantees messages after they're written to Kafka. The crash happened before that. What now?",
+        },
+      ],
+    },
+
+    {
+      id: "20",
+      role: "candidate",
+      elapsedSeconds: 418,
+      content: [
+        {
+          type: "text",
+          value:
+            "You're right. There's still a gap between committing the payment and publishing the event.",
+        },
+      ],
+    },
+
+    {
+      id: "21",
+      role: "interviewer",
+      elapsedSeconds: 437,
+      content: [
+        {
+          type: "text",
+          value:
+            "Exactly. How do you remove that gap?",
+        },
+      ],
+    },
+
+    {
+      id: "22",
+      role: "candidate",
+      elapsedSeconds: 462,
+      content: [
+        {
+          type: "text",
+          value:
+            "Instead of publishing immediately, I'd insert an event into an ",
+        },
+        {
+          id: "highlight-outbox",
+          type: "highlight",
+          status: "strong",
+          value: "Outbox table",
+          explanation:
+            "Excellent recovery. The candidate identifies the transactional outbox pattern, eliminating the DB-to-Kafka failure window.",
+        },
+        {
+          type: "text",
+          value:
+            " inside the same database transaction as the payment record.",
+        },
+      ],
+    },
+
+    {
+      id: "23",
+      role: "interviewer",
+      elapsedSeconds: 490,
+      content: [
+        {
+          type: "text",
+          value:
+            "Walk me through that transaction.",
+        },
+      ],
+    },
+
+    {
+      id: "24",
+      role: "candidate",
+      elapsedSeconds: 515,
+      content: [
+        {
+          type: "text",
+          value:
+            "Within one database transaction I'd write the payment row and the corresponding outbox event together. Either both commit or both roll back.",
+        },
+      ],
+    },
+
+    {
+      id: "25",
+      role: "interviewer",
+      elapsedSeconds: 540,
+      content: [
+        {
+          type: "text",
+          value:
+            "How does the event eventually reach Kafka?",
+        },
+      ],
+    },
+
+    {
+      id: "26",
+      role: "candidate",
+      elapsedSeconds: 565,
+      content: [
+        {
+          type: "text",
+          value:
+            "A separate background ",
+        },
+        {
+          id: "highlight-relay",
+          type: "highlight",
+          status: "strong",
+          value: "relay process",
+          explanation:
+            "Correctly separates business transactions from event publication. This worker can safely retry forever.",
+        },
+        {
+          type: "text",
+          value:
+            " continuously scans unpublished outbox records and publishes them to Kafka.",
+        },
+      ],
+    },
+
+    {
+      id: "27",
+      role: "interviewer",
+      elapsedSeconds: 592,
+      content: [
+        {
+          type: "text",
+          value:
+            "What if the relay crashes after publishing but before marking the event as processed?",
+        },
+      ],
+    },
+
+    {
+      id: "28",
+      role: "candidate",
+      elapsedSeconds: 617,
+      content: [
+        {
+          type: "text",
+          value:
+            "Then it may publish the same event again after restart.",
+        },
+      ],
+    },
+
+    {
+      id: "29",
+      role: "interviewer",
+      elapsedSeconds: 632,
+      content: [
+        {
+          type: "text",
+          value:
+            "Would that break downstream services?",
+        },
+      ],
+    },
+
+    {
+      id: "30",
+      role: "candidate",
+      elapsedSeconds: 655,
+      content: [
+        {
+          type: "text",
+          value:
+            "Not if consumers are ",
+        },
+        {
+          id: "highlight-idempotent-consumer",
+          type: "highlight",
+          status: "strong",
+          value: "idempotent",
+          explanation:
+            "Excellent. Exactly-once delivery is rarely achievable across distributed systems, so idempotent consumers are the practical solution.",
+        },
+        {
+          type: "text",
+          value:
+            ". Duplicate events should be harmless because each event carries a unique identifier.",
+        },
+      ],
+    },
+
+    {
+      id: "31",
+      role: "interviewer",
+      elapsedSeconds: 684,
+      content: [
+        {
+          type: "text",
+          value:
+            "How would consumers implement that?",
+        },
+      ],
+    },
+
+    {
+      id: "32",
+      role: "candidate",
+      elapsedSeconds: 708,
+      content: [
+        {
+          type: "text",
+          value:
+            "Each consumer stores processed event IDs. If an event arrives again, it's acknowledged but ignored because the side effect has already been applied.",
+        },
+      ],
+    },
+
+    {
+      id: "33",
+      role: "interviewer",
+      elapsedSeconds: 736,
+      content: [
+        {
+          type: "text",
+          value:
+            "Good. Now let's discuss failures in external payment gateways.",
+        },
+      ],
+    },    {
+      id: "34",
+      role: "candidate",
+      elapsedSeconds: 760,
+      content: [
+        {
+          type: "text",
+          value:
+            "The payment gateway is another unreliable distributed system, so every interaction with it has to be treated as potentially failing.",
+        },
+      ],
+    },
+
+    {
+      id: "35",
+      role: "interviewer",
+      elapsedSeconds: 781,
+      content: [
+        {
+          type: "text",
+          value:
+            "Suppose the gateway times out. What do you do?",
+        },
+      ],
+    },
+
+    {
+      id: "36",
+      role: "candidate",
+      elapsedSeconds: 806,
+      content: [
+        {
+          type: "text",
+          value:
+            "First I'd determine whether the timeout happened before or after the gateway actually processed the request. If that isn't immediately knowable, I'd avoid blindly issuing another charge.",
+        },
+      ],
+    },
+
+    {
+      id: "37",
+      role: "interviewer",
+      elapsedSeconds: 835,
+      content: [
+        {
+          type: "text",
+          value:
+            "So how do retries work?",
+        },
+      ],
+    },
+
+    {
+      id: "38",
+      role: "candidate",
+      elapsedSeconds: 861,
+      content: [
+        {
+          type: "text",
+          value:
+            "Retries should always reuse the same ",
+        },
+        {
+          id: "highlight-retry-idempotency",
+          type: "highlight",
+          status: "strong",
+          value: "idempotency key",
+          explanation:
+            "Excellent. Safe retries come from identifying the logical operation rather than creating a brand-new payment request.",
+        },
+        {
+          type: "text",
+          value:
+            ". The gateway either returns the previous result or safely processes the request once.",
+        },
+      ],
+    },
+
+    {
+      id: "39",
+      role: "interviewer",
+      elapsedSeconds: 891,
+      content: [
+        {
+          type: "text",
+          value:
+            "Would you retry forever?",
+        },
+      ],
+    },
+
+    {
+      id: "40",
+      role: "candidate",
+      elapsedSeconds: 913,
+      content: [
+        {
+          type: "text",
+          value:
+            "No. I'd use exponential backoff with jitter and eventually move requests requiring manual investigation into a recovery workflow.",
+        },
+      ],
+    },
+
+    {
+      id: "41",
+      role: "interviewer",
+      elapsedSeconds: 941,
+      content: [
+        {
+          type: "text",
+          value:
+            "The gateway starts failing for everyone. What prevents your service from making things worse?",
+        },
+      ],
+    },
+
+    {
+      id: "42",
+      role: "candidate",
+      elapsedSeconds: 968,
+      content: [
+        {
+          type: "text",
+          value:
+            "I'd protect the gateway using a ",
+        },
+        {
+          id: "highlight-circuit-breaker",
+          type: "highlight",
+          status: "strong",
+          value: "circuit breaker",
+          explanation:
+            "Good operational thinking. Continuing to send requests to an unhealthy dependency only amplifies failures.",
+        },
+        {
+          type: "text",
+          value:
+            ". When failures exceed a threshold we temporarily stop sending traffic and fail fast.",
+        },
+      ],
+    },
+
+    {
+      id: "43",
+      role: "interviewer",
+      elapsedSeconds: 996,
+      content: [
+        {
+          type: "text",
+          value:
+            "Eventually the gateway recovers. How do you verify your database still matches reality?",
+        },
+      ],
+    },
+
+    {
+      id: "44",
+      role: "candidate",
+      elapsedSeconds: 1025,
+      content: [
+        {
+          type: "text",
+          value:
+            "I'd run a scheduled reconciliation job comparing our payment records against the gateway's authoritative ledger.",
+        },
+      ],
+    },
+
+    {
+      id: "45",
+      role: "interviewer",
+      elapsedSeconds: 1053,
+      content: [
+        {
+          type: "text",
+          value:
+            "Why isn't eventual consistency enough?",
+        },
+      ],
+    },
+
+    {
+      id: "46",
+      role: "candidate",
+      elapsedSeconds: 1078,
+      content: [
+        {
+          type: "text",
+          value:
+            "Because infrastructure bugs, software defects and operator mistakes still happen. Reconciliation provides a safety net that discovers mismatches nobody anticipated.",
+        },
+      ],
+    },
+
+    {
+      id: "47",
+      role: "interviewer",
+      elapsedSeconds: 1109,
+      content: [
+        {
+          type: "text",
+          value:
+            "Good. Last question—how would you scale this architecture?",
+        },
+      ],
+    },
+
+    {
+      id: "48",
+      role: "candidate",
+      elapsedSeconds: 1136,
+      content: [
+        {
+          type: "text",
+          value:
+            "Payment requests are stateless, so API servers scale horizontally behind a load balancer. Kafka partitions distribute downstream processing, databases shard by merchant or payment ID, and consumers remain idempotent so scaling doesn't change correctness.",
+        },
+      ],
+    },
+
+    {
+      id: "49",
+      role: "takeaway",
+      elapsedSeconds: 1165,
+      content: [
+        {
+          type: "text",
+          value:
+            "Takeaway: Design for failure first. Idempotency protects clients, the transactional outbox closes the database-to-Kafka gap, idempotent consumers tolerate duplicates, and reconciliation catches the failures you didn't predict.",
+        },
+      ],
+    },
+  ],
+};
+
+const paymentSystem: TranscriptEntry = {
+  summary: {
+    slug: "payment-system",
+    title: "Design a Payment System",
+    category: "hld",
+    difficulty: Difficulty.HARD,
+    duration: 45,
+    company: "Stripe",
+    tags: [
+      "Kafka",
+      "Distributed Systems",
+      "Payments",
+      "Outbox",
+      "Idempotency",
+      "Consistency",
+    ],
+    description:
+      "Production-grade HLD interview covering payment processing, retries, transactional outbox, reconciliation, and distributed consistency.",
+  },
+
+  transcript,
+};
+
+export default paymentSystem;
+================================================
+FILE: ./src/content/transcripts/types.ts
+================================================
+import { Difficulty } from "@prisma/client";
+import { TranscriptData } from "@/features/library/types/transcript";
+
+export type TranscriptCategory =
+  | "hld"
+  | "lld"
+  | "dsa"
+  | "behavioural";
+
+export type TranscriptSummary = {
+  slug: string;
+
+  title: string;
+
+  category: TranscriptCategory;
+
+  difficulty: Difficulty;
+
+  duration: number;
+
+  company?: string;
+
+  tags: string[];
+
+  description: string;
+};
+
+export type TranscriptEntry = {
+  summary: TranscriptSummary;
+
+  transcript: TranscriptData;
+};
+================================================
+FILE: ./src/content/transcripts/index.ts
+================================================
+import { TranscriptEntry, TranscriptCategory } from "./types";
+
+import paymentSystem from "./hld/payment-system";
+
+const TRANSCRIPTS: TranscriptEntry[] = [
+  paymentSystem,
+];
+
+export function getAllTranscripts(): TranscriptEntry[] {
+  return TRANSCRIPTS;
+}
+
+export function getTranscript(slug: string): TranscriptEntry | undefined {
+  return TRANSCRIPTS.find(
+    (transcript) => transcript.summary.slug === slug
+  );
+}
+
+export function getTranscriptsByCategory(
+  category: TranscriptCategory
+): TranscriptEntry[] {
+  return TRANSCRIPTS.filter(
+    (transcript) => transcript.summary.category === category
+  );
+}
+
+export function getGroupedTranscripts(): Record<
+  TranscriptCategory,
+  TranscriptEntry[]
+> {
+  return {
+    hld: getTranscriptsByCategory("hld"),
+    lld: getTranscriptsByCategory("lld"),
+    dsa: getTranscriptsByCategory("dsa"),
+    behavioural: getTranscriptsByCategory("behavioural"),
+  };
+}
+
+export const TRANSCRIPT_CATEGORIES: {
+  id: TranscriptCategory;
+  label: string;
+}[] = [
+  {
+    id: "hld",
+    label: "High Level Design",
+  },
+  {
+    id: "lld",
+    label: "Low Level Design",
+  },
+  {
+    id: "dsa",
+    label: "Data Structures & Algorithms",
+  },
+  {
+    id: "behavioural",
+    label: "Behavioural",
+  },
+];
 ================================================
 FILE: ./src/shared/logger/logger.ts
 ================================================

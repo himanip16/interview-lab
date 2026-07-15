@@ -73,12 +73,10 @@ export default function LibraryView({
       <div className="mt-8">
         {activeTab === "problems" && (
           <ProblemInventoryView
-            onSelectProblem={(problemId) =>
-              router.push(
-                `/interview/setup?problemId=${problemId}`
-              )
-            }
-          />
+  onSelectProblem={(problemId) => {
+    router.push(`/interview?problemId=${problemId}`);
+  }}
+/>
         )}
 
         {activeTab === "transcripts" && (

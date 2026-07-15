@@ -1,11 +1,18 @@
 import { NextResponse } from "next/server";
 
 import { RecommendationService } from "@/modules/interview/services/recommendation/RecommendationService";
-import { ensureGuestUser } from "@/modules/auth/getCurrentUserId";
+import { getCurrentUserId } from "@/modules/auth/getCurrentUserId";
 
 export async function GET(request: Request) {
   try {
-    const userId = await ensureGuestUser();
+    const userId = await getCurrentUserId();
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
 
     const limitParam = new URL(request.url).searchParams.get("limit");
 

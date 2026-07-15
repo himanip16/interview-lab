@@ -2,7 +2,7 @@
 
 import { TranscriptEntry } from "@/content/transcripts/types";
 
-import TranscriptCard from "./TakeawayCard";
+import TranscriptCard from "@/features/library/components/TranscriptCard";
 
 type Props = {
   title: string;

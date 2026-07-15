@@ -19,12 +19,19 @@ export default function SmartMentor() {
   const [recommendation, setRecommendation] = useState<Recommendation | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [needsLogin, setNeedsLogin] = useState(false);
 
   useEffect(() => {
     async function fetchRecommendation() {
       try {
         // Fetch recommendations for the current authenticated user
         const response = await fetch('/api/recommendations?limit=1');
+        
+        if (response.status === 401) {
+          setNeedsLogin(true);
+          return;
+        }
+        
         if (!response.ok) {
           throw new Error('Failed to fetch recommendations');
         }
@@ -65,7 +72,7 @@ export default function SmartMentor() {
     <section className="py-20">
       <div className="mb-6">
         <Heading level="h2" className="mb-2">
-          Smart Recommendation
+          Personalized Interview Recommendation
         </Heading>
         <Text variant="muted">What should I practice next?</Text>
       </div>
@@ -74,6 +81,21 @@ export default function SmartMentor() {
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <Text variant="muted">Loading recommendations...</Text>
+          </div>
+        ) : needsLogin ? (
+          <div className="py-12 text-center">
+            <Heading level="h3" className="mb-2">
+              Sign in to unlock personalized interview recommendations
+            </Heading>
+            <Text variant="muted" className="mb-6">
+              We'll analyze your interview history, mastery, and weak areas to recommend what to practice next.
+            </Text>
+            <Link
+              href="/login"
+              className="inline-flex items-center rounded-xl bg-primary px-6 py-3 font-medium text-primary-foreground"
+            >
+              Sign In
+            </Link>
           </div>
         ) : error ? (
           <div className="flex items-center justify-center py-12">
