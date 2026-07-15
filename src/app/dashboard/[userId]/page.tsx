@@ -18,35 +18,25 @@ export default async function DashboardPage({ params }: Props) {
 
   if (!user) return notFound();
 
-  const skillGraphService = new SkillGraphService();
-  const recommendationService = new RecommendationService();
+  // Fetch base data
+  const [completedInterviews, exploreProblems] = await Promise.all([
+    prisma.interview.findMany({
+      where: { userId, status: InterviewStatus.COMPLETED },
+      include: { template: true, evaluation: true },
+      orderBy: [
+        { completedAt: { sort: "desc", nulls: "last" } },
+        { updatedAt: "desc" },
+      ],
+    }),
+    prisma.problem.findMany({
+      orderBy: { interviewCount: "desc" },
+      take: 4,
+    }),
+  ]);
 
-  const [skillGraph, recommendation, completedInterviews, exploreProblems] =
-    await Promise.all([
-      skillGraphService.getSkillGraph(userId),
-      recommendationService.nextRecommended(userId),
-      prisma.interview.findMany({
-        where: { userId, status: InterviewStatus.COMPLETED },
-        include: { template: true, evaluation: true },
-        orderBy: [
-          { completedAt: { sort: "desc", nulls: "last" } },
-          { updatedAt: "desc" },
-        ],
-      }),
-      prisma.problem.findMany({
-        orderBy: { interviewCount: "desc" },
-        take: 4,
-      }),
-    ]);
-
-  // Group completed-interview scores by template slug (hld / lld / dsa) so
-  // we can show a 0-5 star rating per interview type, same idea as the
-  // per-concept mastery bars but at the template level.
   const scoresByTemplate: Record<string, number[]> = {};
-
   for (const interview of completedInterviews) {
     if (!interview.evaluation) continue;
-
     const slug = interview.template.slug;
     (scoresByTemplate[slug] ??= []).push(interview.evaluation.overallScore);
   }
@@ -56,12 +46,11 @@ export default async function DashboardPage({ params }: Props) {
       slug,
       Math.round(
         (scores.reduce((sum, score) => sum + score, 0) / scores.length) / 20
-      ), // 0-100 score -> 0-5 stars
+      ),
     ])
   );
 
   const hasData = completedInterviews.length > 0;
-
   const overallReadiness = hasData
     ? Math.round(
         completedInterviews.reduce(
@@ -73,11 +62,10 @@ export default async function DashboardPage({ params }: Props) {
 
   return (
     <DashboardView
+      userId={userId}
       hasData={hasData}
       overallReadiness={overallReadiness}
       categoryRatings={categoryRatings}
-      skillGraph={skillGraph}
-      recommendation={recommendation}
       exploreProblems={exploreProblems.map((problem) => ({
         id: problem.id,
         title: problem.title,

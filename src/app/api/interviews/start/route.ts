@@ -60,7 +60,21 @@ export async function POST(request: Request) {
 
     const userId = await ensureGuestUser();
 
-    const interviewMode = mode === "REVERSE" ? InterviewMode.REVERSE : InterviewMode.CANDIDATE;
+    // Fix: Idempotency check to prevent duplicate sessions
+    const existingInterview = await prisma.interview.findFirst({
+      where: {
+        userId,
+        problemId: problem.id,
+        status: { not: "COMPLETED" },
+      },
+    });
+
+    if (existingInterview) {
+      return NextResponse.json({ id: existingInterview.id }, { status: 200 });
+    }
+
+    const interviewMode =
+      mode === "REVERSE" ? InterviewMode.REVERSE : InterviewMode.CANDIDATE;
 
     const interviewData = createInterview({
       templateId: template.id,
@@ -72,28 +86,38 @@ export async function POST(request: Request) {
       topic,
     });
 
-    const persona = interviewMode === InterviewMode.REVERSE ? pickPersona(interviewDifficulty) : null;
+    const persona =
+      interviewMode === InterviewMode.REVERSE
+        ? pickPersona(interviewDifficulty)
+        : null;
 
     const repository = new InterviewRepository();
 
-    const savedInterview = await repository.create({
-      difficulty: interviewData.difficulty,
-      duration: interviewData.duration,
-      company: interviewData.company,
-      status: interviewData.status,
-      currentPhase: interviewData.currentPhase,
-      summary: interviewData.summary,
-      promptVersion: interviewData.promptVersion,
-      mode: interviewData.mode,
-      candidatePersona: persona as any,
-      user: { connect: { id: userId } },
-      template: { connect: { id: template.id } },
-      problem: { connect: { id: problem.id } },
-    });
+    // Fix: Use transaction to ensure atomicity
+    const savedInterview = await prisma.$transaction(async (tx) => {
+      const interview = await tx.interview.create({
+        data: {
+          difficulty: interviewData.difficulty,
+          duration: interviewData.duration,
+          company: interviewData.company,
+          status: interviewData.status,
+          currentPhase: interviewData.currentPhase,
+          summary: interviewData.summary,
+          promptVersion: interviewData.promptVersion,
+          mode: interviewData.mode,
+          candidatePersona: persona as any,
+          user: { connect: { id: userId } },
+          template: { connect: { id: template.id } },
+          problem: { connect: { id: problem.id } },
+        },
+      });
 
-    await prisma.problem.update({
-      where: { id: problem.id },
-      data: { interviewCount: { increment: 1 } },
+      await tx.problem.update({
+        where: { id: problem.id },
+        data: { interviewCount: { increment: 1 } },
+      });
+
+      return interview;
     });
 
     const transcriptService = new TranscriptService();

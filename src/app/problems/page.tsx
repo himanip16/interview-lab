@@ -368,12 +368,12 @@ export default function ProblemsPage() {
           ) : (
             filteredProblems.map((p) => (
               <div
-                key={p.id}
-                className="flex items-center gap-4 p-[16px_18px] radius-card border border-[var(--border)] cursor-pointer transition-transform duration-[0.25s] ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:-translate-y-[-3px] hover:shadow-floating"
+  key={p.id}
+  className="flex items-center gap-4 p-[16px_18px] radius-card border border-[var(--border)] cursor-pointer transition-transform duration-[0.25s] ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:-translate-y-[-3px] hover:shadow-floating"
                 onClick={() => {
                   router.push(`/interview/setup?problemId=${encodeURIComponent(p.id)}`);
                 }}
-              >
+>
                 <div className={`w-[5px] self-stretch radius-small flex-shrink-0 ${getBarClass(p.type)}`} />
                 
                 <div className="flex-1 min-w-0">

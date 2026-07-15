@@ -1,29 +1,48 @@
 // src/features/dashboard/components/DashboardView.tsx
 import Heading  from "@/components/ui/Heading";
-
-import type { SkillGraph } from "@/modules/interview/services/mastery/SkillGraphService";
-import type { Recommendation } from "@/modules/interview/services/recommendation/RecommendationService";
+import { Suspense } from "react";
 
 import CurrentStandingCard from "./CurrentStandingCard";
 import LiveFeedbackCard from "./LiveFeedbackCard";
 import RecommendationCard from "./RecommendationCard";
 import ExploreProblems, { type ExploreProblem } from "./ExploreProblems";
+import { SkillGraphService } from "@/modules/interview/services/mastery/SkillGraphService";
+import { RecommendationService } from "@/modules/interview/services/recommendation/RecommendationService";
+
+// Helper components to fetch their own data
+async function SkillGraphWidget({ userId }: { userId: string }) {
+  try {
+    const service = new SkillGraphService();
+    const skillGraph = await service.getSkillGraph(userId);
+    return <LiveFeedbackCard hasData={true} skillGraph={skillGraph} />;
+  } catch {
+    return <div className="p-4 text-sm text-red-500">Failed to load skill graph.</div>;
+  }
+}
+
+async function RecommendationWidget({ userId }: { userId: string }) {
+  try {
+    const service = new RecommendationService();
+    const recommendation = await service.nextRecommended(userId);
+    return <RecommendationCard recommendation={recommendation} />;
+  } catch {
+    return <div className="p-4 text-sm text-red-500">Failed to load recommendation.</div>;
+  }
+}
 
 type Props = {
+  userId: string;
   hasData: boolean;
   overallReadiness: number | null;
-  categoryRatings: Record<string, number>; // template slug ("hld" | "lld" | "dsa") -> 0-5 stars
-  skillGraph: SkillGraph;
-  recommendation: Recommendation | null;
+  categoryRatings: Record<string, number>;
   exploreProblems: ExploreProblem[];
 };
 
 export default function DashboardView({
+  userId,
   hasData,
   overallReadiness,
   categoryRatings,
-  skillGraph,
-  recommendation,
   exploreProblems,
 }: Props) {
   return (
@@ -40,7 +59,6 @@ export default function DashboardView({
       </div>
 
       <div className="mt-10 grid grid-cols-1 gap-8 md:grid-cols-2">
-        {/* 01 — Current standing */}
         <div className="space-y-4">
           <div>
             <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
@@ -58,7 +76,6 @@ export default function DashboardView({
           />
         </div>
 
-        {/* 02 — Live feedback */}
         <div className="space-y-4">
           <div>
             <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
@@ -68,11 +85,11 @@ export default function DashboardView({
               What changed recently?
             </Heading>
           </div>
-
-          <LiveFeedbackCard hasData={hasData} skillGraph={skillGraph} />
+          <Suspense fallback={<div className="p-4">Loading...</div>}>
+            <SkillGraphWidget userId={userId} />
+          </Suspense>
         </div>
 
-        {/* 03 — Smart mentor recommendation */}
         <div className="space-y-4 md:col-span-2">
           <div>
             <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
@@ -82,12 +99,12 @@ export default function DashboardView({
               What should I do next?
             </Heading>
           </div>
-
-          <RecommendationCard recommendation={recommendation} />
+          <Suspense fallback={<div className="p-4">Loading...</div>}>
+            <RecommendationWidget userId={userId} />
+          </Suspense>
         </div>
       </div>
 
-      {/* 04 — Explore more problems */}
       <ExploreProblems exploreProblems={exploreProblems} />
     </main>
   );

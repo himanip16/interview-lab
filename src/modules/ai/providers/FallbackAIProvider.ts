@@ -34,7 +34,7 @@ export class FallbackAIProvider {
       (model): model is string => Boolean(model)
     );
 
-    let lastError: unknown;
+    const errors: { model: string; error: string }[] = [];
 
     for (const model of candidates) {
       try {
@@ -50,14 +50,14 @@ export class FallbackAIProvider {
 
         return response;
       } catch (error) {
-        console.warn(`Provider ${model} failed.`, error);
-
-        lastError = error;
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.warn(`Provider ${model} failed.`, errorMessage);
+        errors.push({ model, error: errorMessage });
       }
     }
 
-    throw new Error("All AI providers failed.", {
-      cause: lastError,
-    });
+    throw new Error(
+      `All AI providers failed: ${JSON.stringify(errors)}`
+    );
   }
 }

@@ -13,17 +13,14 @@ export class ValidatedJSONParser {
         .replace(/```$/i, "")
         .trim();
 
-      
       const parsed = JSON.parse(cleaned);
 
-      if (
-        typeof parsed.confidence === "number" &&
-        parsed.confidence > 1
-      ) {
-        parsed.confidence = Math.min(
-          parsed.confidence / 100,
-          1
-        );
+      if (typeof parsed.confidence === "number") {
+        if (parsed.confidence > 1 && parsed.confidence <= 100) {
+          parsed.confidence = parsed.confidence / 100;
+        } else if (parsed.confidence > 100) {
+          parsed.confidence = 1;
+        }
       }
 
       return schema.parse(parsed);

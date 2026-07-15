@@ -131,8 +131,6 @@ PROJECT STRUCTURE
 │   │   ├── globals.css
 │   │   ├── interview
 │   │   │   ├── live
-│   │   │   │   ├── [id]
-│   │   │   │   │   └── page.tsx
 │   │   │   │   ├── [sessionId]
 │   │   │   │   │   └── page.tsx
 │   │   │   │   └── page.tsx
@@ -176,6 +174,7 @@ PROJECT STRUCTURE
 │   │   ├── login
 │   │   │   └── page.tsx
 │   │   ├── problems
+│   │   │   ├── actions.ts
 │   │   │   └── page.tsx
 │   │   └── register
 │   │       └── page.tsx
@@ -472,7 +471,7 @@ PROJECT STRUCTURE
 ├── tsconfig.json
 └── tsconfig.tsbuildinfo
 
-177 directories, 294 files
+176 directories, 294 files
 
 FILE CONTENTS
 
@@ -543,16 +542,18 @@ model User {
   practiceRecommendations PracticeRecommendation[]
   learningRecommendations LearningRecommendation[]
 }
-
 model InterviewSession {
-  id          String   @id @default(cuid())
-  userId      String?
-  problemId   String
-  difficulty  String
-  status      String   @default("STARTED")
-  // We store the dialogue as a JSON blob for flexibility
-  transcript  Json     
-  createdAt   DateTime @default(now()) @map("created_at")
+  id                    String   @id @default(cuid())
+  userId                String?
+  problemId             String
+  difficulty            String
+  status                String   @default("STARTED")
+  transcript            Json     
+  duration              Int      // Add this (in seconds)
+  whiteboardState       Json?    // Add this
+  interviewTitle        String?  // Add this
+  designSummary         Json?    // Add this (array as JSON)
+  createdAt             DateTime @default(now()) @map("created_at")
 }
 
 // ---------------------------------------------------------------------------
@@ -1194,14 +1195,12 @@ const prisma = new PrismaClient();
 // Zod schemas for JSON field validation
 // ---------------------------------------------------------------------------
 
-const GoalDefinitionSchema = z.object({
-  id: z.string(),
-  required: z.boolean(),
-  weight: z.number(),
-});
+// Replace the GoalDefinitionSchema with:
+const GoalDefinitionSchema = z.string(); // Just store the goal string directly
+
+const GoalDefinitionArraySchema = z.array(GoalDefinitionSchema);
 
 const EvaluationDimensionArraySchema = z.array(z.string());
-const GoalDefinitionArraySchema = z.array(GoalDefinitionSchema);
 const JsonValueSchema = z.any(); // Generic JSON validation for other fields
 
 // ---------------------------------------------------------------------------
@@ -5253,6 +5252,30 @@ export default function ActionCarouselPage() {
 }
 
 ================================================
+FILE: ./src/app/problems/actions.ts
+================================================
+// src/app/problems/actions.ts
+"use server";
+
+import { prisma } from "@/shared/prisma/client";
+import { getCurrentUserId } from "@/modules/auth/getCurrentUserId";
+import { redirect } from "next/navigation";
+
+export async function startInterview(problemId: string) {
+  const userId = await getCurrentUserId();
+
+  const interview = await prisma.interviewSession.create({
+    data: {
+      userId: userId ?? null,
+      problemId,
+      status: "STARTED",
+      transcript: [],
+    },
+  });
+
+  redirect(`/interview/live/${interview.id}`);
+}
+================================================
 FILE: ./src/app/problems/page.tsx
 ================================================
 "use client";
@@ -5625,12 +5648,12 @@ export default function ProblemsPage() {
           ) : (
             filteredProblems.map((p) => (
               <div
-                key={p.id}
-                className="flex items-center gap-4 p-[16px_18px] radius-card border border-[var(--border)] cursor-pointer transition-transform duration-[0.25s] ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:-translate-y-[-3px] hover:shadow-floating"
+  key={p.id}
+  className="flex items-center gap-4 p-[16px_18px] radius-card border border-[var(--border)] cursor-pointer transition-transform duration-[0.25s] ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:-translate-y-[-3px] hover:shadow-floating"
                 onClick={() => {
                   router.push(`/interview/setup?problemId=${encodeURIComponent(p.id)}`);
                 }}
-              >
+>
                 <div className={`w-[5px] self-stretch radius-small flex-shrink-0 ${getBarClass(p.type)}`} />
                 
                 <div className="flex-1 min-w-0">
@@ -6197,35 +6220,25 @@ export default async function DashboardPage({ params }: Props) {
 
   if (!user) return notFound();
 
-  const skillGraphService = new SkillGraphService();
-  const recommendationService = new RecommendationService();
+  // Fetch base data
+  const [completedInterviews, exploreProblems] = await Promise.all([
+    prisma.interview.findMany({
+      where: { userId, status: InterviewStatus.COMPLETED },
+      include: { template: true, evaluation: true },
+      orderBy: [
+        { completedAt: { sort: "desc", nulls: "last" } },
+        { updatedAt: "desc" },
+      ],
+    }),
+    prisma.problem.findMany({
+      orderBy: { interviewCount: "desc" },
+      take: 4,
+    }),
+  ]);
 
-  const [skillGraph, recommendation, completedInterviews, exploreProblems] =
-    await Promise.all([
-      skillGraphService.getSkillGraph(userId),
-      recommendationService.nextRecommended(userId),
-      prisma.interview.findMany({
-        where: { userId, status: InterviewStatus.COMPLETED },
-        include: { template: true, evaluation: true },
-        orderBy: [
-          { completedAt: { sort: "desc", nulls: "last" } },
-          { updatedAt: "desc" },
-        ],
-      }),
-      prisma.problem.findMany({
-        orderBy: { interviewCount: "desc" },
-        take: 4,
-      }),
-    ]);
-
-  // Group completed-interview scores by template slug (hld / lld / dsa) so
-  // we can show a 0-5 star rating per interview type, same idea as the
-  // per-concept mastery bars but at the template level.
   const scoresByTemplate: Record<string, number[]> = {};
-
   for (const interview of completedInterviews) {
     if (!interview.evaluation) continue;
-
     const slug = interview.template.slug;
     (scoresByTemplate[slug] ??= []).push(interview.evaluation.overallScore);
   }
@@ -6235,12 +6248,11 @@ export default async function DashboardPage({ params }: Props) {
       slug,
       Math.round(
         (scores.reduce((sum, score) => sum + score, 0) / scores.length) / 20
-      ), // 0-100 score -> 0-5 stars
+      ),
     ])
   );
 
   const hasData = completedInterviews.length > 0;
-
   const overallReadiness = hasData
     ? Math.round(
         completedInterviews.reduce(
@@ -6252,11 +6264,10 @@ export default async function DashboardPage({ params }: Props) {
 
   return (
     <DashboardView
+      userId={userId}
       hasData={hasData}
       overallReadiness={overallReadiness}
       categoryRatings={categoryRatings}
-      skillGraph={skillGraph}
-      recommendation={recommendation}
       exploreProblems={exploreProblems.map((problem) => ({
         id: problem.id,
         title: problem.title,
@@ -6368,6 +6379,8 @@ export async function createInterviewSession(data: {
   userId: string | null;
   type: string;
 }) {
+
+  console.log("Server action started");
   // 1. Create the session in the DB
   const session = await prisma.interviewSession.create({
     data: {
@@ -6401,6 +6414,7 @@ export async function createInterviewSession(data: {
       ]
     }
   });
+  console.log("Created session", session.id);
 
   // 2. Redirect to the unique session URL
   redirect(`/interview/live/${session.id}`);
@@ -6446,6 +6460,7 @@ export default function SetupPage({ userId }: Props) {
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
 
   const handleStartInterview = () => {
+    console.log("Start clicked", selectedProblem);
     if (!selectedProblem) {
       alert("Please select a problem");
       return;
@@ -6453,12 +6468,14 @@ export default function SetupPage({ userId }: Props) {
 
     // Use startTransition to handle the Server Action
     startTransition(async () => {
+      console.log("Calling server action");
       await createInterviewSession({
         problemId: selectedProblem,
         difficulty: selectedDifficulty,
         userId: userId,
         type: selectedType
       });
+      console.log("Server action finished");
     });
   };
 
@@ -6471,10 +6488,10 @@ export default function SetupPage({ userId }: Props) {
         </div>
 
         <ProblemInventoryView
-          userId={userId}
-          onSelectProblem={setSelectedProblem}
-        />
-
+  value={selectedProblem}  // Add this
+  userId={userId}
+  onSelectProblem={setSelectedProblem}
+/>
         <InterviewTypeSelector
           value={selectedType}
           onChange={setSelectedType}
@@ -6521,63 +6538,33 @@ export default async function InterviewSetupPage() {
 ================================================
 FILE: ./src/app/interview/live/[sessionId]/page.tsx
 ================================================
-import { prisma } from "@/shared/prisma/client";
-import { notFound } from "next/navigation";
-import LiveInterviewClient from "@/features/interview/components/LiveInterviewClient";
-
-export default async function SessionPage({ params }: { params: { sessionId: string } }) {
-  const session = await prisma.interviewSession.findUnique({
-    where: { id: params.sessionId }
-  });
-
-  if (!session) notFound();
-
-  return (
-    <div className="py-12 bg-[#FDFDFD] min-h-screen">
-      {/* 
-         Note: We cast transcript as any because Prisma Json types 
-         need to be mapped to our DialogueNode interface 
-      */}
-      <LiveInterviewClient initialTranscript={session.transcript as any} />
-    </div>
-  );
-}
-================================================
-FILE: ./src/app/interview/live/[id]/page.tsx
-================================================
-// app/interview/live/[id]/page.tsx
+// app/interview/live/[sessionId]/page.tsx
 import { prisma } from "@/shared/prisma/client";
 import LiveInterview from "@/features/interview/live/components/LiveInterview";
 import { notFound } from "next/navigation";
 
 type Props = {
-  params: Promise<{ id: string }>;
+  params: Promise<{ sessionId: string }>;
 };
+// app/interview/live/[sessionId]/page.tsx
+export default async function LivePage({ params }: Props) {
+  const { sessionId } = await params;
 
-export default async function Page({ params }: Props) {
-  const { id } = await params;
-
-  // 1. Change 'messages' to 'transcript'
-  const interview = await prisma.interview.findUnique({
-    where: { id },
-    include: { 
-      transcript: { 
-        orderBy: { createdAt: 'asc' } 
-      } 
-    }
+  const session = await prisma.interviewSession.findUnique({
+    where: { id: sessionId }
   });
 
-  if (!interview) {
-    return notFound();
-  }
+  if (!session) notFound();
 
   return (
     <LiveInterview
-  interviewId={interview.id}
-  duration={interview.duration}
-  initialMessages={interview.transcript}
-  initialWhiteboardState={interview.whiteboardState}
-/>
+      interviewId={session.id}
+      duration={session.duration}
+      initialMessages={session.transcript as any}
+      interviewTitle={session.interviewTitle || 'System Design Interview'}
+      designSummary={session.designSummary as any || []}
+      initialWhiteboardState={session.whiteboardState}
+    />
   );
 }
 ================================================
@@ -7553,7 +7540,21 @@ export async function POST(request: Request) {
 
     const userId = await ensureGuestUser();
 
-    const interviewMode = mode === "REVERSE" ? InterviewMode.REVERSE : InterviewMode.CANDIDATE;
+    // Fix: Idempotency check to prevent duplicate sessions
+    const existingInterview = await prisma.interview.findFirst({
+      where: {
+        userId,
+        problemId: problem.id,
+        status: { not: "COMPLETED" },
+      },
+    });
+
+    if (existingInterview) {
+      return NextResponse.json({ id: existingInterview.id }, { status: 200 });
+    }
+
+    const interviewMode =
+      mode === "REVERSE" ? InterviewMode.REVERSE : InterviewMode.CANDIDATE;
 
     const interviewData = createInterview({
       templateId: template.id,
@@ -7565,28 +7566,38 @@ export async function POST(request: Request) {
       topic,
     });
 
-    const persona = interviewMode === InterviewMode.REVERSE ? pickPersona(interviewDifficulty) : null;
+    const persona =
+      interviewMode === InterviewMode.REVERSE
+        ? pickPersona(interviewDifficulty)
+        : null;
 
     const repository = new InterviewRepository();
 
-    const savedInterview = await repository.create({
-      difficulty: interviewData.difficulty,
-      duration: interviewData.duration,
-      company: interviewData.company,
-      status: interviewData.status,
-      currentPhase: interviewData.currentPhase,
-      summary: interviewData.summary,
-      promptVersion: interviewData.promptVersion,
-      mode: interviewData.mode,
-      candidatePersona: persona as any,
-      user: { connect: { id: userId } },
-      template: { connect: { id: template.id } },
-      problem: { connect: { id: problem.id } },
-    });
+    // Fix: Use transaction to ensure atomicity
+    const savedInterview = await prisma.$transaction(async (tx) => {
+      const interview = await tx.interview.create({
+        data: {
+          difficulty: interviewData.difficulty,
+          duration: interviewData.duration,
+          company: interviewData.company,
+          status: interviewData.status,
+          currentPhase: interviewData.currentPhase,
+          summary: interviewData.summary,
+          promptVersion: interviewData.promptVersion,
+          mode: interviewData.mode,
+          candidatePersona: persona as any,
+          user: { connect: { id: userId } },
+          template: { connect: { id: template.id } },
+          problem: { connect: { id: problem.id } },
+        },
+      });
 
-    await prisma.problem.update({
-      where: { id: problem.id },
-      data: { interviewCount: { increment: 1 } },
+      await tx.problem.update({
+        where: { id: problem.id },
+        data: { interviewCount: { increment: 1 } },
+      });
+
+      return interview;
     });
 
     const transcriptService = new TranscriptService();
@@ -13047,30 +13058,49 @@ FILE: ./src/features/dashboard/components/DashboardView.tsx
 ================================================
 // src/features/dashboard/components/DashboardView.tsx
 import Heading  from "@/components/ui/Heading";
-
-import type { SkillGraph } from "@/modules/interview/services/mastery/SkillGraphService";
-import type { Recommendation } from "@/modules/interview/services/recommendation/RecommendationService";
+import { Suspense } from "react";
 
 import CurrentStandingCard from "./CurrentStandingCard";
 import LiveFeedbackCard from "./LiveFeedbackCard";
 import RecommendationCard from "./RecommendationCard";
 import ExploreProblems, { type ExploreProblem } from "./ExploreProblems";
+import { SkillGraphService } from "@/modules/interview/services/mastery/SkillGraphService";
+import { RecommendationService } from "@/modules/interview/services/recommendation/RecommendationService";
+
+// Helper components to fetch their own data
+async function SkillGraphWidget({ userId }: { userId: string }) {
+  try {
+    const service = new SkillGraphService();
+    const skillGraph = await service.getSkillGraph(userId);
+    return <LiveFeedbackCard hasData={true} skillGraph={skillGraph} />;
+  } catch {
+    return <div className="p-4 text-sm text-red-500">Failed to load skill graph.</div>;
+  }
+}
+
+async function RecommendationWidget({ userId }: { userId: string }) {
+  try {
+    const service = new RecommendationService();
+    const recommendation = await service.nextRecommended(userId);
+    return <RecommendationCard recommendation={recommendation} />;
+  } catch {
+    return <div className="p-4 text-sm text-red-500">Failed to load recommendation.</div>;
+  }
+}
 
 type Props = {
+  userId: string;
   hasData: boolean;
   overallReadiness: number | null;
-  categoryRatings: Record<string, number>; // template slug ("hld" | "lld" | "dsa") -> 0-5 stars
-  skillGraph: SkillGraph;
-  recommendation: Recommendation | null;
+  categoryRatings: Record<string, number>;
   exploreProblems: ExploreProblem[];
 };
 
 export default function DashboardView({
+  userId,
   hasData,
   overallReadiness,
   categoryRatings,
-  skillGraph,
-  recommendation,
   exploreProblems,
 }: Props) {
   return (
@@ -13087,7 +13117,6 @@ export default function DashboardView({
       </div>
 
       <div className="mt-10 grid grid-cols-1 gap-8 md:grid-cols-2">
-        {/* 01 — Current standing */}
         <div className="space-y-4">
           <div>
             <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
@@ -13105,7 +13134,6 @@ export default function DashboardView({
           />
         </div>
 
-        {/* 02 — Live feedback */}
         <div className="space-y-4">
           <div>
             <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
@@ -13115,11 +13143,11 @@ export default function DashboardView({
               What changed recently?
             </Heading>
           </div>
-
-          <LiveFeedbackCard hasData={hasData} skillGraph={skillGraph} />
+          <Suspense fallback={<div className="p-4">Loading...</div>}>
+            <SkillGraphWidget userId={userId} />
+          </Suspense>
         </div>
 
-        {/* 03 — Smart mentor recommendation */}
         <div className="space-y-4 md:col-span-2">
           <div>
             <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
@@ -13129,12 +13157,12 @@ export default function DashboardView({
               What should I do next?
             </Heading>
           </div>
-
-          <RecommendationCard recommendation={recommendation} />
+          <Suspense fallback={<div className="p-4">Loading...</div>}>
+            <RecommendationWidget userId={userId} />
+          </Suspense>
         </div>
       </div>
 
-      {/* 04 — Explore more problems */}
       <ExploreProblems exploreProblems={exploreProblems} />
     </main>
   );
@@ -13656,14 +13684,18 @@ export default function ProblemSelector({
   return (
     <div className="grid grid-cols-1 gap-3">
       {problems.map((problem) => (
-        <Button
-          key={problem.id}
-          type="button"
-          variant={value === problem.id ? "primary" : "outline"}
-          aria-pressed={value === problem.id}
-          onClick={() => onChange(problem.id)}
-          className="h-auto w-full justify-start p-4 text-left"
-        >
+        // In ProblemSelector.tsx
+<Button
+  key={problem.id}
+  type="button"
+  variant={value === problem.id ? "primary" : "ghost"}
+  aria-pressed={value === problem.id}
+  onClick={() => {
+    console.log("1. Button clicked, problemId:", problem.id);
+    onChange(problem.id);
+  }}
+  className="h-auto w-full justify-start p-4 text-left"
+>
           <div className="flex-1">
             <div className="flex items-center justify-between">
               <h4 className="font-semibold">{problem.title}</h4>
@@ -14250,14 +14282,19 @@ FILE: ./src/features/interview/setup/components/ProblemInventoryView.tsx
 import ProblemSelector from "@/features/interview/setup/components/ProblemSelector";
 
 type Props = {
+  value?: string | null;  // Add this
   onSelectProblem?: (problemId: string) => void;
   userId?: string | null;
 };
 
-export default function ProblemInventoryView({ onSelectProblem, userId }: Props) {
+export default function ProblemInventoryView({ 
+  value,  // Add this parameter
+  onSelectProblem, 
+  userId 
+}: Props) {
   return (
     <ProblemSelector
-      value={null}
+      value={value}  // Pass it through
       onChange={(problemId) => {
         if (onSelectProblem && problemId) {
           onSelectProblem(problemId);
@@ -14267,7 +14304,6 @@ export default function ProblemInventoryView({ onSelectProblem, userId }: Props)
     />
   );
 }
-
 ================================================
 FILE: ./src/features/interview/setup/components/TopicSelector.tsx
 ================================================
@@ -22808,7 +22844,7 @@ export class FallbackAIProvider {
       (model): model is string => Boolean(model)
     );
 
-    let lastError: unknown;
+    const errors: { model: string; error: string }[] = [];
 
     for (const model of candidates) {
       try {
@@ -22824,15 +22860,15 @@ export class FallbackAIProvider {
 
         return response;
       } catch (error) {
-        console.warn(`Provider ${model} failed.`, error);
-
-        lastError = error;
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.warn(`Provider ${model} failed.`, errorMessage);
+        errors.push({ model, error: errorMessage });
       }
     }
 
-    throw new Error("All AI providers failed.", {
-      cause: lastError,
-    });
+    throw new Error(
+      `All AI providers failed: ${JSON.stringify(errors)}`
+    );
   }
 }
 ================================================
@@ -22853,17 +22889,14 @@ export class ValidatedJSONParser {
         .replace(/```$/i, "")
         .trim();
 
-      
       const parsed = JSON.parse(cleaned);
 
-      if (
-        typeof parsed.confidence === "number" &&
-        parsed.confidence > 1
-      ) {
-        parsed.confidence = Math.min(
-          parsed.confidence / 100,
-          1
-        );
+      if (typeof parsed.confidence === "number") {
+        if (parsed.confidence > 1 && parsed.confidence <= 100) {
+          parsed.confidence = parsed.confidence / 100;
+        } else if (parsed.confidence > 100) {
+          parsed.confidence = 1;
+        }
       }
 
       return schema.parse(parsed);
@@ -22887,6 +22920,7 @@ export class ValidatedJSONParser {
     }
   }
 }
+
 ================================================
 FILE: ./src/modules/ai/AIProvider.ts
 ================================================
@@ -22916,27 +22950,39 @@ interface TaskConfig {
 
 // Model + temperature routing per workload. This is the ONLY place task
 // names map to specific models — providers below know nothing about tasks.
-const TASK_CONFIG: Record<AITask, TaskConfig> = {
-  interviewer: {
-    model: env.AI_PROVIDER === "openai" ? env.OPENAI_MODEL_INTERVIEWER : env.OLLAMA_MODEL_INTERVIEWER,
-    fallbackModel: env.AI_PROVIDER === "openai" ? env.OPENAI_FALLBACK_MODEL : env.OLLAMA_FALLBACK_MODEL,
-    temperature: 0.3,
-  },
-  summary: {
-    model: env.AI_PROVIDER === "openai" ? env.OPENAI_MODEL_SUMMARY : env.OLLAMA_MODEL_SUMMARY,
-    fallbackModel: env.AI_PROVIDER === "openai" ? env.OPENAI_FALLBACK_MODEL : env.OLLAMA_FALLBACK_MODEL,
-    temperature: 0.2,
-  },
-  evaluation: {
-    model: env.AI_PROVIDER === "openai" ? env.OPENAI_MODEL_EVALUATION : env.OLLAMA_MODEL_EVALUATION,
-    fallbackModel: env.AI_PROVIDER === "openai" ? env.OPENAI_FALLBACK_MODEL : env.OLLAMA_FALLBACK_MODEL,
-    temperature: 0,
-  },
-  repair: {
-    model: env.AI_PROVIDER === "openai" ? env.OPENAI_MODEL_REPAIR : env.OLLAMA_MODEL_REPAIR,
-    fallbackModel: env.AI_PROVIDER === "openai" ? env.OPENAI_FALLBACK_MODEL : env.OLLAMA_FALLBACK_MODEL,
-    temperature: 0,
-  },
+const getTaskConfig = (): Record<AITask, TaskConfig> => {
+  const isOpenAI = env.AI_PROVIDER === "openai";
+
+  const getModel = (openaiKey: string | undefined, ollamaKey: string | undefined) => {
+    const model = isOpenAI ? openaiKey : ollamaKey;
+    if (!model) {
+      throw new Error(`Missing AI model configuration for provider ${env.AI_PROVIDER}`);
+    }
+    return model;
+  };
+
+  return {
+    interviewer: {
+      model: getModel(env.OPENAI_MODEL_INTERVIEWER, env.OLLAMA_MODEL_INTERVIEWER),
+      fallbackModel: getModel(env.OPENAI_FALLBACK_MODEL, env.OLLAMA_FALLBACK_MODEL),
+      temperature: 0.3,
+    },
+    summary: {
+      model: getModel(env.OPENAI_MODEL_SUMMARY, env.OLLAMA_MODEL_SUMMARY),
+      fallbackModel: getModel(env.OPENAI_FALLBACK_MODEL, env.OLLAMA_FALLBACK_MODEL),
+      temperature: 0.2,
+    },
+    evaluation: {
+      model: getModel(env.OPENAI_MODEL_EVALUATION, env.OLLAMA_MODEL_EVALUATION),
+      fallbackModel: getModel(env.OPENAI_FALLBACK_MODEL, env.OLLAMA_FALLBACK_MODEL),
+      temperature: 0,
+    },
+    repair: {
+      model: getModel(env.OPENAI_MODEL_REPAIR, env.OLLAMA_MODEL_REPAIR),
+      fallbackModel: getModel(env.OPENAI_FALLBACK_MODEL, env.OLLAMA_FALLBACK_MODEL),
+      temperature: 0,
+    },
+  };
 };
 
 export interface AIRequestOptions {
@@ -22953,7 +22999,7 @@ export class AIService {
     messages: ChatMessage[],
     options: AIRequestOptions
   ): Promise<string> {
-    const config = TASK_CONFIG[options.task];
+    const config = getTaskConfig()[options.task];
 
     return this.provider.generateResponse(messages, {
       model: config.model,
