@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Search } from "@/components/ui/Search";
 import { Panel } from "@/components/ui/Panel";
 
-const CARD_WIDTH = 300; // doubled from 216
+const CARD_WIDTH = 380;
 const GAP = 18; // px, matches gap-4.5
 
 const CARDS = [
@@ -13,17 +13,18 @@ const CARDS = [
   id: 1,
   title: "Bug hunting",
   meta: "Practice · 15 min",
+  description: "Find production bugs from real systems.",
   from: "#FF6B4A",
   to: "#E0432A",
-  href: "/bug-hunting/checkout-timeout",
+  href: "/bug-hunting",
   icon: (
-    <svg viewBox="0 0 84 84" fill="none">
-      <circle cx="42" cy="42" r="40" fill="#fff"/>
-      <ellipse cx="42" cy="46" rx="14" ry="10" fill="#FF6B4A"/>
-      <circle cx="35" cy="42" r="3" fill="#26282F"/>
-      <circle cx="49" cy="42" r="3" fill="#26282F"/>
-      <path d="M28 34 Q22 26 16 30" stroke="#FF6B4A" strokeWidth="3" strokeLinecap="round" fill="none"/>
-      <path d="M56 34 Q62 26 68 30" stroke="#FF6B4A" strokeWidth="3" strokeLinecap="round" fill="none"/>
+    <svg viewBox="0 0 110 110" fill="none">
+      <circle cx="55" cy="55" r="52" fill="#fff"/>
+      <ellipse cx="55" cy="60" rx="18" ry="13" fill="#FF6B4A"/>
+      <circle cx="46" cy="55" r="4" fill="#26282F"/>
+      <circle cx="64" cy="55" r="4" fill="#26282F"/>
+      <path d="M37 45 Q29 34 21 39" stroke="#FF6B4A" strokeWidth="4" strokeLinecap="round" fill="none"/>
+      <path d="M73 45 Q81 34 89 39" stroke="#FF6B4A" strokeWidth="4" strokeLinecap="round" fill="none"/>
     </svg>
   ),
 },
@@ -31,14 +32,15 @@ const CARDS = [
     id: 2,
     title: "Review a PR",
     meta: "Practice · 30 min",
+    description: "Practice code review on real pull requests.",
     from: "#3E6BFF",
     to: "#213FCC",
     href: "#", // Disabled - route doesn't exist yet
     icon: (
-      <svg viewBox="0 0 84 84" fill="none">
-        <circle cx="42" cy="42" r="40" fill="#fff"/>
-        <rect x="26" y="24" width="32" height="36" rx="4" fill="#3E6BFF"/>
-        <path d="M32 44l6 6 12-14" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+      <svg viewBox="0 0 110 110" fill="none">
+        <circle cx="55" cy="55" r="52" fill="#fff"/>
+        <rect x="34" y="31" width="42" height="47" rx="5" fill="#3E6BFF"/>
+        <path d="M42 58l8 8 16-18" stroke="#fff" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
       </svg>
     ),
   },
@@ -46,15 +48,16 @@ const CARDS = [
     id: 3,
     title: "Read a transcript",
     meta: "Library · Full session",
+    description: "Study real interview conversations.",
     from: "#262832",
     to: "#121319",
     href: "/library/transcript", // exact match — the sample transcript page
     icon: (
-      <svg viewBox="0 0 84 84" fill="none">
-        <circle cx="42" cy="42" r="40" fill="#fff"/>
-        <path d="M26 30h32v6H26z" fill="#262832"/>
-        <path d="M26 42h24v5H26z" fill="#262832" opacity=".7"/>
-        <path d="M26 52h28v5H26z" fill="#262832" opacity=".45"/>
+      <svg viewBox="0 0 110 110" fill="none">
+        <circle cx="55" cy="55" r="52" fill="#fff"/>
+        <path d="M34 39h42v8H34z" fill="#262832"/>
+        <path d="M34 55h32v7H34z" fill="#262832" opacity=".7"/>
+        <path d="M34 69h38v7H34z" fill="#262832" opacity=".45"/>
       </svg>
     ),
   },
@@ -62,15 +65,16 @@ const CARDS = [
     id: 4,
     title: "Learn whiteboarding",
     meta: "Learn · Guided",
+    description: "Master system design whiteboarding.",
     from: "#00E0AB",
     to: "#00A87E",
     href: "/learn/whiteboard", // exact match
     icon: (
-      <svg viewBox="0 0 84 84" fill="none">
-        <circle cx="42" cy="42" r="40" fill="#fff"/>
-        <rect x="24" y="28" width="36" height="26" rx="3" fill="#00A87E"/>
-        <path d="M30 40h10M30 46h16" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"/>
-        <rect x="24" y="58" width="36" height="4" rx="2" fill="#00A87E" opacity=".4"/>
+      <svg viewBox="0 0 110 110" fill="none">
+        <circle cx="55" cy="55" r="52" fill="#fff"/>
+        <rect x="31" y="37" width="47" height="34" rx="4" fill="#00A87E"/>
+        <path d="M39 52h13M39 60h21" stroke="#fff" strokeWidth="3" strokeLinecap="round"/>
+        <rect x="31" y="76" width="47" height="5" rx="2.5" fill="#00A87E" opacity=".4"/>
       </svg>
     ),
   },
@@ -78,15 +82,16 @@ const CARDS = [
     id: 5,
     title: "Live interview with AI",
     meta: "Live · 45 min",
+    description: "Practice with an AI interviewer.",
     from: "#FFB930",
     to: "#E8940A",
     href: "/interview/setup", // exact match — the general setup flow
     icon: (
-      <svg viewBox="0 0 84 84" fill="none">
-        <circle cx="42" cy="42" r="40" fill="#fff"/>
-        <rect x="35" y="24" width="14" height="24" rx="7" fill="#E8940A"/>
-        <path d="M28 40a14 14 0 0028 0" stroke="#E8940A" strokeWidth="3" strokeLinecap="round" fill="none"/>
-        <line x1="42" y1="54" x2="42" y2="60" stroke="#E8940A" strokeWidth="3" strokeLinecap="round"/>
+      <svg viewBox="0 0 110 110" fill="none">
+        <circle cx="55" cy="55" r="52" fill="#fff"/>
+        <rect x="46" y="31" width="18" height="31" rx="9" fill="#E8940A"/>
+        <path d="M37 52a18 18 0 0036 0" stroke="#E8940A" strokeWidth="4" strokeLinecap="round" fill="none"/>
+        <line x1="55" y1="70" x2="55" y2="78" stroke="#E8940A" strokeWidth="4" strokeLinecap="round"/>
       </svg>
     ),
   },
@@ -94,15 +99,16 @@ const CARDS = [
     id: 6,
     title: "Deep dives",
     meta: "Learn · Topic-based",
+    description: "Deep dive into specific topics.",
     from: "#7A6BFF",
     to: "#4C3FD6",
     href: "/interview/setup?type=deep_dive", // matches InterviewTemplate slug "deep_dive"
     icon: (
-      <svg viewBox="0 0 84 84" fill="none">
-        <circle cx="42" cy="42" r="40" fill="#fff"/>
-        <circle cx="42" cy="42" r="6" fill="#4C3FD6"/>
-        <circle cx="42" cy="42" r="13" stroke="#4C3FD6" strokeWidth="2.5" fill="none" opacity=".55"/>
-        <circle cx="42" cy="42" r="20" stroke="#4C3FD6" strokeWidth="2.5" fill="none" opacity=".3"/>
+      <svg viewBox="0 0 110 110" fill="none">
+        <circle cx="55" cy="55" r="52" fill="#fff"/>
+        <circle cx="55" cy="55" r="8" fill="#4C3FD6"/>
+        <circle cx="55" cy="55" r="17" stroke="#4C3FD6" strokeWidth="3" fill="none" opacity=".55"/>
+        <circle cx="55" cy="55" r="26" stroke="#4C3FD6" strokeWidth="3" fill="none" opacity=".3"/>
       </svg>
     ),
   },
@@ -110,15 +116,16 @@ const CARDS = [
     id: 7,
     title: "Build it",
     meta: "Hands-on · Self-paced",
+    description: "Build real systems from scratch.",
     from: "#FF4D93",
     to: "#D62568",
     href: "#", // Disabled - route doesn't exist yet
     icon: (
-      <svg viewBox="0 0 84 84" fill="none">
-        <circle cx="42" cy="42" r="40" fill="#fff"/>
-        <rect x="27" y="46" width="12" height="12" fill="#D62568"/>
-        <rect x="39" y="34" width="12" height="24" fill="#FF4D93"/>
-        <rect x="51" y="24" width="12" height="34" fill="#D62568"/>
+      <svg viewBox="0 0 110 110" fill="none">
+        <circle cx="55" cy="55" r="52" fill="#fff"/>
+        <rect x="35" y="60" width="16" height="16" fill="#D62568"/>
+        <rect x="51" y="44" width="16" height="32" fill="#FF4D93"/>
+        <rect x="67" y="31" width="16" height="45" fill="#D62568"/>
       </svg>
     ),
   },
@@ -139,7 +146,7 @@ export default function LearnPage() {
 
   return (
     <div className="min-h-screen bg-[var(--paper)] py-12 px-6">
-      <Panel variant="default" className="max-w-[1080px] mx-auto p-[36px_40px_44px]">
+      <Panel variant="default" className="max-w-[1500px] mx-auto p-[36px_40px_44px]">
         {/* Top Navigation */}
         <div className="flex items-center justify-between mb-8.5 gap-6">
           <div className="heading-m font-semibold">
@@ -178,15 +185,20 @@ export default function LearnPage() {
               className="relative flex-none snap-start cursor-pointer overflow-visible transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:-translate-y-2 flex flex-col justify-end p-6"
               style={{
                 width: CARD_WIDTH,
-                height: 300,
+                height: 360,
                 borderRadius: "26px",
                 background: `linear-gradient(160deg, ${card.from}, ${card.to})`,
               }}
             >
-              <div className="absolute top-[-30px] left-1/2 -translate-x-1/2 w-[84px] h-[84px] animate-float">
+              <div className="absolute top-[-30px] left-1/2 -translate-x-1/2 w-[110px] h-[110px] animate-float">
                 {card.icon}
               </div>
-              <h3 className="text-white body-s font-semibold mb-1 text-lg">{card.title}</h3>
+              <h3 className="text-white body-s font-semibold mb-1 text-2xl">{card.title}</h3>
+              {card.description && (
+                <p className="text-white/90 text-sm leading-relaxed mb-2">
+                  {card.description}
+                </p>
+              )}
               <div className="flex items-center gap-1.5 caption text-white/75 font-medium">
                 <span className="w-1 h-1 rounded-full bg-white/60" />
                 {card.meta}

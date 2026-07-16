@@ -26,58 +26,51 @@ export default function TranscriptCard({ transcript }: Props) {
   return (
     <Card
       onClick={() => router.push(`/library/transcript/${summary.slug}`)}
-      className="cursor-pointer p-5 transition-all hover:-translate-y-0.5 hover:border-foreground/30 hover:shadow-md"
+      className="cursor-pointer p-6 transition-all hover:-translate-y-0.5 hover:border-foreground/30 hover:shadow-md"
     >
-      <div className="flex items-start justify-between gap-6">
-        <div className="min-w-0 flex-1 space-y-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <span
-              className={`rounded border px-2 py-1 font-mono text-[10px] uppercase tracking-wider ${
-                CATEGORY_COLORS[summary.category]
-              }`}
-            >
-              {summary.category}
+      <div className="flex flex-col h-full">
+        {/* Meta row */}
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          {summary.company && (
+            <span className="font-semibold text-sm text-foreground">
+              {summary.company}
             </span>
-
-            <span className="rounded border border-border bg-muted px-2 py-1 font-mono text-[10px] uppercase">
-              {summary.difficulty}
-            </span>
-
-            <span className="rounded border border-border bg-muted px-2 py-1 font-mono text-[10px]">
-              {summary.duration} min
-            </span>
-
-            {summary.company && (
-              <span className="rounded border border-border bg-muted px-2 py-1 font-mono text-[10px]">
-                {summary.company}
-              </span>
-            )}
-          </div>
-
-          <div>
-            <h3 className="text-lg font-semibold text-foreground">
-              {summary.title}
-            </h3>
-
-            <p className="mt-2 text-sm text-muted-foreground">
-              {summary.description}
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            {summary.tags.map((tag) => (
-              <span
-                key={tag}
-                className="rounded-full bg-muted px-3 py-1 text-xs"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
+          )}
+          <span className="text-muted-foreground">•</span>
+          <span className="rounded border border-border bg-muted px-2 py-1 font-mono text-[10px] uppercase">
+            {summary.difficulty}
+          </span>
+          <span className="text-muted-foreground">•</span>
+          <span className="rounded border border-border bg-muted px-2 py-1 font-mono text-[10px]">
+            {summary.duration} min
+          </span>
         </div>
 
-        <div className="flex shrink-0 items-center">
-          <span className="text-xl text-muted-foreground">→</span>
+        {/* Title */}
+        <h3 className="text-xl font-semibold text-foreground mb-2">
+          {summary.title}
+        </h3>
+
+        {/* Description */}
+        <p className="text-sm text-muted-foreground mb-4 flex-1">
+          {summary.description}
+        </p>
+
+        {/* Topics/Tags */}
+        <div className="flex flex-wrap gap-2">
+          {summary.tags.slice(0, 5).map((tag) => (
+            <span
+              key={tag}
+              className="rounded-full bg-muted/50 px-3 py-1 text-xs font-medium text-muted-foreground"
+            >
+              {tag}
+            </span>
+          ))}
+          {summary.tags.length > 5 && (
+            <span className="rounded-full bg-muted/50 px-3 py-1 text-xs font-medium text-muted-foreground">
+              +{summary.tags.length - 5}
+            </span>
+          )}
         </div>
       </div>
     </Card>

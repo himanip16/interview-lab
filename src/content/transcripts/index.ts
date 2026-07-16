@@ -1,18 +1,19 @@
-import { TranscriptEntry, TranscriptCategory } from "./types";
+import {
+  TranscriptEntry,
+  TranscriptCategory,
+} from "./types";
 
-import paymentSystem from "./hld/payment-system";
-
-const TRANSCRIPTS: TranscriptEntry[] = [
-  paymentSystem,
-];
+import { TRANSCRIPTS } from "./registry";
 
 export function getAllTranscripts(): TranscriptEntry[] {
   return TRANSCRIPTS;
 }
 
-export function getTranscript(slug: string): TranscriptEntry | undefined {
+export function getTranscript(
+  slug: string
+): TranscriptEntry | undefined {
   return TRANSCRIPTS.find(
-    (transcript) => transcript.summary.slug === slug
+    (t) => t.summary.slug === slug
   );
 }
 
@@ -20,40 +21,46 @@ export function getTranscriptsByCategory(
   category: TranscriptCategory
 ): TranscriptEntry[] {
   return TRANSCRIPTS.filter(
-    (transcript) => transcript.summary.category === category
+    (t) => t.summary.category === category
   );
 }
 
-export function getGroupedTranscripts(): Record<
-  TranscriptCategory,
-  TranscriptEntry[]
-> {
-  return {
-    hld: getTranscriptsByCategory("hld"),
-    lld: getTranscriptsByCategory("lld"),
-    dsa: getTranscriptsByCategory("dsa"),
-    behavioural: getTranscriptsByCategory("behavioural"),
-  };
+export function getCategories(): TranscriptCategory[] {
+  return [
+    ...new Set(
+      TRANSCRIPTS.map(
+        (t) => t.summary.category
+      )
+    ),
+  ];
 }
 
-export const TRANSCRIPT_CATEGORIES: {
-  id: TranscriptCategory;
-  label: string;
-}[] = [
-  {
-    id: "hld",
-    label: "High Level Design",
-  },
-  {
-    id: "lld",
-    label: "Low Level Design",
-  },
-  {
-    id: "dsa",
-    label: "Data Structures & Algorithms",
-  },
-  {
-    id: "behavioural",
-    label: "Behavioural",
-  },
-];
+export function getCategoryLabel(
+  category: TranscriptCategory
+): string {
+  const labels: Record<TranscriptCategory, string> = {
+    hld: "High Level Design",
+    lld: "Low Level Design",
+    dsa: "Data Structures & Algorithms",
+    behavioural: "Behavioural"
+  };
+
+  return labels[category];
+}
+
+function validateTranscripts() {
+  const slugs = new Set<string>();
+
+  for (const transcript of TRANSCRIPTS) {
+    if (slugs.has(transcript.summary.slug)) {
+      throw new Error(
+        `Duplicate slug: ${transcript.summary.slug}`
+      );
+    }
+
+    slugs.add(transcript.summary.slug);
+  }
+}
+
+// Validate on import
+validateTranscripts();
