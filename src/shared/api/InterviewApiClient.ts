@@ -1,21 +1,3 @@
-/**
- * InterviewApiClient
- * 
- * Single source of truth for all API communication with the interview backend.
- * Components should NEVER call fetch() directly or hardcode API URLs.
- * 
- * This layer abstracts:
- * - URL construction
- * - Request/response formatting
- * - Error handling
- * - Future changes to the API (polling → WebSocket/SSE)
- * 
- * Benefits:
- * - Easy to swap backends (Polling → WebSocket)
- * - Type-safe API calls
- * - Testable in isolation
- * - Centralized error handling
- */
 
 import type { ProcessInterviewMessageResult } from "@/modules/interview/types";
 import type { InterviewState } from "@/modules/interview/types";
@@ -36,7 +18,7 @@ export class InterviewApiClient {
       throw new Error(`Failed to fetch interview: ${response.statusText}`);
     }
 
-    return response.json();
+    return await response.json();
   }
 
   /**
@@ -49,10 +31,7 @@ export class InterviewApiClient {
    * 
    * Request body DOES NOT include phase — backend owns that decision
    */
-  async sendMessage(
-    interviewId: string,
-    message: string
-  ): Promise<ProcessInterviewMessageResult> {
+  async sendMessage(interviewId: string, message: string): Promise<ProcessInterviewMessageResult> {
     if (!message.trim()) {
       throw new Error('Message cannot be empty');
     }

@@ -184,7 +184,7 @@ model Message {
 }
 
 model Problem {
-  id               String                @id @default(cuid())
+  id   String @id @default(uuid())
   slug             String                @unique
   title            String
   description      String?

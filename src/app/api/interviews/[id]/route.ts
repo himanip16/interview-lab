@@ -43,6 +43,7 @@ export async function GET(request: Request, { params }: Props) {
     return NextResponse.json(
       {
         id: interview.id,
+        problem: interview.problem,
         status: interview.status,
         template: interview.template,
         difficulty: interview.difficulty,

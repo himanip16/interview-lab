@@ -20,6 +20,10 @@ export interface ProcessInterviewMessageResult {
 }
 export interface InterviewState {
   id: string;
+  problem: {
+  id: string;
+  title: string;
+  }
 
   type: string;
   difficulty: string;

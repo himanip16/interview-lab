@@ -5,10 +5,7 @@ import logger from "@/shared/logger/logger";
 import { InterviewMessageService } from "@/modules/interview/services/interview/InterviewMessageService";
 
 export async function POST(
-  req: Request,
-  {
-    params,
-  }: {
+  req: Request,{params,}: {
     params: Promise<{
       id: string;
     }>;
@@ -16,13 +13,9 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
-
     const body = await req.json();
-
-    const message =
-      typeof body.text === "string"
-        ? body.text.trim()
-        : "";
+    const message = typeof body.message === "string"
+        ? body.message.trim() : "";
 
     if (!id || !message) {
       return NextResponse.json(
@@ -35,11 +28,9 @@ export async function POST(
       );
     }
 
-    const service =
-      new InterviewMessageService();
+    const service = new InterviewMessageService();
 
-    const result =
-      await service.processMessage(
+    const result = await service.processMessage(
         id,
         message
       );

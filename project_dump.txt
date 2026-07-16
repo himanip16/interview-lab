@@ -65,6 +65,8 @@ PROJECT STRUCTURE
 │   ├── next.svg
 │   ├── vercel.svg
 │   └── window.svg
+├── scripts
+│   └── generate-transcripts.ts
 ├── shared
 │   └── prisma
 │       └── client.ts
@@ -128,8 +130,9 @@ PROJECT STRUCTURE
 │   │   │           └── skill-graph
 │   │   │               └── route.ts
 │   │   ├── bug-hunting
-│   │   │   └── [scenarioId]
-│   │   │       └── page.tsx
+│   │   │   ├── [scenarioId]
+│   │   │   │   └── page.tsx
+│   │   │   └── page.tsx
 │   │   ├── dashboard
 │   │   │   ├── [userId]
 │   │   │   │   └── page.tsx
@@ -225,11 +228,23 @@ PROJECT STRUCTURE
 │   │   │   └── shared
 │   │   └── transcripts
 │   │       ├── hld
+│   │       │   ├── amazon-lockers.ts
+│   │       │   ├── autocomplete.ts
+│   │       │   ├── config-sync.ts
 │   │       │   └── payment-system.ts
 │   │       ├── index.ts
+│   │       ├── lld
+│   │       │   ├── read-receipts.ts
+│   │       │   └── vending-machine.ts
 │   │       └── types.ts
 │   ├── contexts
 │   │   └── ThemeContext.tsx
+│   ├── domain
+│   │   ├── entities
+│   │   │   └── index.ts
+│   │   ├── index.ts
+│   │   └── value-objects
+│   │       └── index.ts
 │   ├── features
 │   │   ├── bug-hunting
 │   │   │   ├── components
@@ -368,6 +383,7 @@ PROJECT STRUCTURE
 │   │   │   │       ├── TranscriptLegend.tsx
 │   │   │   │       └── TranscriptMetadata.tsx
 │   │   │   ├── data
+│   │   │   │   └── generated.ts
 │   │   │   ├── types
 │   │   │   │   └── transcript.ts
 │   │   │   ├── types.ts
@@ -407,7 +423,6 @@ PROJECT STRUCTURE
 │   ├── modules
 │   │   ├── ai
 │   │   │   ├── AIProvider.ts
-│   │   │   ├── parsers
 │   │   │   ├── providers
 │   │   │   │   ├── ClaudeProvider.ts
 │   │   │   │   ├── FallbackAIProvider.ts
@@ -417,28 +432,53 @@ PROJECT STRUCTURE
 │   │   │   │   └── AIService.ts
 │   │   │   └── utils
 │   │   │       └── ValidatedJSONParser.ts
-│   │   ├── analytics
 │   │   ├── auth
 │   │   │   ├── auth.ts
 │   │   │   └── getCurrentUserId.ts
+│   │   ├── bug-hunting
+│   │   │   ├── data
+│   │   │   │   └── scenarios
+│   │   │   │       └── checkout-timeout.json
+│   │   │   ├── domain
+│   │   │   │   ├── entities
+│   │   │   │   │   ├── BugAttempt.ts
+│   │   │   │   │   ├── BugScenario.ts
+│   │   │   │   │   ├── Finding.ts
+│   │   │   │   │   └── InvestigationArtifact.ts
+│   │   │   │   ├── errors
+│   │   │   │   │   └── DomainErrors.ts
+│   │   │   │   └── value-objects
+│   │   │   │       ├── AttemptStatus.ts
+│   │   │   │       ├── EvidenceType.ts
+│   │   │   │       ├── ScenarioCategory.ts
+│   │   │   │       ├── ScenarioDifficulty.ts
+│   │   │   │       ├── ScenarioMetadata.ts
+│   │   │   │       └── Severity.ts
+│   │   │   ├── index.ts
+│   │   │   ├── infrastructure
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── registry
+│   │   │   │   │   └── ScenarioRegistry.ts
+│   │   │   │   └── repositories
+│   │   │   │       └── JsonBugScenarioRepository.ts
+│   │   │   ├── repositories
+│   │   │   │   ├── BugAttemptRepository.ts
+│   │   │   │   └── BugScenarioRepository.ts
+│   │   │   └── services
+│   │   │       ├── BugHuntingService.ts
+│   │   │       └── index.ts
 │   │   ├── common
 │   │   │   └── errors
 │   │   │       └── ApplicationErrors.ts
 │   │   ├── container.ts
 │   │   ├── interview
-│   │   │   ├── application
 │   │   │   ├── constants.ts
-│   │   │   ├── dto
 │   │   │   ├── engine
 │   │   │   │   ├── InterviewEngine.ts
 │   │   │   │   ├── InterviewStateMachine.ts
 │   │   │   │   ├── PromptBuilder.ts
 │   │   │   │   ├── ResponseParser.ts
-│   │   │   │   ├── StateUpdater.ts
-│   │   │   │   ├── context
-│   │   │   │   ├── parser
-│   │   │   │   ├── pipeline
-│   │   │   │   └── state
+│   │   │   │   └── StateUpdater.ts
 │   │   │   ├── evaluators
 │   │   │   │   ├── ArchitectureEvaluator.ts
 │   │   │   │   ├── CommunicationEvaluator.ts
@@ -452,7 +492,6 @@ PROJECT STRUCTURE
 │   │   │   │   ├── Evaluation.ts
 │   │   │   │   ├── Message.ts
 │   │   │   │   └── PhaseResult.ts
-│   │   │   ├── phases
 │   │   │   ├── profiles
 │   │   │   │   ├── DSAInterviewProfile.ts
 │   │   │   │   ├── HLDInterviewProfile.ts
@@ -476,6 +515,7 @@ PROJECT STRUCTURE
 │   │   │   ├── reverse
 │   │   │   │   └── CandidatePersonas.ts
 │   │   │   ├── services
+│   │   │   │   ├── InterviewService.ts
 │   │   │   │   ├── ProblemPickerService.ts
 │   │   │   │   ├── TranscriptService.ts
 │   │   │   │   ├── evaluation
@@ -492,16 +532,17 @@ PROJECT STRUCTURE
 │   │   │   │   │   └── RecommendationService.ts
 │   │   │   │   ├── studyplan
 │   │   │   │   │   └── StudyResources.ts
-│   │   │   │   ├── summary
-│   │   │   │   │   ├── IncrementalSummaryService.ts
-│   │   │   │   │   └── SummaryService.ts
-│   │   │   │   └── whiteboard
+│   │   │   │   └── summary
+│   │   │   │       ├── IncrementalSummaryService.ts
+│   │   │   │       └── SummaryService.ts
 │   │   │   └── types.ts
 │   │   └── transcript
 │   │       ├── application
 │   │       │   └── TranscriptService.ts
 │   │       └── domain
 │   │           └── TranscriptNode.ts
+│   ├── repositories
+│   │   └── index.ts
 │   ├── shared
 │   │   ├── api
 │   │   │   └── InterviewApiClient.ts
@@ -519,7 +560,7 @@ PROJECT STRUCTURE
 ├── tsconfig.json
 └── tsconfig.tsbuildinfo
 
-202 directories, 316 files
+210 directories, 349 files
 
 FILE CONTENTS
 
@@ -4051,7 +4092,10 @@ FILE: ./package.json
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "generate:transcripts": "tsx scripts/generate-transcripts.ts",
+    "predev": "npm run generate:transcripts",
+    "prebuild": "npm run generate:transcripts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
@@ -4281,6 +4325,52 @@ For each React implementation, verify:
 - Responsive behavior is explicitly defined in each HTML
 - Color coding is consistent (HLD=violet, LLD=coral, DSA=mint)
 - All interactive elements have defined hover/active states
+
+================================================
+FILE: ./scripts/generate-transcripts.ts
+================================================
+import { readdirSync, writeFileSync } from "fs";
+import { join } from "path";
+
+const ROOT = join(process.cwd(), "src/content/transcripts");
+const OUT = join(process.cwd(), "src/features/library/data/generated.ts");
+
+function scanCategory(category: string): string[] {
+  const dir = join(ROOT, category);
+  return readdirSync(dir, { withFileTypes: true })
+    .filter((d) => d.isFile() && /\.(ts|tsx)$/.test(d.name))
+    .map((d) => d.name.replace(/\.(ts|tsx)$/, ""));
+}
+
+const categories = readdirSync(ROOT, { withFileTypes: true })
+  .filter((d) => d.isDirectory())
+  .map((d) => d.name);
+
+const entries: { category: string; slug: string }[] = [];
+for (const category of categories) {
+  for (const slug of scanCategory(category)) {
+    entries.push({ category, slug });
+  }
+}
+
+const imports = entries
+  .map((e, i) => `import transcript${i} from "@/content/transcripts/${e.category}/${e.slug}";`)
+  .join("\n");
+
+const arr = entries.map((_, i) => `  transcript${i},`).join("\n");
+
+writeFileSync(
+  OUT,
+  `// AUTO-GENERATED — do not edit by hand. Run \`npm run generate:transcripts\`.
+${imports}
+
+export const TRANSCRIPTS = Object.freeze([
+${arr}
+]);
+`
+);
+
+console.log(`Generated ${entries.length} transcript imports.`);
 
 ================================================
 FILE: ./tsconfig.json
@@ -5120,7 +5210,7 @@ import { useRouter } from "next/navigation";
 import { Search } from "@/components/ui/Search";
 import { Panel } from "@/components/ui/Panel";
 
-const CARD_WIDTH = 300; // doubled from 216
+const CARD_WIDTH = 380;
 const GAP = 18; // px, matches gap-4.5
 
 const CARDS = [
@@ -5128,17 +5218,18 @@ const CARDS = [
   id: 1,
   title: "Bug hunting",
   meta: "Practice · 15 min",
+  description: "Find production bugs from real systems.",
   from: "#FF6B4A",
   to: "#E0432A",
-  href: "/bug-hunting/checkout-timeout",
+  href: "/bug-hunting",
   icon: (
-    <svg viewBox="0 0 84 84" fill="none">
-      <circle cx="42" cy="42" r="40" fill="#fff"/>
-      <ellipse cx="42" cy="46" rx="14" ry="10" fill="#FF6B4A"/>
-      <circle cx="35" cy="42" r="3" fill="#26282F"/>
-      <circle cx="49" cy="42" r="3" fill="#26282F"/>
-      <path d="M28 34 Q22 26 16 30" stroke="#FF6B4A" strokeWidth="3" strokeLinecap="round" fill="none"/>
-      <path d="M56 34 Q62 26 68 30" stroke="#FF6B4A" strokeWidth="3" strokeLinecap="round" fill="none"/>
+    <svg viewBox="0 0 110 110" fill="none">
+      <circle cx="55" cy="55" r="52" fill="#fff"/>
+      <ellipse cx="55" cy="60" rx="18" ry="13" fill="#FF6B4A"/>
+      <circle cx="46" cy="55" r="4" fill="#26282F"/>
+      <circle cx="64" cy="55" r="4" fill="#26282F"/>
+      <path d="M37 45 Q29 34 21 39" stroke="#FF6B4A" strokeWidth="4" strokeLinecap="round" fill="none"/>
+      <path d="M73 45 Q81 34 89 39" stroke="#FF6B4A" strokeWidth="4" strokeLinecap="round" fill="none"/>
     </svg>
   ),
 },
@@ -5146,14 +5237,15 @@ const CARDS = [
     id: 2,
     title: "Review a PR",
     meta: "Practice · 30 min",
+    description: "Practice code review on real pull requests.",
     from: "#3E6BFF",
     to: "#213FCC",
     href: "#", // Disabled - route doesn't exist yet
     icon: (
-      <svg viewBox="0 0 84 84" fill="none">
-        <circle cx="42" cy="42" r="40" fill="#fff"/>
-        <rect x="26" y="24" width="32" height="36" rx="4" fill="#3E6BFF"/>
-        <path d="M32 44l6 6 12-14" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+      <svg viewBox="0 0 110 110" fill="none">
+        <circle cx="55" cy="55" r="52" fill="#fff"/>
+        <rect x="34" y="31" width="42" height="47" rx="5" fill="#3E6BFF"/>
+        <path d="M42 58l8 8 16-18" stroke="#fff" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
       </svg>
     ),
   },
@@ -5161,15 +5253,16 @@ const CARDS = [
     id: 3,
     title: "Read a transcript",
     meta: "Library · Full session",
+    description: "Study real interview conversations.",
     from: "#262832",
     to: "#121319",
     href: "/library/transcript", // exact match — the sample transcript page
     icon: (
-      <svg viewBox="0 0 84 84" fill="none">
-        <circle cx="42" cy="42" r="40" fill="#fff"/>
-        <path d="M26 30h32v6H26z" fill="#262832"/>
-        <path d="M26 42h24v5H26z" fill="#262832" opacity=".7"/>
-        <path d="M26 52h28v5H26z" fill="#262832" opacity=".45"/>
+      <svg viewBox="0 0 110 110" fill="none">
+        <circle cx="55" cy="55" r="52" fill="#fff"/>
+        <path d="M34 39h42v8H34z" fill="#262832"/>
+        <path d="M34 55h32v7H34z" fill="#262832" opacity=".7"/>
+        <path d="M34 69h38v7H34z" fill="#262832" opacity=".45"/>
       </svg>
     ),
   },
@@ -5177,15 +5270,16 @@ const CARDS = [
     id: 4,
     title: "Learn whiteboarding",
     meta: "Learn · Guided",
+    description: "Master system design whiteboarding.",
     from: "#00E0AB",
     to: "#00A87E",
     href: "/learn/whiteboard", // exact match
     icon: (
-      <svg viewBox="0 0 84 84" fill="none">
-        <circle cx="42" cy="42" r="40" fill="#fff"/>
-        <rect x="24" y="28" width="36" height="26" rx="3" fill="#00A87E"/>
-        <path d="M30 40h10M30 46h16" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"/>
-        <rect x="24" y="58" width="36" height="4" rx="2" fill="#00A87E" opacity=".4"/>
+      <svg viewBox="0 0 110 110" fill="none">
+        <circle cx="55" cy="55" r="52" fill="#fff"/>
+        <rect x="31" y="37" width="47" height="34" rx="4" fill="#00A87E"/>
+        <path d="M39 52h13M39 60h21" stroke="#fff" strokeWidth="3" strokeLinecap="round"/>
+        <rect x="31" y="76" width="47" height="5" rx="2.5" fill="#00A87E" opacity=".4"/>
       </svg>
     ),
   },
@@ -5193,15 +5287,16 @@ const CARDS = [
     id: 5,
     title: "Live interview with AI",
     meta: "Live · 45 min",
+    description: "Practice with an AI interviewer.",
     from: "#FFB930",
     to: "#E8940A",
     href: "/interview/setup", // exact match — the general setup flow
     icon: (
-      <svg viewBox="0 0 84 84" fill="none">
-        <circle cx="42" cy="42" r="40" fill="#fff"/>
-        <rect x="35" y="24" width="14" height="24" rx="7" fill="#E8940A"/>
-        <path d="M28 40a14 14 0 0028 0" stroke="#E8940A" strokeWidth="3" strokeLinecap="round" fill="none"/>
-        <line x1="42" y1="54" x2="42" y2="60" stroke="#E8940A" strokeWidth="3" strokeLinecap="round"/>
+      <svg viewBox="0 0 110 110" fill="none">
+        <circle cx="55" cy="55" r="52" fill="#fff"/>
+        <rect x="46" y="31" width="18" height="31" rx="9" fill="#E8940A"/>
+        <path d="M37 52a18 18 0 0036 0" stroke="#E8940A" strokeWidth="4" strokeLinecap="round" fill="none"/>
+        <line x1="55" y1="70" x2="55" y2="78" stroke="#E8940A" strokeWidth="4" strokeLinecap="round"/>
       </svg>
     ),
   },
@@ -5209,15 +5304,16 @@ const CARDS = [
     id: 6,
     title: "Deep dives",
     meta: "Learn · Topic-based",
+    description: "Deep dive into specific topics.",
     from: "#7A6BFF",
     to: "#4C3FD6",
     href: "/interview/setup?type=deep_dive", // matches InterviewTemplate slug "deep_dive"
     icon: (
-      <svg viewBox="0 0 84 84" fill="none">
-        <circle cx="42" cy="42" r="40" fill="#fff"/>
-        <circle cx="42" cy="42" r="6" fill="#4C3FD6"/>
-        <circle cx="42" cy="42" r="13" stroke="#4C3FD6" strokeWidth="2.5" fill="none" opacity=".55"/>
-        <circle cx="42" cy="42" r="20" stroke="#4C3FD6" strokeWidth="2.5" fill="none" opacity=".3"/>
+      <svg viewBox="0 0 110 110" fill="none">
+        <circle cx="55" cy="55" r="52" fill="#fff"/>
+        <circle cx="55" cy="55" r="8" fill="#4C3FD6"/>
+        <circle cx="55" cy="55" r="17" stroke="#4C3FD6" strokeWidth="3" fill="none" opacity=".55"/>
+        <circle cx="55" cy="55" r="26" stroke="#4C3FD6" strokeWidth="3" fill="none" opacity=".3"/>
       </svg>
     ),
   },
@@ -5225,15 +5321,16 @@ const CARDS = [
     id: 7,
     title: "Build it",
     meta: "Hands-on · Self-paced",
+    description: "Build real systems from scratch.",
     from: "#FF4D93",
     to: "#D62568",
     href: "#", // Disabled - route doesn't exist yet
     icon: (
-      <svg viewBox="0 0 84 84" fill="none">
-        <circle cx="42" cy="42" r="40" fill="#fff"/>
-        <rect x="27" y="46" width="12" height="12" fill="#D62568"/>
-        <rect x="39" y="34" width="12" height="24" fill="#FF4D93"/>
-        <rect x="51" y="24" width="12" height="34" fill="#D62568"/>
+      <svg viewBox="0 0 110 110" fill="none">
+        <circle cx="55" cy="55" r="52" fill="#fff"/>
+        <rect x="35" y="60" width="16" height="16" fill="#D62568"/>
+        <rect x="51" y="44" width="16" height="32" fill="#FF4D93"/>
+        <rect x="67" y="31" width="16" height="45" fill="#D62568"/>
       </svg>
     ),
   },
@@ -5254,7 +5351,7 @@ export default function LearnPage() {
 
   return (
     <div className="min-h-screen bg-[var(--paper)] py-12 px-6">
-      <Panel variant="default" className="max-w-[1080px] mx-auto p-[36px_40px_44px]">
+      <Panel variant="default" className="max-w-[1500px] mx-auto p-[36px_40px_44px]">
         {/* Top Navigation */}
         <div className="flex items-center justify-between mb-8.5 gap-6">
           <div className="heading-m font-semibold">
@@ -5293,15 +5390,20 @@ export default function LearnPage() {
               className="relative flex-none snap-start cursor-pointer overflow-visible transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:-translate-y-2 flex flex-col justify-end p-6"
               style={{
                 width: CARD_WIDTH,
-                height: 300,
+                height: 360,
                 borderRadius: "26px",
                 background: `linear-gradient(160deg, ${card.from}, ${card.to})`,
               }}
             >
-              <div className="absolute top-[-30px] left-1/2 -translate-x-1/2 w-[84px] h-[84px] animate-float">
+              <div className="absolute top-[-30px] left-1/2 -translate-x-1/2 w-[110px] h-[110px] animate-float">
                 {card.icon}
               </div>
-              <h3 className="text-white body-s font-semibold mb-1 text-lg">{card.title}</h3>
+              <h3 className="text-white body-s font-semibold mb-1 text-2xl">{card.title}</h3>
+              {card.description && (
+                <p className="text-white/90 text-sm leading-relaxed mb-2">
+                  {card.description}
+                </p>
+              )}
               <div className="flex items-center gap-1.5 caption text-white/75 font-medium">
                 <span className="w-1 h-1 rounded-full bg-white/60" />
                 {card.meta}
@@ -5595,19 +5697,34 @@ export default function ProblemsPage({ userId }: { userId: string | null }) {
           error={error}
           onRetry={refetch}
           onSelect={async (problemId) => {
-            const res = await fetch("/api/interviews/start", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                type: filters.type === "all" ? "hld" : filters.type,
-                difficulty: filters.difficulty === "ALL" ? "MEDIUM" : filters.difficulty,
-                duration: 45,
-                company: "General",
-                problemId,
-              }),
-            });
-            const { id } = await res.json();
-            router.push(`/interview/live/${id}`);
+            try {
+              const res = await fetch("/api/interviews/start", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  type: filters.type === "all" ? "hld" : filters.type,
+                  difficulty: filters.difficulty === "ALL" ? "MEDIUM" : filters.difficulty,
+                  duration: 45,
+                  company: "General",
+                  problemId,
+                }),
+              });
+
+              const data = await res.json();
+
+              if (!res.ok) {
+                alert(`Failed to start interview: ${data.error}`);
+                return;
+              }
+
+              if (data.id) {
+                router.push(`/interview/live/${data.id}`);
+              } else {
+                console.error("No ID returned from API", data);
+              }
+            } catch (err) {
+              console.error("Network error starting interview:", err);
+            }
           }}
         />
       </Panel>
@@ -5629,7 +5746,7 @@ export default function TranscriptListPage() {
 
   return (
     <div className="min-h-screen bg-[var(--paper)]">
-      <div className="max-w-[1080px] mx-auto p-[36px_24px_90px]">
+      <div className="max-w-[1440px] mx-auto p-[36px_24px_90px]">
         {/* Breadcrumb */}
         <Breadcrumb
           items={[
@@ -5640,10 +5757,11 @@ export default function TranscriptListPage() {
           className="mb-8"
         />
 
+        {/* Header */}
         <div className="mb-10">
-          <h1 className="heading-l font-bold text-[var(--ink)]">Interview Transcripts</h1>
+          <h1 className="heading-l font-bold text-[var(--ink)]">Browse Transcripts</h1>
           <p className="body-m text-[var(--ink-400)] mt-2">
-            Review past high-performing sessions to understand what "Good" looks like.
+            Study real interview sessions from top companies. Learn how experienced engineers gather requirements, communicate trade-offs, and design scalable systems.
           </p>
         </div>
 
@@ -7075,149 +7193,37 @@ export async function POST(request: Request) {
 FILE: ./src/app/api/interviews/start/route.ts
 ================================================
 import { NextResponse } from "next/server";
-import { Difficulty, InterviewMode } from "@prisma/client";
 
-import { prisma } from "@/shared/prisma/client";
-import { ensureGuestUser } from "@/modules/auth/getCurrentUserId";
-import { createInterview } from "@/modules/interview/services/interview/InterviewFactory";
-import { InterviewRepository } from "@/modules/interview/repositories/InterviewRepository";
-import { TranscriptService } from "@/modules/interview/services/TranscriptService";
-import { pickPersona } from "@/modules/interview/reverse/CandidatePersonas";
-
-const difficultyMap: Record<string, Difficulty> = {
-  EASY: Difficulty.EASY,
-  MEDIUM: Difficulty.MEDIUM,
-  HARD: Difficulty.HARD,
-};
+import { InterviewService, StartInterviewSchema } from "@/modules/interview/services/InterviewService";
+import logger from "@/shared/logger/logger";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    
+    // Validate input with Zod schema
+    const validatedInput = StartInterviewSchema.parse(body);
 
-    const { type, difficulty, duration, company, problemId, mode, topic } = body;
+    const interviewService = new InterviewService();
+    const interviewId = await interviewService.startInterview(validatedInput);
 
-    if (!type || !difficulty || !duration || !company || !problemId) {
-      return NextResponse.json(
-        { error: "Missing required fields." },
-        { status: 400 }
-      );
-    }
-
-    const template = await prisma.interviewTemplate.findUnique({
-      where: { slug: type },
-    });
-
-    if (!template) {
-      return NextResponse.json(
-        { error: "Invalid interview type." },
-        { status: 400 }
-      );
-    }
-
-    const interviewDifficulty = difficultyMap[difficulty];
-
-    if (!interviewDifficulty) {
-      return NextResponse.json(
-        { error: "Invalid difficulty." },
-        { status: 400 }
-      );
-    }
-
-    const problem = await prisma.problem.findUnique({
-      where: { id: problemId },
-    });
-
-    if (!problem) {
-      return NextResponse.json(
-        { error: "Problem not found." },
-        { status: 404 }
-      );
-    }
-
-    const userId = await ensureGuestUser();
-
-    // Fix: Idempotency check to prevent duplicate sessions
-    const existingInterview = await prisma.interview.findFirst({
-      where: {
-        userId,
-        problemId: problem.id,
-        status: { not: "COMPLETED" },
-      },
-    });
-
-    if (existingInterview) {
-      return NextResponse.json({ id: existingInterview.id }, { status: 200 });
-    }
-
-    const interviewMode =
-      mode === "REVERSE" ? InterviewMode.REVERSE : InterviewMode.CANDIDATE;
-
-    const interviewData = createInterview({
-      templateId: template.id,
-      difficulty: interviewDifficulty,
-      duration,
-      company,
-      problemId: problem.id,
-      mode: interviewMode,
-      topic,
-    });
-
-    const persona =
-      interviewMode === InterviewMode.REVERSE
-        ? pickPersona(interviewDifficulty)
-        : null;
-
-    const repository = new InterviewRepository();
-
-    // Fix: Use transaction to ensure atomicity
-    const savedInterview = await prisma.$transaction(async (tx) => {
-      const interview = await tx.interview.create({
-        data: {
-          difficulty: interviewData.difficulty,
-          duration: interviewData.duration,
-          company: interviewData.company,
-          status: interviewData.status,
-          currentPhase: interviewData.currentPhase,
-          summary: interviewData.summary,
-          promptVersion: interviewData.promptVersion,
-          mode: interviewData.mode,
-          candidatePersona: persona as any,
-          user: { connect: { id: userId } },
-          template: { connect: { id: template.id } },
-          problem: { connect: { id: problem.id } },
-        },
-      });
-
-      await tx.problem.update({
-        where: { id: problem.id },
-        data: { interviewCount: { increment: 1 } },
-      });
-
-      return interview;
-    });
-
-    const transcriptService = new TranscriptService();
-
-    const greeting = interviewMode === InterviewMode.REVERSE
-      ? `Hi, I'm ${persona!.name}. Ready when you are — go ahead and start the interview.`
-      : `Welcome! Today we'll design "${problem.title}". Start by asking clarifying questions before proposing your design.`;
-
-    await transcriptService.addAssistantMessage(
-      savedInterview.id,
-      greeting
-    );
-
-    return NextResponse.json({ id: savedInterview.id }, { status: 201 });
+    return NextResponse.json({ id: interviewId }, { status: 201 });
   } catch (error) {
-    console.error(error);
+    logger.error({
+      error,
+      message: error instanceof Error ? error.message : "Unknown error",
+    }, "Failed to start interview");
 
+    if (error instanceof Error && error.name === "ZodError") {
+      return NextResponse.json(
+        { error: "Invalid request body" },
+        { status: 400 }
+      );
+    }
+
+    // Never expose internal error details to client
     return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Internal server error",
-      },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }
@@ -7869,6 +7875,81 @@ export default async function Page({ params }: { params: Promise<{ scenarioId: s
     </div>
   );
 }
+================================================
+FILE: ./src/app/bug-hunting/page.tsx
+================================================
+import { Panel } from "@/components/ui/Panel";
+import type { BugScenario } from "@/features/bug-hunting/types/Scenario";
+import checkoutTimeout from "@/features/bug-hunting/data/checkout-timeout.json";
+
+// Swap this map for a real DB/API lookup once bug-hunting scenarios are
+// modeled in Prisma (e.g. as PracticeActivityType.BUG_HUNT content).
+const SCENARIOS: BugScenario[] = [
+  checkoutTimeout as BugScenario,
+];
+
+export default function BugHuntingPage() {
+  return (
+    <div className="min-h-screen bg-[var(--paper)] py-12 px-6">
+      <Panel variant="default" className="max-w-[1500px] mx-auto p-[36px_40px_44px]">
+        {/* Header */}
+        <div className="mb-12">
+          <h1 className="text-4xl font-bold text-[var(--ink)] mb-3">
+            Bug Hunting
+          </h1>
+          <p className="text-lg text-[var(--ink-400)]">
+            Find production bugs from real backend systems.
+          </p>
+        </div>
+
+        {/* Scenarios Grid */}
+        <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
+          {SCENARIOS.map((scenario) => (
+            <a
+              key={scenario.id}
+              href={`/bug-hunting/${scenario.id}`}
+              className="group block bg-white border border-gray-200 rounded-2xl p-6 hover:border-[var(--mint)] hover:shadow-lg transition-all duration-300"
+              style={{ minHeight: "240px" }}
+            >
+              <div className="flex flex-col h-full">
+                {/* Title */}
+                <h3 className="text-xl font-bold text-[var(--ink)] mb-2 group-hover:text-[var(--mint)] transition-colors">
+                  {scenario.title}
+                </h3>
+
+                {/* Meta tags */}
+                <div className="flex flex-wrap gap-2 mb-4">
+                  <span className="px-2.5 py-1 text-xs font-medium bg-blue-50 text-blue-700 rounded-full">
+                    {scenario.service}
+                  </span>
+                  <span className="px-2.5 py-1 text-xs font-medium bg-orange-50 text-orange-700 rounded-full">
+                    {scenario.severity}
+                  </span>
+                  <span className="px-2.5 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
+                    {Math.floor(scenario.timerSeconds / 60)} min
+                  </span>
+                </div>
+
+                {/* Description */}
+                <p className="text-sm text-[var(--ink-400)] leading-relaxed mb-6 flex-1">
+                  {scenario.symptom}
+                </p>
+
+                {/* CTA */}
+                <div className="flex items-center justify-end">
+                  <span className="text-sm font-semibold text-[var(--mint)] group-hover:translate-x-1 transition-transform">
+                    Start →
+                  </span>
+                </div>
+              </div>
+            </a>
+          ))}
+        </div>
+      </Panel>
+    </div>
+  );
+}
+
 ================================================
 FILE: ./src/app/globals.css
 ================================================
@@ -12451,12 +12532,35 @@ FILE: ./src/features/library/components/transcript/TakeawayCard.tsx
 "use client";
 
 import Card from "@/components/ui/Card";
+import { type ContentBlock } from "../../types/transcript";
 
 type Props = {
-  content: string;
+  content: ContentBlock[] | string;
 };
 
 export default function TakeawayCard({ content }: Props) {
+  function renderContent(contentBlock: ContentBlock | string): React.ReactNode {
+    if (typeof contentBlock === "string") {
+      return <span>{contentBlock}</span>;
+    }
+
+    if (contentBlock.type === "text") {
+      return <span>{contentBlock.value}</span>;
+    }
+
+    throw new Error(`Unknown content block type: ${contentBlock.type}`);
+  }
+
+  function renderContentBlocks(blocks: ContentBlock[] | string): React.ReactNode {
+    if (typeof blocks === "string") {
+      return <span key="text">{blocks}</span>;
+    }
+
+    return blocks.map((block, index) => (
+      <span key={index}>{renderContent(block)}</span>
+    ));
+  }
+
   return (
     <Card className="border-blue-500/20 bg-blue-500/5 p-5">
       <div className="mb-2 text-xs font-mono uppercase tracking-wider text-blue-400">
@@ -12464,7 +12568,7 @@ export default function TakeawayCard({ content }: Props) {
       </div>
 
       <p className="text-sm leading-7">
-        {content}
+        {renderContentBlocks(content)}
       </p>
     </Card>
   );
@@ -12580,7 +12684,8 @@ export default function DialogueBubble({
       );
     }
 
-    return <span>{String(contentBlock)}</span>;
+    // This should never happen if types are correct, but provides runtime safety
+    throw new Error(`Unknown content block type`);
   }
 
   function renderContentBlocks(blocks: ContentBlock[] | string): React.ReactNode {
@@ -13057,36 +13162,99 @@ FILE: ./src/features/library/components/TranscriptCatalog.tsx
 ================================================
 "use client";
 
-import {
-  getGroupedTranscripts,
-  TRANSCRIPT_CATEGORIES,
-} from "@/content/transcripts";
-
-import TranscriptCategory from "./TranscriptCategory";
+import { useState, useMemo } from "react";
+import { Search } from "@/components/ui/Search";
+import { getAllTranscripts, getCategories, getCategoryLabel } from "@/content/transcripts";
+import type { TranscriptCategory } from "@/content/transcripts/types";
+import TranscriptCard from "./TranscriptCard";
 import EmptyState from "./EmptyState";
 
 export default function TranscriptCatalog() {
-  const grouped = getGroupedTranscripts();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string | "all">("all");
 
-  const hasTranscripts = Object.values(grouped).some(
-    (items) => items.length > 0
-  );
+  const allTranscripts = getAllTranscripts();
 
-  if (!hasTranscripts) {
+  const filteredTranscripts = useMemo(() => {
+    return allTranscripts.filter((transcript) => {
+      const matchesCategory = selectedCategory === "all" || transcript.summary.category === selectedCategory;
+      const matchesSearch = searchQuery === "" || 
+        transcript.summary.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        transcript.summary.company?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        transcript.summary.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        transcript.summary.description.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      return matchesCategory && matchesSearch;
+    });
+  }, [searchQuery, selectedCategory, allTranscripts]);
+
+  const categories = getCategories();
+
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = {
+      all: allTranscripts.length,
+    };
+    categories.forEach(cat => {
+      counts[cat] = allTranscripts.filter(t => t.summary.category === cat).length;
+    });
+    return counts as Record<string | "all", number>;
+  }, [allTranscripts, categories]);
+
+  if (allTranscripts.length === 0) {
     return (
       <EmptyState message="No transcripts available yet." />
     );
   }
 
   return (
-    <div className="space-y-10">
-      {TRANSCRIPT_CATEGORIES.map((category) => (
-        <TranscriptCategory
-          key={category.id}
-          title={category.label}
-          transcripts={grouped[category.id]}
-        />
-      ))}
+    <div className="space-y-8">
+      {/* Search Bar */}
+      <Search
+        placeholder="Search by title, company, topic..."
+        className="w-full max-w-md"
+        onSearch={setSearchQuery}
+      />
+
+      {/* Category Tabs */}
+      <div className="flex flex-wrap gap-2 border-b border-border pb-4">
+        <button
+          onClick={() => setSelectedCategory("all")}
+          className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+            selectedCategory === "all"
+              ? "bg-[var(--ink)] text-white"
+              : "bg-muted text-muted-foreground hover:bg-muted/80"
+          }`}
+        >
+          All ({categoryCounts.all})
+        </button>
+        {categories.map((category) => (
+          <button
+            key={category}
+            onClick={() => setSelectedCategory(category)}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+              selectedCategory === category
+                ? "bg-[var(--ink)] text-white"
+                : "bg-muted text-muted-foreground hover:bg-muted/80"
+            }`}
+          >
+            {getCategoryLabel(category)} ({categoryCounts[category]})
+          </button>
+        ))}
+      </div>
+
+      {/* Transcript Grid */}
+      {filteredTranscripts.length === 0 ? (
+        <EmptyState message="No transcripts match your search." />
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {filteredTranscripts.map((transcript) => (
+            <TranscriptCard
+              key={transcript.summary.slug}
+              transcript={transcript}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -13142,63 +13310,76 @@ export default function TranscriptCard({ transcript }: Props) {
   return (
     <Card
       onClick={() => router.push(`/library/transcript/${summary.slug}`)}
-      className="cursor-pointer p-5 transition-all hover:-translate-y-0.5 hover:border-foreground/30 hover:shadow-md"
+      className="cursor-pointer p-6 transition-all hover:-translate-y-0.5 hover:border-foreground/30 hover:shadow-md"
     >
-      <div className="flex items-start justify-between gap-6">
-        <div className="min-w-0 flex-1 space-y-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <span
-              className={`rounded border px-2 py-1 font-mono text-[10px] uppercase tracking-wider ${
-                CATEGORY_COLORS[summary.category]
-              }`}
-            >
-              {summary.category}
+      <div className="flex flex-col h-full">
+        {/* Meta row */}
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          {summary.company && (
+            <span className="font-semibold text-sm text-foreground">
+              {summary.company}
             </span>
-
-            <span className="rounded border border-border bg-muted px-2 py-1 font-mono text-[10px] uppercase">
-              {summary.difficulty}
-            </span>
-
-            <span className="rounded border border-border bg-muted px-2 py-1 font-mono text-[10px]">
-              {summary.duration} min
-            </span>
-
-            {summary.company && (
-              <span className="rounded border border-border bg-muted px-2 py-1 font-mono text-[10px]">
-                {summary.company}
-              </span>
-            )}
-          </div>
-
-          <div>
-            <h3 className="text-lg font-semibold text-foreground">
-              {summary.title}
-            </h3>
-
-            <p className="mt-2 text-sm text-muted-foreground">
-              {summary.description}
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            {summary.tags.map((tag) => (
-              <span
-                key={tag}
-                className="rounded-full bg-muted px-3 py-1 text-xs"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
+          )}
+          <span className="text-muted-foreground">•</span>
+          <span className="rounded border border-border bg-muted px-2 py-1 font-mono text-[10px] uppercase">
+            {summary.difficulty}
+          </span>
+          <span className="text-muted-foreground">•</span>
+          <span className="rounded border border-border bg-muted px-2 py-1 font-mono text-[10px]">
+            {summary.duration} min
+          </span>
         </div>
 
-        <div className="flex shrink-0 items-center">
-          <span className="text-xl text-muted-foreground">→</span>
+        {/* Title */}
+        <h3 className="text-xl font-semibold text-foreground mb-2">
+          {summary.title}
+        </h3>
+
+        {/* Description */}
+        <p className="text-sm text-muted-foreground mb-4 flex-1">
+          {summary.description}
+        </p>
+
+        {/* Topics/Tags */}
+        <div className="flex flex-wrap gap-2">
+          {summary.tags.slice(0, 5).map((tag) => (
+            <span
+              key={tag}
+              className="rounded-full bg-muted/50 px-3 py-1 text-xs font-medium text-muted-foreground"
+            >
+              {tag}
+            </span>
+          ))}
+          {summary.tags.length > 5 && (
+            <span className="rounded-full bg-muted/50 px-3 py-1 text-xs font-medium text-muted-foreground">
+              +{summary.tags.length - 5}
+            </span>
+          )}
         </div>
       </div>
     </Card>
   );
 }
+================================================
+FILE: ./src/features/library/data/generated.ts
+================================================
+// AUTO-GENERATED — do not edit by hand. Run `npm run generate:transcripts`.
+import transcript0 from "@/content/transcripts/hld/amazon-lockers";
+import transcript1 from "@/content/transcripts/hld/autocomplete";
+import transcript2 from "@/content/transcripts/hld/config-sync";
+import transcript3 from "@/content/transcripts/hld/payment-system";
+import transcript4 from "@/content/transcripts/lld/read-receipts";
+import transcript5 from "@/content/transcripts/lld/vending-machine";
+
+export const TRANSCRIPTS = Object.freeze([
+  transcript0,
+  transcript1,
+  transcript2,
+  transcript3,
+  transcript4,
+  transcript5,
+]);
+
 ================================================
 FILE: ./src/features/dashboard/components/NextRecommendedInterview.tsx
 ================================================
@@ -15772,7 +15953,7 @@ import { useRouter } from "next/navigation";
 import { useInvestigation } from "../hooks/useInvestigation";
 import type { BugScenario } from "../types/Scenario";
 
-import { Header } from "@/components/layout/Header";
+import Header from "./Header/Header";
 import ReportSidebar from "./Sidebar/ReportSidebar";
 import TabBar from "./shared/Tabs";
 import LogsPanel from "./Tabs/LogsPanel";
@@ -16042,6 +16223,2852 @@ FILE: ./src/features/bug-hunting/data/checkout-timeout.json
     { "version": "v2.3.9", "status": "ok", "message": "Bump payment SDK to 4.2.1", "time": "Last Friday, 11:20 AM" }
   ]
 }
+================================================
+FILE: ./src/content/transcripts/lld/read-receipts.ts
+================================================
+import { Difficulty } from "@prisma/client";
+
+import { TranscriptEntry } from "../types";
+import { TranscriptData } from "@/features/library/types/transcript";
+
+const transcript: TranscriptData = {
+  metadata: {
+    title: "Design WhatsApp Read Receipts (Tick Status)",
+    difficulty: Difficulty.HARD,
+    duration: 45,
+    template: "Low Level Design",
+    category: "LLD",
+  },
+
+  messages: [
+    {
+      id: "1",
+      role: "interviewer",
+      elapsedSeconds: 0,
+      content: [
+        {
+          type: "text",
+          value:
+            "Let's do a low-level design problem. Assume the core messaging framework already exists, and there's already an observer-style event pipeline that fires events like message sent, delivered, and read. Your job is the component that turns those events into the tick status a user actually sees — single gray, double gray, double blue.",
+        },
+      ],
+    },
+
+    {
+      id: "2",
+      role: "candidate",
+      elapsedSeconds: 18,
+      content: [
+        {
+          type: "text",
+          value:
+            "Okay. Since I'm not building the event pipeline, can I assume I just receive events like 'user X read message Y' and my job is purely to maintain and expose status from there?",
+        },
+      ],
+    },
+
+    {
+      id: "3",
+      role: "interviewer",
+      elapsedSeconds: 38,
+      content: [
+        { type: "text", value: "Exactly. You consume those events and answer 'what tick does this message show right now.'" },
+      ],
+    },
+
+    {
+      id: "4",
+      role: "candidate",
+      elapsedSeconds: 60,
+      content: [
+        {
+          type: "text",
+          value:
+            "And this needs to work the same for a direct chat and a group with, say, two hundred people?",
+        },
+      ],
+    },
+
+    {
+      id: "5",
+      role: "interviewer",
+      elapsedSeconds: 80,
+      content: [
+        { type: "text", value: "Yes, both. Group behavior is where most of the interesting problems live." },
+      ],
+    },
+
+    {
+      id: "6",
+      role: "candidate",
+      elapsedSeconds: 105,
+      content: [
+        {
+          type: "text",
+          value:
+            "Let me start with the direct case since it's simpler, and use it to sanity-check the model before I complicate it for groups.",
+        },
+      ],
+    },
+
+    {
+      id: "7",
+      role: "interviewer",
+      elapsedSeconds: 120,
+      content: [{ type: "text", value: "Go ahead." }],
+    },
+
+    {
+      id: "8",
+      role: "candidate",
+      elapsedSeconds: 145,
+      content: [
+        {
+          type: "text",
+          value:
+            "A message has a status — sent, delivered, read — and in a direct chat there's exactly one other participant, so the moment their read event arrives, the message flips straight to read, double blue. I'd model that as an enum on the message, updated by whichever event handler receives the read event.",
+        },
+      ],
+    },
+
+    {
+      id: "9",
+      role: "interviewer",
+      elapsedSeconds: 172,
+      content: [
+        {
+          type: "text",
+          value:
+            "Now the group case. When does a message actually earn double blue there?",
+        },
+      ],
+    },
+
+    {
+      id: "10",
+      role: "candidate",
+      elapsedSeconds: 198,
+      content: [
+        {
+          type: "text",
+          value:
+            "Only once every participant has read it — not just one person. So a single enum doesn't work anymore, I need to know who specifically has read it. Simplest thing: each message keeps a set of user IDs who've read it, and the tick is double blue only when that set contains every participant in the conversation.",
+        },
+      ],
+    },
+
+    {
+      id: "11",
+      role: "interviewer",
+      elapsedSeconds: 228,
+      content: [
+        {
+          type: "text",
+          value:
+            "Fine so far. Now, different message types might need slightly different tick rules down the line — maybe disappearing messages, maybe broadcast lists. How are you structuring that so it's easy to extend?",
+        },
+      ],
+    },
+
+    {
+      id: "12",
+      role: "candidate",
+      elapsedSeconds: 258,
+      content: [
+        {
+          type: "text",
+          value:
+            "My first thought is to wrap each message in a decorator that adds the tick-computation behavior on top of the base message — that way I could layer on different tick rules without changing the message class itself.",
+        },
+        {
+          id: "highlight-decorator-overreach",
+          type: "highlight",
+          status: "missed",
+          value: "",
+          explanation:
+            "Decorator earns its place when behavior needs to be composed and layered dynamically at runtime. Here the tick rule is determined once, by conversation type, and never changes for a given message — that's a case for picking the right strategy up front, not wrapping and unwrapping behavior.",
+        },
+      ],
+    },
+
+    {
+      id: "13",
+      role: "interviewer",
+      elapsedSeconds: 288,
+      content: [
+        {
+          type: "text",
+          value:
+            "Does the tick rule for a given message ever change after it's sent? Do you ever need to dynamically add or remove a layer of behavior at runtime?",
+        },
+      ],
+    },
+
+    {
+      id: "14",
+      role: "candidate",
+      elapsedSeconds: 315,
+      content: [
+        {
+          type: "text",
+          value:
+            "No — actually, no. Once a message is sent into a direct chat or a group, that's fixed for its whole lifetime. There's no dynamic wrapping and unwrapping happening. Decorator's solving a problem I don't have.",
+        },
+      ],
+    },
+
+    {
+      id: "15",
+      role: "interviewer",
+      elapsedSeconds: 340,
+      content: [{ type: "text", value: "So what's a better fit?" }],
+    },
+
+    {
+      id: "16",
+      role: "candidate",
+      elapsedSeconds: 368,
+      content: [
+        { type: "text", value: "I'd rather just pick " },
+        {
+          id: "highlight-strategy-justified",
+          type: "highlight",
+          status: "strong",
+          value: "one tick-rule implementation per conversation type",
+          explanation:
+            "Justifies the pattern by what actually varies — behavior differs by a fixed, known-at-creation-time category (conversation type), which is exactly the case a simple strategy interface fits, without the runtime composition overhead decorator implies.",
+        },
+        {
+          type: "text",
+          value:
+            " — a small interface with something like isFullyRead(message, context), and a direct-chat implementation and a group implementation behind it. It's chosen once, based on the conversation's type, and never changes. Simpler to read, and I'm not paying for flexibility I don't need.",
+        },
+      ],
+    },
+
+    {
+      id: "17",
+      role: "interviewer",
+      elapsedSeconds: 400,
+      content: [
+        {
+          type: "text",
+          value:
+            "Good. Now, where does the 'has everyone read this' check actually live? Show me the class that owns it.",
+        },
+      ],
+    },
+
+    {
+      id: "18",
+      role: "candidate",
+      elapsedSeconds: 428,
+      content: [
+        {
+          type: "text",
+          value:
+            "My instinct is to just put a method directly on the Message class — something like message.computeStatus() that looks at its own readBy set against the conversation's participant list.",
+        },
+      ],
+    },
+
+    {
+      id: "19",
+      role: "interviewer",
+      elapsedSeconds: 452,
+      content: [
+        {
+          type: "text",
+          value:
+            "Group membership changes — people get added and removed. Where does the current participant list live, relative to that method?",
+        },
+      ],
+    },
+
+    {
+      id: "20",
+      role: "candidate",
+      elapsedSeconds: 480,
+      content: [
+        {
+          type: "text",
+          value:
+            "It'd have to reach out to the conversation object to get the live roster, which means my message entity — supposedly just data — now depends on looking up mutable state that lives somewhere else entirely, and possibly changes after the message was even sent.",
+        },
+      ],
+    },
+
+    {
+      id: "21",
+      role: "interviewer",
+      elapsedSeconds: 508,
+      content: [{ type: "text", value: "Is that a problem?" }],
+    },
+
+    {
+      id: "22",
+      role: "candidate",
+      elapsedSeconds: 535,
+      content: [
+        {
+          type: "text",
+          value:
+            "I think so — I'm mixing a plain data entity with logic that needs external, mutable context. It also raises a question I hadn't considered: if someone joins the group after a message was already sent, should that new person's lack of a read receipt drag an already-read message back down to not-fully-read?",
+        },
+      ],
+    },
+
+    {
+      id: "23",
+      role: "interviewer",
+      elapsedSeconds: 562,
+      content: [{ type: "text", value: "What's your answer?" }],
+    },
+
+    {
+      id: "24",
+      role: "candidate",
+      elapsedSeconds: 590,
+      content: [
+        {
+          type: "text",
+          value:
+            "I don't think it should — a message's tick status should only ever depend on the people who were actually in the group when it was sent. So I'd snapshot the participant list onto the message itself at send time, and keep the read-computation logic in a separate resolver class that takes the message and that snapshot, not the live, mutable conversation object. That keeps the entity as plain data and the business rule as its own thing.",
+        },
+      ],
+    },
+
+    {
+      id: "25",
+      role: "interviewer",
+      elapsedSeconds: 622,
+      content: [
+        {
+          type: "text",
+          value:
+            "Good. Now let's build up your basic class structure a bit further, and then I want to ask something about it.",
+        },
+      ],
+    },
+
+    {
+      id: "26",
+      role: "candidate",
+      elapsedSeconds: 650,
+      content: [
+        {
+          type: "text",
+          value:
+            "Sure — so, Message holds id, conversationId, senderId, and the participant snapshot at send time. Separately, a ReadReceipt tracks conversationId, userId, and which messages that user's read. And a resolver, keyed by conversation type, decides whether a given message counts as fully read given the receipts that exist so far.",
+        },
+      ],
+    },
+
+    {
+      id: "27",
+      role: "interviewer",
+      elapsedSeconds: 682,
+      content: [
+        {
+          type: "text",
+          value:
+            "Okay. Now — what happens if two different threads call your 'mark as read' method for the same message at the exact same time?",
+        },
+      ],
+    },
+
+    {
+      id: "28",
+      role: "candidate",
+      elapsedSeconds: 710,
+      content: [
+        {
+          type: "text",
+          value:
+            "That could happen — same user reading from two devices at once, or two read events for the same message just landing back to back. If I'm mutating a shared readBy set without protection, I could lose an update, or get a set in a half-updated state depending on the underlying collection.",
+        },
+      ],
+    },
+
+    {
+      id: "29",
+      role: "interviewer",
+      elapsedSeconds: 735,
+      content: [{ type: "text", value: "How do you fix that?" }],
+    },
+
+    {
+      id: "30",
+      role: "candidate",
+      elapsedSeconds: 762,
+      content: [
+        {
+          type: "text",
+          value:
+            "Simplest thing — synchronize the whole markRead method, so only one thread can touch it at a time.",
+        },
+        {
+          id: "highlight-coarse-lock",
+          type: "highlight",
+          status: "missed",
+          value: "",
+          explanation:
+            "A single lock around the whole method serializes read events for every message across the entire service, not just the one message being updated — under group fan-out with hundreds of simultaneous read events, that becomes a throughput bottleneck for something that only needs to be safe per-message.",
+        },
+      ],
+    },
+
+    {
+      id: "31",
+      role: "interviewer",
+      elapsedSeconds: 792,
+      content: [
+        {
+          type: "text",
+          value:
+            "That method probably gets called constantly across every message in every conversation. What does one global lock do to all of that traffic?",
+        },
+      ],
+    },
+
+    {
+      id: "32",
+      role: "candidate",
+      elapsedSeconds: 818,
+      content: [
+        {
+          type: "text",
+          value:
+            "Right — it serializes reads for messages that have nothing to do with each other, just because they happen to share one lock. I only actually need safety per message, not across the whole service.",
+        },
+      ],
+    },
+
+    {
+      id: "33",
+      role: "interviewer",
+      elapsedSeconds: 842,
+      content: [{ type: "text", value: "So how do you scope it down?" }],
+    },
+
+    {
+      id: "34",
+      role: "candidate",
+      elapsedSeconds: 870,
+      content: [
+        {
+          type: "text",
+          value: "I'd keep the readBy set as a " },
+        {
+          id: "highlight-fine-grained-concurrency",
+          type: "highlight",
+          status: "strong",
+          value: "concurrent, thread-safe collection keyed per message",
+          explanation:
+            "Correctly narrows the synchronization boundary — a concurrent set (or a ConcurrentHashMap keyed by messageId) makes each message's own state safe to mutate independently, so unrelated messages never contend with each other.",
+        },
+        {
+          type: "text",
+          value:
+            " — something like a ConcurrentHashMap from messageId to a thread-safe set of user IDs. Adding a reader becomes an atomic operation on that specific message's set, and two unrelated messages never block each other at all.",
+        },
+      ],
+    },
+
+    {
+      id: "35",
+      role: "interviewer",
+      elapsedSeconds: 902,
+      content: [
+        {
+          type: "text",
+          value:
+            "Good. Now — a follow-up that trips a lot of people up. A user goes offline for two days, comes back online, and opens the app to five hundred unread messages across several chats, all at once. What does that do to your system if you're handling this the way you've described?",
+        },
+      ],
+    },
+
+    {
+      id: "36",
+      role: "candidate",
+      elapsedSeconds: 935,
+      content: [
+        {
+          type: "text",
+          value:
+            "If the client fires one read event per message, that's five hundred separate events landing at nearly the same instant, each one touching its own message's concurrent set — which avoids the contention problem, but it's still five hundred individual writes and five hundred recomputations of tick status, for something that's conceptually one action: 'I've read up to here.'",
+        },
+      ],
+    },
+
+    {
+      id: "37",
+      role: "interviewer",
+      elapsedSeconds: 965,
+      content: [{ type: "text", value: "So how would you model it instead?" }],
+    },
+
+    {
+      id: "38",
+      role: "candidate",
+      elapsedSeconds: 995,
+      content: [
+        {
+          type: "text",
+          value:
+            "What if, instead of a set of message IDs a user has read, I track a single number per user per conversation — the sequence number of the last message they've read? A message is read by that user if its own sequence number is less than or equal to that watermark. Catching up on five hundred messages becomes one watermark update, not five hundred.",
+        },
+      ],
+    },
+
+    {
+      id: "39",
+      role: "interviewer",
+      elapsedSeconds: 1028,
+      content: [
+        {
+          type: "text",
+          value: "Does that assumption always hold — that reading message five hundred means you've read everything before it?",
+        },
+      ],
+    },
+
+    {
+      id: "40",
+      role: "candidate",
+      elapsedSeconds: 1058,
+      content: [
+        {
+          type: "text",
+          value:
+            "It's an assumption, not a guarantee — someone could theoretically jump straight to the newest message without scrolling through the rest. But that matches how the client actually reports read state in practice, marking everything visible as read as you scroll past it, so I think it's a reasonable simplification here rather than something I'm hiding.",
+        },
+      ],
+    },
+
+    {
+      id: "41",
+      role: "interviewer",
+      elapsedSeconds: 1088,
+      content: [
+        {
+          type: "text",
+          value:
+            "Let's use that. Now, group read status — two hundred participants. How do you tell whether a message is fully read without checking two hundred people's watermarks on every single render?",
+        },
+      ],
+    },
+
+    {
+      id: "42",
+      role: "candidate",
+      elapsedSeconds: 1120,
+      content: [
+        {
+          type: "text",
+          value:
+            "If I did that naively, every time a client needs to know a message's tick, I'd query up to two hundred watermark rows and compare each one against the message's sequence number. For a chat screen showing dozens of messages at once, that's a lot of repeated, mostly redundant reads.",
+        },
+      ],
+    },
+
+    {
+      id: "43",
+      role: "interviewer",
+      elapsedSeconds: 1150,
+      content: [{ type: "text", value: "What would you cache instead?" }],
+    },
+
+    {
+      id: "44",
+      role: "candidate",
+      elapsedSeconds: 1180,
+      content: [
+        {
+          type: "text",
+          value: "What if the group itself kept a single cached value — the " },
+        {
+          id: "highlight-group-min-watermark",
+          type: "highlight",
+          status: "strong",
+          value: "minimum watermark across all current participants",
+          explanation:
+            "Denormalizes the expensive part of the computation — instead of scanning every participant's watermark per render, a single cached minimum lets any message's read status be answered with one comparison, updated incrementally rather than recomputed from scratch on every read.",
+        },
+        {
+          type: "text",
+          value:
+            "? A message is fully read exactly when its sequence number is less than or equal to that one cached minimum. Any single message's tick becomes one comparison against one number, not a scan across every participant.",
+        },
+      ],
+    },
+
+    {
+      id: "45",
+      role: "interviewer",
+      elapsedSeconds: 1215,
+      content: [
+        {
+          type: "text",
+          value: "How does that cached minimum get updated when one participant's watermark advances?",
+        },
+      ],
+    },
+
+    {
+      id: "46",
+      role: "candidate",
+      elapsedSeconds: 1245,
+      content: [
+        {
+          type: "text",
+          value:
+            "Most of the time, cheaply — if the participant whose watermark just advanced wasn't the one holding the current minimum, the group minimum doesn't change at all, so there's nothing to do. It only gets expensive in the rare case where the participant who was the minimum just advanced past it — then I actually do need to recompute the true minimum across everyone else.",
+        },
+      ],
+    },
+
+    {
+      id: "47",
+      role: "interviewer",
+      elapsedSeconds: 1275,
+      content: [
+        {
+          type: "text",
+          value:
+            "That recompute touches every participant's watermark. In a two-hundred-person group, could that happen often?",
+        },
+      ],
+    },
+
+    {
+      id: "48",
+      role: "candidate",
+      elapsedSeconds: 1305,
+      content: [
+        {
+          type: "text",
+          value:
+            "It could, if the slowest reader in the group happens to be the one advancing constantly in small steps — every step past the minimum would force a full rescan. I'd probably want to only trigger that expensive rescan lazily, say the next time someone actually asks for this message's tick status, rather than synchronously on every watermark update, so a burst of small advances from the slow reader doesn't each pay the full recompute cost.",
+        },
+      ],
+    },
+
+    {
+      id: "49",
+      role: "interviewer",
+      elapsedSeconds: 1335,
+      content: [
+        {
+          type: "text",
+          value: "And thread safety on that shared minimum — multiple participants' watermarks could be advancing concurrently.",
+        },
+      ],
+    },
+
+    {
+      id: "50",
+      role: "candidate",
+      elapsedSeconds: 1365,
+      content: [
+        {
+          type: "text",
+          value:
+            "Right, that cached minimum is shared state at the conversation level, not the per-message level, so it needs its own protection — a lock scoped to that one conversation's minimum, not global, and not per-message either. Two different groups' minimums should never contend with each other.",
+        },
+      ],
+    },
+
+    {
+      id: "51",
+      role: "interviewer",
+      elapsedSeconds: 1395,
+      content: [
+        {
+          type: "text",
+          value:
+            "Good. One more — a new member joins the group. Does that affect the cached minimum for messages sent before they joined?",
+        },
+      ],
+    },
+
+    {
+      id: "52",
+      role: "candidate",
+      elapsedSeconds: 1425,
+      content: [
+        {
+          type: "text",
+          value:
+            "It shouldn't, going back to what we said earlier — a message only cares about the participants snapshotted at the time it was sent. So the group-level minimum watermark I just described really needs to be scoped per message's own participant snapshot, not one single number for the whole conversation regardless of history. In practice that probably means grouping messages by which snapshot of participants they were sent under, and maintaining a cached minimum per snapshot rather than per conversation.",
+        },
+      ],
+    },
+
+    {
+      id: "53",
+      role: "interviewer",
+      elapsedSeconds: 1458,
+      content: [
+        { type: "text", value: "Good catch. I think that's a solid design. Any last concern before we wrap up?" },
+      ],
+    },
+
+    {
+      id: "54",
+      role: "candidate",
+      elapsedSeconds: 1485,
+      content: [
+        {
+          type: "text",
+          value:
+            "Just that the lazy-recompute path needs a sensible upper bound — if it somehow never gets triggered, a message could show as unread forever even after everyone's actually caught up. I'd want some background sweep as a backstop, separate from the on-demand trigger.",
+        },
+      ],
+    },
+
+    {
+      id: "55",
+      role: "takeaway",
+      elapsedSeconds: 1510,
+      content: [
+        {
+          type: "text",
+          value:
+            "Takeaway: the pattern choice mattered less than asking what actually varies and when — a fixed, type-based rule called for a plain strategy, not a decorator built for runtime composition that was never needed. Keeping the read-computation logic out of the data entities avoided coupling to mutable group membership. And the two follow-ups shared one underlying idea: collapse many small facts into one cheap number — a watermark instead of a set of read messages, a cached minimum instead of a per-render scan — updated incrementally, with concurrency scoped to exactly the piece of state that's actually shared.",
+        },
+      ],
+    },
+  ],
+};
+
+const whatsappReadReceipts: TranscriptEntry = {
+  summary: {
+    slug: "whatsapp-read-receipts",
+    title: "Design WhatsApp Read Receipts (Tick Status)",
+    category: "lld",
+    difficulty: Difficulty.HARD,
+    duration: 45,
+    company: "WhatsApp",
+    tags: [
+      "Low Level Design",
+      "Concurrency",
+      "Thread Safety",
+      "Separation of Concerns",
+      "Design Patterns",
+      "Watermarking",
+    ],
+    description:
+      "LLD interview covering tick status computation for direct and group chats, justifying strategy over decorator based on what actually varies, keeping business rules out of data entities, fine-grained concurrency for concurrent read events, and a watermark-based model for handling offline read blasts and efficient group read-status computation.",
+  },
+
+  transcript,
+};
+
+export default whatsappReadReceipts;
+================================================
+FILE: ./src/content/transcripts/lld/vending-machine.ts
+================================================
+import { Difficulty } from "@prisma/client";
+
+import { TranscriptEntry } from "../types";
+import { TranscriptData } from "@/features/library/types/transcript";
+
+const transcript: TranscriptData = {
+  metadata: {
+    title: "Design a Vending Machine Leasing System",
+    difficulty: Difficulty.HARD,
+    duration: 45,
+    template: "Low Level Design",
+    category: "LLD",
+  },
+
+  messages: [
+    {
+      id: "1",
+      role: "interviewer",
+      elapsedSeconds: 0,
+      content: [
+        {
+          type: "text",
+          value:
+            "Let's design a B2B system that manages leasing agreements for vending machines — a supplier leases machines out, and we need to model the machine's lifecycle, the lease terms, and incoming payment events.",
+        },
+      ],
+    },
+
+    {
+      id: "2",
+      role: "candidate",
+      elapsedSeconds: 16,
+      content: [{ type: "text", value: "A couple of scoping questions first." }],
+    },
+
+    { id: "3", role: "interviewer", elapsedSeconds: 28, content: [{ type: "text", value: "Sure." }] },
+
+    {
+      id: "4",
+      role: "candidate",
+      elapsedSeconds: 45,
+      content: [
+        {
+          type: "text",
+          value:
+            "Am I building the payment processing itself, or do I just receive events like 'payment received' or 'payment failed' and react to them?",
+        },
+      ],
+    },
+
+    {
+      id: "5",
+      role: "interviewer",
+      elapsedSeconds: 65,
+      content: [
+        {
+          type: "text",
+          value: "Just react to them. Assume payment events arrive from somewhere else, already validated.",
+        },
+      ],
+    },
+
+    {
+      id: "6",
+      role: "candidate",
+      elapsedSeconds: 88,
+      content: [
+        {
+          type: "text",
+          value:
+            "And what states does a machine actually move through? I want to hear the vocabulary before I start modeling.",
+        },
+      ],
+    },
+
+    {
+      id: "7",
+      role: "interviewer",
+      elapsedSeconds: 110,
+      content: [
+        {
+          type: "text",
+          value:
+            "At minimum: idle and available, leased to a customer, under maintenance, and defaulted on payment.",
+        },
+      ],
+    },
+
+    {
+      id: "8",
+      role: "candidate",
+      elapsedSeconds: 135,
+      content: [
+        {
+          type: "text",
+          value:
+            "Okay. Let me start with something simple and see where it breaks, rather than jumping straight to a pattern.",
+        },
+      ],
+    },
+
+    { id: "9", role: "interviewer", elapsedSeconds: 150, content: [{ type: "text", value: "Go for it." }] },
+
+    {
+      id: "10",
+      role: "candidate",
+      elapsedSeconds: 178,
+      content: [
+        {
+          type: "text",
+          value:
+            "A VendingMachine entity with a status field — an enum, idle, leased, underMaintenance, defaulted. Then a handler method per event type: handleLeaseSigned, handlePaymentReceived, handlePaymentMissed, handleMaintenanceRequested. Each one checks the current status and, if it's a valid transition, updates it.",
+        },
+      ],
+    },
+
+    {
+      id: "11",
+      role: "interviewer",
+      elapsedSeconds: 210,
+      content: [
+        {
+          type: "text",
+          value:
+            "Walk me through handlePaymentMissed specifically — what does it actually check?",
+        },
+      ],
+    },
+
+    {
+      id: "12",
+      role: "candidate",
+      elapsedSeconds: 238,
+      content: [
+        {
+          type: "text",
+          value:
+            "Something like: if status is leased, and this is, say, the third missed payment, set status to defaulted. If it's already under maintenance, missed payments probably shouldn't default it — a machine that's broken isn't really the lessee's fault. So I'd guard on the current status inside that handler too.",
+        },
+      ],
+    },
+
+    {
+      id: "13",
+      role: "interviewer",
+      elapsedSeconds: 268,
+      content: [
+        {
+          type: "text",
+          value:
+            "We add a fifth state next quarter — say, pending inspection before a machine can be leased out at all. How many of these handler methods do you have to go back and touch?",
+        },
+      ],
+    },
+
+    {
+      id: "14",
+      role: "candidate",
+      elapsedSeconds: 298,
+      content: [
+        {
+          type: "text",
+          value:
+            "Probably most of them — I'd need to add a branch to handleLeaseSigned to reject leasing a machine still pending inspection, and I'd want to double check every other handler to make sure none of them accidentally allow a transition out of pending inspection that shouldn't be allowed either.",
+        },
+      ],
+    },
+
+    {
+      id: "15",
+      role: "interviewer",
+      elapsedSeconds: 328,
+      content: [{ type: "text", value: "Is that a comfortable place to be?" }],
+    },
+
+    {
+      id: "16",
+      role: "candidate",
+      elapsedSeconds: 355,
+      content: [
+        {
+          type: "text",
+          value:
+            "Not really — the legality of a transition is scattered across every handler instead of living in one place, so it's easy for one handler to forget a guard the others remember. That's the kind of thing that quietly breaks when someone adds a state six months from now and doesn't know to check all four other files.",
+        },
+      ],
+    },
+
+    {
+      id: "17",
+      role: "interviewer",
+      elapsedSeconds: 385,
+      content: [{ type: "text", value: "So how would you restructure it?" }],
+    },
+
+    {
+      id: "18",
+      role: "candidate",
+      elapsedSeconds: 412,
+      content: [
+        {
+          type: "text",
+          value:
+            "Before I reach for anything heavier — could this just be a lookup table? Current state plus incoming event maps to a next state, all in one place, instead of scattered across handlers.",
+        },
+      ],
+    },
+
+    {
+      id: "19",
+      role: "interviewer",
+      elapsedSeconds: 440,
+      content: [{ type: "text", value: "Would that be enough on its own?" }],
+    },
+
+    {
+      id: "20",
+      role: "candidate",
+      elapsedSeconds: 468,
+      content: [
+        {
+          type: "text",
+          value:
+            "Thinking about it more — probably not, because it's not just about which transitions are legal. Each state actually does something different. Leased has to kick off a billing cycle. UnderMaintenance needs to block any new lease from being signed. Defaulted probably triggers a repossession workflow. A table tells me what's allowed, but not what should happen.",
+        },
+      ],
+    },
+
+    {
+      id: "21",
+      role: "interviewer",
+      elapsedSeconds: 498,
+      content: [{ type: "text", value: "So what earns its place here?" }],
+    },
+
+    {
+      id: "22",
+      role: "candidate",
+      elapsedSeconds: 525,
+      content: [
+        { type: "text", value: "Given that each state carries its own real behavior, not just permissions, I think " },
+        {
+          id: "highlight-state-pattern-justified",
+          type: "highlight",
+          status: "strong",
+          value: "a state class per lifecycle stage actually earns its place here",
+          explanation:
+            "Justifies the State pattern on the right basis — each state has genuinely distinct behavior and side effects (billing, blocking new leases, repossession), not merely a different row in a transition table, which is exactly when encapsulating state-specific behavior in its own class pays for its complexity.",
+        },
+        {
+          type: "text",
+          value:
+            " — an Idle state, a Leased state, an UnderMaintenance state, a Defaulted state, each implementing the same interface: something like onPaymentReceived, onPaymentMissed, onMaintenanceRequested, onLeaseSigned. Each state only overrides what actually applies to it, and the machine just delegates to whatever state it's currently in.",
+        },
+      ],
+    },
+
+    {
+      id: "23",
+      role: "interviewer",
+      elapsedSeconds: 560,
+      content: [
+        {
+          type: "text",
+          value:
+            "Good. Now, where does the actual business decision live — like, how many missed payments before we call it defaulted?",
+        },
+      ],
+    },
+
+    {
+      id: "24",
+      role: "candidate",
+      elapsedSeconds: 590,
+      content: [
+        {
+          type: "text",
+          value:
+            "My instinct is to just put that threshold check directly inside the Leased state's onPaymentMissed method.",
+        },
+      ],
+    },
+
+    {
+      id: "25",
+      role: "interviewer",
+      elapsedSeconds: 615,
+      content: [
+        {
+          type: "text",
+          value:
+            "Suppose that threshold differs by lease contract — some suppliers negotiate a grace period of one missed payment, others allow three. Does that change where you'd put it?",
+        },
+      ],
+    },
+
+    {
+      id: "26",
+      role: "candidate",
+      elapsedSeconds: 645,
+      content: [
+        {
+          type: "text",
+          value:
+            "It should. If I bake a fixed threshold into the state class, every lease is forced through the same rule, and testing that rule means instantiating the whole state machine just to check a number comparison.",
+        },
+      ],
+    },
+
+    {
+      id: "27",
+      role: "interviewer",
+      elapsedSeconds: 675,
+      content: [{ type: "text", value: "So restructure it." }],
+    },
+
+    {
+      id: "28",
+      role: "candidate",
+      elapsedSeconds: 702,
+      content: [
+        {
+          type: "text",
+          value:
+            "I'd pull that decision out into a separate compliance engine — something like a LeaseComplianceEngine that knows about grace periods and contract-specific rules, and takes in the payment history plus the lease terms to decide whether this counts as a default. The Leased state just asks that engine 'should this trigger a default,' and reacts to whatever it says. The state class stays about transition semantics; the actual business rule lives somewhere I can test on its own, independent of the machine.",
+        },
+      ],
+    },
+
+    {
+      id: "29",
+      role: "interviewer",
+      elapsedSeconds: 738,
+      content: [
+        {
+          type: "text",
+          value:
+            "Good separation. Let's build up the basic structure a bit more, and then I want to ask you something about it.",
+        },
+      ],
+    },
+
+    {
+      id: "30",
+      role: "candidate",
+      elapsedSeconds: 765,
+      content: [
+        {
+          type: "text",
+          value:
+            "Sure — VendingMachine holds a reference to its current MachineState, plus its ID and lease history. Each MachineState implementation handles the four event types and returns whatever the next state should be. The compliance engine sits alongside, consulted by states that need a business decision rather than a pure transition rule.",
+        },
+      ],
+    },
+
+    {
+      id: "31",
+      role: "interviewer",
+      elapsedSeconds: 798,
+      content: [
+        {
+          type: "text",
+          value:
+            "Okay. Now — a field technician marks a machine as needing maintenance, and at the exact same instant, an automated payment sweep marks that same machine as defaulted. Both events hit your VendingMachine object at the same time, from different threads. What happens?",
+        },
+      ],
+    },
+
+    {
+      id: "32",
+      role: "candidate",
+      elapsedSeconds: 830,
+      content: [
+        {
+          type: "text",
+          value:
+            "If both threads read the current state — say, Leased — before either one writes the new state, both would compute their transition based on the same starting point, and whichever write lands last just silently overwrites the other. I could end up with the machine marked under maintenance when it should also reflect that it defaulted, or vice versa, and no record that both things actually happened.",
+        },
+      ],
+    },
+
+    {
+      id: "33",
+      role: "interviewer",
+      elapsedSeconds: 862,
+      content: [{ type: "text", value: "How would you prevent that?" }],
+    },
+
+    {
+      id: "34",
+      role: "candidate",
+      elapsedSeconds: 890,
+      content: [
+        {
+          type: "text",
+          value:
+            "Simplest fix — synchronize the whole method that processes events, across the entire service, so only one event processes at a time anywhere.",
+        },
+        {
+          id: "highlight-global-lock-mistake",
+          type: "highlight",
+          status: "missed",
+          value: "",
+          explanation:
+            "A single global lock makes every machine's events wait behind every other machine's events, even though machines are entirely independent of each other — the actual race only involves two events for the same machine, not the whole fleet.",
+        },
+      ],
+    },
+
+    {
+      id: "35",
+      role: "interviewer",
+      elapsedSeconds: 918,
+      content: [
+        {
+          type: "text",
+          value:
+            "There could be tens of thousands of machines, all firing events independently. What does one lock across the whole service do to that?",
+        },
+      ],
+    },
+
+    {
+      id: "36",
+      role: "candidate",
+      elapsedSeconds: 945,
+      content: [
+        {
+          type: "text",
+          value:
+            "It forces every unrelated machine's events to queue behind each other, even though they share nothing. The actual conflict is scoped to one machine at a time — I only need mutual exclusion per machine, not across the entire fleet.",
+        },
+      ],
+    },
+
+    {
+      id: "37",
+      role: "interviewer",
+      elapsedSeconds: 972,
+      content: [{ type: "text", value: "So how do you scope it down?" }],
+    },
+
+    {
+      id: "38",
+      role: "candidate",
+      elapsedSeconds: 1000,
+      content: [
+        {
+          type: "text",
+          value: "I'd key a lock " },
+        {
+          id: "highlight-per-machine-lock",
+          type: "highlight",
+          status: "strong",
+          value: "per machine ID, not globally",
+          explanation:
+            "Correctly narrows the synchronization boundary to exactly the shared, mutable piece of state — one machine's current state reference — so unrelated machines never contend, while still guaranteeing that two events for the same machine can't race.",
+        },
+        {
+          type: "text",
+          value:
+            " — something like a striped lock, or a ConcurrentHashMap from machine ID to its own lock object. Whichever event acquires that specific machine's lock first fully applies its transition before the second one even reads the current state, so the second one is guaranteed to see the result of the first.",
+        },
+      ],
+    },
+
+    {
+      id: "39",
+      role: "interviewer",
+      elapsedSeconds: 1032,
+      content: [
+        {
+          type: "text",
+          value:
+            "Once the second event acquires the lock and sees the machine is now defaulted, does it still make sense to apply the maintenance-requested event on top of that?",
+        },
+      ],
+    },
+
+    {
+      id: "40",
+      role: "candidate",
+      elapsedSeconds: 1062,
+      content: [
+        {
+          type: "text",
+          value:
+            "That's actually a real business question, not just a concurrency one — the lock guarantees the events apply one at a time in some order, but it doesn't tell me whether Defaulted's onMaintenanceRequested should even allow that transition. I think it should — a machine can be both defaulted on payment and physically broken at the same time, those aren't mutually exclusive facts about the world. So Defaulted's handler for a maintenance event probably needs to layer maintenance on top rather than discard it, maybe as a flag alongside the state rather than replacing it outright.",
+        },
+      ],
+    },
+
+    {
+      id: "41",
+      role: "interviewer",
+      elapsedSeconds: 1098,
+      content: [
+        {
+          type: "text",
+          value: "So is 'state' really a single enum-like value at all, or something richer?",
+        },
+      ],
+    },
+
+    {
+      id: "42",
+      role: "candidate",
+      elapsedSeconds: 1128,
+      content: [
+        {
+          type: "text",
+          value:
+            "Hearing myself say that out loud — probably something richer. A single current lifecycle state, like Leased or Defaulted, plus an independent maintenance flag that can be true or false regardless of lifecycle state. That keeps the state pattern focused on the lifecycle question it's actually good at, without forcing it to represent every combination of independent facts as its own named state.",
+        },
+      ],
+    },
+
+    {
+      id: "43",
+      role: "interviewer",
+      elapsedSeconds: 1160,
+      content: [
+        {
+          type: "text",
+          value:
+            "Good catch. Last thing — the automated payment sweep retries on failure and could theoretically deliver the same payment-missed event twice for the same machine. Does your locking scheme protect against that on its own?",
+        },
+      ],
+    },
+
+    {
+      id: "44",
+      role: "candidate",
+      elapsedSeconds: 1192,
+      content: [
+        {
+          type: "text",
+          value:
+            "No — the lock only guarantees events for one machine don't interleave with each other, it doesn't know two events are actually duplicates of the same underlying occurrence. I'd want each event to carry its own ID, and have the compliance engine or the machine itself track which event IDs it's already applied, so a redelivered duplicate gets recognized and skipped rather than incorrectly counted as a second missed payment.",
+        },
+      ],
+    },
+
+    {
+      id: "45",
+      role: "interviewer",
+      elapsedSeconds: 1222,
+      content: [{ type: "text", value: "Good. I think that covers it." }],
+    },
+
+    {
+      id: "46",
+      role: "takeaway",
+      elapsedSeconds: 1245,
+      content: [
+        {
+          type: "text",
+          value:
+            "Takeaway: the State pattern earned its place here because each lifecycle stage carried genuinely different behavior, not just different permissions — a plain transition table was considered and rejected for that specific reason. Pulling contract-specific business rules like grace periods out of the state classes and into a separate compliance engine kept the state machine testable and the business logic testable, independently. And the concurrency fix wasn't just 'add a lock' — it was scoping that lock to exactly the shared resource in contention, one machine at a time, which then surfaced a deeper modeling question about whether lifecycle state and maintenance status should ever have been the same field.",
+        },
+      ],
+    },
+  ],
+};
+
+const vendingMachineLeasing: TranscriptEntry = {
+  summary: {
+    slug: "vending-machine-leasing",
+    title: "Design a Vending Machine Leasing System",
+    category: "lld",
+    difficulty: Difficulty.HARD,
+    duration: 45,
+    company: "Amazon",
+    tags: [
+      "Low Level Design",
+      "State Pattern",
+      "Concurrency",
+      "Thread Safety",
+      "Separation of Concerns",
+      "Design Patterns",
+    ],
+    description:
+      "LLD interview covering a vending machine leasing lifecycle, justifying the State pattern by distinct per-state behavior rather than pattern-matching, separating contract-specific business rules into a standalone compliance engine, and scoping concurrency fixes to per-machine locks rather than a global lock, including a modeling correction around independent maintenance status.",
+  },
+
+  transcript,
+};
+
+export default vendingMachineLeasing;
+================================================
+FILE: ./src/content/transcripts/hld/config-sync.ts
+================================================
+import { Difficulty } from "@prisma/client";
+
+import { TranscriptEntry } from "../types";
+import { TranscriptData } from "@/features/library/types/transcript";
+
+const transcript: TranscriptData = {
+  metadata: {
+    title: "Design a Multi-Device Configuration Sync Platform",
+    difficulty: Difficulty.HARD,
+    duration: 50,
+    template: "High Level Design",
+    category: "HLD",
+  },
+
+  messages: [
+    {
+      id: "1",
+      role: "interviewer",
+      elapsedSeconds: 0,
+      content: [
+        {
+          type: "text",
+          value:
+            "Let's design the system that migrates a customer's settings from an old device to a new one — think an old Echo to a new Echo, or an old Kindle to a new Kindle.",
+        },
+      ],
+    },
+
+    {
+      id: "2",
+      role: "candidate",
+      elapsedSeconds: 15,
+      content: [
+        {
+          type: "text",
+          value: "Happy to start with a few clarifying questions.",
+        },
+      ],
+    },
+
+    {
+      id: "3",
+      role: "interviewer",
+      elapsedSeconds: 26,
+      content: [{ type: "text", value: "Go ahead." }],
+    },
+
+    {
+      id: "4",
+      role: "candidate",
+      elapsedSeconds: 44,
+      content: [
+        {
+          type: "text",
+          value:
+            "What counts as 'configuration' here — just app preferences, or things like WiFi credentials and account tokens too?",
+        },
+      ],
+    },
+
+    {
+      id: "5",
+      role: "interviewer",
+      elapsedSeconds: 62,
+      content: [
+        {
+          type: "text",
+          value:
+            "Both. WiFi credentials, auth tokens, skill or app settings, and general device preferences.",
+        },
+      ],
+    },
+
+    {
+      id: "6",
+      role: "candidate",
+      elapsedSeconds: 84,
+      content: [
+        {
+          type: "text",
+          value:
+            "And is the old and new device always the same firmware version, or can someone migrate from a three-year-old device to a brand new one?",
+        },
+      ],
+    },
+
+    {
+      id: "7",
+      role: "interviewer",
+      elapsedSeconds: 105,
+      content: [
+        {
+          type: "text",
+          value:
+            "Definitely not the same version. Assume the old device could be running software from years ago.",
+        },
+      ],
+    },
+
+    {
+      id: "8",
+      role: "candidate",
+      elapsedSeconds: 128,
+      content: [
+        {
+          type: "text",
+          value:
+            "Okay. Functionally then: read a config off an old device, transform it so it's meaningful to a newer device, transfer it securely, and apply it on the new device — including large payloads like downloaded content, not just small settings.",
+        },
+      ],
+    },
+
+    {
+      id: "9",
+      role: "interviewer",
+      elapsedSeconds: 152,
+      content: [
+        {
+          type: "text",
+          value:
+            "Right. And non-functionally — this has to hold up on a product launch day, when a huge wave of people set up new devices at once, and it can never leak a WiFi password.",
+        },
+      ],
+    },
+
+    {
+      id: "10",
+      role: "candidate",
+      elapsedSeconds: 178,
+      content: [
+        {
+          type: "text",
+          value:
+            "Got it — so availability under a traffic spike, and confidentiality of sensitive fields, are both first-class requirements, not afterthoughts. Let me sketch something simple first.",
+        },
+      ],
+    },
+
+    {
+      id: "11",
+      role: "interviewer",
+      elapsedSeconds: 200,
+      content: [{ type: "text", value: "Go for it." }],
+    },
+
+    {
+      id: "12",
+      role: "candidate",
+      elapsedSeconds: 224,
+      content: [
+        {
+          type: "text",
+          value:
+            "Old device serializes its full config into a blob and uploads it to a Sync Service, which stores it. The customer's companion app links the new device to that same account, the new device pulls the blob down, and applies it directly.",
+        },
+      ],
+    },
+
+    {
+      id: "13",
+      role: "interviewer",
+      elapsedSeconds: 252,
+      content: [
+        {
+          type: "text",
+          value:
+            "The old device is running firmware from three years ago — config schema v1.2. The new device only understands schema v2.0. What happens when it applies that blob directly?",
+        },
+      ],
+    },
+
+    {
+      id: "14",
+      role: "candidate",
+      elapsedSeconds: 280,
+      content: [
+        {
+          type: "text",
+          value:
+            "It'd either choke on fields it doesn't recognize, or worse, silently misinterpret a field that changed meaning between versions. Let me think — I could have the new device check the version and branch its parsing logic depending on which version it sees.",
+        },
+        {
+          id: "highlight-if-else-schema",
+          type: "highlight",
+          status: "missed",
+          value: "",
+          explanation:
+            "Branching on every historical schema version inside the device's own parsing logic doesn't scale — every device model would need to carry parsing logic for every version that ever shipped, forever.",
+        },
+      ],
+    },
+
+    {
+      id: "15",
+      role: "interviewer",
+      elapsedSeconds: 308,
+      content: [
+        {
+          type: "text",
+          value:
+            "You said the old device could be years old. Now imagine ten schema versions from now — every new device model has to know how to parse v1.0 through v2.0 forever?",
+        },
+      ],
+    },
+
+    {
+      id: "16",
+      role: "candidate",
+      elapsedSeconds: 335,
+      content: [
+        {
+          type: "text",
+          value:
+            "Right, that doesn't scale — the parsing burden grows with every version we ever ship, and it lives on the device, which is the hardest place to update. The transformation shouldn't be the new device's job at all.",
+        },
+      ],
+    },
+
+    {
+      id: "17",
+      role: "interviewer",
+      elapsedSeconds: 360,
+      content: [{ type: "text", value: "Whose job should it be?" }],
+    },
+
+    {
+      id: "18",
+      role: "candidate",
+      elapsedSeconds: 388,
+      content: [
+        { type: "text", value: "I'd put a " },
+        {
+          id: "highlight-transformer-engine",
+          type: "highlight",
+          status: "strong",
+          value: "stateless transformer engine",
+          explanation:
+            "Correctly moves schema translation out of the device and into a central, statelessly-scalable service, and frames it as a chain of small migrations rather than a single all-versions mapping.",
+        },
+        {
+          type: "text",
+          value:
+            " in the Sync Service itself. Each schema version only needs a small migration function to the next version — v1.2 to v1.3, v1.3 to v1.4, and so on. Given any input version, the engine walks that chain up to whatever version the target device needs.",
+        },
+      ],
+    },
+
+    {
+      id: "19",
+      role: "interviewer",
+      elapsedSeconds: 420,
+      content: [
+        {
+          type: "text",
+          value: "Is that a decision you can easily change your mind about later?",
+        },
+      ],
+    },
+
+    {
+      id: "20",
+      role: "candidate",
+      elapsedSeconds: 448,
+      content: [
+        {
+          type: "text",
+          value:
+            "The idea of using versioned, chained migrations instead of format-specific parsers — that's close to a one-way door. Every future schema change has to fit that model once devices and services are built around it. But the transformer engine's own implementation, how it's hosted, how many hops it computes at once, that stays a two-way door — we can optimize that later without touching the versioning contract.",
+        },
+      ],
+    },
+
+    {
+      id: "21",
+      role: "interviewer",
+      elapsedSeconds: 480,
+      content: [
+        {
+          type: "text",
+          value:
+            "Good distinction. Let's talk about the WiFi credentials now. How are they protected in what you've drawn so far?",
+        },
+      ],
+    },
+
+    {
+      id: "22",
+      role: "candidate",
+      elapsedSeconds: 508,
+      content: [
+        {
+          type: "text",
+          value:
+            "Right now, nothing special — it's part of the same blob. I'd start with TLS in transit and server-side encryption at rest for the whole payload.",
+        },
+      ],
+    },
+
+    {
+      id: "23",
+      role: "interviewer",
+      elapsedSeconds: 532,
+      content: [
+        {
+          type: "text",
+          value:
+            "The Sync Service holds the encryption key to decrypt that payload at rest. Does that satisfy 'never store it in plaintext,' in spirit?",
+        },
+      ],
+    },
+
+    {
+      id: "24",
+      role: "candidate",
+      elapsedSeconds: 558,
+      content: [
+        {
+          type: "text",
+          value:
+            "Not really — anyone with access to that key, including us operationally, could still read the WiFi password. Server-side encryption protects against someone stealing the disk, not against the service itself being able to see it.",
+        },
+      ],
+    },
+
+    {
+      id: "25",
+      role: "interviewer",
+      elapsedSeconds: 585,
+      content: [
+        { type: "text", value: "So how do you make sure even the Sync Service can't read it?" },
+      ],
+    },
+
+    {
+      id: "26",
+      role: "candidate",
+      elapsedSeconds: 615,
+      content: [
+        {
+          type: "text",
+          value: "The old and new device would need to establish ",
+        },
+        {
+          id: "highlight-e2ee-key-exchange",
+          type: "highlight",
+          status: "strong",
+          value: "a shared secret directly with each other",
+          explanation:
+            "Correctly identifies that true end-to-end confidentiality requires the key to be negotiated device-to-device, not held by the intermediary service that only relays ciphertext.",
+        },
+        {
+          type: "text",
+          value:
+            " — a key exchange during the pairing step, maybe triggered by scanning a code the new device displays. Once they agree on a key, the old device encrypts the sensitive fields with it, and the Sync Service only ever stores and relays ciphertext it can't decrypt.",
+        },
+      ],
+    },
+
+    {
+      id: "27",
+      role: "interviewer",
+      elapsedSeconds: 650,
+      content: [
+        {
+          type: "text",
+          value:
+            "Would you apply that same end-to-end scheme to every field, like the volume setting or theme preference?",
+        },
+      ],
+    },
+
+    {
+      id: "28",
+      role: "candidate",
+      elapsedSeconds: 678,
+      content: [
+        {
+          type: "text",
+          value:
+            "Probably not everything. For non-sensitive preferences, envelope encryption through a managed key service is fine, and it keeps support and debugging workflows possible. I'd reserve device-negotiated end-to-end encryption specifically for the fields we genuinely can't let the platform see — credentials and tokens.",
+        },
+      ],
+    },
+
+    {
+      id: "29",
+      role: "interviewer",
+      elapsedSeconds: 705,
+      content: [{ type: "text", value: "Which of those two feels like the harder decision to walk back?" }],
+    },
+
+    {
+      id: "30",
+      role: "candidate",
+      elapsedSeconds: 732,
+      content: [
+        {
+          type: "text",
+          value:
+            "The end-to-end pairing protocol is the one-way door — once it's baked into device firmware, changing the key exchange mechanism means every device in the field needs a firmware update to stay compatible. Swapping which managed key service wraps the non-sensitive envelope encryption is comparatively a two-way door — that's a backend change devices never see.",
+        },
+      ],
+    },
+
+    {
+      id: "31",
+      role: "interviewer",
+      elapsedSeconds: 762,
+      content: [
+        {
+          type: "text",
+          value:
+            "Let's talk about what actually gets transferred. Some of this — downloaded books, media libraries — is large. What happens if the old device loses WiFi halfway through uploading a few gigabytes?",
+        },
+      ],
+    },
+
+    {
+      id: "32",
+      role: "candidate",
+      elapsedSeconds: 792,
+      content: [
+        {
+          type: "text",
+          value:
+            "If it's one big upload, the connection drops and we'd have to restart the whole thing from zero, which on a flaky connection might never finish.",
+        },
+      ],
+    },
+
+    {
+      id: "33",
+      role: "interviewer",
+      elapsedSeconds: 818,
+      content: [{ type: "text", value: "How would you avoid restarting from zero?" }],
+    },
+
+    {
+      id: "34",
+      role: "candidate",
+      elapsedSeconds: 845,
+      content: [
+        { type: "text", value: "I'd split the payload into " },
+        {
+          id: "highlight-chunked-resumable",
+          type: "highlight",
+          status: "strong",
+          value: "content-addressed chunks that upload independently",
+          explanation:
+            "Correctly reframes a large fragile transfer as many small idempotent transfers, so connectivity loss only costs the in-flight chunk rather than the whole payload.",
+        },
+        {
+          type: "text",
+          value:
+            ", each identified by a hash of its own content. If the connection drops, the device just resumes from whichever chunks the server hasn't acknowledged yet, instead of starting over.",
+        },
+      ],
+    },
+
+    {
+      id: "35",
+      role: "interviewer",
+      elapsedSeconds: 875,
+      content: [
+        {
+          type: "text",
+          value: "What if the same chunk gets uploaded twice because the ack itself got lost?",
+        },
+      ],
+    },
+
+    {
+      id: "36",
+      role: "candidate",
+      elapsedSeconds: 900,
+      content: [
+        {
+          type: "text",
+          value:
+            "That's harmless if chunks are keyed by their content hash — writing the same chunk again just overwrites itself with identical bytes. The upload endpoint is naturally idempotent as long as we key on content, not on upload order.",
+        },
+      ],
+    },
+
+    {
+      id: "37",
+      role: "interviewer",
+      elapsedSeconds: 928,
+      content: [
+        {
+          type: "text",
+          value:
+            "All chunks arrive, but the final 'migration complete' signal from device to service gets lost in the same flaky connection. What does the customer see?",
+        },
+      ],
+    },
+
+    {
+      id: "38",
+      role: "candidate",
+      elapsedSeconds: 955,
+      content: [
+        {
+          type: "text",
+          value:
+            "The new device would look like it's still mid-setup even though everything actually arrived. I'd give the completion signal its own migration ID and make that endpoint idempotent too — the device can safely retry 'mark this migration complete' as many times as it needs, and the server just checks whether it's already marked done.",
+        },
+      ],
+    },
+
+    {
+      id: "39",
+      role: "interviewer",
+      elapsedSeconds: 985,
+      content: [
+        {
+          type: "text",
+          value:
+            "Good. Now — launch day. A new device ships, and hundreds of thousands of customers start migrations within the same hour. What breaks first?",
+        },
+      ],
+    },
+
+    {
+      id: "40",
+      role: "candidate",
+      elapsedSeconds: 1015,
+      content: [
+        {
+          type: "text",
+          value:
+            "If everything sits behind one shared Sync Service and one shared transformer engine, a spike big enough to slow down the transformer engine slows down every migration everywhere, even accounts that have nothing to do with the new launch.",
+        },
+      ],
+    },
+
+    {
+      id: "41",
+      role: "interviewer",
+      elapsedSeconds: 1042,
+      content: [{ type: "text", value: "How do you contain that?" }],
+    },
+
+    {
+      id: "42",
+      role: "candidate",
+      elapsedSeconds: 1070,
+      content: [
+        {
+          type: "text",
+          value: "I'd shard by account or region into separate ",
+        },
+        {
+          id: "highlight-blast-radius",
+          type: "highlight",
+          status: "strong",
+          value: "isolated cells",
+          explanation:
+            "Correctly names blast-radius isolation as the mechanism — a launch-day surge or a bad deploy in one cell degrades a bounded slice of customers rather than the whole platform.",
+        },
+        {
+          type: "text",
+          value:
+            " so a surge or a bad deploy affecting one cell only degrades that slice of customers, not the whole platform. On top of that I'd put a circuit breaker in front of the transformer engine — if it starts timing out, we stop hammering it and fall back to queuing the migration for retry instead of blocking the customer's whole setup flow. A rate limiter on the upload path protects it from the initial burst, and the device gets a clear 'retry shortly' signal rather than the request just hanging.",
+        },
+      ],
+    },
+
+    {
+      id: "43",
+      role: "interviewer",
+      elapsedSeconds: 1108,
+      content: [
+        {
+          type: "text",
+          value:
+            "Let's pin down the store that tracks migration state — status, chunk progress, which device is waiting on what. DynamoDB or Postgres?",
+        },
+      ],
+    },
+
+    {
+      id: "44",
+      role: "candidate",
+      elapsedSeconds: 1138,
+      content: [
+        {
+          type: "text",
+          value:
+            "The access pattern here is almost entirely point lookups and writes by migration ID or account ID — get this migration's status, update this chunk's progress. There's no real need for joins across migrations. That points toward DynamoDB: it fits the access pattern directly and there's less operational overhead than running and scaling a relational cluster for something that's fundamentally key-value.",
+        },
+      ],
+    },
+
+    {
+      id: "45",
+      role: "interviewer",
+      elapsedSeconds: 1168,
+      content: [{ type: "text", value: "Is that choice easy to walk back later?" }],
+    },
+
+    {
+      id: "46",
+      role: "candidate",
+      elapsedSeconds: 1195,
+      content: [
+        {
+          type: "text",
+          value:
+            "Not really — once the partition key is chosen and data's been written at scale, migrating to a different store or repartitioning means a live data migration across every existing record, which is exactly the kind of thing we've spent this whole conversation trying to make safe for customer devices, and now we'd be doing it to ourselves. I'd treat the partition key choice as the one-way door here and spend real time on it up front — probably migration ID, since that's the natural unit almost every read and write centers on.",
+        },
+      ],
+    },
+
+    {
+      id: "47",
+      role: "interviewer",
+      elapsedSeconds: 1230,
+      content: [
+        {
+          type: "text",
+          value:
+            "Good, that's the high-level picture. Let's go deeper on that migration state store specifically. Walk me through exactly how a chunk-progress update flows through it.",
+        },
+      ],
+    },
+
+    {
+      id: "48",
+      role: "candidate",
+      elapsedSeconds: 1262,
+      content: [
+        {
+          type: "text",
+          value:
+            "Each migration gets one partition keyed by migration ID. Within that partition, I'd use the chunk sequence number as the sort key, so a device's 'chunk 47 uploaded' write lands as its own item, and reading 'what's still missing' is a range query over that partition rather than a scan.",
+        },
+      ],
+    },
+
+    {
+      id: "49",
+      role: "interviewer",
+      elapsedSeconds: 1295,
+      content: [
+        {
+          type: "text",
+          value:
+            "Under standard load that's fine. On launch day, what does a hot partition look like here?",
+        },
+      ],
+    },
+
+    {
+      id: "50",
+      role: "candidate",
+      elapsedSeconds: 1325,
+      content: [
+        {
+          type: "text",
+          value:
+            "A single migration's partition itself shouldn't get hot — one device only writes its own chunks at its own pace. The real risk is if I'd chosen something coarser, like account ID, as the partition key instead — a customer migrating several devices at once, or worse, a monitoring job scanning 'all in-progress migrations' across accounts, would hammer a small number of partitions. Keying on migration ID specifically avoids that, since migrations naturally spread themselves across a huge key space.",
+        },
+      ],
+    },
+
+    {
+      id: "51",
+      role: "interviewer",
+      elapsedSeconds: 1358,
+      content: [
+        {
+          type: "text",
+          value:
+            "What about the transformer engine itself — where's the bottleneck when it has to apply a long chain of migrations, say ten hops from an ancient schema version?",
+        },
+      ],
+    },
+
+    {
+      id: "52",
+      role: "candidate",
+      elapsedSeconds: 1390,
+      content: [
+        {
+          type: "text",
+          value:
+            "Walking ten sequential migration functions one at a time on every request is wasted work if most old devices cluster around just a few common versions — we'd be recomputing the same v1.2-to-v2.0 chain repeatedly.",
+        },
+      ],
+    },
+
+    {
+      id: "53",
+      role: "interviewer",
+      elapsedSeconds: 1418,
+      content: [{ type: "text", value: "So what would you change?" }],
+    },
+
+    {
+      id: "54",
+      role: "candidate",
+      elapsedSeconds: 1448,
+      content: [
+        {
+          type: "text",
+          value:
+            "I'd cache the composed transformation for common version pairs — effectively precomputing 'v1.2 to v2.0' as a single collapsed function instead of replaying every intermediate hop on the hot path. New or rare version pairs still fall back to walking the chain live, but the common case, which is what launch-day traffic actually looks like, skips straight to a cached path.",
+        },
+      ],
+    },
+
+    {
+      id: "55",
+      role: "interviewer",
+      elapsedSeconds: 1478,
+      content: [
+        {
+          type: "text",
+          value: "Good. Anything you'd still want monitored once this is live?",
+        },
+      ],
+    },
+
+    {
+      id: "56",
+      role: "candidate",
+      elapsedSeconds: 1505,
+      content: [
+        {
+          type: "text",
+          value:
+            "I'd watch the circuit breaker's trip rate on the transformer engine and the queue depth behind it — those tell us the fallback path is actually absorbing load rather than silently piling up. And I'd want an alert on any migration that completes with a mismatch between the number of chunks the device says it sent and what the store actually has, since that's the kind of gap reconciliation should be catching before a customer notices a missing photo library.",
+        },
+      ],
+    },
+
+    {
+      id: "57",
+      role: "takeaway",
+      elapsedSeconds: 1540,
+      content: [
+        {
+          type: "text",
+          value:
+            "Takeaway: separate the decisions that are genuinely hard to reverse — the schema-versioning contract, the device-negotiated encryption protocol, the partition key — from the ones that aren't, and spend deliberation accordingly. Chunked, content-addressed transfers and idempotent completion signals make offline-first sync safe to retry. Cell-based isolation, circuit breakers, rate limiting, and backpressure keep a launch-day spike from becoming a global outage. And end-to-end encryption belongs specifically where the platform itself must never be able to read the data — not applied uniformly everywhere.",
+        },
+      ],
+    },
+  ],
+};
+
+const configSyncPlatform: TranscriptEntry = {
+  summary: {
+    slug: "config-sync-platform",
+    title: "Design a Multi-Device Configuration Sync Platform",
+    category: "hld",
+    difficulty: Difficulty.HARD,
+    duration: 50,
+    company: "Amazon",
+    tags: [
+      "Distributed Systems",
+      "Schema Evolution",
+      "End-to-End Encryption",
+      "Offline-First",
+      "Resiliency",
+      "Blast Radius Isolation",
+      "One-Way vs Two-Way Doors",
+    ],
+    description:
+      "Production-grade HLD interview covering schema-drift transformation, device-negotiated end-to-end encryption, resumable idempotent chunked sync, blast-radius isolation on launch-day load, explicit one-way/two-way door trade-offs, and a deep component drill into the migration state store and transformer engine.",
+  },
+
+  transcript,
+};
+
+export default configSyncPlatform;
+================================================
+FILE: ./src/content/transcripts/hld/autocomplete.ts
+================================================
+import { Difficulty } from "@prisma/client";
+
+import { TranscriptEntry } from "../types";
+import { TranscriptData } from "@/features/library/types/transcript";
+
+const transcript: TranscriptData = {
+  metadata: {
+    title: "Design Autocomplete & Search Recommendations",
+    difficulty: Difficulty.HARD,
+    duration: 50,
+    template: "High Level Design",
+    category: "HLD",
+  },
+
+  messages: [
+    {
+      id: "1",
+      role: "interviewer",
+      elapsedSeconds: 0,
+      content: [
+        {
+          type: "text",
+          value:
+            "Let's design the autocomplete system behind a retail search box — as a customer types, we suggest completed search terms.",
+        },
+      ],
+    },
+
+    {
+      id: "2",
+      role: "candidate",
+      elapsedSeconds: 14,
+      content: [{ type: "text", value: "Okay. Mind if I ask a couple questions first?" }],
+    },
+
+    { id: "3", role: "interviewer", elapsedSeconds: 24, content: [{ type: "text", value: "Go ahead." }] },
+
+    {
+      id: "4",
+      role: "candidate",
+      elapsedSeconds: 40,
+      content: [
+        {
+          type: "text",
+          value:
+            "Is this ranked purely by overall popularity, or does it need to reflect what's trending right now? And is it just English, or multiple languages?",
+        },
+      ],
+    },
+
+    {
+      id: "5",
+      role: "interviewer",
+      elapsedSeconds: 62,
+      content: [
+        {
+          type: "text",
+          value:
+            "Both trending and steady-state popularity matter, and yes — multiple languages, not just English.",
+        },
+      ],
+    },
+
+    {
+      id: "6",
+      role: "candidate",
+      elapsedSeconds: 84,
+      content: [
+        {
+          type: "text",
+          value:
+            "And latency — this fires on every keystroke, so I'm guessing there's a real budget, not just 'be fast.'",
+        },
+      ],
+    },
+
+    {
+      id: "7",
+      role: "interviewer",
+      elapsedSeconds: 106,
+      content: [
+        { type: "text", value: "Tens of milliseconds at p99. Assume that's non-negotiable." },
+      ],
+    },
+
+    {
+      id: "8",
+      role: "candidate",
+      elapsedSeconds: 128,
+      content: [
+        {
+          type: "text",
+          value:
+            "Got it. Before I draw boxes, can I just follow one request through the system? I find that grounds things better than starting from data structures.",
+        },
+      ],
+    },
+
+    { id: "9", role: "interviewer", elapsedSeconds: 145, content: [{ type: "text", value: "Please." }] },
+
+    {
+      id: "10",
+      role: "candidate",
+      elapsedSeconds: 168,
+      content: [
+        {
+          type: "text",
+          value:
+            "So — a customer types 'iph'. The client sends that prefix, along with their locale, to some autocomplete service. That service has to hand back maybe ten suggestions, and it has to do it inside that tens-of-milliseconds window. Given that budget, I don't think we can afford to do any real ranking work at query time — whatever happens on the read path has to already be mostly decided before the request arrives.",
+        },
+      ],
+    },
+
+    {
+      id: "11",
+      role: "interviewer",
+      elapsedSeconds: 205,
+      content: [{ type: "text", value: "Okay, keep going from there." }],
+    },
+
+    {
+      id: "12",
+      role: "candidate",
+      elapsedSeconds: 230,
+      content: [
+        {
+          type: "text",
+          value:
+            "Let me start with something simple, even though I already suspect it won't survive the latency requirement — I'd rather find that out than assume it. Build a trie from historical search terms, character by character. At query time, walk to the node matching the typed prefix, then look at everything under it, count up frequency, return the top ten.",
+        },
+      ],
+    },
+
+    {
+      id: "13",
+      role: "interviewer",
+      elapsedSeconds: 262,
+      content: [
+        {
+          type: "text",
+          value:
+            "Someone types just the letter 'a'. How much of the trie does 'look at everything under it' actually touch?",
+        },
+      ],
+    },
+
+    {
+      id: "14",
+      role: "candidate",
+      elapsedSeconds: 288,
+      content: [
+        {
+          type: "text",
+          value:
+            "Hmm. Basically everything that starts with 'a' — which is a lot. That's nowhere close to tens of milliseconds if I'm walking a subtree that size on every keystroke.",
+        },
+      ],
+    },
+
+    {
+      id: "15",
+      role: "interviewer",
+      elapsedSeconds: 312,
+      content: [{ type: "text", value: "So what do you do about it?" }],
+    },
+
+    {
+      id: "16",
+      role: "candidate",
+      elapsedSeconds: 335,
+      content: [
+        {
+          type: "text",
+          value:
+            "My first instinct is just to throw more servers at it — replicate the trie so more queries can be served in parallel.",
+        },
+        {
+          id: "highlight-scale-out-only",
+          type: "highlight",
+          status: "missed",
+          value: "",
+          explanation:
+            "Adding replicas increases throughput, not per-request latency — a single query still has to traverse a massive subtree, so the tens-of-milliseconds ceiling is still violated no matter how many replicas serve it.",
+        },
+      ],
+    },
+
+    {
+      id: "17",
+      role: "interviewer",
+      elapsedSeconds: 360,
+      content: [
+        {
+          type: "text",
+          value:
+            "That gets you more queries per second. Does it make any single query faster?",
+        },
+      ],
+    },
+
+    {
+      id: "18",
+      role: "candidate",
+      elapsedSeconds: 385,
+      content: [
+        {
+          type: "text",
+          value:
+            "...No. Each request still walks the same huge subtree, I've just given myself more machines doing that same slow thing. That's throughput, not latency. Let me think about this differently — the subtree walk itself can't happen on the read path at all.",
+        },
+      ],
+    },
+
+    {
+      id: "19",
+      role: "interviewer",
+      elapsedSeconds: 415,
+      content: [{ type: "text", value: "So where does it happen instead?" }],
+    },
+
+    {
+      id: "20",
+      role: "candidate",
+      elapsedSeconds: 442,
+      content: [
+        { type: "text", value: "What if I moved that work to " },
+        {
+          id: "highlight-denormalized-topk",
+          type: "highlight",
+          status: "strong",
+          value: "write time instead of read time",
+          explanation:
+            "Correctly shifts the expensive aggregation off the latency-critical read path — caching a small top-K heap at every node trades cheap, frequent writes for a read path that's just a bounded walk down to one node.",
+        },
+        {
+          type: "text",
+          value:
+            "? Every node in the trie keeps a small, already-sorted list of its own top completions, and I update that list whenever something below it gets searched. Then a query just walks down to one node and reads whatever's cached there. No subtree walk on the read path.",
+        },
+      ],
+    },
+
+    {
+      id: "21",
+      role: "interviewer",
+      elapsedSeconds: 478,
+      content: [{ type: "text", value: "Sit with that for a second — what did you just trade away?" }],
+    },
+
+    {
+      id: "22",
+      role: "candidate",
+      elapsedSeconds: 505,
+      content: [
+        {
+          type: "text",
+          value:
+            "Every search now costs more on the write side — I'm touching a bunch of ancestor nodes instead of just logging an event somewhere. I'm betting that reads vastly outnumber writes here, so it's worth paying more per write to make every read cheap. But I'm making that trade without knowing the actual read-to-write ratio yet.",
+        },
+      ],
+    },
+
+    {
+      id: "23",
+      role: "interviewer",
+      elapsedSeconds: 535,
+      content: [
+        {
+          type: "text",
+          value:
+            "Fair, we can assume reads dominate heavily here — every keystroke is a read, searches are comparatively rare. Let's shift gears. Your customer in Tokyo searches. There are no spaces between words. Does character-by-character trie insertion still work?",
+        },
+      ],
+    },
+
+    {
+      id: "24",
+      role: "candidate",
+      elapsedSeconds: 565,
+      content: [
+        {
+          type: "text",
+          value:
+            "It doesn't, the way I described it — I was quietly assuming whitespace tells me where a word starts and ends, and that's an English-specific assumption, not a universal one.",
+        },
+      ],
+    },
+
+    {
+      id: "25",
+      role: "interviewer",
+      elapsedSeconds: 590,
+      content: [{ type: "text", value: "What would you change?" }],
+    },
+
+    {
+      id: "26",
+      role: "candidate",
+      elapsedSeconds: 615,
+      content: [
+        {
+          type: "text",
+          value:
+            "I'd need something that segments text for a given script before it ever reaches the trie. My instinct is to also just split into a separate trie per language, so segmentation logic doesn't have to fight itself inside one shared structure. Though — actually, before I commit to that, I'd want to know the scale we're talking about. If there are, say, a hundred million terms spread across two hundred locales, separate tries probably simplifies things a lot. If ninety percent of traffic is one dominant locale, maybe the split needs to look different, like size-based rather than strictly one-tree-per-language.",
+        },
+      ],
+    },
+
+    {
+      id: "27",
+      role: "interviewer",
+      elapsedSeconds: 655,
+      content: [
+        {
+          type: "text",
+          value:
+            "Assume it's closer to your first number — broad, fairly even spread across a couple hundred locales. Given that, is splitting by locale something you could walk back easily later?",
+        },
+      ],
+    },
+
+    {
+      id: "28",
+      role: "candidate",
+      elapsedSeconds: 688,
+      content: [
+        {
+          type: "text",
+          value:
+            "I don't think so. Once caching, counting, everything downstream is built assuming that boundary, un-splitting or re-splitting it means touching data across every locale we've ever built. That feels like the heavier decision here — get it wrong and moving things later is painful. Whatever segmentation library I pick for any one language, on the other hand, feels easy to swap out without anyone else noticing.",
+        },
+      ],
+    },
+
+    {
+      id: "29",
+      role: "interviewer",
+      elapsedSeconds: 722,
+      content: [
+        {
+          type: "text",
+          value:
+            "Okay. Let's go back to that cached top-K sitting at each node. A major news event breaks and a term nobody searched yesterday suddenly explodes. How fresh is that cache?",
+        },
+      ],
+    },
+
+    {
+      id: "30",
+      role: "candidate",
+      elapsedSeconds: 752,
+      content: [
+        {
+          type: "text",
+          value:
+            "If I only recompute it from an overnight batch job — not at all, really, not until the next run. By then the news cycle's probably moved on.",
+        },
+      ],
+    },
+
+    {
+      id: "31",
+      role: "interviewer",
+      elapsedSeconds: 778,
+      content: [{ type: "text", value: "So?" }],
+    },
+
+    {
+      id: "32",
+      role: "candidate",
+      elapsedSeconds: 802,
+      content: [
+        {
+          type: "text",
+          value:
+            "So searches need to feed the counters continuously, not in a nightly batch — each search nudges the count for its term, and that has to ripple up to the cached top-K at every ancestor node fairly quickly, not the next day.",
+        },
+      ],
+    },
+
+    {
+      id: "33",
+      role: "interviewer",
+      elapsedSeconds: 828,
+      content: [
+        {
+          type: "text",
+          value:
+            "Are you keeping an exact count for every term that's ever been typed?",
+        },
+      ],
+    },
+
+    {
+      id: "34",
+      role: "candidate",
+      elapsedSeconds: 855,
+      content: [
+        {
+          type: "text",
+          value:
+            "Probably not — most terms are one-off and will never come close to a top-ten list, so exact counting for all of them is memory I don't need to spend. Something approximate, with a small bounded error, should be fine, since I only care about relative ranking among the top handful, not the precise count of something obscure.",
+        },
+      ],
+    },
+
+    {
+      id: "35",
+      role: "interviewer",
+      elapsedSeconds: 882,
+      content: [{ type: "text", value: "That approximation choice — same category of decision as the locale split?" }],
+    },
+
+    {
+      id: "36",
+      role: "candidate",
+      elapsedSeconds: 908,
+      content: [
+        {
+          type: "text",
+          value:
+            "No, this one feels smaller — it's internal to how one node keeps its own counts. I could change the counting scheme later without anyone outside that node ever noticing, as long as it still hands back a top-K list the same way.",
+        },
+      ],
+    },
+
+    {
+      id: "37",
+      role: "interviewer",
+      elapsedSeconds: 935,
+      content: [
+        {
+          type: "text",
+          value:
+            "That same trending term now means a huge share of all traffic is hitting one specific node, over and over, in the same second. What happens to it?",
+        },
+      ],
+    },
+
+    {
+      id: "38",
+      role: "candidate",
+      elapsedSeconds: 962,
+      content: [
+        {
+          type: "text",
+          value:
+            "That node just becomes hot. Whatever single server happens to own that shard is suddenly taking a wildly disproportionate share of reads while everything else sits idle.",
+        },
+      ],
+    },
+
+    {
+      id: "39",
+      role: "interviewer",
+      elapsedSeconds: 988,
+      content: [
+        {
+          type: "text",
+          value: "Let's stay right here for a minute. What would you actually try first?",
+        },
+      ],
+    },
+
+    {
+      id: "40",
+      role: "candidate",
+      elapsedSeconds: 1015,
+      content: [
+        {
+          type: "text",
+          value: "I'd want to detect that a node's traffic has spiked, and " },
+        {
+          id: "highlight-hot-node-replication",
+          type: "highlight",
+          status: "strong",
+          value: "replicate just that node's cached top-K to a few extra servers",
+          explanation:
+            "Correctly scopes the mitigation to the specific hot node rather than over-engineering a global caching layer before confirming the problem is localized.",
+        },
+        {
+          type: "text",
+          value:
+            ", so the load spreads across more than one machine. It's a fairly blunt fix, but it's cheap and it directly targets the one node that's actually in trouble, instead of rebuilding caching everywhere.",
+        },
+      ],
+    },
+
+    {
+      id: "41",
+      role: "interviewer",
+      elapsedSeconds: 1048,
+      content: [
+        {
+          type: "text",
+          value:
+            "Okay, let's move on for now — I want to come back to resiliency more broadly in a bit. First: why build custom trie infrastructure at all, instead of pointing autocomplete at whatever general-purpose search engine you'd probably already have for full product search?",
+        },
+      ],
+    },
+
+    {
+      id: "42",
+      role: "candidate",
+      elapsedSeconds: 1082,
+      content: [
+        {
+          type: "text",
+          value:
+            "A general search engine is tuned for scoring relevance across whole documents. Even a fast one isn't really built for a single-field prefix lookup that has to land in tens of milliseconds on every keystroke. I'd lean toward something purpose-built, but I'll admit that's a bigger bet — a lot of tooling and operational muscle grows up around infrastructure like that, and it's not something we'd casually rip out in a year.",
+        },
+      ],
+    },
+
+    {
+      id: "43",
+      role: "interviewer",
+      elapsedSeconds: 1115,
+      content: [
+        {
+          type: "text",
+          value:
+            "Let's talk about failure more directly now. Say the real-time counting pipeline you described earlier falls behind during a spike. What does the customer actually see while it catches up?",
+        },
+      ],
+    },
+
+    {
+      id: "44",
+      role: "candidate",
+      elapsedSeconds: 1148,
+      content: [
+        {
+          type: "text",
+          value:
+            "I wouldn't want the read path waiting on that pipeline at all. If it's lagging, I'd rather just serve whatever top-K is already cached — a little stale — than have the request hang or come back empty. Something like a circuit breaker in front of the live counting dependency, so a slow pipeline degrades freshness, not availability.",
+        },
+      ],
+    },
+
+    {
+      id: "45",
+      role: "interviewer",
+      elapsedSeconds: 1178,
+      content: [
+        {
+          type: "text",
+          value:
+            "Now, separately — one locale's pipeline has a bug and starts falling badly behind. Should that touch any other locale?",
+        },
+      ],
+    },
+
+    {
+      id: "46",
+      role: "candidate",
+      elapsedSeconds: 1205,
+      content: [
+        {
+          type: "text",
+          value:
+            "It shouldn't, and since I already split tries by locale, it seems natural to carry that same line through counting and serving too — each locale gets its own pipeline and shard set, so a bug in one stays contained instead of dragging everything else down with it.",
+        },
+      ],
+    },
+
+    {
+      id: "47",
+      role: "interviewer",
+      elapsedSeconds: 1235,
+      content: [
+        {
+          type: "text",
+          value:
+            "Good, that's a solid high-level picture. Let's go deeper on one specific piece — the top-K structure cached at each node. Walk me through exactly what a write touches.",
+        },
+      ],
+    },
+
+    {
+      id: "48",
+      role: "candidate",
+      elapsedSeconds: 1268,
+      content: [
+        {
+          type: "text",
+          value:
+            "When a search comes in for a term, I'd walk that term's path from root to leaf, and at every node along the way, check whether this term's updated count now beats whatever's currently the lowest entry in that node's cached list — if so, swap it in, otherwise leave it alone.",
+        },
+      ],
+    },
+
+    {
+      id: "49",
+      role: "interviewer",
+      elapsedSeconds: 1298,
+      content: [
+        {
+          type: "text",
+          value: "How many nodes does one search event actually touch, for a longer term?",
+        },
+      ],
+    },
+
+    {
+      id: "50",
+      role: "candidate",
+      elapsedSeconds: 1325,
+      content: [
+        {
+          type: "text",
+          value:
+            "One per character, root to leaf — so a fifteen-character term touches fifteen nodes. That scales with the length of the term someone typed, not with how many other terms exist, which is why it stays cheap even under a lot of write volume.",
+        },
+      ],
+    },
+
+    {
+      id: "51",
+      role: "interviewer",
+      elapsedSeconds: 1355,
+      content: [
+        {
+          type: "text",
+          value:
+            "That's fine under normal load. During the spike we've been circling back to, where's the actual bottleneck inside this structure, specifically?",
+        },
+      ],
+    },
+
+    {
+      id: "52",
+      role: "candidate",
+      elapsedSeconds: 1385,
+      content: [
+        {
+          type: "text",
+          value:
+            "It's not the update logic itself, that's cheap. It's contention — millions of near-identical events are all trying to update the same handful of ancestor nodes near the root at once. That's a hot lock, not a slow computation.",
+        },
+      ],
+    },
+
+    {
+      id: "53",
+      role: "interviewer",
+      elapsedSeconds: 1412,
+      content: [{ type: "text", value: "How would you relieve that?" }],
+    },
+
+    {
+      id: "54",
+      role: "candidate",
+      elapsedSeconds: 1442,
+      content: [
+        {
+          type: "text",
+          value:
+            "Maybe buffer updates locally for a short window and flush a single combined delta to the hot node, instead of applying every individual event as its own write. That turns a flood of contending writes into a much smaller number of batched ones. It does mean the top-K is a few hundred milliseconds behind truly instantaneous — but against a latency-critical read path, I think that's an easy trade.",
+        },
+      ],
+    },
+
+    {
+      id: "55",
+      role: "interviewer",
+      elapsedSeconds: 1472,
+      content: [
+        {
+          type: "text",
+          value: "Good. Anything you'd specifically want monitored once this is live?",
+        },
+      ],
+    },
+
+    {
+      id: "56",
+      role: "candidate",
+      elapsedSeconds: 1500,
+      content: [
+        {
+          type: "text",
+          value:
+            "Read latency at the tail, broken out per locale — a regression in one language shouldn't be able to hide inside a healthy global average. And how far behind that write buffer gets during a spike, since that's really what determines how stale a trending suggestion is allowed to get before it starts to matter.",
+        },
+      ],
+    },
+
+    {
+      id: "57",
+      role: "takeaway",
+      elapsedSeconds: 1530,
+      content: [
+        {
+          type: "text",
+          value:
+            "Takeaway: the important move here was protecting the read path. Because autocomplete has a strict latency budget, the expensive work — ranking, aggregation, counting — got pushed into the write and ingestion side, leaving reads as a simple, bounded lookup. Once that trade was made, most of the remaining complexity was about keeping those cached results fresh without letting a spike or a single bad locale take down anything else.",
+        },
+      ],
+    },
+  ],
+};
+
+const autocompleteSearch: TranscriptEntry = {
+  summary: {
+    slug: "autocomplete-search-recommendations",
+    title: "Design Autocomplete & Search Recommendations",
+    category: "hld",
+    difficulty: Difficulty.HARD,
+    duration: 50,
+    company: "Amazon",
+    tags: [
+      "Distributed Systems",
+      "Low Latency",
+      "Multi-Language",
+      "Trie",
+      "Resiliency",
+      "Blast Radius Isolation",
+      "One-Way vs Two-Way Doors",
+    ],
+    description:
+      "Production-grade HLD interview covering localized top-K prefix engines, multi-language tokenization, write-time top-K denormalization for hard latency ceilings, hot-key mitigation, blast-radius isolation per locale, explicit one-way/two-way door trade-offs, and a deep component drill into the trie's top-K node structure.",
+  },
+
+  transcript,
+};
+
+export default autocompleteSearch;
 ================================================
 FILE: ./src/content/transcripts/hld/payment-system.ts
 ================================================
@@ -16820,16 +19847,898 @@ const paymentSystem: TranscriptEntry = {
 
 export default paymentSystem;
 ================================================
+FILE: ./src/content/transcripts/hld/amazon-lockers.ts
+================================================
+import { Difficulty } from "@prisma/client";
+
+import { TranscriptEntry } from "../types";
+import { TranscriptData } from "@/features/library/types/transcript";
+
+const transcript: TranscriptData = {
+  metadata: {
+    title: "Design Amazon Lockers & Capacity Management",
+    difficulty: Difficulty.HARD,
+    duration: 50,
+    template: "High Level Design",
+    category: "HLD",
+  },
+
+  messages: [
+    {
+      id: "1",
+      role: "interviewer",
+      elapsedSeconds: 0,
+      content: [
+        {
+          type: "text",
+          value:
+            "Let's design the system behind Amazon Lockers — the physical pickup points where drivers drop off packages and customers pick them up later.",
+        },
+      ],
+    },
+
+    {
+      id: "2",
+      role: "candidate",
+      elapsedSeconds: 16,
+      content: [
+        {
+          type: "text",
+          value:
+            "Before designing anything, I want to understand what decisions this system is actually responsible for.",
+        },
+      ],
+    },
+
+    {
+      id: "3",
+      role: "interviewer",
+      elapsedSeconds: 28,
+      content: [
+        {
+          type: "text",
+          value: "Fair. Go ahead.",
+        },
+      ],
+    },
+
+    {
+      id: "4",
+      role: "candidate",
+      elapsedSeconds: 45,
+      content: [
+        {
+          type: "text",
+          value:
+            "Is the scope just reserving and tracking locker slots, or does it also include deciding which locker a driver should be routed to in the first place?",
+        },
+      ],
+    },
+
+    {
+      id: "5",
+      role: "interviewer",
+      elapsedSeconds: 63,
+      content: [
+        {
+          type: "text",
+          value:
+            "Both. The system should pick a locker for a package and manage the physical slot lifecycle end to end.",
+        },
+      ],
+    },
+
+    {
+      id: "6",
+      role: "candidate",
+      elapsedSeconds: 82,
+      content: [
+        {
+          type: "text",
+          value:
+            "Okay. So functionally: assign a package to a locker, reserve a physical slot sized for that package, let the driver deposit it, notify the customer, and release the slot once picked up or expired.",
+        },
+      ],
+    },
+
+    {
+      id: "7",
+      role: "interviewer",
+      elapsedSeconds: 108,
+      content: [
+        {
+          type: "text",
+          value: "Right. What about non-functional concerns?",
+        },
+      ],
+    },
+
+    {
+      id: "8",
+      role: "candidate",
+      elapsedSeconds: 130,
+      content: [
+        {
+          type: "text",
+          value:
+            "The big one is correctness of slot state — we can never tell two drivers the same slot is free. I'd also guess these kiosks sit in places like mall basements or apartment lobbies, so I shouldn't assume reliable connectivity at the kiosk itself.",
+        },
+      ],
+    },
+
+    {
+      id: "9",
+      role: "interviewer",
+      elapsedSeconds: 158,
+      content: [
+        {
+          type: "text",
+          value:
+            "Good instinct, we'll come back to that. Let's start simple. Sketch the first version.",
+        },
+      ],
+    },
+
+    {
+      id: "10",
+      role: "candidate",
+      elapsedSeconds: 182,
+      content: [
+        {
+          type: "text",
+          value:
+            "Simplest version: a driver's handheld app calls a Locker Service, which checks a database for a free slot near the delivery address, marks it reserved, and returns an access code. Driver walks up, enters the code, door opens.",
+        },
+      ],
+    },
+
+    {
+      id: "11",
+      role: "interviewer",
+      elapsedSeconds: 215,
+      content: [
+        {
+          type: "text",
+          value:
+            "Two drivers, delivering to nearby addresses, both query the same locker bank within a second of each other for the last free small slot. Walk me through what happens.",
+        },
+      ],
+    },
+
+    {
+      id: "12",
+      role: "candidate",
+      elapsedSeconds: 244,
+      content: [
+        {
+          type: "text",
+          value:
+            "Both requests hit different API servers. Both read the slot as free. Both write a reservation. Let me think... whichever write happens last wins, but both drivers already got back a success response and an access code for the same physical door.",
+        },
+      ],
+    },
+
+    {
+      id: "13",
+      role: "interviewer",
+      elapsedSeconds: 275,
+      content: [
+        {
+          type: "text",
+          value: "So how do you stop that?",
+        },
+      ],
+    },
+
+    {
+      id: "14",
+      role: "candidate",
+      elapsedSeconds: 298,
+      content: [
+        {
+          type: "text",
+          value: "I'd just wrap the read and the write in a database transaction.",
+        },
+        {
+          id: "highlight-naive-transaction",
+          type: "highlight",
+          status: "missed",
+          value: "",
+          explanation:
+            "A transaction around a read-then-write doesn't help if two separate transactions each read 'free' before either writes — it doesn't create mutual exclusion on its own without an isolation guarantee tied to the actual row.",
+        },
+      ],
+    },
+
+    {
+      id: "15",
+      role: "interviewer",
+      elapsedSeconds: 322,
+      content: [
+        {
+          type: "text",
+          value:
+            "Both transactions still read the row before either commits. Does wrapping it in a transaction change that?",
+        },
+      ],
+    },
+
+    {
+      id: "16",
+      role: "candidate",
+      elapsedSeconds: 348,
+      content: [
+        {
+          type: "text",
+          value:
+            "No, you're right, that doesn't fix it by itself. The reservation has to be a single atomic operation, not a read followed by a write.",
+        },
+      ],
+    },
+
+    {
+      id: "17",
+      role: "interviewer",
+      elapsedSeconds: 368,
+      content: [
+        {
+          type: "text",
+          value: "How would you make it atomic?",
+        },
+      ],
+    },
+
+    {
+      id: "18",
+      role: "candidate",
+      elapsedSeconds: 392,
+      content: [
+        {
+          type: "text",
+          value: "I'd make the ",
+        },
+        {
+          id: "highlight-conditional-update",
+          type: "highlight",
+          status: "strong",
+          value: "reservation a single conditional update",
+          explanation:
+            "Correctly moves from read-then-write to an atomic compare-and-set on the row itself, which is what actually prevents the race.",
+        },
+        {
+          type: "text",
+          value:
+            " — an UPDATE against the slot row that only succeeds if its current status is still 'free'. Whichever request's update actually flips the row wins, and the other gets zero rows affected and knows to try a different slot.",
+        },
+      ],
+    },
+
+    {
+      id: "19",
+      role: "interviewer",
+      elapsedSeconds: 425,
+      content: [
+        {
+          type: "text",
+          value: "Good. Now — packages aren't all the same size. Does that change anything?",
+        },
+      ],
+    },
+
+    {
+      id: "20",
+      role: "candidate",
+      elapsedSeconds: 452,
+      content: [
+        {
+          type: "text",
+          value:
+            "It does. A slot isn't interchangeable capacity like a generic counter — it's a specific physical compartment of a specific size. So 'is there a free slot' isn't a single number, it's really 'is there a free slot in the size tier this package needs.'",
+        },
+      ],
+    },
+
+    {
+      id: "21",
+      role: "interviewer",
+      elapsedSeconds: 480,
+      content: [
+        {
+          type: "text",
+          value:
+            "Say a locker bank has plenty of large slots free but zero small ones, and a small package shows up. What do you do?",
+        },
+      ],
+    },
+
+    {
+      id: "22",
+      role: "candidate",
+      elapsedSeconds: 508,
+      content: [
+        {
+          type: "text",
+          value:
+            "You could put the small package in a large slot, but if you always do that you'll burn through large capacity fast with tiny packages and then have nowhere for actual large ones. I'd want a ",
+        },
+        {
+          id: "highlight-best-fit",
+          type: "highlight",
+          status: "strong",
+          value: "best-fit allocation with tiered fallback",
+          explanation:
+            "Recognizes that naive first-available allocation wastes scarce large capacity — best-fit-first with controlled fallback is the right tradeoff.",
+        },
+        {
+          type: "text",
+          value:
+            " — try the smallest tier that fits first, and only fall back to the next size up when that tier is exhausted, so large slots stay reserved for packages that actually need them.",
+        },
+      ],
+    },
+
+    {
+      id: "23",
+      role: "interviewer",
+      elapsedSeconds: 545,
+      content: [
+        {
+          type: "text",
+          value:
+            "What if every tier at this specific locker bank is full for this package's size?",
+        },
+      ],
+    },
+
+    {
+      id: "24",
+      role: "candidate",
+      elapsedSeconds: 570,
+      content: [
+        {
+          type: "text",
+          value:
+            "Then this locker bank just isn't a valid candidate for this package, and it shouldn't have been offered in the first place. Which makes me think slot allocation and locker selection aren't really two separate steps — the selection step needs live visibility into per-tier capacity, not just 'is this locker open.'",
+        },
+      ],
+    },
+
+    {
+      id: "25",
+      role: "interviewer",
+      elapsedSeconds: 600,
+      content: [
+        {
+          type: "text",
+          value: "Good, hold that thought. Let's talk about the kiosk itself now. Where does it live in this picture?",
+        },
+      ],
+    },
+
+    {
+      id: "26",
+      role: "candidate",
+      elapsedSeconds: 625,
+      content: [
+        {
+          type: "text",
+          value:
+            "So far I've been treating the kiosk as a dumb terminal — driver enters a code, kiosk asks the central Locker Service 'is this code valid,' service says yes, door opens.",
+        },
+      ],
+    },
+
+    {
+      id: "27",
+      role: "interviewer",
+      elapsedSeconds: 650,
+      content: [
+        {
+          type: "text",
+          value:
+            "This kiosk is in a basement with unreliable cellular signal. The driver walks up with a valid code, but the kiosk's connection to the central service has been down for the last ten minutes. What happens?",
+        },
+      ],
+    },
+
+    {
+      id: "28",
+      role: "candidate",
+      elapsedSeconds: 680,
+      content: [
+        {
+          type: "text",
+          value:
+            "Hmm. If opening the door requires a live round trip to the central service, the door just... doesn't open. The driver's standing there with a package and a valid reservation and the kiosk can't confirm it.",
+        },
+      ],
+    },
+
+    {
+      id: "29",
+      role: "interviewer",
+      elapsedSeconds: 705,
+      content: [
+        {
+          type: "text",
+          value: "So how do you avoid that?",
+        },
+      ],
+    },
+
+    {
+      id: "30",
+      role: "candidate",
+      elapsedSeconds: 730,
+      content: [
+        {
+          type: "text",
+          value:
+            "The kiosk needs to be able to make the open-or-not decision on its own. I'd push the reservation — slot ID and access code — down to the kiosk at the moment it's created, so the kiosk already knows locally which codes are valid for which doors, before the driver ever arrives.",
+        },
+      ],
+    },
+
+    {
+      id: "31",
+      role: "interviewer",
+      elapsedSeconds: 758,
+      content: [
+        {
+          type: "text",
+          value:
+            "Okay, but that push has to reach the kiosk somehow. What if the kiosk was already offline when the reservation was made?",
+        },
+      ],
+    },
+
+    {
+      id: "32",
+      role: "candidate",
+      elapsedSeconds: 785,
+      content: [
+        {
+          type: "text",
+          value:
+            "Then it queues, and the kiosk picks it up once it reconnects. That's fine for a package that hasn't arrived yet. It's only a real problem if the driver shows up before the reservation ever made it down.",
+        },
+      ],
+    },
+
+    {
+      id: "33",
+      role: "interviewer",
+      elapsedSeconds: 812,
+      content: [
+        {
+          type: "text",
+          value: "So does that change how you pick lockers for packages heading to a flaky kiosk?",
+        },
+      ],
+    },
+
+    {
+      id: "34",
+      role: "candidate",
+      elapsedSeconds: 838,
+      content: [
+        {
+          type: "text",
+          value:
+            "It should. Going back to what you said earlier — locker selection needs live capacity, and I'd extend that to needing live connectivity health too. If a kiosk's been unreachable, I'd treat its capacity as ",
+        },
+        {
+          id: "highlight-degraded-capacity",
+          type: "highlight",
+          status: "strong",
+          value: "unconfirmed rather than unavailable",
+          explanation:
+            "Good distinction — instead of a binary online/offline flag, treating stale kiosks as degraded input to the selection scoring avoids both wrongly excluding a locker that's fine and wrongly trusting one that isn't.",
+        },
+        {
+          type: "text",
+          value:
+            ", and deprioritize it in selection until it's confirmed synced again, rather than fully excluding it or fully trusting it.",
+        },
+      ],
+    },
+
+    {
+      id: "35",
+      role: "interviewer",
+      elapsedSeconds: 872,
+      content: [
+        {
+          type: "text",
+          value:
+            "Now flip it around. The kiosk was offline, a driver dropped off a package using its locally cached reservation, and the door opened and closed. When the kiosk reconnects, what does it tell the central service, and what if the central service had, in the meantime, decided to give that slot away as expired?",
+        },
+      ],
+    },
+
+    {
+      id: "36",
+      role: "candidate",
+      elapsedSeconds: 905,
+      content: [
+        {
+          type: "text",
+          value:
+            "That's a real conflict. The kiosk thinks the slot is occupied because it physically watched the door close. The central service thinks it's free because it never heard otherwise and the reservation timed out.",
+        },
+      ],
+    },
+
+    {
+      id: "37",
+      role: "interviewer",
+      elapsedSeconds: 930,
+      content: [
+        {
+          type: "text",
+          value: "Who's right?",
+        },
+      ],
+    },
+
+    {
+      id: "38",
+      role: "candidate",
+      elapsedSeconds: 955,
+      content: [
+        {
+          type: "text",
+          value:
+            "The kiosk is, physically. It has a door sensor, it knows a package is actually sitting in that compartment. I think the mistake is letting the central service treat itself as the source of truth for physical slot occupancy when it isn't physically present.",
+        },
+      ],
+    },
+
+    {
+      id: "39",
+      role: "interviewer",
+      elapsedSeconds: 985,
+      content: [
+        {
+          type: "text",
+          value: "So how do you restructure that?",
+        },
+      ],
+    },
+
+    {
+      id: "40",
+      role: "candidate",
+      elapsedSeconds: 1015,
+      content: [
+        {
+          type: "text",
+          value: "The kiosk should be the ",
+        },
+        {
+          id: "highlight-kiosk-authority",
+          type: "highlight",
+          status: "strong",
+          value: "authoritative source for physical occupancy",
+          explanation:
+            "Correctly relocates the source of truth to the component with physical evidence, and treats the central service as a downstream, reconciling observer rather than the arbiter of physical reality.",
+        },
+        {
+          type: "text",
+          value:
+            ", logging every door-open and door-close event locally as it happens, with its own timestamps. The central service is downstream of that — it reconciles its view against the kiosk's event log once connectivity returns, not the other way around.",
+        },
+      ],
+    },
+
+    {
+      id: "41",
+      role: "interviewer",
+      elapsedSeconds: 1050,
+      content: [
+        {
+          type: "text",
+          value: "Walk me through that sync happening.",
+        },
+      ],
+    },
+
+    {
+      id: "42",
+      role: "candidate",
+      elapsedSeconds: 1080,
+      content: [
+        {
+          type: "text",
+          value:
+            "The kiosk keeps an append-only local log of door events with sequence numbers. On reconnect, a relay process on the kiosk pushes any events the central service hasn't acknowledged yet. If the central service had marked that slot expired and free, it now sees a door-close event after the expiry and corrects itself — flags the slot occupied, and separately raises an alert that a reservation was fulfilled after its expiry window so someone can check whether that customer still needs notifying.",
+        },
+      ],
+    },
+
+    {
+      id: "43",
+      role: "interviewer",
+      elapsedSeconds: 1120,
+      content: [
+        {
+          type: "text",
+          value: "Good. Now, once a package is actually placed, how does the customer find out?",
+        },
+      ],
+    },
+
+    {
+      id: "44",
+      role: "candidate",
+      elapsedSeconds: 1148,
+      content: [
+        {
+          type: "text",
+          value:
+            "The kiosk's door-close event, once it reaches the central service, should trigger a notification — push notification with a pickup code, falling back to SMS.",
+        },
+      ],
+    },
+
+    {
+      id: "45",
+      role: "interviewer",
+      elapsedSeconds: 1172,
+      content: [
+        {
+          type: "text",
+          value:
+            "Given everything we just discussed about the kiosk being offline and syncing late, what happens if that same door-close event gets delivered to the notification step twice?",
+        },
+      ],
+    },
+
+    {
+      id: "46",
+      role: "candidate",
+      elapsedSeconds: 1198,
+      content: [
+        {
+          type: "text",
+          value:
+            "Right, because the kiosk might retry pushing an event it's not sure was acknowledged. I'd carry the kiosk's event ID all the way through to the notification, so the notification step can recognize ",
+        },
+        {
+          id: "highlight-idempotent-notification",
+          type: "highlight",
+          status: "strong",
+          value: "it's already sent for this event ID",
+          explanation:
+            "Correctly extends idempotency from the kiosk sync layer through to customer-facing notifications, so a duplicate physical event doesn't become a duplicate, confusing message to the customer.",
+        },
+        {
+          type: "text",
+          value:
+            " and skip it, rather than treating every incoming event as a brand new notification to send.",
+        },
+      ],
+    },
+
+    {
+      id: "47",
+      role: "interviewer",
+      elapsedSeconds: 1230,
+      content: [
+        {
+          type: "text",
+          value:
+            "Let's go back to locker selection. You mentioned it needs live capacity and connectivity health. What about cost — does the system just pick the nearest locker with room?",
+        },
+      ],
+    },
+
+    {
+      id: "48",
+      role: "candidate",
+      elapsedSeconds: 1260,
+      content: [
+        {
+          type: "text",
+          value:
+            "Nearest-to-the-customer isn't quite right either, because the thing we're actually optimizing is the driver's route, not straight-line distance. A locker slightly farther from the customer but directly on the driver's existing route costs less than a 'closer' one that's a detour.",
+        },
+      ],
+    },
+
+    {
+      id: "49",
+      role: "interviewer",
+      elapsedSeconds: 1292,
+      content: [
+        {
+          type: "text",
+          value: "So what are you actually scoring on?",
+        },
+      ],
+    },
+
+    {
+      id: "50",
+      role: "candidate",
+      elapsedSeconds: 1320,
+      content: [
+        {
+          type: "text",
+          value:
+            "A few signals together: detour cost added to the driver's planned route, whether the right size tier is actually free, and now, from what we just covered, the kiosk's connectivity confidence. I'd score candidate lockers on those and pick the best, not just the nearest.",
+        },
+      ],
+    },
+
+    {
+      id: "51",
+      role: "interviewer",
+      elapsedSeconds: 1352,
+      content: [
+        {
+          type: "text",
+          value:
+            "The locker looked free when the route was planned that morning, but by the time the driver actually gets there hours later, someone else's package has filled it. What now?",
+        },
+      ],
+    },
+
+    {
+      id: "52",
+      role: "candidate",
+      elapsedSeconds: 1382,
+      content: [
+        {
+          type: "text",
+          value:
+            "That's the gap between planning-time capacity and arrival-time capacity. A locker that shows one free slot in the morning might have several drivers all planning routes around that same slot before any of them arrive.",
+        },
+      ],
+    },
+
+    {
+      id: "53",
+      role: "interviewer",
+      elapsedSeconds: 1408,
+      content: [
+        {
+          type: "text",
+          value: "So how do you protect against that?",
+        },
+      ],
+    },
+
+    {
+      id: "54",
+      role: "candidate",
+      elapsedSeconds: 1435,
+      content: [
+        {
+          type: "text",
+          value: "I'd put a ",
+        },
+        {
+          id: "highlight-soft-hold",
+          type: "highlight",
+          status: "strong",
+          value: "short-lived soft hold on the slot at planning time",
+          explanation:
+            "Correctly identifies that a scoring decision made hours before arrival needs its own temporary reservation with a decaying lifetime, rather than treating the slot as free right up until the atomic reservation at arrival.",
+        },
+        {
+          type: "text",
+          value:
+            " as soon as a route plan assigns a package to it — not a full reservation yet, but enough that other route plans see it as spoken for. If the driver doesn't actually arrive and confirm within some window, the hold expires and the slot goes back into the pool.",
+        },
+      ],
+    },
+
+    {
+      id: "55",
+      role: "interviewer",
+      elapsedSeconds: 1470,
+      content: [
+        {
+          type: "text",
+          value: "Good. Last one — days later, does anything check that the software's view of locker state matches physical reality?",
+        },
+      ],
+    },
+
+    {
+      id: "56",
+      role: "candidate",
+      elapsedSeconds: 1500,
+      content: [
+        {
+          type: "text",
+          value:
+            "It should. Even with the kiosk as source of truth, hardware fails — a door sensor can stick, a kiosk can lose its local log. I'd run a periodic reconciliation between each kiosk's reported slot state and whatever physical audit signal is available, like a technician sweep or a weight sensor, and flag mismatches for manual review rather than assume software state is always correct.",
+        },
+      ],
+    },
+
+    {
+      id: "57",
+      role: "interviewer",
+      elapsedSeconds: 1535,
+      content: [
+        {
+          type: "text",
+          value: "Last question — how does this scale to thousands of locker banks?",
+        },
+      ],
+    },
+
+    {
+      id: "58",
+      role: "candidate",
+      elapsedSeconds: 1565,
+      content: [
+        {
+          type: "text",
+          value:
+            "The locker selection and route-scoring services scale horizontally and shard capacity data by region, since a package only ever competes with lockers near its own delivery area. Each kiosk only ever talks about its own slots, so kiosk sync fans out naturally without any kiosk needing to know about any other. The soft-hold and reservation state can live in a per-region store keyed by locker, and reconciliation jobs run per region on their own schedule so a backlog in one area doesn't block another.",
+        },
+      ],
+    },
+
+    {
+      id: "59",
+      role: "takeaway",
+      elapsedSeconds: 1600,
+      content: [
+        {
+          type: "text",
+          value:
+            "Takeaway: treat physical slot state as owned by the device that can actually observe it, not the central service. Atomic conditional updates prevent double-booking, tiered best-fit allocation respects scarce capacity, soft holds bridge the gap between planning-time and arrival-time state, and reconciliation — at the kiosk-sync level and the physical-audit level — catches everything the rest of the design didn't anticipate.",
+        },
+      ],
+    },
+  ],
+};
+
+const amazonLockers: TranscriptEntry = {
+  summary: {
+    slug: "amazon-lockers",
+    title: "Design Amazon Lockers & Capacity Management",
+    category: "hld",
+    difficulty: Difficulty.HARD,
+    duration: 50,
+    company: "Amazon",
+    tags: [
+      "Distributed Systems",
+      "Concurrency",
+      "Offline-First",
+      "Capacity Planning",
+      "Idempotency",
+      "Edge Computing",
+      "Last-Mile Logistics",
+    ],
+    description:
+      "Production-grade HLD interview covering dynamic slot allocation, kiosk-authoritative offline sync, edge notification dispatch, and last-mile cost optimization for a physical locker network.",
+  },
+
+  transcript,
+};
+
+export default amazonLockers;
+================================================
 FILE: ./src/content/transcripts/types.ts
 ================================================
 import { Difficulty } from "@prisma/client";
 import { TranscriptData } from "@/features/library/types/transcript";
 
-export type TranscriptCategory =
-  | "hld"
-  | "lld"
-  | "dsa"
-  | "behavioural";
+// Transcript categories - add new categories here and create corresponding folder
+export const TRANSCRIPT_CATEGORIES = [
+  "hld",
+  "lld",
+  "dsa",
+  "behavioural",
+] as const;
+
+export type TranscriptCategory = typeof TRANSCRIPT_CATEGORIES[number];
 
 export type TranscriptSummary = {
   slug: string;
@@ -16857,65 +20766,103 @@ export type TranscriptEntry = {
 ================================================
 FILE: ./src/content/transcripts/index.ts
 ================================================
-import { TranscriptEntry, TranscriptCategory } from "./types";
+import {
+  TranscriptEntry,
+  TranscriptCategory,
+} from "./types";
 
-import paymentSystem from "./hld/payment-system";
+import { TRANSCRIPTS } from "@/features/library/data/generated";
 
-const TRANSCRIPTS: TranscriptEntry[] = [
-  paymentSystem,
-];
+// Precompute indexes for O(1) lookups
+const transcriptMap = new Map(
+  TRANSCRIPTS.map(t => [t.summary.slug, t])
+);
 
-export function getAllTranscripts(): TranscriptEntry[] {
+const categoryMap = new Map<TranscriptCategory, TranscriptEntry[]>();
+
+for (const transcript of TRANSCRIPTS) {
+  const list = categoryMap.get(transcript.summary.category) ?? [];
+  list.push(transcript);
+  categoryMap.set(transcript.summary.category, list);
+}
+
+export function getAllTranscripts(): ReadonlyArray<TranscriptEntry> {
   return TRANSCRIPTS;
 }
 
-export function getTranscript(slug: string): TranscriptEntry | undefined {
-  return TRANSCRIPTS.find(
-    (transcript) => transcript.summary.slug === slug
-  );
+export function getTranscript(
+  slug: string
+): TranscriptEntry | undefined {
+  return transcriptMap.get(slug);
 }
 
 export function getTranscriptsByCategory(
   category: TranscriptCategory
 ): TranscriptEntry[] {
-  return TRANSCRIPTS.filter(
-    (transcript) => transcript.summary.category === category
-  );
+  return categoryMap.get(category) ?? [];
 }
 
-export function getGroupedTranscripts(): Record<
-  TranscriptCategory,
-  TranscriptEntry[]
-> {
-  return {
-    hld: getTranscriptsByCategory("hld"),
-    lld: getTranscriptsByCategory("lld"),
-    dsa: getTranscriptsByCategory("dsa"),
-    behavioural: getTranscriptsByCategory("behavioural"),
+export function getCategories(): TranscriptCategory[] {
+  return [
+    ...new Set(
+      TRANSCRIPTS.map(
+        (t) => t.summary.category
+      )
+    ),
+  ];
+}
+
+export function getCategoryLabel(
+  category: TranscriptCategory
+): string {
+  const labels: Record<TranscriptCategory, string> = {
+    hld: "High Level Design",
+    lld: "Low Level Design",
+    dsa: "Data Structures & Algorithms",
+    behavioural: "Behavioural"
   };
+
+  return labels[category] ?? category;
 }
 
-export const TRANSCRIPT_CATEGORIES: {
-  id: TranscriptCategory;
-  label: string;
-}[] = [
-  {
-    id: "hld",
-    label: "High Level Design",
-  },
-  {
-    id: "lld",
-    label: "Low Level Design",
-  },
-  {
-    id: "dsa",
-    label: "Data Structures & Algorithms",
-  },
-  {
-    id: "behavioural",
-    label: "Behavioural",
-  },
-];
+export function validateTranscripts(): void {
+  const slugs = new Set<string>();
+
+  for (const transcript of TRANSCRIPTS) {
+    if (slugs.has(transcript.summary.slug)) {
+      throw new Error(
+        `Duplicate slug: ${transcript.summary.slug}`
+      );
+    }
+
+    slugs.add(transcript.summary.slug);
+
+    if (!transcript.summary.title.trim()) {
+      throw new Error(
+        `${transcript.summary.slug}: missing title`
+      );
+    }
+
+    if (!transcript.summary.tags.length) {
+      throw new Error(
+        `${transcript.summary.slug}: no tags`
+      );
+    }
+
+    if (transcript.summary.duration <= 0) {
+      throw new Error(
+        `${transcript.summary.slug}: invalid duration`
+      );
+    }
+  }
+}
+================================================
+FILE: ./src/repositories/index.ts
+================================================
+// Removed export of BugScenarioRepository because the module or its type
+// declarations were not found. Exporting available repositories only.
+export * from "./BugAttemptRepository";
+export * from "./BugAttemptRepository";
 ================================================
 FILE: ./src/shared/logger/logger.ts
 ================================================
@@ -18363,6 +22310,7 @@ interface HeaderProps extends React.HTMLAttributes<HTMLDivElement> {
   subtitle?: string;
   actions?: React.ReactNode;
   className?: string;
+  onBack?: () => void;
 }
 
 export const Header = React.forwardRef<HTMLDivElement, HeaderProps>(
@@ -22581,6 +26529,187 @@ FILE: ./src/modules/interview/services/ProblemPickerService.ts
 ================================================
 
 ================================================
+FILE: ./src/modules/interview/services/InterviewService.ts
+================================================
+import { Difficulty, InterviewMode } from "@prisma/client";
+import { z } from "zod";
+
+import { prisma } from "@/shared/prisma/client";
+import { createInterview } from "./interview/InterviewFactory";
+import { TranscriptService } from "./TranscriptService";
+import { pickPersona } from "../reverse/CandidatePersonas";
+import logger from "@/shared/logger/logger";
+
+const difficultyMap: Record<string, Difficulty> = {
+  EASY: Difficulty.EASY,
+  MEDIUM: Difficulty.MEDIUM,
+  HARD: Difficulty.HARD,
+};
+
+export const StartInterviewSchema = z.object({
+  type: z.string(),
+  difficulty: z.nativeEnum(Difficulty),
+  duration: z.number().positive(),
+  company: z.string(),
+  problemId: z.string().uuid(),
+  mode: z.nativeEnum(InterviewMode).optional(),
+  topic: z.string().optional(),
+});
+
+export type StartInterviewInput = z.infer<typeof StartInterviewSchema>;
+
+export class InterviewService {
+  async startInterview(input: StartInterviewInput) {
+    const { type, difficulty, duration, company, problemId, mode, topic } = input;
+
+    // Find template with fallback
+    let template = await prisma.interviewTemplate.findUnique({
+      where: { slug: type },
+    });
+
+    if (!template) {
+      template = await prisma.interviewTemplate.findUnique({
+        where: { slug: "hld" },
+      });
+    }
+
+    if (!template) {
+      throw new Error("No valid interview templates found. Please run seed.");
+    }
+
+    const interviewDifficulty = difficultyMap[difficulty];
+
+    if (!interviewDifficulty) {
+      throw new Error("Invalid difficulty.");
+    }
+
+    const problem = await prisma.problem.findUnique({
+      where: { id: problemId },
+    });
+
+    if (!problem) {
+      throw new Error("Problem not found.");
+    }
+
+    const userId = await this.ensureGuestUser();
+
+    const interviewMode =
+      mode === "REVERSE" ? InterviewMode.REVERSE : InterviewMode.CANDIDATE;
+
+    const interviewData = createInterview({
+      templateId: template.id,
+      difficulty: interviewDifficulty,
+      duration,
+      company,
+      problemId: problem.id,
+      mode: interviewMode,
+      topic,
+    });
+
+    const persona =
+      interviewMode === InterviewMode.REVERSE
+        ? pickPersona(interviewDifficulty)
+        : null;
+
+    // Use transaction to ensure atomicity and handle race conditions
+    const savedInterview = await prisma.$transaction(async (tx) => {
+      try {
+        const interview = await tx.interview.create({
+          data: {
+            difficulty: interviewData.difficulty,
+            duration: interviewData.duration,
+            company: interviewData.company,
+            status: interviewData.status,
+            currentPhase: interviewData.currentPhase,
+            summary: interviewData.summary,
+            promptVersion: interviewData.promptVersion,
+            mode: interviewData.mode,
+            candidatePersona: persona as any,
+            user: { connect: { id: userId } },
+            template: { connect: { id: template.id } },
+            problem: { connect: { id: problem.id } },
+          },
+        });
+
+        await tx.problem.update({
+          where: { id: problem.id },
+          data: { interviewCount: { increment: 1 } },
+        });
+
+        return interview;
+      } catch (error) {
+        // Handle race condition: if interview already exists, return it
+        if (error instanceof Error && 'code' in error && error.code === 'P2002') {
+          const existing = await tx.interview.findFirst({
+            where: {
+              userId,
+              problemId: problem.id,
+              status: { not: "COMPLETED" },
+            },
+          });
+          if (existing) return existing;
+        }
+        throw error;
+      }
+    });
+
+    const transcriptService = new TranscriptService();
+
+    const greeting = interviewMode === InterviewMode.REVERSE
+      ? `Hi, I'm ${persona!.name}. Ready when you are — go ahead and start the interview.`
+      : `Welcome! Today we'll design "${problem.title}". Start by asking clarifying questions before proposing your design.`;
+
+    await transcriptService.addAssistantMessage(
+      savedInterview.id,
+      greeting
+    );
+
+    return savedInterview.id;
+  }
+
+  private async ensureGuestUser(): Promise<string> {
+    const { cookies } = await import("next/headers");
+    const { randomUUID } = await import("crypto");
+    const GUEST_COOKIE = "guest_user_id";
+    const GUEST_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 30; // 30 days
+
+    const { auth } = await import("@/modules/auth/auth");
+    const session = await auth();
+
+    if (session?.user?.id) {
+      return session.user.id;
+    }
+
+    const cookieStore = await cookies();
+    const existingGuestId = cookieStore.get(GUEST_COOKIE)?.value;
+
+    if (existingGuestId) {
+      const guest = await prisma.user.findUnique({
+        where: { id: existingGuestId },
+      });
+
+      if (guest) return guest.id;
+    }
+
+    const guest = await prisma.user.create({
+      data: {
+        email: `guest-${randomUUID()}@guest.local`,
+        isGuest: true,
+      },
+    });
+
+    cookieStore.set(GUEST_COOKIE, guest.id, {
+      httpOnly: true,
+      sameSite: "lax",
+      maxAge: GUEST_COOKIE_MAX_AGE_SECONDS,
+      path: "/",
+    });
+
+    return guest.id;
+  }
+}
+
+================================================
 FILE: ./src/modules/interview/services/interview/InterviewFactory.ts
 ================================================
 import { InterviewStatus, InterviewMode } from "@prisma/client";
@@ -23540,3 +27669,540 @@ The JSON must satisfy the requested schema.
     });
   }
 }
+================================================
+FILE: ./src/modules/bug-hunting/repositories/BugAttemptRepository.ts
+================================================
+import { BugAttempt } from "../domain/entities/BugAttempt";
+
+export interface BugAttemptRepository {
+  findById(
+    id: string,
+  ): Promise<BugAttempt | null>;
+
+  save(
+    attempt: BugAttempt,
+  ): Promise<void>;
+}
+================================================
+FILE: ./src/modules/bug-hunting/repositories/BugScenarioRepository.ts
+================================================
+import { BugScenario } from "../domain/entities/BugScenario";
+
+export interface ScenarioQuery {
+  difficulty?: string;
+  category?: string;
+  severity?: string;
+  tags?: string[];
+  search?: string;
+  page: number;
+  pageSize: number;
+}
+
+export interface Page<T> {
+  items: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface BugScenarioRepository {
+  findById(
+    id: string,
+  ): Promise<BugScenario | null>;
+
+  findMany(
+    query: ScenarioQuery,
+  ): Promise<Page<BugScenario>>;
+}
+================================================
+FILE: ./src/modules/bug-hunting/index.ts
+================================================
+export * from "@/domain";
+export * from "@/repositories";
+export * from "./services";
+export * from "./infrastructure";
+================================================
+FILE: ./src/modules/bug-hunting/infrastructure/repositories/JsonBugScenarioRepository.ts
+================================================
+import {
+  BugScenarioRepository,
+  Page,
+  ScenarioQuery,
+} from "@/repositories";
+
+import {
+  BugScenario,
+  InvestigationArtifact,
+  ScenarioMetadata,
+  ScenarioDifficulty,
+  Severity,
+  ScenarioCategory,
+  EvidenceType,
+} from "@/domain";
+import { ScenarioRegistry } from "@/infrastructure/registry/ScenarioRegistry";
+
+
+export class JsonBugScenarioRepository
+  implements BugScenarioRepository {
+
+  async findById(
+    id: string,
+  ): Promise<BugScenario | null> {
+
+    const raw = ScenarioRegistry.get(id);
+
+    if (!raw) {
+      return null;
+    }
+
+    return this.mapToDomain(raw);
+  }
+
+
+  async findMany(
+    query: ScenarioQuery,
+  ): Promise<Page<BugScenario>> {
+
+    let scenarios = ScenarioRegistry.getAll();
+
+
+    if (query.search) {
+      scenarios = scenarios.filter(
+        scenario =>
+          scenario.title
+            .toLowerCase()
+            .includes(
+              query.search!.toLowerCase(),
+            ),
+      );
+    }
+
+
+    const start =
+      query.page * query.pageSize;
+
+    const items =
+      scenarios
+        .slice(
+          start,
+          start + query.pageSize,
+        )
+        .map(item =>
+          this.mapToDomain(item),
+        );
+
+
+    return {
+      items,
+      total: scenarios.length,
+      page: query.page,
+      pageSize: query.pageSize,
+    };
+  }
+
+
+  private mapToDomain(
+    data: any,
+  ): BugScenario {
+
+    return new BugScenario(
+      data.id,
+      data.title,
+      data.description,
+
+      new ScenarioMetadata(
+        data.metadata.difficulty as ScenarioDifficulty,
+        data.metadata.severity as Severity,
+        data.metadata.category as ScenarioCategory,
+        data.metadata.estimatedTimeMinutes,
+        data.metadata.tags,
+      ),
+
+      data.artifacts.map(
+        (artifact: any) =>
+          new InvestigationArtifact(
+            artifact.id,
+            artifact.type as EvidenceType,
+            artifact.label,
+            artifact.description,
+            artifact.content,
+            artifact.order,
+            artifact.points,
+            artifact.unlocked,
+          ),
+      ),
+
+      new Date(data.createdAt),
+    );
+  }
+}
+================================================
+FILE: ./src/modules/bug-hunting/infrastructure/registry/ScenarioRegistry.ts
+================================================
+import checkoutTimeout from "@/modules/bug-hunting/data/scenarios/checkout-timeout.json";
+
+
+const scenarios = [
+  checkoutTimeout,
+];
+
+
+export class ScenarioRegistry {
+
+  static getAll() {
+    return scenarios;
+  }
+
+
+  static get(id: string) {
+
+    return scenarios.find(
+      scenario =>
+        scenario.id === id,
+    );
+  }
+}
+================================================
+FILE: ./src/modules/bug-hunting/infrastructure/index.ts
+================================================
+export * from "./repositories/JsonBugScenarioRepository";
+export * from "./registry/ScenarioRegistry";
+================================================
+FILE: ./src/modules/bug-hunting/data/scenarios/checkout-timeout.json
+================================================
+{
+  "id": "checkout-timeout",
+  "title": "Checkout API Timeout",
+  "description": "Checkout requests are timing out after deployment.",
+  "createdAt": "2026-07-16T00:00:00.000Z",
+
+  "metadata": {
+    "difficulty": "HARD",
+    "severity": "HIGH",
+    "category": "CHECKOUT",
+    "estimatedTimeMinutes": 30,
+    "tags": [
+      "latency",
+      "database",
+      "timeout"
+    ]
+  },
+
+  "artifacts": [
+    {
+      "id": "logs-001",
+      "type": "LOG",
+      "label": "Checkout Service Logs",
+      "description": "Application logs",
+      "content": "DB connection timeout...",
+      "order": 1,
+      "points": 10,
+      "unlocked": true
+    }
+  ]
+}
+================================================
+FILE: ./src/modules/bug-hunting/domain/value-objects/EvidenceType.ts
+================================================
+export enum EvidenceType {
+  LOG = "LOG",
+  METRIC = "METRIC",
+  TRACE = "TRACE",
+  SQL = "SQL",
+  CODE = "CODE",
+  CONFIG = "CONFIG",
+  API_RESPONSE = "API_RESPONSE",
+  DASHBOARD = "DASHBOARD",
+  TERMINAL = "TERMINAL",
+  SCREENSHOT = "SCREENSHOT",
+}
+================================================
+FILE: ./src/modules/bug-hunting/domain/value-objects/AttemptStatus.ts
+================================================
+export enum AttemptStatus {
+  IN_PROGRESS = "IN_PROGRESS",
+  COMPLETED = "COMPLETED",
+  ABANDONED = "ABANDONED",
+}
+================================================
+FILE: ./src/modules/bug-hunting/domain/value-objects/ScenarioCategory.ts
+================================================
+export enum ScenarioCategory {
+  CHECKOUT = "CHECKOUT",
+  DATABASE = "DATABASE",
+  CACHE = "CACHE",
+  KAFKA = "KAFKA",
+  AUTH = "AUTH",
+  NETWORK = "NETWORK",
+  API = "API",
+  INFRASTRUCTURE = "INFRASTRUCTURE",
+}
+================================================
+FILE: ./src/modules/bug-hunting/domain/value-objects/ScenarioDifficulty.ts
+================================================
+export enum ScenarioDifficulty {
+  EASY = "EASY",
+  MEDIUM = "MEDIUM",
+  HARD = "HARD",
+}
+================================================
+FILE: ./src/modules/bug-hunting/domain/value-objects/ScenarioMetadata.ts
+================================================
+import { ScenarioDifficulty } from "./ScenarioDifficulty";
+import { Severity } from "./Severity";
+import { ScenarioCategory } from "./ScenarioCategory";
+
+export class ScenarioMetadata {
+  constructor(
+    readonly difficulty: ScenarioDifficulty,
+    readonly severity: Severity,
+    readonly category: ScenarioCategory,
+    readonly estimatedTimeMinutes: number,
+    readonly tags: readonly string[],
+  ) {}
+}
+================================================
+FILE: ./src/modules/bug-hunting/domain/value-objects/Severity.ts
+================================================
+export enum Severity {
+  LOW = "LOW",
+  MEDIUM = "MEDIUM",
+  HIGH = "HIGH",
+  CRITICAL = "CRITICAL",
+}
+
+================================================
+FILE: ./src/modules/bug-hunting/domain/errors/DomainErrors.ts
+================================================
+export class ArtifactNotFoundError extends Error {
+  constructor(id: string) {
+    super(`Artifact not found: ${id}`);
+  }
+}
+
+export class ScenarioCompletedError extends Error {
+  constructor() {
+    super("Scenario already completed");
+  }
+}
+
+export class ArtifactLockedError extends Error {
+  constructor() {
+    super("Artifact is locked");
+  }
+}
+================================================
+FILE: ./src/modules/bug-hunting/domain/entities/BugAttempt.ts
+================================================
+import { Finding } from "./Finding";
+import { AttemptStatus } from "../value-objects/AttemptStatus";
+
+export class BugAttempt {
+  private findings: Finding[] = [];
+
+  private status: AttemptStatus;
+
+  constructor(
+    readonly id: string,
+    readonly scenarioId: string,
+    readonly startedAt: Date,
+  ) {
+    this.status = AttemptStatus.IN_PROGRESS;
+  }
+
+  addFinding(finding: Finding) {
+    this.findings.push(finding);
+  }
+
+  complete() {
+    this.status = AttemptStatus.COMPLETED;
+  }
+
+  abandon() {
+    this.status = AttemptStatus.ABANDONED;
+  }
+
+  getFindings() {
+    return [...this.findings];
+  }
+
+  getStatus() {
+    return this.status;
+  }
+}
+
+================================================
+FILE: ./src/modules/bug-hunting/domain/entities/BugScenario.ts
+================================================
+import { InvestigationArtifact } from "./InvestigationArtifact";
+import { ScenarioMetadata } from "../value-objects/ScenarioMetadata";
+import { Finding } from "./Finding";
+
+export class BugScenario {
+  private completed = false;
+
+  private findings: Finding[] = [];
+
+  constructor(
+    readonly id: string,
+    readonly title: string,
+    readonly description: string,
+    readonly metadata: ScenarioMetadata,
+    private readonly artifacts: InvestigationArtifact[],
+    readonly createdAt: Date,
+  ) {}
+
+  unlockArtifact(id: string) {
+    const artifact = this.artifacts.find(
+      item => item.id === id,
+    );
+
+    if (!artifact) {
+      throw new Error(
+        `Artifact ${id} not found`,
+      );
+    }
+
+    artifact.unlock();
+  }
+
+  addFinding(finding: Finding) {
+    this.findings.push(finding);
+  }
+
+  complete() {
+    this.completed = true;
+  }
+
+  isCompleted() {
+    return this.completed;
+  }
+
+  getArtifacts() {
+    return [...this.artifacts];
+  }
+
+  getFindings() {
+    return [...this.findings];
+  }
+}
+================================================
+FILE: ./src/modules/bug-hunting/domain/entities/InvestigationArtifact.ts
+================================================
+import { EvidenceType } from "../value-objects/EvidenceType";
+
+export class InvestigationArtifact {
+  private unlocked: boolean;
+
+  constructor(
+    readonly id: string,
+    readonly type: EvidenceType,
+    readonly label: string,
+    readonly description: string,
+    readonly content: string,
+    readonly order: number,
+    readonly points: number,
+    unlocked = false,
+  ) {
+    this.unlocked = unlocked;
+  }
+
+  unlock() {
+    this.unlocked = true;
+  }
+
+  isUnlocked() {
+    return this.unlocked;
+  }
+}
+================================================
+FILE: ./src/modules/bug-hunting/domain/entities/Finding.ts
+================================================
+export class Finding {
+  constructor(
+    readonly id: string,
+    readonly hypothesis: string,
+    readonly evidence: string,
+    readonly rootCause: string,
+    readonly proposedFix: string,
+  ) {}
+}
+================================================
+FILE: ./src/modules/bug-hunting/services/BugHuntingService.ts
+================================================
+import {
+  BugScenarioRepository,
+  ScenarioQuery,
+} from "@/repositories";
+
+import BugScenario from "@/domain";
+
+
+export class BugHuntingService {
+  constructor(
+    private readonly scenarioRepository: BugScenarioRepository,
+  ) {}
+
+
+  async getScenarios(
+    query: ScenarioQuery,
+  ): Promise<BugScenario[]> {
+
+    const result =
+      await this.scenarioRepository.findMany(
+        query,
+      );
+
+    return result.items;
+  }
+
+
+  async getScenario(
+    id: string,
+  ): Promise<BugScenario | null> {
+
+    return this.scenarioRepository.findById(
+      id,
+    );
+  }
+
+
+  async exists(
+    id: string,
+  ): Promise<boolean> {
+
+    const scenario =
+      await this.scenarioRepository.findById(
+        id,
+      );
+
+    return scenario !== null;
+  }
+}
+================================================
+FILE: ./src/modules/bug-hunting/services/index.ts
+================================================
+export * from "./BugHuntingService";
+
+================================================
+FILE: ./src/domain/value-objects/index.ts
+================================================
+export * from "./ScenarioDifficulty";
+export * from "./ScenarioMetadata";
+export * from "./ScenarioCategory";
+export * from "./Severity";
+export * from "./EvidenceType";
+export * from "./AttemptStatus";
+================================================
+FILE: ./src/domain/index.ts
+================================================
+export * from "./entities";
+export * from "./value-objects";
+export * from "./errors/DomainErrors";
+================================================
+FILE: ./src/domain/entities/index.ts
+================================================
+export * from "./BugScenario";
+export * from "./BugAttempt";
+export * from "./Finding";
+export * from "./InvestigationArtifact";
