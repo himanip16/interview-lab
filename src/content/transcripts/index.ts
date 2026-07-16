@@ -1,30 +1,40 @@
 import {
   TranscriptEntry,
+  TranscriptCategory,
 } from "./types";
 
-import { TRANSCRIPTS } from "./generated";
+import { TRANSCRIPTS } from "@/features/library/data/generated";
 
-export function getAllTranscripts(): TranscriptEntry[] {
+// Precompute indexes for O(1) lookups
+const transcriptMap = new Map(
+  TRANSCRIPTS.map(t => [t.summary.slug, t])
+);
+
+const categoryMap = new Map<TranscriptCategory, TranscriptEntry[]>();
+
+for (const transcript of TRANSCRIPTS) {
+  const list = categoryMap.get(transcript.summary.category) ?? [];
+  list.push(transcript);
+  categoryMap.set(transcript.summary.category, list);
+}
+
+export function getAllTranscripts(): ReadonlyArray<TranscriptEntry> {
   return TRANSCRIPTS;
 }
 
 export function getTranscript(
   slug: string
 ): TranscriptEntry | undefined {
-  return TRANSCRIPTS.find(
-    (t) => t.summary.slug === slug
-  );
+  return transcriptMap.get(slug);
 }
 
 export function getTranscriptsByCategory(
-  category: string
+  category: TranscriptCategory
 ): TranscriptEntry[] {
-  return TRANSCRIPTS.filter(
-    (t) => t.summary.category === category
-  );
+  return categoryMap.get(category) ?? [];
 }
 
-export function getCategories(): string[] {
+export function getCategories(): TranscriptCategory[] {
   return [
     ...new Set(
       TRANSCRIPTS.map(
@@ -35,19 +45,19 @@ export function getCategories(): string[] {
 }
 
 export function getCategoryLabel(
-  category: string
+  category: TranscriptCategory
 ): string {
-  const labels: Record<string, string> = {
+  const labels: Record<TranscriptCategory, string> = {
     hld: "High Level Design",
     lld: "Low Level Design",
     dsa: "Data Structures & Algorithms",
     behavioural: "Behavioural"
   };
 
-  return labels[category] || category;
+  return labels[category] ?? category;
 }
 
-function validateTranscripts() {
+export function validateTranscripts(): void {
   const slugs = new Set<string>();
 
   for (const transcript of TRANSCRIPTS) {
@@ -58,8 +68,23 @@ function validateTranscripts() {
     }
 
     slugs.add(transcript.summary.slug);
+
+    if (!transcript.summary.title.trim()) {
+      throw new Error(
+        `${transcript.summary.slug}: missing title`
+      );
+    }
+
+    if (!transcript.summary.tags.length) {
+      throw new Error(
+        `${transcript.summary.slug}: no tags`
+      );
+    }
+
+    if (transcript.summary.duration <= 0) {
+      throw new Error(
+        `${transcript.summary.slug}: invalid duration`
+      );
+    }
   }
 }
-
-// Validate on import
-validateTranscripts();

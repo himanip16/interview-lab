@@ -1,46 +1,42 @@
-import fs from "fs";
-import path from "path";
+import { readdirSync, writeFileSync } from "fs";
+import { join } from "path";
 
-const BASE_PATH = path.join(process.cwd(), "src/content/transcripts");
+const ROOT = join(process.cwd(), "src/content/transcripts");
+const OUT = join(process.cwd(), "src/features/library/data/generated.ts");
 
-const categories = fs
-  .readdirSync(BASE_PATH)
-  .filter((file) =>
-    fs.statSync(path.join(BASE_PATH, file)).isDirectory()
-  );
+function scanCategory(category: string): string[] {
+  const dir = join(ROOT, category);
+  return readdirSync(dir, { withFileTypes: true })
+    .filter((d) => d.isFile() && /\.(ts|tsx)$/.test(d.name))
+    .map((d) => d.name.replace(/\.(ts|tsx)$/, ""));
+}
 
-const imports: string[] = [];
-const entries: string[] = [];
+const categories = readdirSync(ROOT, { withFileTypes: true })
+  .filter((d) => d.isDirectory())
+  .map((d) => d.name);
 
-let counter = 0;
-
+const entries: { category: string; slug: string }[] = [];
 for (const category of categories) {
-  const categoryPath = path.join(BASE_PATH, category);
-  const files = fs
-    .readdirSync(categoryPath)
-    .filter(file => file.endsWith(".ts") && file !== "index.ts");
-
-  for (const file of files) {
-    const name = `transcript${counter++}`;
-
-    imports.push(
-      `import ${name} from "./${category}/${file.replace(".ts", "")}";`
-    );
-
-    entries.push(name);
+  for (const slug of scanCategory(category)) {
+    entries.push({ category, slug });
   }
 }
 
-const output = `${imports.join("\n")}
+const imports = entries
+  .map((e, i) => `import transcript${i} from "@/content/transcripts/${e.category}/${e.slug}";`)
+  .join("\n");
 
-export const TRANSCRIPTS = [
-${entries.join(",\n")}
-];
-`;
+const arr = entries.map((_, i) => `  transcript${i},`).join("\n");
 
-fs.writeFileSync(
-  path.join(BASE_PATH, "generated.ts"),
-  output
+writeFileSync(
+  OUT,
+  `// AUTO-GENERATED — do not edit by hand. Run \`npm run generate:transcripts\`.
+${imports}
+
+export const TRANSCRIPTS = Object.freeze([
+${arr}
+]);
+`
 );
 
-console.log(`Generated registry with ${entries.length} transcripts`);
+console.log(`Generated ${entries.length} transcript imports.`);
