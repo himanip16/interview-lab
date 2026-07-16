@@ -5,10 +5,7 @@ import {
 
 import { TRANSCRIPTS } from "@/features/library/data/generated";
 
-// Precompute indexes for O(1) lookups
-const transcriptMap = new Map(
-  TRANSCRIPTS.map(t => [t.summary.slug, t])
-);
+
 
 const categoryMap = new Map<TranscriptCategory, TranscriptEntry[]>();
 
@@ -25,12 +22,29 @@ export function getAllTranscripts(): ReadonlyArray<TranscriptEntry> {
 export function getTranscript(
   slug: string
 ): TranscriptEntry | undefined {
-  return transcriptMap.get(slug);
+  const transcript = await prisma.transcript.findUnique({
+    where: {
+        slug
+    }
+});
+
+if (!transcript) {
+    notFound();
+}
 }
 
 export function getTranscriptsByCategory(
   category: TranscriptCategory
 ): TranscriptEntry[] {
+  const transcript = await prisma.transcript.findUnique({
+    where: {
+        slug
+    }
+});
+
+if (!transcript) {
+    notFound();
+}
   return categoryMap.get(category) ?? [];
 }
 

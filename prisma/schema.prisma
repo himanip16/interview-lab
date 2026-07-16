@@ -51,18 +51,34 @@ model User {
   practiceRecommendations PracticeRecommendation[]
   learningRecommendations LearningRecommendation[]
 }
-model InterviewSession {
-  id              String   @id @default(cuid())
-  userId          String?
-  problemId       String
-  difficulty      String
-  status          String   @default("STARTED")
-  transcript      Json
-  duration        Int
-  whiteboardState Json?
-  interviewTitle  String?
-  designSummary   Json?
-  createdAt       DateTime @default(now())
+
+model Transcript {
+  id          String   @id @default(cuid())
+
+  slug        String   @unique
+
+  title       String
+
+  category    String
+
+  difficulty  String
+
+  company     String?
+
+  interviewer String?
+
+  candidate   String?
+
+  duration    Int?
+
+  summary     String?
+
+  transcript  Json
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
 }
 
 // ---------------------------------------------------------------------------

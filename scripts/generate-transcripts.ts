@@ -2,6 +2,9 @@ import { readdirSync, writeFileSync } from "fs";
 import { join } from "path";
 
 const ROOT = join(process.cwd(), "src/content/transcripts");
+const response = await fetch("/api/transcripts");
+
+const transcripts = await response.json();
 const OUT = join(process.cwd(), "src/features/library/data/generated.ts");
 
 function scanCategory(category: string): string[] {

@@ -3,7 +3,7 @@ import { TranscriptNode } from "../domain/TranscriptNode";
 
 export class TranscriptService {
   static async getBySessionId(sessionId: string): Promise<TranscriptNode[]> {
-    const session = await prisma.interviewSession.findUnique({
+    const session = await prisma.interview.findUnique({
       where: { id: sessionId },
       select: { transcript: true }
     });
