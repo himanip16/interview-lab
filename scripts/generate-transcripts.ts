@@ -39,7 +39,7 @@ ${entries.join(",\n")}
 `;
 
 fs.writeFileSync(
-  path.join(BASE_PATH, "registry.ts"),
+  path.join(BASE_PATH, "generated.ts"),
   output
 );
 

@@ -3,13 +3,12 @@
 import { useState, useMemo } from "react";
 import { Search } from "@/components/ui/Search";
 import { getAllTranscripts, getCategories, getCategoryLabel } from "@/content/transcripts";
-import type { TranscriptCategory } from "@/content/transcripts/types";
 import TranscriptCard from "./TranscriptCard";
 import EmptyState from "./EmptyState";
 
 export default function TranscriptCatalog() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<TranscriptCategory | "all">("all");
+  const [selectedCategory, setSelectedCategory] = useState<string | "all">("all");
 
   const allTranscripts = getAllTranscripts();
 
@@ -35,7 +34,7 @@ export default function TranscriptCatalog() {
     categories.forEach(cat => {
       counts[cat] = allTranscripts.filter(t => t.summary.category === cat).length;
     });
-    return counts as Record<TranscriptCategory | "all", number>;
+    return counts as Record<string | "all", number>;
   }, [allTranscripts, categories]);
 
   if (allTranscripts.length === 0) {

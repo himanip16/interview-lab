@@ -1,18 +1,16 @@
 import { Difficulty } from "@prisma/client";
 import { TranscriptData } from "@/features/library/types/transcript";
 
-export type TranscriptCategory =
-  | "hld"
-  | "lld"
-  | "dsa"
-  | "behavioural";
+// Transcript categories are derived from the filesystem structure
+// New categories can be added by creating a new folder under src/content/transcripts/
+export type TranscriptCategory = string;
 
 export type TranscriptSummary = {
   slug: string;
 
   title: string;
 
-  category: TranscriptCategory;
+  category: string;
 
   difficulty: Difficulty;
 

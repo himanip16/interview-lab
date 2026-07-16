@@ -1,9 +1,8 @@
 import {
   TranscriptEntry,
-  TranscriptCategory,
 } from "./types";
 
-import { TRANSCRIPTS } from "./registry";
+import { TRANSCRIPTS } from "./generated";
 
 export function getAllTranscripts(): TranscriptEntry[] {
   return TRANSCRIPTS;
@@ -18,14 +17,14 @@ export function getTranscript(
 }
 
 export function getTranscriptsByCategory(
-  category: TranscriptCategory
+  category: string
 ): TranscriptEntry[] {
   return TRANSCRIPTS.filter(
     (t) => t.summary.category === category
   );
 }
 
-export function getCategories(): TranscriptCategory[] {
+export function getCategories(): string[] {
   return [
     ...new Set(
       TRANSCRIPTS.map(
@@ -36,16 +35,16 @@ export function getCategories(): TranscriptCategory[] {
 }
 
 export function getCategoryLabel(
-  category: TranscriptCategory
+  category: string
 ): string {
-  const labels: Record<TranscriptCategory, string> = {
+  const labels: Record<string, string> = {
     hld: "High Level Design",
     lld: "Low Level Design",
     dsa: "Data Structures & Algorithms",
     behavioural: "Behavioural"
   };
 
-  return labels[category];
+  return labels[category] || category;
 }
 
 function validateTranscripts() {
