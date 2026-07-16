@@ -2,19 +2,47 @@
 
 export class PromptGuard {
   private static readonly BLOCKED_PATTERNS = [
-    /ignore (all|previous) instructions/i,
-    /forget (all|previous) instructions/i,
-    /reveal (the )?(solution|answer)/i,
-    /give me the solution/i,
-    /act as/i,
-    /pretend to be/i,
-    /system prompt/i,
-    /developer prompt/i,
-    /repeat your instructions/i,
-    /show hidden instructions/i,
-    /bypass/i,
-    /jailbreak/i,
-  ];
+  // Existing patterns
+  /ignore (all|previous) instructions/i,
+  /forget (all|previous) instructions/i,
+  /reveal (the )?(solution|answer)/i,
+  /give me the solution/i,
+  /act as/i,
+  /pretend to be/i,
+  /system prompt/i,
+  /developer prompt/i,
+  /repeat your instructions/i,
+  /show hidden instructions/i,
+  /bypass/i,
+  /jailbreak/i,
+
+  // Prompt delimiters
+  /begin\s+system\s+prompt/i,
+  /end\s+system\s+prompt/i,
+  /begin\s+prompt/i,
+  /end\s+prompt/i,
+
+  // Role labels
+  /^\s*assistant\s*:/im,
+  /^\s*developer\s*:/im,
+  /^\s*system\s*:/im,
+  /^\s*user\s*:/im,
+
+  // XML / HTML-style prompt wrappers
+  /<\s*system\b[^>]*>/i,
+  /<\s*developer\b[^>]*>/i,
+  /<\s*prompt\b[^>]*>/i,
+  /<\/\s*(system|developer|prompt)\s*>/i,
+
+  // Markdown fenced prompt blocks
+  /```(?:system|prompt|instructions?)?/i,
+  /~~~(?:system|prompt|instructions?)?/i,
+
+  // Additional prompt injection phrases
+  /hidden instructions/i,
+  /internal instructions/i,
+  /prompt injection/i,
+];
 
   isPromptInjection(message: string): boolean {
     return PromptGuard.BLOCKED_PATTERNS.some((pattern) =>

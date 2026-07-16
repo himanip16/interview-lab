@@ -44,19 +44,11 @@ interface LiveInterviewProps {
  */
 export function LiveInterview({ interviewId }: LiveInterviewProps) {
   const { interview, loading, error, refetch } = useInterview(interviewId);
-  const { messages, sendMessage, isSending, error: messageError } = useMessages(
-    interviewId,
-    interview?.transcript.map((msg) => ({
-      id: msg.id,
-      role: msg.role,
-      content: msg.content,
-      metadata: msg.metadata,
-      createdAt: msg.createdAt,
-      elapsedSeconds: msg.elapsedSeconds,
-      phase: msg.phase,
-    })) || []
-  );
-
+  const {
+  sendMessage,
+  isSending,
+  error: messageError,
+} = useMessages(interviewId);
   const handleSendMessage = async (text: string) => {
     try {
       // Send message (optimistically updates local state)
@@ -116,7 +108,7 @@ export function LiveInterview({ interviewId }: LiveInterviewProps) {
       <div className="flex flex-1 overflow-hidden">
         {/* Chat Area */}
         <div className="flex-1 flex flex-col">
-          <MessageList messages={messages} />
+          <MessageList messages={interview.transcript} />
           <ChatInput
             onSendMessage={handleSendMessage}
             isSending={isSending}
