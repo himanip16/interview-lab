@@ -1,0 +1,12 @@
+export enum EvidenceType {
+  LOG = "LOG",
+  METRIC = "METRIC",
+  TRACE = "TRACE",
+  SQL = "SQL",
+  CODE = "CODE",
+  CONFIG = "CONFIG",
+  API_RESPONSE = "API_RESPONSE",
+  DASHBOARD = "DASHBOARD",
+  TERMINAL = "TERMINAL",
+  SCREENSHOT = "SCREENSHOT",
+}

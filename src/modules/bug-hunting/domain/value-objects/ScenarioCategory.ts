@@ -1,0 +1,10 @@
+export enum ScenarioCategory {
+  CHECKOUT = "CHECKOUT",
+  DATABASE = "DATABASE",
+  CACHE = "CACHE",
+  KAFKA = "KAFKA",
+  AUTH = "AUTH",
+  NETWORK = "NETWORK",
+  API = "API",
+  INFRASTRUCTURE = "INFRASTRUCTURE",
+}

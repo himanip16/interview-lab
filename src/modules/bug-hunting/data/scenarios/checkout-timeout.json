@@ -1,0 +1,31 @@
+{
+  "id": "checkout-timeout",
+  "title": "Checkout API Timeout",
+  "description": "Checkout requests are timing out after deployment.",
+  "createdAt": "2026-07-16T00:00:00.000Z",
+
+  "metadata": {
+    "difficulty": "HARD",
+    "severity": "HIGH",
+    "category": "CHECKOUT",
+    "estimatedTimeMinutes": 30,
+    "tags": [
+      "latency",
+      "database",
+      "timeout"
+    ]
+  },
+
+  "artifacts": [
+    {
+      "id": "logs-001",
+      "type": "LOG",
+      "label": "Checkout Service Logs",
+      "description": "Application logs",
+      "content": "DB connection timeout...",
+      "order": 1,
+      "points": 10,
+      "unlocked": true
+    }
+  ]
+}
