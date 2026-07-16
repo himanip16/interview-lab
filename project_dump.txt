@@ -17,6 +17,10 @@ PROJECT STRUCTURE
 ├── package.json
 ├── postcss.config.mjs
 ├── prisma
+│   ├── data
+│   │   ├── problems.json
+│   │   ├── templates.json
+│   │   └── templates.ts
 │   ├── migrations
 │   │   ├── 20260711145437_init
 │   │   │   └── migration.sql
@@ -158,6 +162,8 @@ PROJECT STRUCTURE
 │   │   │   ├── card-detail
 │   │   │   │   └── page.tsx
 │   │   │   ├── diagrams
+│   │   │   │   ├── [system]
+│   │   │   │   │   └── page.tsx
 │   │   │   │   ├── instagram
 │   │   │   │   │   └── page.tsx
 │   │   │   │   ├── netflix
@@ -208,6 +214,7 @@ PROJECT STRUCTURE
 │   │   ├── theme
 │   │   │   └── ThemeProvider.tsx
 │   │   └── ui
+│   │       ├── Animations.tsx
 │   │       ├── Avatar.tsx
 │   │       ├── Badge.tsx
 │   │       ├── Bubble.tsx
@@ -423,6 +430,7 @@ PROJECT STRUCTURE
 │   │   ├── read_transcript.html
 │   │   └── whiteboard.html
 │   ├── lib
+│   │   ├── api.ts
 │   │   ├── hooks
 │   │   │   └── useClickOutside.ts
 │   │   ├── logger.ts
@@ -572,20 +580,25 @@ PROJECT STRUCTURE
 │   │   │   ├── common-constants.ts
 │   │   │   ├── constants.ts
 │   │   │   └── env.ts
+│   │   ├── constants
+│   │   │   └── routes.ts
 │   │   ├── logger
 │   │   │   ├── Logger.test.ts
 │   │   │   └── logger.ts
 │   │   └── schemas
 │   │       └── interviewSchemas.ts
 │   ├── styles
+│   │   ├── animations.css
 │   │   └── bug-hunting.css
 │   └── types
 │       └── interview.ts
+├── styles
+│   └── animations.css
 ├── tests
 ├── tsconfig.json
 └── tsconfig.tsbuildinfo
 
-220 directories, 364 files
+224 directories, 373 files
 
 FILE CONTENTS
 
@@ -1317,52 +1330,20 @@ import {
   LearningActionType,
 } from "@prisma/client";
 import { EvaluationDimension, PhaseId, Goal } from "../src/modules/interview/constants";
-import { z } from "zod";
+import {
+  GoalsSchema,
+  EvaluationDimensionsSchema,
+  ConversationSchema,
+  JsonSchema,
+} from "@/shared/schemas/interviewSchemas";
+
+import problemsData from "./data/problems.json";
+import templatesData from "./data/templates.json";
 
 const prisma = new PrismaClient();
 
 // ---------------------------------------------------------------------------
-// Zod schemas for JSON field validation
-// ---------------------------------------------------------------------------
-
-// Replace the GoalDefinitionSchema with:
-const GoalDefinitionSchema = z.string(); // Just store the goal string directly
-
-const GoalDefinitionArraySchema = z.array(GoalDefinitionSchema);
-
-const EvaluationDimensionArraySchema = z.array(z.string());
-const JsonValueSchema = z.any(); // Generic JSON validation for other fields
-
-// ---------------------------------------------------------------------------
-// Safe validation helpers for JSON fields
-// ---------------------------------------------------------------------------
-
-function validateEvaluationDimensions(data: unknown): Prisma.InputJsonValue {
-  const result = EvaluationDimensionArraySchema.safeParse(data);
-  if (!result.success) {
-    throw new Error(`Invalid evaluationDimensions: ${result.error.message}`);
-  }
-  return result.data as Prisma.InputJsonValue;
-}
-
-function validateGoals(data: unknown): Prisma.InputJsonValue {
-  const result = GoalDefinitionArraySchema.safeParse(data);
-  if (!result.success) {
-    throw new Error(`Invalid goals: ${result.error.message}`);
-  }
-  return result.data as Prisma.InputJsonValue;
-}
-
-function validateJson(data: unknown): Prisma.InputJsonValue {
-  const result = JsonValueSchema.safeParse(data);
-  if (!result.success) {
-    throw new Error(`Invalid JSON: ${result.error.message}`);
-  }
-  return result.data as Prisma.InputJsonValue;
-}
-
-// ---------------------------------------------------------------------------
-// Problems - Expanded to 50+ focused problems by interview type
+// Problems — data now lives in prisma/data/problems.json
 // ---------------------------------------------------------------------------
 
 type ProblemSeed = {
@@ -1378,616 +1359,36 @@ type ProblemSeed = {
   tags?: string[];
 };
 
-const problems: ProblemSeed[] = [
-  // HLD - High-Level Design Problems
-  {
-    slug: "real-time-dashboard",
-    title: "Design a Real-Time Analytics Dashboard",
-    description: "Build a system that displays live metrics with sub-second updates for thousands of concurrent users.",
-    category: ProblemCategory.SYSTEM_DESIGN,
-    difficulty: Difficulty.HARD,
-    interviewType: "hld",
-    cruxOfProblem: "WebSocket scaling + efficient aggregation",
-    estimatedMinutes: 45,
-    concepts: ["websockets", "redis", "time-series"],
-    tags: ["real-time", "analytics", "high-concurrency"],
-  },
-  {
-    slug: "recommendation-service",
-    title: "Design a Recommendation Service",
-    description: "Build a service that suggests personalized content to millions of users with low latency.",
-    category: ProblemCategory.SYSTEM_DESIGN,
-    difficulty: Difficulty.HARD,
-    interviewType: "hld",
-    cruxOfProblem: "Collaborative filtering + real-time ranking",
-    estimatedMinutes: 45,
-    concepts: ["machine-learning", "caching-strategy", "database-sharding"],
-    tags: ["recommendations", "personalization", "ml"],
-  },
-  {
-    slug: "analytics-pipeline",
-    title: "Design an Analytics Pipeline",
-    description: "Build a system that processes billions of events daily and generates aggregated reports.",
-    category: ProblemCategory.DISTRIBUTED_SYSTEMS,
-    difficulty: Difficulty.HARD,
-    interviewType: "hld",
-    cruxOfProblem: "Event batching + time-window aggregation",
-    estimatedMinutes: 60,
-    concepts: ["message-queues", "data-consistency", "batch-processing"],
-    tags: ["analytics", "big-data", "aggregation"],
-  },
-  {
-    slug: "notification-system",
-    title: "Design a Notification System",
-    description: "Build a system that delivers push notifications to millions of devices reliably.",
-    category: ProblemCategory.DISTRIBUTED_SYSTEMS,
-    difficulty: Difficulty.HARD,
-    interviewType: "hld",
-    cruxOfProblem: "Queue-based delivery + deduplication",
-    estimatedMinutes: 45,
-    concepts: ["message-queues", "rate-limiting-algorithms", "data-consistency"],
-    tags: ["notifications", "push", "reliability"],
-  },
-  {
-    slug: "feed-ranking",
-    title: "Design a Feed Ranking System",
-    description: "Build a system that ranks and personalizes social media feeds for millions of users.",
-    category: ProblemCategory.SYSTEM_DESIGN,
-    difficulty: Difficulty.HARD,
-    interviewType: "hld",
-    cruxOfProblem: "Ranking algorithms + personalized scoring",
-    estimatedMinutes: 45,
-    concepts: ["caching-strategy", "database-sharding", "machine-learning"],
-    tags: ["social", "ranking", "personalization"],
-  },
-  {
-    slug: "click-tracking",
-    title: "Design a Click Tracking System",
-    description: "Build a system that tracks and aggregates millions of click events in real-time.",
-    category: ProblemCategory.DISTRIBUTED_SYSTEMS,
-    difficulty: Difficulty.HARD,
-    interviewType: "hld",
-    cruxOfProblem: "High-volume ingestion + real-time aggregation",
-    estimatedMinutes: 45,
-    concepts: ["message-queues", "time-series", "database-sharding"],
-    tags: ["analytics", "high-volume", "real-time"],
-  },
-  {
-    slug: "url-shortener",
-    title: "Design a URL Shortener",
-    description: "Design a scalable URL shortening service like TinyURL.",
-    category: ProblemCategory.SYSTEM_DESIGN,
-    difficulty: Difficulty.MEDIUM,
-    interviewType: "hld",
-    cruxOfProblem: "Unique ID generation + redirect performance",
-    estimatedMinutes: 30,
-    concepts: ["database-sharding", "caching-strategy", "api-design"],
-    tags: ["storage", "redirection", "scalability"],
-  },
-  {
-    slug: "rate-limiter",
-    title: "Design a Rate Limiter",
-    description: "Design a distributed rate limiting system.",
-    category: ProblemCategory.SYSTEM_DESIGN,
-    difficulty: Difficulty.MEDIUM,
-    interviewType: "hld",
-    cruxOfProblem: "Distributed state + sliding window",
-    estimatedMinutes: 30,
-    concepts: ["rate-limiting-algorithms", "consistent-hashing", "redis"],
-    tags: ["rate-limiting", "distributed", "throttling"],
-  },
-  {
-    slug: "news-feed",
-    title: "Design a News Feed",
-    description: "Design a scalable social media news feed.",
-    category: ProblemCategory.SYSTEM_DESIGN,
-    difficulty: Difficulty.HARD,
-    interviewType: "hld",
-    cruxOfProblem: "Fanout on write vs read + timeline pagination",
-    estimatedMinutes: 45,
-    concepts: ["caching-strategy", "message-queues", "database-sharding"],
-    tags: ["social", "feed", "scalability"],
-  },
-  {
-    slug: "chat-system",
-    title: "Design a Chat System",
-    description: "Design a real-time messaging platform.",
-    category: ProblemCategory.SYSTEM_DESIGN,
-    difficulty: Difficulty.HARD,
-    interviewType: "hld",
-    cruxOfProblem: "Message ordering + presence + delivery guarantees",
-    estimatedMinutes: 45,
-    concepts: ["websockets", "message-queues", "data-consistency"],
-    tags: ["messaging", "real-time", "communication"],
-  },
-  {
-    slug: "file-storage",
-    title: "Design File Storage",
-    description: "Design a distributed cloud file storage system.",
-    category: ProblemCategory.DISTRIBUTED_SYSTEMS,
-    difficulty: Difficulty.HARD,
-    interviewType: "hld",
-    cruxOfProblem: "Block-level storage + consistency + durability",
-    estimatedMinutes: 60,
-    concepts: ["database-sharding", "cdn", "data-consistency"],
-    tags: ["storage", "cloud", "distributed"],
-  },
-  {
-    slug: "design-uber",
-    title: "Design Uber",
-    description: "Design a large-scale ride sharing platform.",
-    category: ProblemCategory.SYSTEM_DESIGN,
-    difficulty: Difficulty.HARD,
-    interviewType: "hld",
-    cruxOfProblem: "Real-time matching + location indexing + ETA calculation",
-    estimatedMinutes: 60,
-    concepts: ["consistent-hashing", "data-consistency", "load-balancing"],
-    tags: ["ride-sharing", "location", "real-time"],
-  },
-  {
-    slug: "design-youtube",
-    title: "Design YouTube",
-    description: "Design a global video streaming platform.",
-    category: ProblemCategory.SYSTEM_DESIGN,
-    difficulty: Difficulty.HARD,
-    interviewType: "hld",
-    cruxOfProblem: "Video upload + transcoding + CDN distribution",
-    estimatedMinutes: 60,
-    concepts: ["cdn", "database-sharding", "caching-strategy"],
-    tags: ["streaming", "video", "cdn"],
-  },
-
-  // LLD - Low-Level Design Problems
-  {
-    slug: "post-comment-threading",
-    title: "Design Post/Comment Threading",
-    description: "Design a system for nested comments with efficient retrieval and pagination.",
-    category: ProblemCategory.LOW_LEVEL_DESIGN,
-    difficulty: Difficulty.MEDIUM,
-    interviewType: "lld",
-    cruxOfProblem: "Tree traversal + pagination + N+1 prevention",
-    estimatedMinutes: 30,
-    concepts: ["object-modeling", "database-indexing", "encapsulation"],
-    tags: ["social", "comments", "threading"],
-  },
-  {
-    slug: "like-reaction-system",
-    title: "Design a Like/Reaction System",
-    description: "Design a system for handling likes and reactions on posts with real-time counts.",
-    category: ProblemCategory.LOW_LEVEL_DESIGN,
-    difficulty: Difficulty.MEDIUM,
-    interviewType: "lld",
-    cruxOfProblem: "Efficient counting + denormalization + consistency",
-    estimatedMinutes: 30,
-    concepts: ["caching-strategy", "denormalization", "redis"],
-    tags: ["social", "reactions", "counting"],
-  },
-  {
-    slug: "user-authentication",
-    title: "Design User Authentication",
-    description: "Design a secure user authentication system with sessions and tokens.",
-    category: ProblemCategory.LOW_LEVEL_DESIGN,
-    difficulty: Difficulty.MEDIUM,
-    interviewType: "lld",
-    cruxOfProblem: "Session management + token security + password hashing",
-    estimatedMinutes: 30,
-    concepts: ["encapsulation", "design-patterns", "api-design"],
-    tags: ["security", "auth", "sessions"],
-  },
-  {
-    slug: "video-upload-pipeline",
-    title: "Design a Video Upload Pipeline",
-    description: "Design a system for uploading and processing large video files.",
-    category: ProblemCategory.LOW_LEVEL_DESIGN,
-    difficulty: Difficulty.HARD,
-    interviewType: "lld",
-    cruxOfProblem: "Multipart upload + state machine + error handling",
-    estimatedMinutes: 45,
-    concepts: ["design-patterns", "state-machine", "error-handling"],
-    tags: ["video", "upload", "processing"],
-  },
-  {
-    slug: "search-indexing",
-    title: "Design Search Indexing",
-    description: "Design an inverted index system for full-text search with ranking.",
-    category: ProblemCategory.LOW_LEVEL_DESIGN,
-    difficulty: Difficulty.HARD,
-    interviewType: "lld",
-    cruxOfProblem: "Inverted index + ranking + relevance scoring",
-    estimatedMinutes: 45,
-    concepts: ["database-indexing", "algorithms", "data-structures"],
-    tags: ["search", "indexing", "ranking"],
-  },
-  {
-    slug: "permissions-access-control",
-    title: "Design Permissions & Access Control",
-    description: "Design a flexible permission system for role-based access control.",
-    category: ProblemCategory.LOW_LEVEL_DESIGN,
-    difficulty: Difficulty.MEDIUM,
-    interviewType: "lld",
-    cruxOfProblem: "Role hierarchy + permission inheritance + performance",
-    estimatedMinutes: 30,
-    concepts: ["design-patterns", "object-modeling", "encapsulation"],
-    tags: ["security", "permissions", "rbac"],
-  },
-  {
-    slug: "shopping-cart",
-    title: "Design a Shopping Cart",
-    description: "Design a shopping cart system that handles persistence and concurrency.",
-    category: ProblemCategory.LOW_LEVEL_DESIGN,
-    difficulty: Difficulty.EASY,
-    interviewType: "lld",
-    cruxOfProblem: "Cart persistence + price consistency + session handling",
-    estimatedMinutes: 30,
-    concepts: ["object-modeling", "encapsulation", "design-patterns"],
-    tags: ["e-commerce", "cart", "persistence"],
-  },
-  {
-    slug: "booking-system",
-    title: "Design a Booking System",
-    description: "Design a system for booking appointments with availability management.",
-    category: ProblemCategory.LOW_LEVEL_DESIGN,
-    difficulty: Difficulty.MEDIUM,
-    interviewType: "lld",
-    cruxOfProblem: "Availability checking + concurrency + double-booking prevention",
-    estimatedMinutes: 30,
-    concepts: ["design-patterns", "data-consistency", "encapsulation"],
-    tags: ["booking", "scheduling", "availability"],
-  },
-  {
-    slug: "file-versioning",
-    title: "Design File Versioning",
-    description: "Design a system for tracking and managing different versions of files.",
-    category: ProblemCategory.LOW_LEVEL_DESIGN,
-    difficulty: Difficulty.MEDIUM,
-    interviewType: "lld",
-    cruxOfProblem: "Version storage + diff generation + rollback",
-    estimatedMinutes: 30,
-    concepts: ["object-modeling", "design-patterns", "data-structures"],
-    tags: ["versioning", "files", "storage"],
-  },
-  {
-    slug: "cache-invalidation",
-    title: "Design Cache Invalidation",
-    description: "Design a cache invalidation strategy for a distributed system.",
-    category: ProblemCategory.LOW_LEVEL_DESIGN,
-    difficulty: Difficulty.HARD,
-    interviewType: "lld",
-    cruxOfProblem: "Invalidation propagation + consistency + performance",
-    estimatedMinutes: 45,
-    concepts: ["caching-strategy", "design-patterns", "data-consistency"],
-    tags: ["caching", "invalidation", "consistency"],
-  },
-  {
-    slug: "event-sourcing",
-    title: "Design Event Sourcing",
-    description: "Design an event-sourced system for audit trails and replay.",
-    category: ProblemCategory.LOW_LEVEL_DESIGN,
-    difficulty: Difficulty.HARD,
-    interviewType: "lld",
-    cruxOfProblem: "Event storage + snapshotting + replay performance",
-    estimatedMinutes: 45,
-    concepts: ["design-patterns", "message-queues", "data-consistency"],
-    tags: ["event-sourcing", "audit", "replay"],
-  },
-  {
-    slug: "api-rate-limiter",
-    title: "Design API Rate Limiter",
-    description: "Design a rate limiter for API endpoints with different tiers.",
-    category: ProblemCategory.LOW_LEVEL_DESIGN,
-    difficulty: Difficulty.MEDIUM,
-    interviewType: "lld",
-    cruxOfProblem: "Token bucket + sliding window + distributed coordination",
-    estimatedMinutes: 30,
-    concepts: ["rate-limiting-algorithms", "design-patterns", "encapsulation"],
-    tags: ["rate-limiting", "api", "throttling"],
-  },
-  {
-    slug: "retry-mechanism",
-    title: "Design a Retry Mechanism",
-    description: "Design a retry mechanism for handling transient failures.",
-    category: ProblemCategory.LOW_LEVEL_DESIGN,
-    difficulty: Difficulty.MEDIUM,
-    interviewType: "lld",
-    cruxOfProblem: "Exponential backoff + idempotency + dead letter queue",
-    estimatedMinutes: 30,
-    concepts: ["design-patterns", "error-handling", "message-queues"],
-    tags: ["retry", "resilience", "error-handling"],
-  },
-
-  // DSA - Data Structures & Algorithms Problems
-  {
-    slug: "binary-search-variations",
-    title: "Binary Search Variations",
-    description: "Implement various binary search patterns including finding first/last occurrence and search in rotated arrays.",
-    category: ProblemCategory.JAVA,
-    difficulty: Difficulty.MEDIUM,
-    interviewType: "dsa",
-    cruxOfProblem: "Search space reduction + boundary conditions",
-    estimatedMinutes: 30,
-    concepts: ["algorithms", "complexity-analysis", "edge-case-handling"],
-    tags: ["binary-search", "algorithms", "searching"],
-  },
-  {
-    slug: "graph-traversals",
-    title: "Graph Traversals",
-    description: "Implement BFS and DFS for various graph problems including shortest path and cycle detection.",
-    category: ProblemCategory.JAVA,
-    difficulty: Difficulty.MEDIUM,
-    interviewType: "dsa",
-    cruxOfProblem: "Traversal order + visited tracking + cycle detection",
-    estimatedMinutes: 45,
-    concepts: ["algorithms", "data-structures", "complexity-analysis"],
-    tags: ["graph", "bfs", "dfs"],
-  },
-  {
-    slug: "dynamic-programming-patterns",
-    title: "Dynamic Programming Patterns",
-    description: "Solve DP problems using memoization and tabulation for knapsack, LCS, and palindrome problems.",
-    category: ProblemCategory.JAVA,
-    difficulty: Difficulty.HARD,
-    interviewType: "dsa",
-    cruxOfProblem: "State definition + recurrence relation + optimal substructure",
-    estimatedMinutes: 60,
-    concepts: ["algorithms", "complexity-analysis", "problem-solving"],
-    tags: ["dynamic-programming", "optimization", "algorithms"],
-  },
-  {
-    slug: "two-pointers",
-    title: "Two Pointers Technique",
-    description: "Solve array problems using two pointers for sorting, searching, and partitioning.",
-    category: ProblemCategory.JAVA,
-    difficulty: Difficulty.EASY,
-    interviewType: "dsa",
-    cruxOfProblem: "Pointer movement + termination conditions",
-    estimatedMinutes: 30,
-    concepts: ["algorithms", "edge-case-handling", "complexity-analysis"],
-    tags: ["two-pointers", "arrays", "algorithms"],
-  },
-  {
-    slug: "sliding-window",
-    title: "Sliding Window",
-    description: "Solve subarray problems using fixed and variable size sliding windows.",
-    category: ProblemCategory.JAVA,
-    difficulty: Difficulty.MEDIUM,
-    interviewType: "dsa",
-    cruxOfProblem: "Window expansion + contraction + state maintenance",
-    estimatedMinutes: 30,
-    concepts: ["algorithms", "complexity-analysis", "edge-case-handling"],
-    tags: ["sliding-window", "arrays", "subarrays"],
-  },
-  {
-    slug: "heap-priority-queue",
-    title: "Heap and Priority Queue",
-    description: "Solve problems using heaps for top-k elements, merge k-sorted lists, and task scheduling.",
-    category: ProblemCategory.JAVA,
-    difficulty: Difficulty.MEDIUM,
-    interviewType: "dsa",
-    cruxOfProblem: "Heap property + efficient insertion/extraction",
-    estimatedMinutes: 45,
-    concepts: ["data-structures", "algorithms", "complexity-analysis"],
-    tags: ["heap", "priority-queue", "data-structures"],
-  },
-  {
-    slug: "trie-prefix-tree",
-    title: "Trie Prefix Tree",
-    description: "Implement a trie for autocomplete, spell checking, and word search problems.",
-    category: ProblemCategory.JAVA,
-    difficulty: Difficulty.MEDIUM,
-    interviewType: "dsa",
-    cruxOfProblem: "Trie node structure + prefix traversal + memory optimization",
-    estimatedMinutes: 30,
-    concepts: ["data-structures", "algorithms", "string-manipulation"],
-    tags: ["trie", "prefix", "strings"],
-  },
-  {
-    slug: "union-find",
-    title: "Union Find (Disjoint Set)",
-    description: "Implement union-find for connectivity problems, cycle detection, and Kruskal's algorithm.",
-    category: ProblemCategory.JAVA,
-    difficulty: Difficulty.MEDIUM,
-    interviewType: "dsa",
-    cruxOfProblem: "Path compression + union by rank + time complexity",
-    estimatedMinutes: 30,
-    concepts: ["data-structures", "algorithms", "graph"],
-    tags: ["union-find", "disjoint-set", "graph"],
-  },
-  {
-    slug: "backtracking",
-    title: "Backtracking Patterns",
-    description: "Solve permutation, combination, and constraint satisfaction problems using backtracking.",
-    category: ProblemCategory.JAVA,
-    difficulty: Difficulty.HARD,
-    interviewType: "dsa",
-    cruxOfProblem: "State space exploration + pruning + base cases",
-    estimatedMinutes: 45,
-    concepts: ["algorithms", "problem-solving", "complexity-analysis"],
-    tags: ["backtracking", "recursion", "combinatorics"],
-  },
-  {
-    slug: "greedy-algorithms",
-    title: "Greedy Algorithms",
-    description: "Solve interval scheduling, Huffman coding, and activity selection using greedy approaches.",
-    category: ProblemCategory.JAVA,
-    difficulty: Difficulty.MEDIUM,
-    interviewType: "dsa",
-    cruxOfProblem: "Greedy choice property + optimal substructure",
-    estimatedMinutes: 30,
-    concepts: ["algorithms", "problem-solving", "complexity-analysis"],
-    tags: ["greedy", "optimization", "algorithms"],
-  },
-  {
-    slug: "linked-lists",
-    title: "Linked List Manipulation",
-    description: "Solve problems involving linked list reversal, cycle detection, and intersection.",
-    category: ProblemCategory.JAVA,
-    difficulty: Difficulty.EASY,
-    interviewType: "dsa",
-    cruxOfProblem: "Pointer manipulation + cycle detection + dummy nodes",
-    estimatedMinutes: 30,
-    concepts: ["data-structures", "pointers", "edge-case-handling"],
-    tags: ["linked-list", "pointers", "data-structures"],
-  },
-  {
-    slug: "stack-queue",
-    title: "Stack and Queue Applications",
-    description: "Solve problems using stacks for parentheses matching and queues for level-order traversal.",
-    category: ProblemCategory.JAVA,
-    difficulty: Difficulty.EASY,
-    interviewType: "dsa",
-    cruxOfProblem: "LIFO/FIFO semantics + appropriate data structure choice",
-    estimatedMinutes: 30,
-    concepts: ["data-structures", "algorithms", "problem-solving"],
-    tags: ["stack", "queue", "data-structures"],
-  },
-  {
-    slug: "hash-maps",
-    title: "Hash Map Applications",
-    description: "Solve problems using hash maps for counting, frequency analysis, and two-sum variants.",
-    category: ProblemCategory.JAVA,
-    difficulty: Difficulty.EASY,
-    interviewType: "dsa",
-    cruxOfProblem: "Hash function + collision handling + O(1) operations",
-    estimatedMinutes: 30,
-    concepts: ["data-structures", "algorithms", "complexity-analysis"],
-    tags: ["hash-map", "hashing", "data-structures"],
-  },
-  {
-    slug: "tree-traversals",
-    title: "Tree Traversals",
-    description: "Implement inorder, preorder, postorder traversals and solve tree problems recursively.",
-    category: ProblemCategory.JAVA,
-    difficulty: Difficulty.MEDIUM,
-    interviewType: "dsa",
-    cruxOfProblem: "Recursive vs iterative + traversal order + base cases",
-    estimatedMinutes: 30,
-    concepts: ["data-structures", "recursion", "algorithms"],
-    tags: ["tree", "traversal", "recursion"],
-  },
-  {
-    slug: "binary-search-tree",
-    title: "Binary Search Tree Operations",
-    description: "Implement BST operations including insertion, deletion, search, and validation.",
-    category: ProblemCategory.JAVA,
-    difficulty: Difficulty.MEDIUM,
-    interviewType: "dsa",
-    cruxOfProblem: "BST property + rebalancing + edge cases",
-    estimatedMinutes: 45,
-    concepts: ["data-structures", "algorithms", "recursion"],
-    tags: ["bst", "binary-search-tree", "data-structures"],
-  },
-  {
-    slug: "string-algorithms",
-    title: "String Algorithms",
-    description: "Solve string problems including KMP pattern matching, longest substring, and anagrams.",
-    category: ProblemCategory.JAVA,
-    difficulty: Difficulty.MEDIUM,
-    interviewType: "dsa",
-    cruxOfProblem: "Pattern matching + substring search + character counting",
-    estimatedMinutes: 45,
-    concepts: ["algorithms", "strings", "complexity-analysis"],
-    tags: ["strings", "pattern-matching", "algorithms"],
-  },
-  {
-    slug: "bit-manipulation",
-    title: "Bit Manipulation",
-    description: "Solve problems using bit operations for XOR, bit counting, and single number detection.",
-    category: ProblemCategory.JAVA,
-    difficulty: Difficulty.MEDIUM,
-    interviewType: "dsa",
-    cruxOfProblem: "Bitwise operations + bit masks + optimization",
-    estimatedMinutes: 30,
-    concepts: ["algorithms", "bit-manipulation", "optimization"],
-    tags: ["bits", "bitwise", "optimization"],
-  },
-  {
-    slug: "interval-problems",
-    title: "Interval Problems",
-    description: "Solve interval merging, overlapping, and scheduling problems efficiently.",
-    category: ProblemCategory.JAVA,
-    difficulty: Difficulty.MEDIUM,
-    interviewType: "dsa",
-    cruxOfProblem: "Sorting + sweeping + interval comparison",
-    estimatedMinutes: 30,
-    concepts: ["algorithms", "sorting", "problem-solving"],
-    tags: ["intervals", "sorting", "scheduling"],
-  },
-  {
-    slug: "matrix-problems",
-    title: "Matrix Problems",
-    description: "Solve matrix rotation, search in 2D matrix, and dynamic programming on grids.",
-    category: ProblemCategory.JAVA,
-    difficulty: Difficulty.MEDIUM,
-    interviewType: "dsa",
-    cruxOfProblem: "2D traversal + boundary handling + optimization",
-    estimatedMinutes: 45,
-    concepts: ["algorithms", "data-structures", "problem-solving"],
-    tags: ["matrix", "2d", "grid"],
-  },
-  {
-    slug: "design-linked-list",
-    title: "Design Linked List",
-    description: "Design and implement a linked list with operations from scratch.",
-    category: ProblemCategory.JAVA,
-    difficulty: Difficulty.EASY,
-    interviewType: "dsa",
-    cruxOfProblem: "Node structure + pointer management + edge cases",
-    estimatedMinutes: 30,
-    concepts: ["data-structures", "pointers", "implementation"],
-    tags: ["linked-list", "implementation", "data-structures"],
-  },
-  {
-    slug: "design-stack",
-    title: "Design Stack",
-    description: "Design a stack using arrays and linked lists with O(1) operations.",
-    category: ProblemCategory.JAVA,
-    difficulty: Difficulty.EASY,
-    interviewType: "dsa",
-    cruxOfProblem: "LIFO semantics + dynamic resizing + error handling",
-    estimatedMinutes: 30,
-    concepts: ["data-structures", "implementation", "algorithms"],
-    tags: ["stack", "implementation", "data-structures"],
-  },
-  {
-    slug: "design-queue",
-    title: "Design Queue",
-    description: "Design a queue using arrays and linked lists with O(1) operations.",
-    category: ProblemCategory.JAVA,
-    difficulty: Difficulty.EASY,
-    interviewType: "dsa",
-    cruxOfProblem: "FIFO semantics + circular buffer + error handling",
-    estimatedMinutes: 30,
-    concepts: ["data-structures", "implementation", "algorithms"],
-    tags: ["queue", "implementation", "data-structures"],
-  },
-  {
-    slug: "lru-cache",
-    title: "Design LRU Cache",
-    description: "Design an LRU cache with get and put operations in O(1) time.",
-    category: ProblemCategory.JAVA,
-    difficulty: Difficulty.MEDIUM,
-    interviewType: "dsa",
-    cruxOfProblem: "Hash map + doubly linked list + eviction policy",
-    estimatedMinutes: 45,
-    concepts: ["data-structures", "design-patterns", "algorithms"],
-    tags: ["cache", "lru", "data-structures"],
-  },
-  {
-    slug: "design-hashmap",
-    title: "Design Hash Map",
-    description: "Design a hash map from scratch with collision resolution.",
-    category: ProblemCategory.JAVA,
-    difficulty: Difficulty.MEDIUM,
-    interviewType: "dsa",
-    cruxOfProblem: "Hash function + collision resolution + resizing",
-    estimatedMinutes: 45,
-    concepts: ["data-structures", "algorithms", "implementation"],
-    tags: ["hash-map", "implementation", "data-structures"],
-  },
-];
+const problems = problemsData as ProblemSeed[];
 
 // ---------------------------------------------------------------------------
-// Rubric helper — mirrors the format of the original data/rubrics/*.md files
+// Interview templates — data now lives in prisma/data/templates.json
+// ---------------------------------------------------------------------------
+
+type PhaseSeed = {
+  phaseKey: string;
+  order: number;
+  goals: string[];
+  evaluationDimensions: string[];
+  targetDurationRatio: number;
+  transitionThreshold: number;
+  instructions: string;
+  showWhiteboard?: boolean;
+  reverseEvaluationDimensions?: string[];
+};
+
+type TemplateSeed = {
+  slug: string;
+  name: string;
+  description: string;
+  whiteboardPreset?: string;
+  phases: PhaseSeed[];
+};
+
+const templates = templatesData as TemplateSeed[];
+
+// ---------------------------------------------------------------------------
+// Rubric helper — unchanged, still lives here since it's short and code-like
 // ---------------------------------------------------------------------------
 
 function rubric(criteria: string[], deductFor: string): string {
@@ -2003,6 +1404,705 @@ Deduct points if the candidate ${deductFor}.
 Return reasoning.
 `.trim();
 }
+
+const RUBRICS: Record<EvaluationDimension, string> = {
+  [EvaluationDimension.Communication]: rubric(
+    [
+      "Explains reasoning out loud before committing to decisions",
+      "Structures the conversation (states assumptions, checks in, summarizes)",
+      "Responds directly to interviewer questions instead of deflecting",
+      "Uses precise technical vocabulary",
+    ],
+    "is silent for long stretches or jumps to conclusions without narrating why"
+  ),
+  [EvaluationDimension.RequirementClarity]: rubric(
+    [
+      "Distinguishes functional vs non-functional requirements",
+      "Asks about scale, latency, and consistency expectations",
+      "Confirms scope before designing",
+    ],
+    "starts designing before requirements are clarified"
+  ),
+  [EvaluationDimension.ScopeManagement]: rubric(
+    [
+      "Keeps requirement gathering time-boxed and focused",
+      "Avoids over-scoping into unrelated features",
+    ],
+    "spends excessive time on requirements or scope-creeps the problem"
+  ),
+  [EvaluationDimension.Architecture]: rubric(
+    [
+      "Identifies the right core components and service boundaries",
+      "Justifies storage/database choices",
+      "Describes data flow between components clearly",
+    ],
+    "proposes an architecture without justifying key decisions"
+  ),
+  [EvaluationDimension.TechnicalReasoning]: rubric(
+    [
+      "Backs design choices with concrete reasoning, not buzzwords",
+      "Considers more than one option before choosing",
+    ],
+    "name-drops technologies without explaining why they fit"
+  ),
+  [EvaluationDimension.TechnicalDepth]: rubric(
+    [
+      "Goes beyond the surface level when probed on a component",
+      "Handles follow-up questions about internals confidently",
+    ],
+    "gives shallow answers when pushed for detail"
+  ),
+  [EvaluationDimension.Tradeoffs]: rubric(
+    [
+      "Explicitly names tradeoffs (e.g. consistency vs availability, latency vs cost)",
+      "Justifies a choice given the stated requirements",
+    ],
+    "presents a design as if it has no downsides"
+  ),
+  [EvaluationDimension.Scalability]: rubric(
+    [
+      "Horizontal Scaling",
+      "Load Balancer",
+      "Partitioning",
+      "Sharding",
+      "Replication",
+      "Caching",
+      "CDN",
+      "Queue",
+    ],
+    "ignores scaling completely"
+  ),
+  [EvaluationDimension.Reliability]: rubric(
+    [
+      "Identifies single points of failure",
+      "Discusses retries, timeouts, and graceful degradation",
+      "Considers monitoring/alerting",
+    ],
+    "assumes components never fail"
+  ),
+  [EvaluationDimension.ObjectModeling]: rubric(
+    [
+      "Identifies the right core entities and their responsibilities",
+      "Models relationships (composition vs association vs inheritance) correctly",
+    ],
+    "produces a single god object or unclear ownership"
+  ),
+  [EvaluationDimension.Abstraction]: rubric(
+    [
+      "Hides implementation details behind clean interfaces",
+      "Avoids leaking internal state",
+    ],
+    "exposes internal implementation details unnecessarily"
+  ),
+  [EvaluationDimension.ClassDesign]: rubric(
+    [
+      "Defines clear method boundaries",
+      "Applies encapsulation appropriately",
+      "Separates concerns between classes",
+    ],
+    "produces classes with unclear or overlapping responsibilities"
+  ),
+  [EvaluationDimension.CodeQuality]: rubric(
+    ["Names things clearly", "Keeps methods small and focused"],
+    "writes code that is hard to follow or overly clever"
+  ),
+  [EvaluationDimension.DesignPatterns]: rubric(
+    [
+      "Applies a design pattern where it genuinely fits",
+      "Explains why the pattern was chosen",
+    ],
+    "forces a pattern where it doesn't fit, or can't explain the choice"
+  ),
+  [EvaluationDimension.Maintainability]: rubric(
+    [
+      "Design accommodates realistic future requirement changes",
+      "Includes consideration for testability",
+    ],
+    "produces a design that would require a rewrite for small changes"
+  ),
+  [EvaluationDimension.ProblemSolving]: rubric(
+    [
+      "Breaks the problem into a clear approach before coding",
+      "Considers brute force then optimizes",
+    ],
+    "jumps straight to code without a stated approach"
+  ),
+  [EvaluationDimension.CodeCorrectness]: rubric(
+    [
+      "Produces working code for the stated approach",
+      "Handles edge cases (empty input, single element, duplicates)",
+    ],
+    "leaves obvious bugs or off-by-one errors unaddressed"
+  ),
+  [EvaluationDimension.ComplexityAnalysis]: rubric(
+    [
+      "States time and space complexity accurately",
+      "Recognizes when a better complexity is possible",
+    ],
+    "cannot state or justify the complexity of their own solution"
+  ),
+  [EvaluationDimension.EdgeCaseHandling]: rubric(
+    [
+      "Proactively identifies edge cases before being prompted",
+      "Adjusts the solution to handle them",
+    ],
+    "only handles edge cases after being explicitly told to"
+  ),
+  [EvaluationDimension.RapportBuilding]: rubric(
+    [
+      "Opens with a clear, welcoming introduction",
+      "Sets expectations for the session",
+    ],
+    "jumps into technical questions with no framing"
+  ),
+  [EvaluationDimension.RequirementElicitation]: rubric(
+    [
+      "Asks open-ended questions to surface functional/non-functional requirements",
+      "Doesn't spoon-feed the answer",
+    ],
+    "tells the candidate the requirements instead of drawing them out"
+  ),
+  [EvaluationDimension.ProbingDepth]: rubric(
+    [
+      "Follows up on vague or surface-level answers",
+      "Pushes for specifics (numbers, tradeoffs, edge cases)",
+    ],
+    "accepts shallow answers without pushing further"
+  ),
+  [EvaluationDimension.TechnicalListening]: rubric(
+    [
+      "Picks up on what the candidate actually said and builds the next question from it",
+    ],
+    "asks a pre-scripted next question ignoring the candidate's last answer"
+  ),
+  [EvaluationDimension.ChallengingAppropriately]: rubric(
+    [
+      "Introduces realistic pressure (scale, failure, edge cases) at the right moments",
+    ],
+    "never challenges the candidate's design, or challenges too aggressively to be useful"
+  ),
+  [EvaluationDimension.TimeManagement]: rubric(
+    [
+      "Keeps the session moving, doesn't get stuck on one topic too long",
+    ],
+    "lets one phase consume the entire interview"
+  ),
+  [EvaluationDimension.SummarizingAndWrapUp]: rubric(
+    [
+      "Closes with a clear summary and gives the candidate a chance to ask questions",
+    ],
+    "ends abruptly with no wrap-up"
+  ),
+};
+
+// ---------------------------------------------------------------------------
+// Concept taxonomy — unchanged
+// ---------------------------------------------------------------------------
+
+type ConceptSeed = {
+  slug: string;
+  name: string;
+  category: string;
+  description?: string;
+};
+
+const concepts: ConceptSeed[] = [
+  { slug: "horizontal-scaling", name: "Horizontal Scaling", category: "scalability" },
+  { slug: "load-balancing", name: "Load Balancing", category: "scalability" },
+  { slug: "caching-strategy", name: "Caching Strategy", category: "scalability" },
+  { slug: "database-sharding", name: "Database Sharding", category: "scalability" },
+  { slug: "cdn", name: "CDN", category: "scalability" },
+  { slug: "consistent-hashing", name: "Consistent Hashing", category: "distributed_systems" },
+  { slug: "cap-theorem", name: "CAP Theorem Tradeoffs", category: "distributed_systems" },
+  { slug: "message-queues", name: "Message Queues", category: "distributed_systems" },
+  { slug: "data-consistency", name: "Data Consistency Models", category: "distributed_systems" },
+  { slug: "rate-limiting-algorithms", name: "Rate Limiting Algorithms", category: "backend" },
+  { slug: "api-design", name: "API Design", category: "backend" },
+  { slug: "database-indexing", name: "Database Indexing", category: "databases" },
+  { slug: "object-modeling", name: "Object Modeling", category: "lld" },
+  { slug: "design-patterns", name: "Design Patterns", category: "lld" },
+  { slug: "encapsulation", name: "Encapsulation", category: "lld" },
+  { slug: "complexity-analysis", name: "Time/Space Complexity", category: "dsa" },
+  { slug: "edge-case-handling", name: "Edge Case Handling", category: "dsa" },
+];
+
+const problemConcepts: Record<string, { conceptSlug: string; weight: number }[]> = {
+  "url-shortener": [
+    { conceptSlug: "database-sharding", weight: 0.9 },
+    { conceptSlug: "caching-strategy", weight: 0.8 },
+    { conceptSlug: "api-design", weight: 0.6 },
+  ],
+  "rate-limiter": [
+    { conceptSlug: "rate-limiting-algorithms", weight: 1.0 },
+    { conceptSlug: "consistent-hashing", weight: 0.5 },
+  ],
+  "news-feed": [
+    { conceptSlug: "caching-strategy", weight: 0.9 },
+    { conceptSlug: "message-queues", weight: 0.7 },
+    { conceptSlug: "database-sharding", weight: 0.6 },
+  ],
+  "chat-system": [
+    { conceptSlug: "message-queues", weight: 0.9 },
+    { conceptSlug: "data-consistency", weight: 0.7 },
+    { conceptSlug: "horizontal-scaling", weight: 0.6 },
+  ],
+  "file-storage": [
+    { conceptSlug: "database-sharding", weight: 0.7 },
+    { conceptSlug: "cdn", weight: 0.8 },
+    { conceptSlug: "data-consistency", weight: 0.6 },
+  ],
+  "design-uber": [
+    { conceptSlug: "consistent-hashing", weight: 0.8 },
+    { conceptSlug: "data-consistency", weight: 0.7 },
+    { conceptSlug: "load-balancing", weight: 0.6 },
+  ],
+  "design-youtube": [
+    { conceptSlug: "cdn", weight: 0.9 },
+    { conceptSlug: "database-sharding", weight: 0.7 },
+    { conceptSlug: "caching-strategy", weight: 0.6 },
+  ],
+};
+
+async function seedConcepts() {
+  const savedBySlug = new Map<string, string>();
+
+  for (const concept of concepts) {
+    const saved = await prisma.concept.upsert({
+      where: { slug: concept.slug },
+      update: {
+        name: concept.name,
+        category: concept.category,
+        description: concept.description,
+      },
+      create: {
+        slug: concept.slug,
+        name: concept.name,
+        category: concept.category,
+        description: concept.description,
+      },
+    });
+
+    savedBySlug.set(concept.slug, saved.id);
+  }
+
+  console.log(`Seeded ${concepts.length} concepts.`);
+
+  return savedBySlug;
+}
+
+async function seedProblemConcepts(conceptIdBySlug: Map<string, string>) {
+  let count = 0;
+
+  for (const [problemSlug, links] of Object.entries(problemConcepts)) {
+    const problem = await prisma.problem.findUnique({
+      where: { slug: problemSlug },
+    });
+
+    if (!problem) {
+      console.warn(`Skipping problem-concept links for unknown problem "${problemSlug}".`);
+      continue;
+    }
+
+    for (const link of links) {
+      const conceptId = conceptIdBySlug.get(link.conceptSlug);
+
+      if (!conceptId) {
+        console.warn(`Skipping unknown concept slug "${link.conceptSlug}".`);
+        continue;
+      }
+
+      await prisma.problemConcept.upsert({
+        where: {
+          problemId_conceptId: {
+            problemId: problem.id,
+            conceptId,
+          },
+        },
+        update: { weight: link.weight },
+        create: {
+          problemId: problem.id,
+          conceptId,
+          weight: link.weight,
+        },
+      });
+
+      count++;
+    }
+  }
+
+  console.log(`Seeded ${count} problem-concept links.`);
+}
+
+async function seedTemplates() {
+  for (const template of templates) {
+    const dimensions = new Set<string>();
+
+    for (const phase of template.phases) {
+      for (const dim of phase.evaluationDimensions) {
+        dimensions.add(dim);
+      }
+      for (const dim of phase.reverseEvaluationDimensions ?? []) {
+        dimensions.add(dim);
+      }
+    }
+
+    const saved = await prisma.interviewTemplate.upsert({
+      where: { slug: template.slug },
+      update: {
+        name: template.name,
+        description: template.description,
+        isActive: true,
+        whiteboardPreset: template.whiteboardPreset,
+      },
+      create: {
+        slug: template.slug,
+        name: template.name,
+        description: template.description,
+        whiteboardPreset: template.whiteboardPreset,
+      },
+    });
+
+    for (const phase of template.phases) {
+      await prisma.interviewPhaseTemplate.upsert({
+        where: {
+          templateId_phaseKey: {
+            templateId: saved.id,
+            phaseKey: phase.phaseKey,
+          },
+        },
+        update: {
+          order: phase.order,
+          goals: GoalsSchema.parse(phase.goals),
+          evaluationDimensions: EvaluationDimensionsSchema.parse(phase.evaluationDimensions),
+          targetDurationRatio: phase.targetDurationRatio,
+          transitionThreshold: phase.transitionThreshold,
+          instructions: phase.instructions,
+          showWhiteboard: phase.showWhiteboard,
+          reverseEvaluationDimensions: EvaluationDimensionsSchema.parse(
+            phase.reverseEvaluationDimensions ?? []
+          ),
+        },
+        create: {
+          templateId: saved.id,
+          phaseKey: phase.phaseKey,
+          order: phase.order,
+          goals: GoalsSchema.parse(phase.goals),
+          evaluationDimensions: EvaluationDimensionsSchema.parse(phase.evaluationDimensions),
+          targetDurationRatio: phase.targetDurationRatio,
+          transitionThreshold: phase.transitionThreshold,
+          instructions: phase.instructions,
+          showWhiteboard: phase.showWhiteboard,
+          reverseEvaluationDimensions: EvaluationDimensionsSchema.parse(
+            phase.reverseEvaluationDimensions ?? []
+          ),
+        },
+      });
+    }
+
+    for (const dimension of dimensions) {
+      const content = RUBRICS[dimension as EvaluationDimension];
+
+      if (!content) {
+        console.warn(
+          `No rubric authored for dimension "${dimension}" (template "${template.slug}") — evaluation will fall back to a generic rubric.`
+        );
+        continue;
+      }
+
+      await prisma.rubricTemplate.upsert({
+        where: {
+          templateId_dimension: {
+            templateId: saved.id,
+            dimension,
+          },
+        },
+        update: { content },
+        create: {
+          templateId: saved.id,
+          dimension,
+          content,
+        },
+      });
+    }
+
+    console.log(
+      `Seeded template "${template.slug}" (${template.phases.length} phases, ${dimensions.size} dimensions).`
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Learning scenarios — unchanged
+// ---------------------------------------------------------------------------
+
+type SegmentSeed = {
+  order: number;
+  conversation: { role: "interviewer" | "candidate"; content: string }[];
+  takeaway?: string;
+  conceptSlugs: string[];
+  actions: {
+    type: LearningActionType;
+    title: string;
+    instructions?: string;
+    content: Prisma.InputJsonValue;
+  }[];
+};
+
+const PAYMENT_SCENARIO = {
+  slug: "design-a-payment-system",
+  title: "Design a Payment System",
+  description:
+    "A candidate reasons through what happens when a payment succeeds but the system never observes it.",
+  segments: [
+    {
+      order: 1,
+      conversation: [
+        {
+          role: "interviewer",
+          content:
+            "Let's say the payment succeeded, but our order service never received the event. What happens?",
+        },
+        {
+          role: "candidate",
+          content:
+            "I wouldn't retry the payment itself. I'd first separate payment state from event delivery.",
+        },
+        { role: "interviewer", content: "Why?" },
+        {
+          role: "candidate",
+          content:
+            "Because the external side effect may already have happened. My uncertainty is whether our system observed it — not whether the charge occurred.",
+        },
+        { role: "interviewer", content: "Okay. So how do you recover?" },
+        {
+          role: "candidate",
+          content:
+            "I'd persist the payment result, then publish through an outbox. The consumer must also be idempotent.",
+        },
+      ],
+      takeaway: "Separate payment state from event delivery; use outbox pattern with idempotent consumers.",
+      conceptSlugs: ["data-consistency", "message-queues"],
+      actions: [
+        {
+          type: LearningActionType.OBSERVE,
+          title: "Observe the pattern",
+          instructions: "Watch how someone else handles it.",
+          content: {
+            reflection:
+              "Notice what they did? The candidate separated whether the action happened from whether the system observed it. In your interview, you combined these two concerns.",
+          },
+        },
+      ],
+    },
+    {
+      order: 2,
+      conversation: [
+        {
+          role: "interviewer",
+          content: "The client times out and retries the same payment request. What could go wrong?",
+        },
+        {
+          role: "candidate",
+          content:
+            "If we're not careful, we'd charge the customer twice — the retry looks like a brand new request unless we can recognize it as the same one.",
+        },
+      ],
+      takeaway: "Client retries can cause duplicate charges without idempotency keys.",
+      conceptSlugs: ["rate-limiting-algorithms"],
+      actions: [
+        {
+          type: LearningActionType.FIX,
+          title: "Fix the answer",
+          instructions: "Fix this answer.",
+          content: {
+            reflection:
+              "Better. You correctly questioned the delivery guarantee. One thing is still missing: what happens between the database commit and publishing the event?",
+            interviewerQuestion: "How do you maintain consistency between services?",
+            flawedAnswer:
+              "I'd use Kafka because Kafka guarantees message delivery and makes the system eventually consistent.",
+            evaluationFocus:
+              "Whether the fix identifies the gap between the database write and the event publish, not just naming a technology.",
+          },
+        },
+      ],
+    },
+    {
+      order: 3,
+      conversation: [
+        {
+          role: "interviewer",
+          content:
+            "The database write succeeds. The service crashes before publishing to Kafka. What does the system believe happened?",
+        },
+      ],
+      takeaway: "Database write succeeded but event never published - system drifts out of sync.",
+      conceptSlugs: ["message-queues", "consistent-hashing"],
+      actions: [
+        {
+          type: LearningActionType.PREDICT,
+          title: "Predict the failure",
+          instructions: "What breaks first?",
+          content: {
+            reflection:
+              "The order was persisted, but downstream services never learn about it until the outbox relay catches up — the system silently drifts out of sync in the meantime.",
+            question:
+              "Order Service → Database → Kafka → Inventory Service. The database write succeeds. The service crashes before publishing to Kafka. What does the system believe happened?",
+            revealExplanation:
+              "The Inventory Service has no idea the order exists yet. Without an outbox pattern, this gap is invisible until someone notices inventory never decremented.",
+          },
+        },
+        {
+          type: LearningActionType.JUDGE,
+          title: "Judge the answer",
+          instructions: "Your turn to interview. A candidate is designing a chat system.",
+          content: {
+            reflection:
+              "Exactly. The interesting boundary is between the database write and event publication — that's the failure mode you missed in your own interview.",
+            options: [
+              { id: "a", text: "Why Kafka instead of RabbitMQ?" },
+              { id: "b", text: "What happens if the database write succeeds but publishing fails?" },
+              { id: "c", text: "How many Kafka partitions would you use?" },
+              { id: "d", text: "Would you use WebSockets?" },
+            ],
+            correctOptionId: "b",
+          },
+        },
+        {
+          type: LearningActionType.COMPARE,
+          title: "Compare approaches",
+          instructions: "Who handled this better?",
+          content: {
+            reflection:
+              "Candidate B — not because they used a more advanced term, but because they scoped the consistency decision instead of applying one model to the entire system.",
+            candidateA:
+              "I'd use eventual consistency because availability is more important here.",
+            candidateB:
+              "I think eventual consistency is acceptable for the read model, but I wouldn't apply that assumption to payment state — those have different failure costs.",
+            correctChoice: "B",
+          },
+        },
+      ],
+    },
+  ] satisfies SegmentSeed[],
+};
+
+export async function seedLearningScenarios() {
+  const scenario = await prisma.learningScenario.upsert({
+    where: { slug: PAYMENT_SCENARIO.slug },
+    update: {
+      title: PAYMENT_SCENARIO.title,
+      description: PAYMENT_SCENARIO.description,
+      isActive: true,
+    },
+    create: {
+      slug: PAYMENT_SCENARIO.slug,
+      title: PAYMENT_SCENARIO.title,
+      description: PAYMENT_SCENARIO.description,
+    },
+  });
+
+  for (const segmentSeed of PAYMENT_SCENARIO.segments) {
+    const segment = await prisma.learningSegment.upsert({
+      where: { scenarioId_order: { scenarioId: scenario.id, order: segmentSeed.order } },
+      update: {
+        conversation: ConversationSchema.parse(segmentSeed.conversation),
+        takeaway: segmentSeed.takeaway,
+      },
+      create: {
+        scenarioId: scenario.id,
+        order: segmentSeed.order,
+        conversation: ConversationSchema.parse(segmentSeed.conversation),
+        takeaway: segmentSeed.takeaway,
+      },
+    });
+
+    for (const slug of segmentSeed.conceptSlugs) {
+      const concept = await prisma.concept.findUnique({ where: { slug } });
+
+      if (!concept) {
+        console.warn(`Skipping unknown concept slug "${slug}" for segment order ${segmentSeed.order}.`);
+        continue;
+      }
+
+      await prisma.learningSegmentConcept.upsert({
+        where: { scenarioId_segmentId_conceptId: { scenarioId: scenario.id, segmentId: segment.id, conceptId: concept.id } },
+        update: {},
+        create: { scenarioId: scenario.id, segmentId: segment.id, conceptId: concept.id },
+      });
+    }
+
+    for (const actionSeed of segmentSeed.actions) {
+      const existing = await prisma.learningAction.findFirst({
+        where: { segmentId: segment.id, title: actionSeed.title },
+      });
+
+      const data = {
+        segmentId: segment.id,
+        type: actionSeed.type,
+        title: actionSeed.title,
+        instructions: actionSeed.instructions,
+        content: JsonSchema.parse(actionSeed.content),
+      };
+
+      if (existing) {
+        await prisma.learningAction.update({ where: { id: existing.id }, data });
+      } else {
+        await prisma.learningAction.create({ data });
+      }
+    }
+  }
+
+  console.log(
+    `Seeded learning scenario "${scenario.slug}" (${PAYMENT_SCENARIO.segments.length} segments).`
+  );
+}
+
+async function main() {
+  for (const problem of problems) {
+    await prisma.problem.upsert({
+      where: { slug: problem.slug },
+      update: {
+        title: problem.title,
+        description: problem.description,
+        category: problem.category,
+        difficulty: problem.difficulty,
+        interviewType: problem.interviewType,
+        cruxOfProblem: problem.cruxOfProblem,
+        estimatedMinutes: problem.estimatedMinutes,
+      },
+      create: {
+        slug: problem.slug,
+        title: problem.title,
+        description: problem.description,
+        category: problem.category,
+        difficulty: problem.difficulty,
+        interviewType: problem.interviewType,
+        cruxOfProblem: problem.cruxOfProblem,
+        estimatedMinutes: problem.estimatedMinutes,
+      },
+    });
+  }
+
+  console.log(`Seeded ${problems.length} problems.`);
+
+  await seedTemplates();
+
+  const conceptIdBySlug = await seedConcepts();
+  await seedProblemConcepts(conceptIdBySlug);
+  await seedLearningScenarios();
+}
+
+main()
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
+================================================
+FILE: ./prisma/data/templates.ts
+================================================
 
 const RUBRICS: Record<EvaluationDimension, string> = {
   [EvaluationDimension.Communication]: rubric(
@@ -2195,12 +2295,573 @@ const RUBRICS: Record<EvaluationDimension, string> = {
   ),
 };
 
-// ---------------------------------------------------------------------------
-// Interview templates — this is the part that used to be hardcoded across
-// the InterviewType enum, InterviewProfileResolver, HLDInterviewProfile.ts and
-// LLDInterviewProfile.ts. Adding "DSA" below is the entire cost of adding a
-// new interview type now.
-// ---------------------------------------------------------------------------
+
+
+const templates: TemplateSeed[] = [
+  {
+    slug: "hld",
+    name: "High Level Design",
+    description: "Design scalable distributed systems.",
+    whiteboardPreset: "hld",
+    phases: [
+      {
+        phaseKey: PhaseId.Introduction,
+        order: 0,
+        goals: [Goal.CandidateUnderstandsProblem],
+        evaluationDimensions: [EvaluationDimension.Communication],
+        targetDurationRatio: 0.05,
+        transitionThreshold: 0.7,
+        instructions:
+          "Introduce the problem briefly. Do not reveal requirements. Ask the candidate to begin by clarifying the problem. Move forward once the candidate demonstrates that they understand the problem and begins requirement discovery.",
+        reverseEvaluationDimensions: [EvaluationDimension.RapportBuilding],
+      },
+      {
+        phaseKey: PhaseId.Requirements,
+        order: 1,
+        goals: [
+          Goal.FunctionalRequirements,
+          Goal.NonFunctionalRequirements,
+          Goal.Scale,
+          Goal.Constraints,
+        ],
+        evaluationDimensions: [
+          EvaluationDimension.RequirementClarity,
+          EvaluationDimension.ScopeManagement,
+          EvaluationDimension.Communication,
+        ],
+        targetDurationRatio: 0.15,
+        transitionThreshold: 0.75,
+        instructions:
+          "Evaluate requirement gathering. Answer requirement questions when directly asked. Do not volunteer every requirement. Probe missing functional requirements, non-functional requirements, scale, and constraints. Do not discuss architecture yet.",
+        reverseEvaluationDimensions: [EvaluationDimension.RequirementElicitation, EvaluationDimension.TechnicalListening],
+      },
+      {
+        phaseKey: PhaseId.HighLevelDesign,
+        order: 2,
+        goals: [
+          Goal.CoreComponents,
+          Goal.ServiceBoundaries,
+          Goal.DataFlow,
+          Goal.StorageChoice,
+        ],
+        evaluationDimensions: [EvaluationDimension.Architecture, EvaluationDimension.TechnicalReasoning],
+        targetDurationRatio: 0.25,
+        transitionThreshold: 0.75,
+        instructions:
+          "Ask the candidate to propose a high-level architecture. Evaluate major components, service boundaries, data flow, and storage decisions. Challenge unclear architectural choices. Do not design the system for the candidate.",
+        showWhiteboard: true,
+        reverseEvaluationDimensions: [EvaluationDimension.TechnicalListening, EvaluationDimension.TimeManagement],
+      },
+      {
+        phaseKey: PhaseId.DeepDive,
+        order: 3,
+        goals: [
+          Goal.CriticalComponent,
+          Goal.DataModel,
+          Goal.Consistency,
+          Goal.TechnicalTradeoffs,
+        ],
+        evaluationDimensions: [EvaluationDimension.TechnicalDepth, EvaluationDimension.Tradeoffs],
+        targetDurationRatio: 0.3,
+        transitionThreshold: 0.7,
+        instructions:
+          "Choose important areas from the candidate's design for deeper discussion. Probe implementation details, data modeling, consistency, and tradeoffs. Prefer areas where the candidate's reasoning is incomplete or weak.",
+        showWhiteboard: true,
+        reverseEvaluationDimensions: [EvaluationDimension.ProbingDepth, EvaluationDimension.ChallengingAppropriately],
+      },
+      {
+        phaseKey: PhaseId.Scalability,
+        order: 4,
+        goals: [
+          Goal.Bottlenecks,
+          Goal.FailureModes,
+          Goal.ScalingStrategy,
+          Goal.Reliability,
+        ],
+        evaluationDimensions: [EvaluationDimension.Scalability, EvaluationDimension.Reliability],
+        targetDurationRatio: 0.2,
+        transitionThreshold: 0.7,
+        instructions:
+          "Probe scalability and reliability. Ask about bottlenecks, failure scenarios, capacity pressure, and scaling strategies. Challenge assumptions using realistic production scenarios.",
+        showWhiteboard: true,
+        reverseEvaluationDimensions: [EvaluationDimension.ChallengingAppropriately, EvaluationDimension.ProbingDepth],
+      },
+      {
+        phaseKey: PhaseId.Closing,
+        order: 5,
+        goals: [Goal.FinalTradeoffSummary],
+        evaluationDimensions: [EvaluationDimension.Communication, EvaluationDimension.Tradeoffs],
+        targetDurationRatio: 0.05,
+        transitionThreshold: 1,
+        instructions:
+          "Conclude the interview naturally. Ask the candidate to summarize their design and the most important tradeoffs. Do not begin another technical phase.",
+        reverseEvaluationDimensions: [EvaluationDimension.SummarizingAndWrapUp],
+      },
+    ],
+  },
+  {
+    slug: "lld",
+    name: "Low Level Design",
+    description: "Object-oriented design and patterns.",
+    whiteboardPreset: "lld",
+    phases: [
+      {
+        phaseKey: PhaseId.Introduction,
+        order: 0,
+        goals: [Goal.CandidateUnderstandsProblem],
+        evaluationDimensions: [EvaluationDimension.Communication],
+        targetDurationRatio: 0.05,
+        transitionThreshold: 0.7,
+        instructions:
+          "Introduce the object-oriented design problem. Ask the candidate to clarify the expected behaviour and scope.",
+        reverseEvaluationDimensions: [EvaluationDimension.RapportBuilding],
+      },
+      {
+        phaseKey: PhaseId.Requirements,
+        order: 1,
+        goals: [Goal.LLD_UseCases, Goal.Actors, Goal.Constraints, Goal.EdgeCases],
+        evaluationDimensions: [EvaluationDimension.RequirementClarity, EvaluationDimension.ScopeManagement],
+        targetDurationRatio: 0.15,
+        transitionThreshold: 0.75,
+        instructions:
+          "Evaluate whether the candidate identifies important use cases, actors, constraints, and edge cases. Answer clarification questions. Do not propose classes or interfaces.",
+        reverseEvaluationDimensions: [EvaluationDimension.RequirementElicitation, EvaluationDimension.TechnicalListening],
+      },
+      {
+        phaseKey: PhaseId.DomainModeling,
+        order: 2,
+        goals: [Goal.CoreEntities, Goal.Responsibilities, Goal.Relationships],
+        evaluationDimensions: [EvaluationDimension.ObjectModeling, EvaluationDimension.Abstraction],
+        targetDurationRatio: 0.2,
+        transitionThreshold: 0.75,
+        instructions:
+          "Ask the candidate to identify the core entities. Evaluate responsibilities and relationships. Challenge god objects, unclear ownership, and weak abstractions.",
+        showWhiteboard: true,
+        reverseEvaluationDimensions: [EvaluationDimension.TechnicalListening, EvaluationDimension.TimeManagement],
+      },
+      {
+        phaseKey: PhaseId.ClassDesign,
+        order: 3,
+        goals: [
+          Goal.Classes,
+          Goal.Interfaces,
+          Goal.MethodBoundaries,
+          Goal.Encapsulation,
+        ],
+        evaluationDimensions: [EvaluationDimension.ClassDesign, EvaluationDimension.CodeQuality],
+        targetDurationRatio: 0.3,
+        transitionThreshold: 0.75,
+        instructions:
+          "Probe concrete class and interface design. Evaluate method boundaries, encapsulation, and separation of concerns. Ask focused questions about design decisions.",
+        showWhiteboard: true,
+        reverseEvaluationDimensions: [EvaluationDimension.ProbingDepth, EvaluationDimension.ChallengingAppropriately],
+      },
+      {
+        phaseKey: PhaseId.Extensibility,
+        order: 4,
+        goals: [
+          Goal.ChangeScenarios,
+          Goal.DesignTradeoffs,
+          Goal.Extensibility,
+          Goal.Testability,
+        ],
+        evaluationDimensions: [
+          EvaluationDimension.DesignPatterns,
+          EvaluationDimension.Tradeoffs,
+          EvaluationDimension.Maintainability,
+        ],
+        targetDurationRatio: 0.25,
+        transitionThreshold: 0.7,
+        instructions:
+          "Introduce realistic requirement changes. Evaluate whether the design is extensible and testable. Probe design patterns only when relevant. Do not force pattern usage.",
+        showWhiteboard: true,
+        reverseEvaluationDimensions: [EvaluationDimension.ChallengingAppropriately, EvaluationDimension.ProbingDepth],
+      },
+      {
+        phaseKey: PhaseId.Closing,
+        order: 5,
+        goals: [Goal.FinalDesignSummary],
+        evaluationDimensions: [EvaluationDimension.Communication],
+        targetDurationRatio: 0.05,
+        transitionThreshold: 1,
+        instructions:
+          "Ask the candidate to summarize their final design and major tradeoffs. Conclude the interview naturally.",
+        reverseEvaluationDimensions: [EvaluationDimension.SummarizingAndWrapUp],
+      },
+    ],
+  },
+  {
+    // Proof of extensibility: this entire interview type is new data, zero
+    // new code paths, zero new enum values, zero new resolver branches.
+    slug: "dsa",
+    name: "Data Structures & Algorithms",
+    description: "Coding interview focused on problem solving and complexity analysis.",
+    phases: [
+      {
+        phaseKey: PhaseId.Clarification,
+        order: 0,
+        goals: [Goal.InputConstraints, Goal.EdgeCasesIdentified],
+        evaluationDimensions: [EvaluationDimension.Communication, EvaluationDimension.EdgeCaseHandling],
+        targetDurationRatio: 0.15,
+        transitionThreshold: 0.7,
+        instructions:
+          "Present the problem statement. Ask the candidate to restate the problem and clarify input size, constraints, and edge cases before coding.",
+      },
+      {
+        phaseKey: PhaseId.Approach,
+        order: 1,
+        goals: [Goal.BruteForceStated, Goal.OptimizationDirection],
+        evaluationDimensions: [EvaluationDimension.ProblemSolving, EvaluationDimension.ComplexityAnalysis],
+        targetDurationRatio: 0.2,
+        transitionThreshold: 0.7,
+        instructions:
+          "Ask the candidate to describe their approach and its complexity before writing code. Push for a brute-force baseline if skipped, then an optimization direction.",
+      },
+      {
+        phaseKey: PhaseId.Implementation,
+        order: 2,
+        goals: [Goal.WorkingCode, Goal.CleanStructure],
+        evaluationDimensions: [EvaluationDimension.CodeCorrectness, EvaluationDimension.Communication],
+        targetDurationRatio: 0.45,
+        transitionThreshold: 0.75,
+        instructions:
+          "Let the candidate implement their approach. Ask clarifying questions about their code as they write it. Do not write code for them.",
+      },
+      {
+        phaseKey: PhaseId.Testing,
+        order: 3,
+        goals: [Goal.DryRun, Goal.EdgeCaseVerification],
+        evaluationDimensions: [EvaluationDimension.EdgeCaseHandling, EvaluationDimension.CodeCorrectness],
+        targetDurationRatio: 0.15,
+        transitionThreshold: 0.7,
+        instructions:
+          "Ask the candidate to dry-run their solution against a normal case and at least one edge case.",
+      },
+      {
+        phaseKey: PhaseId.Closing,
+        order: 4,
+        goals: [Goal.FinalComplexitySummary],
+        evaluationDimensions: [EvaluationDimension.ComplexityAnalysis],
+        targetDurationRatio: 0.05,
+        transitionThreshold: 1,
+        instructions:
+          "Ask the candidate to state the final time and space complexity of their solution. Conclude the interview naturally.",
+      },
+    ],
+  },
+  {
+    slug: "pr_review",
+    name: "PR Review",
+    description: "Review a pull request with focus on code quality, design patterns, and maintainability.",
+    phases: [
+      {
+        phaseKey: PhaseId.Introduction,
+        order: 0,
+        goals: [Goal.CandidateUnderstandsPrContext],
+        evaluationDimensions: [EvaluationDimension.Communication],
+        targetDurationRatio: 0.05,
+        transitionThreshold: 0.7,
+        instructions:
+          "Introduce the PR context briefly. Ask the candidate to begin by understanding the purpose and scope of the changes.",
+        reverseEvaluationDimensions: [EvaluationDimension.RapportBuilding],
+      },
+      {
+        phaseKey: PhaseId.ContextUnderstanding,
+        order: 1,
+        goals: [Goal.PrPurpose, Goal.AffectedAreas, Goal.PR_Dependencies],
+        evaluationDimensions: [EvaluationDimension.RequirementClarity, EvaluationDimension.Communication],
+        targetDurationRatio: 0.15,
+        transitionThreshold: 0.75,
+        instructions:
+          "Evaluate whether the candidate understands the PR's purpose, affected areas, and dependencies. Answer clarification questions about the codebase context.",
+        reverseEvaluationDimensions: [EvaluationDimension.RequirementElicitation, EvaluationDimension.TechnicalListening],
+      },
+      {
+        phaseKey: PhaseId.CodeReview,
+        order: 2,
+        goals: [Goal.Correctness, Goal.CodeQuality, Goal.DesignPatterns],
+        evaluationDimensions: [EvaluationDimension.CodeCorrectness, EvaluationDimension.CodeQuality, EvaluationDimension.DesignPatterns],
+        targetDurationRatio: 0.35,
+        transitionThreshold: 0.75,
+        instructions:
+          "Ask the candidate to review the code changes. Evaluate their ability to identify bugs, code quality issues, and design pattern usage. Challenge missed issues.",
+        showWhiteboard: true,
+        reverseEvaluationDimensions: [EvaluationDimension.ProbingDepth, EvaluationDimension.TechnicalListening],
+      },
+      {
+        phaseKey: PhaseId.DesignReview,
+        order: 3,
+        goals: [Goal.ArchitectureImpact, Goal.Extensibility, Goal.Maintainability],
+        evaluationDimensions: [EvaluationDimension.Architecture, EvaluationDimension.Maintainability, EvaluationDimension.Tradeoffs],
+        targetDurationRatio: 0.25,
+        transitionThreshold: 0.7,
+        instructions:
+          "Probe the architectural impact of the changes. Evaluate whether the candidate considers extensibility, maintainability, and design tradeoffs.",
+        showWhiteboard: true,
+        reverseEvaluationDimensions: [EvaluationDimension.ProbingDepth, EvaluationDimension.ChallengingAppropriately],
+      },
+      {
+        phaseKey: PhaseId.FeedbackDelivery,
+        order: 4,
+        goals: [Goal.ConstructiveFeedback, Goal.ActionableSuggestions],
+        evaluationDimensions: [EvaluationDimension.Communication, EvaluationDimension.Tradeoffs],
+        targetDurationRatio: 0.15,
+        transitionThreshold: 0.7,
+        instructions:
+          "Ask the candidate to provide feedback as if they were reviewing this PR. Evaluate the constructiveness and actionability of their feedback.",
+        reverseEvaluationDimensions: [EvaluationDimension.TechnicalListening, EvaluationDimension.TimeManagement],
+      },
+      {
+        phaseKey: PhaseId.Closing,
+        order: 5,
+        goals: [Goal.ReviewSummary],
+        evaluationDimensions: [EvaluationDimension.Communication],
+        targetDurationRatio: 0.05,
+        transitionThreshold: 1,
+        instructions:
+          "Ask the candidate to summarize their review and the most important issues found. Conclude the interview naturally.",
+        reverseEvaluationDimensions: [EvaluationDimension.SummarizingAndWrapUp],
+      },
+    ],
+  },
+  {
+    slug: "deep_dive",
+    name: "Deep Dive",
+    description: "Deep technical exploration of a specific system or technology.",
+    phases: [
+      {
+        phaseKey: PhaseId.Introduction,
+        order: 0,
+        goals: [Goal.CandidateUnderstandsTopic],
+        evaluationDimensions: [EvaluationDimension.Communication],
+        targetDurationRatio: 0.05,
+        transitionThreshold: 0.7,
+        instructions:
+          "Introduce the deep dive topic. Ask the candidate to begin by explaining their understanding of the system or technology.",
+        reverseEvaluationDimensions: [EvaluationDimension.RapportBuilding],
+      },
+      {
+        phaseKey: PhaseId.KnowledgeAssessment,
+        order: 1,
+        goals: [Goal.CoreConcepts, Goal.Internals, Goal.DeepDive_UseCases],
+        evaluationDimensions: [EvaluationDimension.TechnicalDepth, EvaluationDimension.TechnicalReasoning],
+        targetDurationRatio: 0.2,
+        transitionThreshold: 0.75,
+        instructions:
+          "Assess the candidate's depth of knowledge. Probe core concepts, internal workings, and practical use cases. Challenge superficial answers.",
+        reverseEvaluationDimensions: [EvaluationDimension.ProbingDepth, EvaluationDimension.TechnicalListening],
+      },
+      {
+        phaseKey: PhaseId.ArchitectureExploration,
+        order: 2,
+        goals: [Goal.SystemComponents, Goal.DataFlow, Goal.DesignDecisions],
+        evaluationDimensions: [EvaluationDimension.Architecture, EvaluationDimension.TechnicalReasoning],
+        targetDurationRatio: 0.25,
+        transitionThreshold: 0.75,
+        instructions:
+          "Explore the architecture and design decisions. Evaluate understanding of component interactions, data flow, and key design choices.",
+        showWhiteboard: true,
+        reverseEvaluationDimensions: [EvaluationDimension.TechnicalListening, EvaluationDimension.ChallengingAppropriately],
+      },
+      {
+        phaseKey: PhaseId.ImplementationDetails,
+        order: 3,
+        goals: [Goal.ImplementationApproach, Goal.PerformanceConsiderations, Goal.EdgeCases],
+        evaluationDimensions: [EvaluationDimension.TechnicalDepth, EvaluationDimension.Tradeoffs],
+        targetDurationRatio: 0.3,
+        transitionThreshold: 0.7,
+        instructions:
+          "Dive into implementation details. Probe performance considerations, edge cases, and practical implementation challenges.",
+        showWhiteboard: true,
+        reverseEvaluationDimensions: [EvaluationDimension.ProbingDepth, EvaluationDimension.ChallengingAppropriately],
+      },
+      {
+        phaseKey: PhaseId.ScalabilityReliability,
+        order: 4,
+        goals: [Goal.ScalingChallenges, Goal.DeepDive_FailureModes, Goal.OperationalConsiderations],
+        evaluationDimensions: [EvaluationDimension.Scalability, EvaluationDimension.Reliability],
+        targetDurationRatio: 0.15,
+        transitionThreshold: 0.7,
+        instructions:
+          "Discuss scalability and reliability aspects. Ask about scaling challenges, failure modes, and operational considerations.",
+        reverseEvaluationDimensions: [EvaluationDimension.ChallengingAppropriately, EvaluationDimension.ProbingDepth],
+      },
+      {
+        phaseKey: PhaseId.Closing,
+        order: 5,
+        goals: [Goal.TopicSummary, Goal.KeyTakeaways],
+        evaluationDimensions: [EvaluationDimension.Communication],
+        targetDurationRatio: 0.05,
+        transitionThreshold: 1,
+        instructions:
+          "Ask the candidate to summarize the key takeaways from the deep dive. Conclude the interview naturally.",
+        reverseEvaluationDimensions: [EvaluationDimension.SummarizingAndWrapUp],
+      },
+    ],
+  },
+  {
+    slug: "tech_doc_review",
+    name: "Tech Doc Review",
+    description: "Review technical documentation with focus on clarity, completeness, and accuracy.",
+    phases: [
+      {
+        phaseKey: PhaseId.Introduction,
+        order: 0,
+        goals: [Goal.CandidateUnderstandsDocContext],
+        evaluationDimensions: [EvaluationDimension.Communication],
+        targetDurationRatio: 0.05,
+        transitionThreshold: 0.7,
+        instructions:
+          "Introduce the technical document briefly. Ask the candidate to begin by understanding the purpose and audience of the documentation.",
+        reverseEvaluationDimensions: [EvaluationDimension.RapportBuilding],
+      },
+      {
+        phaseKey: PhaseId.ContextUnderstanding,
+        order: 1,
+        goals: [Goal.DocPurpose, Goal.TargetAudience, Goal.DocScope],
+        evaluationDimensions: [EvaluationDimension.RequirementClarity, EvaluationDimension.Communication],
+        targetDurationRatio: 0.15,
+        transitionThreshold: 0.75,
+        instructions:
+          "Evaluate whether the candidate understands the document's purpose, target audience, and scope. Answer clarification questions about the technical context.",
+        reverseEvaluationDimensions: [EvaluationDimension.RequirementElicitation, EvaluationDimension.TechnicalListening],
+      },
+      {
+        phaseKey: PhaseId.StructureReview,
+        order: 2,
+        goals: [Goal.Organization, Goal.Flow, Goal.Navigation],
+        evaluationDimensions: [EvaluationDimension.Architecture, EvaluationDimension.TechnicalReasoning],
+        targetDurationRatio: 0.2,
+        transitionThreshold: 0.75,
+        instructions:
+          "Ask the candidate to review the document structure. Evaluate organization, logical flow, and ease of navigation. Challenge structural issues.",
+        showWhiteboard: true,
+        reverseEvaluationDimensions: [EvaluationDimension.TechnicalListening, EvaluationDimension.TimeManagement],
+      },
+      {
+        phaseKey: PhaseId.ContentReview,
+        order: 3,
+        goals: [Goal.Clarity, Goal.Completeness, Goal.Accuracy],
+        evaluationDimensions: [EvaluationDimension.TechnicalDepth, EvaluationDimension.Communication],
+        targetDurationRatio: 0.35,
+        transitionThreshold: 0.7,
+        instructions:
+          "Dive into content review. Evaluate clarity, completeness, and accuracy of technical information. Probe missing sections, unclear explanations, and potential errors.",
+        showWhiteboard: true,
+        reverseEvaluationDimensions: [EvaluationDimension.ProbingDepth, EvaluationDimension.ChallengingAppropriately],
+      },
+      {
+        phaseKey: PhaseId.ImprovementSuggestions,
+        order: 4,
+        goals: [Goal.ActionableFeedback, Goal.PriorityRanking],
+        evaluationDimensions: [EvaluationDimension.Tradeoffs, EvaluationDimension.Communication],
+        targetDurationRatio: 0.2,
+        transitionThreshold: 0.7,
+        instructions:
+          "Ask the candidate to provide improvement suggestions with priorities. Evaluate the actionability and impact of their recommendations.",
+        reverseEvaluationDimensions: [EvaluationDimension.TechnicalListening, EvaluationDimension.TimeManagement],
+      },
+      {
+        phaseKey: PhaseId.Closing,
+        order: 5,
+        goals: [Goal.ReviewSummary, Goal.KeyImprovements],
+        evaluationDimensions: [EvaluationDimension.Communication],
+        targetDurationRatio: 0.05,
+        transitionThreshold: 1,
+        instructions:
+          "Ask the candidate to summarize their review and the most important improvements. Conclude the interview naturally.",
+        reverseEvaluationDimensions: [EvaluationDimension.SummarizingAndWrapUp],
+      },
+    ],
+  },
+  {
+    slug: "task_breakdown",
+    name: "Task Breakdown",
+    description: "Break down a large task into small, independent, executable subtasks.",
+    phases: [
+      {
+        phaseKey: PhaseId.Introduction,
+        order: 0,
+        goals: [Goal.CandidateUnderstandsTask],
+        evaluationDimensions: [EvaluationDimension.Communication],
+        targetDurationRatio: 0.05,
+        transitionThreshold: 0.7,
+        instructions:
+          "Introduce the large task briefly. Ask the candidate to begin by understanding the requirements and constraints.",
+        reverseEvaluationDimensions: [EvaluationDimension.RapportBuilding],
+      },
+      {
+        phaseKey: PhaseId.RequirementAnalysis,
+        order: 1,
+        goals: [Goal.Task_FunctionalRequirements, Goal.Task_Constraints, Goal.SuccessCriteria],
+        evaluationDimensions: [EvaluationDimension.RequirementClarity, EvaluationDimension.ScopeManagement],
+        targetDurationRatio: 0.15,
+        transitionThreshold: 0.75,
+        instructions:
+          "Evaluate requirement gathering. Probe functional requirements, constraints, and success criteria. Ensure scope is well-defined.",
+        reverseEvaluationDimensions: [EvaluationDimension.RequirementElicitation, EvaluationDimension.TechnicalListening],
+      },
+      {
+        phaseKey: PhaseId.DependencyAnalysis,
+        order: 2,
+        goals: [Goal.Dependencies, Goal.BlockingTasks, Goal.ParallelOpportunities],
+        evaluationDimensions: [EvaluationDimension.Architecture, EvaluationDimension.TechnicalReasoning],
+        targetDurationRatio: 0.2,
+        transitionThreshold: 0.75,
+        instructions:
+          "Ask the candidate to analyze dependencies. Evaluate identification of blocking tasks and opportunities for parallel execution.",
+        showWhiteboard: true,
+        reverseEvaluationDimensions: [EvaluationDimension.TechnicalListening, EvaluationDimension.TimeManagement],
+      },
+      {
+        phaseKey: PhaseId.TaskDecomposition,
+        order: 3,
+        goals: [Goal.SubtaskDefinition, Goal.Independence, Goal.Estimation],
+        evaluationDimensions: [EvaluationDimension.TechnicalDepth, EvaluationDimension.ProblemSolving],
+        targetDurationRatio: 0.35,
+        transitionThreshold: 0.7,
+        instructions:
+          "Dive into task decomposition. Evaluate whether subtasks are small, independent, and properly estimated. Challenge overly large or dependent tasks.",
+        showWhiteboard: true,
+        reverseEvaluationDimensions: [EvaluationDimension.ProbingDepth, EvaluationDimension.ChallengingAppropriately],
+      },
+      {
+        phaseKey: PhaseId.ExecutionPlanning,
+        order: 4,
+        goals: [Goal.Sequencing, Goal.RiskMitigation, Goal.ResourceAllocation],
+        evaluationDimensions: [EvaluationDimension.Tradeoffs, EvaluationDimension.TechnicalReasoning],
+        targetDurationRatio: 0.2,
+        transitionThreshold: 0.7,
+        instructions:
+          "Discuss execution planning. Evaluate task sequencing, risk mitigation strategies, and resource allocation decisions.",
+        reverseEvaluationDimensions: [EvaluationDimension.ChallengingAppropriately, EvaluationDimension.ProbingDepth],
+      },
+      {
+        phaseKey: PhaseId.Closing,
+        order: 5,
+        goals: [Goal.BreakdownSummary, Goal.CriticalPath],
+        evaluationDimensions: [EvaluationDimension.Communication],
+        targetDurationRatio: 0.05,
+        transitionThreshold: 1,
+        instructions:
+          "Ask the candidate to summarize their breakdown and identify the critical path. Conclude the interview naturally.",
+        reverseEvaluationDimensions: [EvaluationDimension.SummarizingAndWrapUp],
+      },
+    ],
+  },
+];
+
+
+
+
+type TemplateSeed = {
+  slug: string;
+  name: string;
+  description: string;
+  whiteboardPreset?: string;
+  phases: PhaseSeed[];
+};
+
 
 type PhaseSeed = {
   phaseKey: string;
@@ -2212,14 +2873,6 @@ type PhaseSeed = {
   instructions: string;
   showWhiteboard?: boolean;
   reverseEvaluationDimensions?: string[];
-};
-
-type TemplateSeed = {
-  slug: string;
-  name: string;
-  description: string;
-  whiteboardPreset?: string;
-  phases: PhaseSeed[];
 };
 
 const templates: TemplateSeed[] = [
@@ -2776,517 +3429,158 @@ const templates: TemplateSeed[] = [
   },
 ];
 
-// ---------------------------------------------------------------------------
-// Concept taxonomy. This is the vocabulary EvidenceEvaluator tags evidence
-// against — deliberately small to start. Expand as real transcripts surface
-// concepts that don't fit anywhere yet; don't try to pre-populate a complete
-// taxonomy up front.
-// ---------------------------------------------------------------------------
-
-type ConceptSeed = {
-  slug: string;
-  name: string;
-  category: string;
-  description?: string;
-};
-
-const concepts: ConceptSeed[] = [
-  { slug: "horizontal-scaling", name: "Horizontal Scaling", category: "scalability" },
-  { slug: "load-balancing", name: "Load Balancing", category: "scalability" },
-  { slug: "caching-strategy", name: "Caching Strategy", category: "scalability" },
-  { slug: "database-sharding", name: "Database Sharding", category: "scalability" },
-  { slug: "cdn", name: "CDN", category: "scalability" },
-  { slug: "consistent-hashing", name: "Consistent Hashing", category: "distributed_systems" },
-  { slug: "cap-theorem", name: "CAP Theorem Tradeoffs", category: "distributed_systems" },
-  { slug: "message-queues", name: "Message Queues", category: "distributed_systems" },
-  { slug: "data-consistency", name: "Data Consistency Models", category: "distributed_systems" },
-  { slug: "rate-limiting-algorithms", name: "Rate Limiting Algorithms", category: "backend" },
-  { slug: "api-design", name: "API Design", category: "backend" },
-  { slug: "database-indexing", name: "Database Indexing", category: "databases" },
-  { slug: "object-modeling", name: "Object Modeling", category: "lld" },
-  { slug: "design-patterns", name: "Design Patterns", category: "lld" },
-  { slug: "encapsulation", name: "Encapsulation", category: "lld" },
-  { slug: "complexity-analysis", name: "Time/Space Complexity", category: "dsa" },
-  { slug: "edge-case-handling", name: "Edge Case Handling", category: "dsa" },
-];
-
-// problemSlug -> [{ conceptSlug, weight }]. Weight = how central the concept
-// is to that problem. Only a starter set is mapped — expand per problem as
-// you go rather than guessing weights for problems you haven't seeded evidence for.
-const problemConcepts: Record<string, { conceptSlug: string; weight: number }[]> = {
-  "url-shortener": [
-    { conceptSlug: "database-sharding", weight: 0.9 },
-    { conceptSlug: "caching-strategy", weight: 0.8 },
-    { conceptSlug: "api-design", weight: 0.6 },
-  ],
-  "rate-limiter": [
-    { conceptSlug: "rate-limiting-algorithms", weight: 1.0 },
-    { conceptSlug: "consistent-hashing", weight: 0.5 },
-  ],
-  "news-feed": [
-    { conceptSlug: "caching-strategy", weight: 0.9 },
-    { conceptSlug: "message-queues", weight: 0.7 },
-    { conceptSlug: "database-sharding", weight: 0.6 },
-  ],
-  "chat-system": [
-    { conceptSlug: "message-queues", weight: 0.9 },
-    { conceptSlug: "data-consistency", weight: 0.7 },
-    { conceptSlug: "horizontal-scaling", weight: 0.6 },
-  ],
-  "file-storage": [
-    { conceptSlug: "database-sharding", weight: 0.7 },
-    { conceptSlug: "cdn", weight: 0.8 },
-    { conceptSlug: "data-consistency", weight: 0.6 },
-  ],
-  "design-uber": [
-    { conceptSlug: "consistent-hashing", weight: 0.8 },
-    { conceptSlug: "data-consistency", weight: 0.7 },
-    { conceptSlug: "load-balancing", weight: 0.6 },
-  ],
-  "design-youtube": [
-    { conceptSlug: "cdn", weight: 0.9 },
-    { conceptSlug: "database-sharding", weight: 0.7 },
-    { conceptSlug: "caching-strategy", weight: 0.6 },
-  ],
-};
-
-async function seedConcepts() {
-  const savedBySlug = new Map<string, string>();
-
-  for (const concept of concepts) {
-    const saved = await prisma.concept.upsert({
-      where: { slug: concept.slug },
-      update: {
-        name: concept.name,
-        category: concept.category,
-        description: concept.description,
-      },
-      create: {
-        slug: concept.slug,
-        name: concept.name,
-        category: concept.category,
-        description: concept.description,
-      },
-    });
-
-    savedBySlug.set(concept.slug, saved.id);
+================================================
+FILE: ./prisma/data/problems.json
+================================================
+[
+  { "slug": "real-time-dashboard", "title": "Design a Real-Time Analytics Dashboard", "description": "Build a system that displays live metrics with sub-second updates for thousands of concurrent users.", "category": "SYSTEM_DESIGN", "difficulty": "HARD", "interviewType": "hld", "cruxOfProblem": "WebSocket scaling + efficient aggregation", "estimatedMinutes": 45, "concepts": ["websockets", "redis", "time-series"], "tags": ["real-time", "analytics", "high-concurrency"] },
+  { "slug": "recommendation-service", "title": "Design a Recommendation Service", "description": "Build a service that suggests personalized content to millions of users with low latency.", "category": "SYSTEM_DESIGN", "difficulty": "HARD", "interviewType": "hld", "cruxOfProblem": "Collaborative filtering + real-time ranking", "estimatedMinutes": 45, "concepts": ["machine-learning", "caching-strategy", "database-sharding"], "tags": ["recommendations", "personalization", "ml"] },
+  { "slug": "analytics-pipeline", "title": "Design an Analytics Pipeline", "description": "Build a system that processes billions of events daily and generates aggregated reports.", "category": "DISTRIBUTED_SYSTEMS", "difficulty": "HARD", "interviewType": "hld", "cruxOfProblem": "Event batching + time-window aggregation", "estimatedMinutes": 60, "concepts": ["message-queues", "data-consistency", "batch-processing"], "tags": ["analytics", "big-data", "aggregation"] },
+  { "slug": "notification-system", "title": "Design a Notification System", "description": "Build a system that delivers push notifications to millions of devices reliably.", "category": "DISTRIBUTED_SYSTEMS", "difficulty": "HARD", "interviewType": "hld", "cruxOfProblem": "Queue-based delivery + deduplication", "estimatedMinutes": 45, "concepts": ["message-queues", "rate-limiting-algorithms", "data-consistency"], "tags": ["notifications", "push", "reliability"] },
+  { "slug": "feed-ranking", "title": "Design a Feed Ranking System", "description": "Build a system that ranks and personalizes social media feeds for millions of users.", "category": "SYSTEM_DESIGN", "difficulty": "HARD", "interviewType": "hld", "cruxOfProblem": "Ranking algorithms + personalized scoring", "estimatedMinutes": 45, "concepts": ["caching-strategy", "database-sharding", "machine-learning"], "tags": ["social", "ranking", "personalization"] },
+  { "slug": "click-tracking", "title": "Design a Click Tracking System", "description": "Build a system that tracks and aggregates millions of click events in real-time.", "category": "DISTRIBUTED_SYSTEMS", "difficulty": "HARD", "interviewType": "hld", "cruxOfProblem": "High-volume ingestion + real-time aggregation", "estimatedMinutes": 45, "concepts": ["message-queues", "time-series", "database-sharding"], "tags": ["analytics", "high-volume", "real-time"] },
+  { "slug": "url-shortener", "title": "Design a URL Shortener", "description": "Design a scalable URL shortening service like TinyURL.", "category": "SYSTEM_DESIGN", "difficulty": "MEDIUM", "interviewType": "hld", "cruxOfProblem": "Unique ID generation + redirect performance", "estimatedMinutes": 30, "concepts": ["database-sharding", "caching-strategy", "api-design"], "tags": ["storage", "redirection", "scalability"] },
+  { "slug": "rate-limiter", "title": "Design a Rate Limiter", "description": "Design a distributed rate limiting system.", "category": "SYSTEM_DESIGN", "difficulty": "MEDIUM", "interviewType": "hld", "cruxOfProblem": "Distributed state + sliding window", "estimatedMinutes": 30, "concepts": ["rate-limiting-algorithms", "consistent-hashing", "redis"], "tags": ["rate-limiting", "distributed", "throttling"] },
+  { "slug": "news-feed", "title": "Design a News Feed", "description": "Design a scalable social media news feed.", "category": "SYSTEM_DESIGN", "difficulty": "HARD", "interviewType": "hld", "cruxOfProblem": "Fanout on write vs read + timeline pagination", "estimatedMinutes": 45, "concepts": ["caching-strategy", "message-queues", "database-sharding"], "tags": ["social", "feed", "scalability"] },
+  { "slug": "chat-system", "title": "Design a Chat System", "description": "Design a real-time messaging platform.", "category": "SYSTEM_DESIGN", "difficulty": "HARD", "interviewType": "hld", "cruxOfProblem": "Message ordering + presence + delivery guarantees", "estimatedMinutes": 45, "concepts": ["websockets", "message-queues", "data-consistency"], "tags": ["messaging", "real-time", "communication"] },
+  { "slug": "file-storage", "title": "Design File Storage", "description": "Design a distributed cloud file storage system.", "category": "DISTRIBUTED_SYSTEMS", "difficulty": "HARD", "interviewType": "hld", "cruxOfProblem": "Block-level storage + consistency + durability", "estimatedMinutes": 60, "concepts": ["database-sharding", "cdn", "data-consistency"], "tags": ["storage", "cloud", "distributed"] },
+  { "slug": "design-uber", "title": "Design Uber", "description": "Design a large-scale ride sharing platform.", "category": "SYSTEM_DESIGN", "difficulty": "HARD", "interviewType": "hld", "cruxOfProblem": "Real-time matching + location indexing + ETA calculation", "estimatedMinutes": 60, "concepts": ["consistent-hashing", "data-consistency", "load-balancing"], "tags": ["ride-sharing", "location", "real-time"] },
+  { "slug": "design-youtube", "title": "Design YouTube", "description": "Design a global video streaming platform.", "category": "SYSTEM_DESIGN", "difficulty": "HARD", "interviewType": "hld", "cruxOfProblem": "Video upload + transcoding + CDN distribution", "estimatedMinutes": 60, "concepts": ["cdn", "database-sharding", "caching-strategy"], "tags": ["streaming", "video", "cdn"] },
+  { "slug": "post-comment-threading", "title": "Design Post/Comment Threading", "description": "Design a system for nested comments with efficient retrieval and pagination.", "category": "LOW_LEVEL_DESIGN", "difficulty": "MEDIUM", "interviewType": "lld", "cruxOfProblem": "Tree traversal + pagination + N+1 prevention", "estimatedMinutes": 30, "concepts": ["object-modeling", "database-indexing", "encapsulation"], "tags": ["social", "comments", "threading"] },
+  { "slug": "like-reaction-system", "title": "Design a Like/Reaction System", "description": "Design a system for handling likes and reactions on posts with real-time counts.", "category": "LOW_LEVEL_DESIGN", "difficulty": "MEDIUM", "interviewType": "lld", "cruxOfProblem": "Efficient counting + denormalization + consistency", "estimatedMinutes": 30, "concepts": ["caching-strategy", "denormalization", "redis"], "tags": ["social", "reactions", "counting"] },
+  { "slug": "user-authentication", "title": "Design User Authentication", "description": "Design a secure user authentication system with sessions and tokens.", "category": "LOW_LEVEL_DESIGN", "difficulty": "MEDIUM", "interviewType": "lld", "cruxOfProblem": "Session management + token security + password hashing", "estimatedMinutes": 30, "concepts": ["encapsulation", "design-patterns", "api-design"], "tags": ["security", "auth", "sessions"] },
+  { "slug": "video-upload-pipeline", "title": "Design a Video Upload Pipeline", "description": "Design a system for uploading and processing large video files.", "category": "LOW_LEVEL_DESIGN", "difficulty": "HARD", "interviewType": "lld", "cruxOfProblem": "Multipart upload + state machine + error handling", "estimatedMinutes": 45, "concepts": ["design-patterns", "state-machine", "error-handling"], "tags": ["video", "upload", "processing"] },
+  { "slug": "search-indexing", "title": "Design Search Indexing", "description": "Design an inverted index system for full-text search with ranking.", "category": "LOW_LEVEL_DESIGN", "difficulty": "HARD", "interviewType": "lld", "cruxOfProblem": "Inverted index + ranking + relevance scoring", "estimatedMinutes": 45, "concepts": ["database-indexing", "algorithms", "data-structures"], "tags": ["search", "indexing", "ranking"] },
+  { "slug": "permissions-access-control", "title": "Design Permissions & Access Control", "description": "Design a flexible permission system for role-based access control.", "category": "LOW_LEVEL_DESIGN", "difficulty": "MEDIUM", "interviewType": "lld", "cruxOfProblem": "Role hierarchy + permission inheritance + performance", "estimatedMinutes": 30, "concepts": ["design-patterns", "object-modeling", "encapsulation"], "tags": ["security", "permissions", "rbac"] },
+  { "slug": "shopping-cart", "title": "Design a Shopping Cart", "description": "Design a shopping cart system that handles persistence and concurrency.", "category": "LOW_LEVEL_DESIGN", "difficulty": "EASY", "interviewType": "lld", "cruxOfProblem": "Cart persistence + price consistency + session handling", "estimatedMinutes": 30, "concepts": ["object-modeling", "encapsulation", "design-patterns"], "tags": ["e-commerce", "cart", "persistence"] },
+  { "slug": "booking-system", "title": "Design a Booking System", "description": "Design a system for booking appointments with availability management.", "category": "LOW_LEVEL_DESIGN", "difficulty": "MEDIUM", "interviewType": "lld", "cruxOfProblem": "Availability checking + concurrency + double-booking prevention", "estimatedMinutes": 30, "concepts": ["design-patterns", "data-consistency", "encapsulation"], "tags": ["booking", "scheduling", "availability"] },
+  { "slug": "file-versioning", "title": "Design File Versioning", "description": "Design a system for tracking and managing different versions of files.", "category": "LOW_LEVEL_DESIGN", "difficulty": "MEDIUM", "interviewType": "lld", "cruxOfProblem": "Version storage + diff generation + rollback", "estimatedMinutes": 30, "concepts": ["object-modeling", "design-patterns", "data-structures"], "tags": ["versioning", "files", "storage"] },
+  { "slug": "cache-invalidation", "title": "Design Cache Invalidation", "description": "Design a cache invalidation strategy for a distributed system.", "category": "LOW_LEVEL_DESIGN", "difficulty": "HARD", "interviewType": "lld", "cruxOfProblem": "Invalidation propagation + consistency + performance", "estimatedMinutes": 45, "concepts": ["caching-strategy", "design-patterns", "data-consistency"], "tags": ["caching", "invalidation", "consistency"] },
+  { "slug": "event-sourcing", "title": "Design Event Sourcing", "description": "Design an event-sourced system for audit trails and replay.", "category": "LOW_LEVEL_DESIGN", "difficulty": "HARD", "interviewType": "lld", "cruxOfProblem": "Event storage + snapshotting + replay performance", "estimatedMinutes": 45, "concepts": ["design-patterns", "message-queues", "data-consistency"], "tags": ["event-sourcing", "audit", "replay"] },
+  { "slug": "api-rate-limiter", "title": "Design API Rate Limiter", "description": "Design a rate limiter for API endpoints with different tiers.", "category": "LOW_LEVEL_DESIGN", "difficulty": "MEDIUM", "interviewType": "lld", "cruxOfProblem": "Token bucket + sliding window + distributed coordination", "estimatedMinutes": 30, "concepts": ["rate-limiting-algorithms", "design-patterns", "encapsulation"], "tags": ["rate-limiting", "api", "throttling"] },
+  { "slug": "retry-mechanism", "title": "Design a Retry Mechanism", "description": "Design a retry mechanism for handling transient failures.", "category": "LOW_LEVEL_DESIGN", "difficulty": "MEDIUM", "interviewType": "lld", "cruxOfProblem": "Exponential backoff + idempotency + dead letter queue", "estimatedMinutes": 30, "concepts": ["design-patterns", "error-handling", "message-queues"], "tags": ["retry", "resilience", "error-handling"] },
+  { "slug": "binary-search-variations", "title": "Binary Search Variations", "description": "Implement various binary search patterns including finding first/last occurrence and search in rotated arrays.", "category": "JAVA", "difficulty": "MEDIUM", "interviewType": "dsa", "cruxOfProblem": "Search space reduction + boundary conditions", "estimatedMinutes": 30, "concepts": ["algorithms", "complexity-analysis", "edge-case-handling"], "tags": ["binary-search", "algorithms", "searching"] },
+  { "slug": "graph-traversals", "title": "Graph Traversals", "description": "Implement BFS and DFS for various graph problems including shortest path and cycle detection.", "category": "JAVA", "difficulty": "MEDIUM", "interviewType": "dsa", "cruxOfProblem": "Traversal order + visited tracking + cycle detection", "estimatedMinutes": 45, "concepts": ["algorithms", "data-structures", "complexity-analysis"], "tags": ["graph", "bfs", "dfs"] },
+  { "slug": "dynamic-programming-patterns", "title": "Dynamic Programming Patterns", "description": "Solve DP problems using memoization and tabulation for knapsack, LCS, and palindrome problems.", "category": "JAVA", "difficulty": "HARD", "interviewType": "dsa", "cruxOfProblem": "State definition + recurrence relation + optimal substructure", "estimatedMinutes": 60, "concepts": ["algorithms", "complexity-analysis", "problem-solving"], "tags": ["dynamic-programming", "optimization", "algorithms"] },
+  { "slug": "two-pointers", "title": "Two Pointers Technique", "description": "Solve array problems using two pointers for sorting, searching, and partitioning.", "category": "JAVA", "difficulty": "EASY", "interviewType": "dsa", "cruxOfProblem": "Pointer movement + termination conditions", "estimatedMinutes": 30, "concepts": ["algorithms", "edge-case-handling", "complexity-analysis"], "tags": ["two-pointers", "arrays", "algorithms"] },
+  { "slug": "sliding-window", "title": "Sliding Window", "description": "Solve subarray problems using fixed and variable size sliding windows.", "category": "JAVA", "difficulty": "MEDIUM", "interviewType": "dsa", "cruxOfProblem": "Window expansion + contraction + state maintenance", "estimatedMinutes": 30, "concepts": ["algorithms", "complexity-analysis", "edge-case-handling"], "tags": ["sliding-window", "arrays", "subarrays"] },
+  { "slug": "heap-priority-queue", "title": "Heap and Priority Queue", "description": "Solve problems using heaps for top-k elements, merge k-sorted lists, and task scheduling.", "category": "JAVA", "difficulty": "MEDIUM", "interviewType": "dsa", "cruxOfProblem": "Heap property + efficient insertion/extraction", "estimatedMinutes": 45, "concepts": ["data-structures", "algorithms", "complexity-analysis"], "tags": ["heap", "priority-queue", "data-structures"] },
+  { "slug": "trie-prefix-tree", "title": "Trie Prefix Tree", "description": "Implement a trie for autocomplete, spell checking, and word search problems.", "category": "JAVA", "difficulty": "MEDIUM", "interviewType": "dsa", "cruxOfProblem": "Trie node structure + prefix traversal + memory optimization", "estimatedMinutes": 30, "concepts": ["data-structures", "algorithms", "string-manipulation"], "tags": ["trie", "prefix", "strings"] },
+  { "slug": "union-find", "title": "Union Find (Disjoint Set)", "description": "Implement union-find for connectivity problems, cycle detection, and Kruskal's algorithm.", "category": "JAVA", "difficulty": "MEDIUM", "interviewType": "dsa", "cruxOfProblem": "Path compression + union by rank + time complexity", "estimatedMinutes": 30, "concepts": ["data-structures", "algorithms", "graph"], "tags": ["union-find", "disjoint-set", "graph"] },
+  { "slug": "backtracking", "title": "Backtracking Patterns", "description": "Solve permutation, combination, and constraint satisfaction problems using backtracking.", "category": "JAVA", "difficulty": "HARD", "interviewType": "dsa", "cruxOfProblem": "State space exploration + pruning + base cases", "estimatedMinutes": 45, "concepts": ["algorithms", "problem-solving", "complexity-analysis"], "tags": ["backtracking", "recursion", "combinatorics"] },
+  { "slug": "greedy-algorithms", "title": "Greedy Algorithms", "description": "Solve interval scheduling, Huffman coding, and activity selection using greedy approaches.", "category": "JAVA", "difficulty": "MEDIUM", "interviewType": "dsa", "cruxOfProblem": "Greedy choice property + optimal substructure", "estimatedMinutes": 30, "concepts": ["algorithms", "problem-solving", "complexity-analysis"], "tags": ["greedy", "optimization", "algorithms"] },
+  { "slug": "linked-lists", "title": "Linked List Manipulation", "description": "Solve problems involving linked list reversal, cycle detection, and intersection.", "category": "JAVA", "difficulty": "EASY", "interviewType": "dsa", "cruxOfProblem": "Pointer manipulation + cycle detection + dummy nodes", "estimatedMinutes": 30, "concepts": ["data-structures", "pointers", "edge-case-handling"], "tags": ["linked-list", "pointers", "data-structures"] },
+  { "slug": "stack-queue", "title": "Stack and Queue Applications", "description": "Solve problems using stacks for parentheses matching and queues for level-order traversal.", "category": "JAVA", "difficulty": "EASY", "interviewType": "dsa", "cruxOfProblem": "LIFO/FIFO semantics + appropriate data structure choice", "estimatedMinutes": 30, "concepts": ["data-structures", "algorithms", "problem-solving"], "tags": ["stack", "queue", "data-structures"] },
+  { "slug": "hash-maps", "title": "Hash Map Applications", "description": "Solve problems using hash maps for counting, frequency analysis, and two-sum variants.", "category": "JAVA", "difficulty": "EASY", "interviewType": "dsa", "cruxOfProblem": "Hash function + collision handling + O(1) operations", "estimatedMinutes": 30, "concepts": ["data-structures", "algorithms", "complexity-analysis"], "tags": ["hash-map", "hashing", "data-structures"] },
+  { "slug": "tree-traversals", "title": "Tree Traversals", "description": "Implement inorder, preorder, postorder traversals and solve tree problems recursively.", "category": "JAVA", "difficulty": "MEDIUM", "interviewType": "dsa", "cruxOfProblem": "Recursive vs iterative + traversal order + base cases", "estimatedMinutes": 30, "concepts": ["data-structures", "recursion", "algorithms"], "tags": ["tree", "traversal", "recursion"] },
+  { "slug": "binary-search-tree", "title": "Binary Search Tree Operations", "description": "Implement BST operations including insertion, deletion, search, and validation.", "category": "JAVA", "difficulty": "MEDIUM", "interviewType": "dsa", "cruxOfProblem": "BST property + rebalancing + edge cases", "estimatedMinutes": 45, "concepts": ["data-structures", "algorithms", "recursion"], "tags": ["bst", "binary-search-tree", "data-structures"] },
+  { "slug": "string-algorithms", "title": "String Algorithms", "description": "Solve string problems including KMP pattern matching, longest substring, and anagrams.", "category": "JAVA", "difficulty": "MEDIUM", "interviewType": "dsa", "cruxOfProblem": "Pattern matching + substring search + character counting", "estimatedMinutes": 45, "concepts": ["algorithms", "strings", "complexity-analysis"], "tags": ["strings", "pattern-matching", "algorithms"] },
+  { "slug": "bit-manipulation", "title": "Bit Manipulation", "description": "Solve problems using bit operations for XOR, bit counting, and single number detection.", "category": "JAVA", "difficulty": "MEDIUM", "interviewType": "dsa", "cruxOfProblem": "Bitwise operations + bit masks + optimization", "estimatedMinutes": 30, "concepts": ["algorithms", "bit-manipulation", "optimization"], "tags": ["bits", "bitwise", "optimization"] },
+  { "slug": "interval-problems", "title": "Interval Problems", "description": "Solve interval merging, overlapping, and scheduling problems efficiently.", "category": "JAVA", "difficulty": "MEDIUM", "interviewType": "dsa", "cruxOfProblem": "Sorting + sweeping + interval comparison", "estimatedMinutes": 30, "concepts": ["algorithms", "sorting", "problem-solving"], "tags": ["intervals", "sorting", "scheduling"] },
+  { "slug": "matrix-problems", "title": "Matrix Problems", "description": "Solve matrix rotation, search in 2D matrix, and dynamic programming on grids.", "category": "JAVA", "difficulty": "MEDIUM", "interviewType": "dsa", "cruxOfProblem": "2D traversal + boundary handling + optimization", "estimatedMinutes": 45, "concepts": ["algorithms", "data-structures", "problem-solving"], "tags": ["matrix", "2d", "grid"] },
+  { "slug": "design-linked-list", "title": "Design Linked List", "description": "Design and implement a linked list with operations from scratch.", "category": "JAVA", "difficulty": "EASY", "interviewType": "dsa", "cruxOfProblem": "Node structure + pointer management + edge cases", "estimatedMinutes": 30, "concepts": ["data-structures", "pointers", "implementation"], "tags": ["linked-list", "implementation", "data-structures"] },
+  { "slug": "design-stack", "title": "Design Stack", "description": "Design a stack using arrays and linked lists with O(1) operations.", "category": "JAVA", "difficulty": "EASY", "interviewType": "dsa", "cruxOfProblem": "LIFO semantics + dynamic resizing + error handling", "estimatedMinutes": 30, "concepts": ["data-structures", "implementation", "algorithms"], "tags": ["stack", "implementation", "data-structures"] },
+  { "slug": "design-queue", "title": "Design Queue", "description": "Design a queue using arrays and linked lists with O(1) operations.", "category": "JAVA", "difficulty": "EASY", "interviewType": "dsa", "cruxOfProblem": "FIFO semantics + circular buffer + error handling", "estimatedMinutes": 30, "concepts": ["data-structures", "implementation", "algorithms"], "tags": ["queue", "implementation", "data-structures"] },
+  { "slug": "lru-cache", "title": "Design LRU Cache", "description": "Design an LRU cache with get and put operations in O(1) time.", "category": "JAVA", "difficulty": "MEDIUM", "interviewType": "dsa", "cruxOfProblem": "Hash map + doubly linked list + eviction policy", "estimatedMinutes": 45, "concepts": ["data-structures", "design-patterns", "algorithms"], "tags": ["cache", "lru", "data-structures"] },
+  { "slug": "design-hashmap", "title": "Design Hash Map", "description": "Design a hash map from scratch with collision resolution.", "category": "JAVA", "difficulty": "MEDIUM", "interviewType": "dsa", "cruxOfProblem": "Hash function + collision resolution + resizing", "estimatedMinutes": 45, "concepts": ["data-structures", "algorithms", "implementation"], "tags": ["hash-map", "implementation", "data-structures"] }
+]
+================================================
+FILE: ./prisma/data/templates.json
+================================================
+[
+  {
+    "slug": "hld",
+    "name": "High Level Design",
+    "description": "Design scalable distributed systems.",
+    "whiteboardPreset": "hld",
+    "phases": [
+      { "phaseKey": "Introduction", "order": 0, "goals": ["CandidateUnderstandsProblem"], "evaluationDimensions": ["Communication"], "targetDurationRatio": 0.05, "transitionThreshold": 0.7, "instructions": "Introduce the problem briefly. Do not reveal requirements. Ask the candidate to begin by clarifying the problem. Move forward once the candidate demonstrates that they understand the problem and begins requirement discovery.", "reverseEvaluationDimensions": ["RapportBuilding"] },
+      { "phaseKey": "Requirements", "order": 1, "goals": ["FunctionalRequirements", "NonFunctionalRequirements", "Scale", "Constraints"], "evaluationDimensions": ["RequirementClarity", "ScopeManagement", "Communication"], "targetDurationRatio": 0.15, "transitionThreshold": 0.75, "instructions": "Evaluate requirement gathering. Answer requirement questions when directly asked. Do not volunteer every requirement. Probe missing functional requirements, non-functional requirements, scale, and constraints. Do not discuss architecture yet.", "reverseEvaluationDimensions": ["RequirementElicitation", "TechnicalListening"] },
+      { "phaseKey": "HighLevelDesign", "order": 2, "goals": ["CoreComponents", "ServiceBoundaries", "DataFlow", "StorageChoice"], "evaluationDimensions": ["Architecture", "TechnicalReasoning"], "targetDurationRatio": 0.25, "transitionThreshold": 0.75, "instructions": "Ask the candidate to propose a high-level architecture. Evaluate major components, service boundaries, data flow, and storage decisions. Challenge unclear architectural choices. Do not design the system for the candidate.", "showWhiteboard": true, "reverseEvaluationDimensions": ["TechnicalListening", "TimeManagement"] },
+      { "phaseKey": "DeepDive", "order": 3, "goals": ["CriticalComponent", "DataModel", "Consistency", "TechnicalTradeoffs"], "evaluationDimensions": ["TechnicalDepth", "Tradeoffs"], "targetDurationRatio": 0.3, "transitionThreshold": 0.7, "instructions": "Choose important areas from the candidate's design for deeper discussion. Probe implementation details, data modeling, consistency, and tradeoffs. Prefer areas where the candidate's reasoning is incomplete or weak.", "showWhiteboard": true, "reverseEvaluationDimensions": ["ProbingDepth", "ChallengingAppropriately"] },
+      { "phaseKey": "Scalability", "order": 4, "goals": ["Bottlenecks", "FailureModes", "ScalingStrategy", "Reliability"], "evaluationDimensions": ["Scalability", "Reliability"], "targetDurationRatio": 0.2, "transitionThreshold": 0.7, "instructions": "Probe scalability and reliability. Ask about bottlenecks, failure scenarios, capacity pressure, and scaling strategies. Challenge assumptions using realistic production scenarios.", "showWhiteboard": true, "reverseEvaluationDimensions": ["ChallengingAppropriately", "ProbingDepth"] },
+      { "phaseKey": "Closing", "order": 5, "goals": ["FinalTradeoffSummary"], "evaluationDimensions": ["Communication", "Tradeoffs"], "targetDurationRatio": 0.05, "transitionThreshold": 1, "instructions": "Conclude the interview naturally. Ask the candidate to summarize their design and the most important tradeoffs. Do not begin another technical phase.", "reverseEvaluationDimensions": ["SummarizingAndWrapUp"] }
+    ]
+  },
+  {
+    "slug": "lld",
+    "name": "Low Level Design",
+    "description": "Object-oriented design and patterns.",
+    "whiteboardPreset": "lld",
+    "phases": [
+      { "phaseKey": "Introduction", "order": 0, "goals": ["CandidateUnderstandsProblem"], "evaluationDimensions": ["Communication"], "targetDurationRatio": 0.05, "transitionThreshold": 0.7, "instructions": "Introduce the object-oriented design problem. Ask the candidate to clarify the expected behaviour and scope.", "reverseEvaluationDimensions": ["RapportBuilding"] },
+      { "phaseKey": "Requirements", "order": 1, "goals": ["LLD_UseCases", "Actors", "Constraints", "EdgeCases"], "evaluationDimensions": ["RequirementClarity", "ScopeManagement"], "targetDurationRatio": 0.15, "transitionThreshold": 0.75, "instructions": "Evaluate whether the candidate identifies important use cases, actors, constraints, and edge cases. Answer clarification questions. Do not propose classes or interfaces.", "reverseEvaluationDimensions": ["RequirementElicitation", "TechnicalListening"] },
+      { "phaseKey": "DomainModeling", "order": 2, "goals": ["CoreEntities", "Responsibilities", "Relationships"], "evaluationDimensions": ["ObjectModeling", "Abstraction"], "targetDurationRatio": 0.2, "transitionThreshold": 0.75, "instructions": "Ask the candidate to identify the core entities. Evaluate responsibilities and relationships. Challenge god objects, unclear ownership, and weak abstractions.", "showWhiteboard": true, "reverseEvaluationDimensions": ["TechnicalListening", "TimeManagement"] },
+      { "phaseKey": "ClassDesign", "order": 3, "goals": ["Classes", "Interfaces", "MethodBoundaries", "Encapsulation"], "evaluationDimensions": ["ClassDesign", "CodeQuality"], "targetDurationRatio": 0.3, "transitionThreshold": 0.75, "instructions": "Probe concrete class and interface design. Evaluate method boundaries, encapsulation, and separation of concerns. Ask focused questions about design decisions.", "showWhiteboard": true, "reverseEvaluationDimensions": ["ProbingDepth", "ChallengingAppropriately"] },
+      { "phaseKey": "Extensibility", "order": 4, "goals": ["ChangeScenarios", "DesignTradeoffs", "Extensibility", "Testability"], "evaluationDimensions": ["DesignPatterns", "Tradeoffs", "Maintainability"], "targetDurationRatio": 0.25, "transitionThreshold": 0.7, "instructions": "Introduce realistic requirement changes. Evaluate whether the design is extensible and testable. Probe design patterns only when relevant. Do not force pattern usage.", "showWhiteboard": true, "reverseEvaluationDimensions": ["ChallengingAppropriately", "ProbingDepth"] },
+      { "phaseKey": "Closing", "order": 5, "goals": ["FinalDesignSummary"], "evaluationDimensions": ["Communication"], "targetDurationRatio": 0.05, "transitionThreshold": 1, "instructions": "Ask the candidate to summarize their final design and major tradeoffs. Conclude the interview naturally.", "reverseEvaluationDimensions": ["SummarizingAndWrapUp"] }
+    ]
+  },
+  {
+    "slug": "dsa",
+    "name": "Data Structures & Algorithms",
+    "description": "Coding interview focused on problem solving and complexity analysis.",
+    "phases": [
+      { "phaseKey": "Clarification", "order": 0, "goals": ["InputConstraints", "EdgeCasesIdentified"], "evaluationDimensions": ["Communication", "EdgeCaseHandling"], "targetDurationRatio": 0.15, "transitionThreshold": 0.7, "instructions": "Present the problem statement. Ask the candidate to restate the problem and clarify input size, constraints, and edge cases before coding." },
+      { "phaseKey": "Approach", "order": 1, "goals": ["BruteForceStated", "OptimizationDirection"], "evaluationDimensions": ["ProblemSolving", "ComplexityAnalysis"], "targetDurationRatio": 0.2, "transitionThreshold": 0.7, "instructions": "Ask the candidate to describe their approach and its complexity before writing code. Push for a brute-force baseline if skipped, then an optimization direction." },
+      { "phaseKey": "Implementation", "order": 2, "goals": ["WorkingCode", "CleanStructure"], "evaluationDimensions": ["CodeCorrectness", "Communication"], "targetDurationRatio": 0.45, "transitionThreshold": 0.75, "instructions": "Let the candidate implement their approach. Ask clarifying questions about their code as they write it. Do not write code for them." },
+      { "phaseKey": "Testing", "order": 3, "goals": ["DryRun", "EdgeCaseVerification"], "evaluationDimensions": ["EdgeCaseHandling", "CodeCorrectness"], "targetDurationRatio": 0.15, "transitionThreshold": 0.7, "instructions": "Ask the candidate to dry-run their solution against a normal case and at least one edge case." },
+      { "phaseKey": "Closing", "order": 4, "goals": ["FinalComplexitySummary"], "evaluationDimensions": ["ComplexityAnalysis"], "targetDurationRatio": 0.05, "transitionThreshold": 1, "instructions": "Ask the candidate to state the final time and space complexity of their solution. Conclude the interview naturally." }
+    ]
+  },
+  {
+    "slug": "pr_review",
+    "name": "PR Review",
+    "description": "Review a pull request with focus on code quality, design patterns, and maintainability.",
+    "phases": [
+      { "phaseKey": "Introduction", "order": 0, "goals": ["CandidateUnderstandsPrContext"], "evaluationDimensions": ["Communication"], "targetDurationRatio": 0.05, "transitionThreshold": 0.7, "instructions": "Introduce the PR context briefly. Ask the candidate to begin by understanding the purpose and scope of the changes.", "reverseEvaluationDimensions": ["RapportBuilding"] },
+      { "phaseKey": "ContextUnderstanding", "order": 1, "goals": ["PrPurpose", "AffectedAreas", "PR_Dependencies"], "evaluationDimensions": ["RequirementClarity", "Communication"], "targetDurationRatio": 0.15, "transitionThreshold": 0.75, "instructions": "Evaluate whether the candidate understands the PR's purpose, affected areas, and dependencies. Answer clarification questions about the codebase context.", "reverseEvaluationDimensions": ["RequirementElicitation", "TechnicalListening"] },
+      { "phaseKey": "CodeReview", "order": 2, "goals": ["Correctness", "CodeQuality", "DesignPatterns"], "evaluationDimensions": ["CodeCorrectness", "CodeQuality", "DesignPatterns"], "targetDurationRatio": 0.35, "transitionThreshold": 0.75, "instructions": "Ask the candidate to review the code changes. Evaluate their ability to identify bugs, code quality issues, and design pattern usage. Challenge missed issues.", "showWhiteboard": true, "reverseEvaluationDimensions": ["ProbingDepth", "TechnicalListening"] },
+      { "phaseKey": "DesignReview", "order": 3, "goals": ["ArchitectureImpact", "Extensibility", "Maintainability"], "evaluationDimensions": ["Architecture", "Maintainability", "Tradeoffs"], "targetDurationRatio": 0.25, "transitionThreshold": 0.7, "instructions": "Probe the architectural impact of the changes. Evaluate whether the candidate considers extensibility, maintainability, and design tradeoffs.", "showWhiteboard": true, "reverseEvaluationDimensions": ["ProbingDepth", "ChallengingAppropriately"] },
+      { "phaseKey": "FeedbackDelivery", "order": 4, "goals": ["ConstructiveFeedback", "ActionableSuggestions"], "evaluationDimensions": ["Communication", "Tradeoffs"], "targetDurationRatio": 0.15, "transitionThreshold": 0.7, "instructions": "Ask the candidate to provide feedback as if they were reviewing this PR. Evaluate the constructiveness and actionability of their feedback.", "reverseEvaluationDimensions": ["TechnicalListening", "TimeManagement"] },
+      { "phaseKey": "Closing", "order": 5, "goals": ["ReviewSummary"], "evaluationDimensions": ["Communication"], "targetDurationRatio": 0.05, "transitionThreshold": 1, "instructions": "Ask the candidate to summarize their review and the most important issues found. Conclude the interview naturally.", "reverseEvaluationDimensions": ["SummarizingAndWrapUp"] }
+    ]
+  },
+  {
+    "slug": "deep_dive",
+    "name": "Deep Dive",
+    "description": "Deep technical exploration of a specific system or technology.",
+    "phases": [
+      { "phaseKey": "Introduction", "order": 0, "goals": ["CandidateUnderstandsTopic"], "evaluationDimensions": ["Communication"], "targetDurationRatio": 0.05, "transitionThreshold": 0.7, "instructions": "Introduce the deep dive topic. Ask the candidate to begin by explaining their understanding of the system or technology.", "reverseEvaluationDimensions": ["RapportBuilding"] },
+      { "phaseKey": "KnowledgeAssessment", "order": 1, "goals": ["CoreConcepts", "Internals", "DeepDive_UseCases"], "evaluationDimensions": ["TechnicalDepth", "TechnicalReasoning"], "targetDurationRatio": 0.2, "transitionThreshold": 0.75, "instructions": "Assess the candidate's depth of knowledge. Probe core concepts, internal workings, and practical use cases. Challenge superficial answers.", "reverseEvaluationDimensions": ["ProbingDepth", "TechnicalListening"] },
+      { "phaseKey": "ArchitectureExploration", "order": 2, "goals": ["SystemComponents", "DataFlow", "DesignDecisions"], "evaluationDimensions": ["Architecture", "TechnicalReasoning"], "targetDurationRatio": 0.25, "transitionThreshold": 0.75, "instructions": "Explore the architecture and design decisions. Evaluate understanding of component interactions, data flow, and key design choices.", "showWhiteboard": true, "reverseEvaluationDimensions": ["TechnicalListening", "ChallengingAppropriately"] },
+      { "phaseKey": "ImplementationDetails", "order": 3, "goals": ["ImplementationApproach", "PerformanceConsiderations", "EdgeCases"], "evaluationDimensions": ["TechnicalDepth", "Tradeoffs"], "targetDurationRatio": 0.3, "transitionThreshold": 0.7, "instructions": "Dive into implementation details. Probe performance considerations, edge cases, and practical implementation challenges.", "showWhiteboard": true, "reverseEvaluationDimensions": ["ProbingDepth", "ChallengingAppropriately"] },
+      { "phaseKey": "ScalabilityReliability", "order": 4, "goals": ["ScalingChallenges", "DeepDive_FailureModes", "OperationalConsiderations"], "evaluationDimensions": ["Scalability", "Reliability"], "targetDurationRatio": 0.15, "transitionThreshold": 0.7, "instructions": "Discuss scalability and reliability aspects. Ask about scaling challenges, failure modes, and operational considerations.", "reverseEvaluationDimensions": ["ChallengingAppropriately", "ProbingDepth"] },
+      { "phaseKey": "Closing", "order": 5, "goals": ["TopicSummary", "KeyTakeaways"], "evaluationDimensions": ["Communication"], "targetDurationRatio": 0.05, "transitionThreshold": 1, "instructions": "Ask the candidate to summarize the key takeaways from the deep dive. Conclude the interview naturally.", "reverseEvaluationDimensions": ["SummarizingAndWrapUp"] }
+    ]
+  },
+  {
+    "slug": "tech_doc_review",
+    "name": "Tech Doc Review",
+    "description": "Review technical documentation with focus on clarity, completeness, and accuracy.",
+    "phases": [
+      { "phaseKey": "Introduction", "order": 0, "goals": ["CandidateUnderstandsDocContext"], "evaluationDimensions": ["Communication"], "targetDurationRatio": 0.05, "transitionThreshold": 0.7, "instructions": "Introduce the technical document briefly. Ask the candidate to begin by understanding the purpose and audience of the documentation.", "reverseEvaluationDimensions": ["RapportBuilding"] },
+      { "phaseKey": "ContextUnderstanding", "order": 1, "goals": ["DocPurpose", "TargetAudience", "DocScope"], "evaluationDimensions": ["RequirementClarity", "Communication"], "targetDurationRatio": 0.15, "transitionThreshold": 0.75, "instructions": "Evaluate whether the candidate understands the document's purpose, target audience, and scope. Answer clarification questions about the technical context.", "reverseEvaluationDimensions": ["RequirementElicitation", "TechnicalListening"] },
+      { "phaseKey": "StructureReview", "order": 2, "goals": ["Organization", "Flow", "Navigation"], "evaluationDimensions": ["Architecture", "TechnicalReasoning"], "targetDurationRatio": 0.2, "transitionThreshold": 0.75, "instructions": "Ask the candidate to review the document structure. Evaluate organization, logical flow, and ease of navigation. Challenge structural issues.", "showWhiteboard": true, "reverseEvaluationDimensions": ["TechnicalListening", "TimeManagement"] },
+      { "phaseKey": "ContentReview", "order": 3, "goals": ["Clarity", "Completeness", "Accuracy"], "evaluationDimensions": ["TechnicalDepth", "Communication"], "targetDurationRatio": 0.35, "transitionThreshold": 0.7, "instructions": "Dive into content review. Evaluate clarity, completeness, and accuracy of technical information. Probe missing sections, unclear explanations, and potential errors.", "showWhiteboard": true, "reverseEvaluationDimensions": ["ProbingDepth", "ChallengingAppropriately"] },
+      { "phaseKey": "ImprovementSuggestions", "order": 4, "goals": ["ActionableFeedback", "PriorityRanking"], "evaluationDimensions": ["Tradeoffs", "Communication"], "targetDurationRatio": 0.2, "transitionThreshold": 0.7, "instructions": "Ask the candidate to provide improvement suggestions with priorities. Evaluate the actionability and impact of their recommendations.", "reverseEvaluationDimensions": ["TechnicalListening", "TimeManagement"] },
+      { "phaseKey": "Closing", "order": 5, "goals": ["ReviewSummary", "KeyImprovements"], "evaluationDimensions": ["Communication"], "targetDurationRatio": 0.05, "transitionThreshold": 1, "instructions": "Ask the candidate to summarize their review and the most important improvements. Conclude the interview naturally.", "reverseEvaluationDimensions": ["SummarizingAndWrapUp"] }
+    ]
+  },
+  {
+    "slug": "task_breakdown",
+    "name": "Task Breakdown",
+    "description": "Break down a large task into small, independent, executable subtasks.",
+    "phases": [
+      { "phaseKey": "Introduction", "order": 0, "goals": ["CandidateUnderstandsTask"], "evaluationDimensions": ["Communication"], "targetDurationRatio": 0.05, "transitionThreshold": 0.7, "instructions": "Introduce the large task briefly. Ask the candidate to begin by understanding the requirements and constraints.", "reverseEvaluationDimensions": ["RapportBuilding"] },
+      { "phaseKey": "RequirementAnalysis", "order": 1, "goals": ["Task_FunctionalRequirements", "Task_Constraints", "SuccessCriteria"], "evaluationDimensions": ["RequirementClarity", "ScopeManagement"], "targetDurationRatio": 0.15, "transitionThreshold": 0.75, "instructions": "Evaluate requirement gathering. Probe functional requirements, constraints, and success criteria. Ensure scope is well-defined.", "reverseEvaluationDimensions": ["RequirementElicitation", "TechnicalListening"] },
+      { "phaseKey": "DependencyAnalysis", "order": 2, "goals": ["Dependencies", "BlockingTasks", "ParallelOpportunities"], "evaluationDimensions": ["Architecture", "TechnicalReasoning"], "targetDurationRatio": 0.2, "transitionThreshold": 0.75, "instructions": "Ask the candidate to analyze dependencies. Evaluate identification of blocking tasks and opportunities for parallel execution.", "showWhiteboard": true, "reverseEvaluationDimensions": ["TechnicalListening", "TimeManagement"] },
+      { "phaseKey": "TaskDecomposition", "order": 3, "goals": ["SubtaskDefinition", "Independence", "Estimation"], "evaluationDimensions": ["TechnicalDepth", "ProblemSolving"], "targetDurationRatio": 0.35, "transitionThreshold": 0.7, "instructions": "Dive into task decomposition. Evaluate whether subtasks are small, independent, and properly estimated. Challenge overly large or dependent tasks.", "showWhiteboard": true, "reverseEvaluationDimensions": ["ProbingDepth", "ChallengingAppropriately"] },
+      { "phaseKey": "ExecutionPlanning", "order": 4, "goals": ["Sequencing", "RiskMitigation", "ResourceAllocation"], "evaluationDimensions": ["Tradeoffs", "TechnicalReasoning"], "targetDurationRatio": 0.2, "transitionThreshold": 0.7, "instructions": "Discuss execution planning. Evaluate task sequencing, risk mitigation strategies, and resource allocation decisions.", "reverseEvaluationDimensions": ["ChallengingAppropriately", "ProbingDepth"] },
+      { "phaseKey": "Closing", "order": 5, "goals": ["BreakdownSummary", "CriticalPath"], "evaluationDimensions": ["Communication"], "targetDurationRatio": 0.05, "transitionThreshold": 1, "instructions": "Ask the candidate to summarize their breakdown and identify the critical path. Conclude the interview naturally.", "reverseEvaluationDimensions": ["SummarizingAndWrapUp"] }
+    ]
   }
-
-  console.log(`Seeded ${concepts.length} concepts.`);
-
-  return savedBySlug;
-}
-
-async function seedProblemConcepts(conceptIdBySlug: Map<string, string>) {
-  let count = 0;
-
-  for (const [problemSlug, links] of Object.entries(problemConcepts)) {
-    const problem = await prisma.problem.findUnique({
-      where: { slug: problemSlug },
-    });
-
-    if (!problem) {
-      console.warn(`Skipping problem-concept links for unknown problem "${problemSlug}".`);
-      continue;
-    }
-
-    for (const link of links) {
-      const conceptId = conceptIdBySlug.get(link.conceptSlug);
-
-      if (!conceptId) {
-        console.warn(`Skipping unknown concept slug "${link.conceptSlug}".`);
-        continue;
-      }
-
-      await prisma.problemConcept.upsert({
-        where: {
-          problemId_conceptId: {
-            problemId: problem.id,
-            conceptId,
-          },
-        },
-        update: { weight: link.weight },
-        create: {
-          problemId: problem.id,
-          conceptId,
-          weight: link.weight,
-        },
-      });
-
-      count++;
-    }
-  }
-
-  console.log(`Seeded ${count} problem-concept links.`);
-}
-
-async function seedTemplates() {
-  for (const template of templates) {
-    const dimensions = new Set<string>();
-
-    for (const phase of template.phases) {
-      for (const dim of phase.evaluationDimensions) {
-        dimensions.add(dim);
-      }
-      for (const dim of phase.reverseEvaluationDimensions ?? []) {
-        dimensions.add(dim);
-      }
-    }
-
-    const saved = await prisma.interviewTemplate.upsert({
-      where: { slug: template.slug },
-      update: {
-        name: template.name,
-        description: template.description,
-        isActive: true,
-        whiteboardPreset: template.whiteboardPreset,
-      },
-      create: {
-        slug: template.slug,
-        name: template.name,
-        description: template.description,
-        whiteboardPreset: template.whiteboardPreset,
-      },
-    });
-
-    for (const phase of template.phases) {
-      await prisma.interviewPhaseTemplate.upsert({
-        where: {
-          templateId_phaseKey: {
-            templateId: saved.id,
-            phaseKey: phase.phaseKey,
-          },
-        },
-        update: {
-          order: phase.order,
-          goals: validateGoals(phase.goals),
-          evaluationDimensions: validateEvaluationDimensions(phase.evaluationDimensions),
-          targetDurationRatio: phase.targetDurationRatio,
-          transitionThreshold: phase.transitionThreshold,
-          instructions: phase.instructions,
-          showWhiteboard: phase.showWhiteboard,
-          reverseEvaluationDimensions: validateEvaluationDimensions(phase.reverseEvaluationDimensions ?? []),
-        },
-        create: {
-          templateId: saved.id,
-          phaseKey: phase.phaseKey,
-          order: phase.order,
-          goals: validateGoals(phase.goals),
-          evaluationDimensions: validateEvaluationDimensions(phase.evaluationDimensions),
-          targetDurationRatio: phase.targetDurationRatio,
-          transitionThreshold: phase.transitionThreshold,
-          instructions: phase.instructions,
-          showWhiteboard: phase.showWhiteboard,
-          reverseEvaluationDimensions: validateEvaluationDimensions(phase.reverseEvaluationDimensions ?? []),
-        },
-      });
-    }
-
-    for (const dimension of dimensions) {
-      const content = RUBRICS[dimension as EvaluationDimension];
-
-      if (!content) {
-        console.warn(
-          `No rubric authored for dimension "${dimension}" (template "${template.slug}") — evaluation will fall back to a generic rubric.`
-        );
-        continue;
-      }
-
-      await prisma.rubricTemplate.upsert({
-        where: {
-          templateId_dimension: {
-            templateId: saved.id,
-            dimension,
-          },
-        },
-        update: { content },
-        create: {
-          templateId: saved.id,
-          dimension,
-          content,
-        },
-      });
-    }
-
-    console.log(
-      `Seeded template "${template.slug}" (${template.phases.length} phases, ${dimensions.size} dimensions).`
-    );
-  }
-}
-
-
-// Additions for prisma/seed.ts — call seedLearningScenarios() from main(),
-// after seedConcepts()/seedProblemConcepts() since segments reference concept
-// slugs that must already exist.
-//
-// This seeds exactly the "Design a Payment System" example from the design
-// doc: one scenario, three segments, and one action of each type, wired to
-// whichever segment its concept actually belongs to.
-
-type SegmentSeed = {
-  order: number;
-  conversation: { role: "interviewer" | "candidate"; content: string }[];
-  takeaway?: string;
-  conceptSlugs: string[]; // must already exist via seedConcepts()
-  actions: {
-    type: LearningActionType;
-    title: string;
-    instructions?: string;
-    content: Prisma.InputJsonValue;
-  }[];
-};
-
-const PAYMENT_SCENARIO = {
-  slug: "design-a-payment-system",
-  title: "Design a Payment System",
-  description:
-    "A candidate reasons through what happens when a payment succeeds but the system never observes it.",
-  segments: [
-    {
-      order: 1,
-      conversation: [
-        {
-          role: "interviewer",
-          content:
-            "Let's say the payment succeeded, but our order service never received the event. What happens?",
-        },
-        {
-          role: "candidate",
-          content:
-            "I wouldn't retry the payment itself. I'd first separate payment state from event delivery.",
-        },
-        { role: "interviewer", content: "Why?" },
-        {
-          role: "candidate",
-          content:
-            "Because the external side effect may already have happened. My uncertainty is whether our system observed it — not whether the charge occurred.",
-        },
-        { role: "interviewer", content: "Okay. So how do you recover?" },
-        {
-          role: "candidate",
-          content:
-            "I'd persist the payment result, then publish through an outbox. The consumer must also be idempotent.",
-        },
-      ],
-      takeaway: "Separate payment state from event delivery; use outbox pattern with idempotent consumers.",
-      conceptSlugs: ["data-consistency", "message-queues"],
-      actions: [
-        {
-          type: LearningActionType.OBSERVE,
-          title: "Observe the pattern",
-          instructions: "Watch how someone else handles it.",
-          content: {
-            reflection:
-              "Notice what they did? The candidate separated whether the action happened from whether the system observed it. In your interview, you combined these two concerns.",
-          },
-        },
-      ],
-    },
-    {
-      order: 2,
-      conversation: [
-        {
-          role: "interviewer",
-          content: "The client times out and retries the same payment request. What could go wrong?",
-        },
-        {
-          role: "candidate",
-          content:
-            "If we're not careful, we'd charge the customer twice — the retry looks like a brand new request unless we can recognize it as the same one.",
-        },
-      ],
-      takeaway: "Client retries can cause duplicate charges without idempotency keys.",
-      conceptSlugs: ["rate-limiting-algorithms"],
-      actions: [
-        {
-          type: LearningActionType.FIX,
-          title: "Fix the answer",
-          instructions: "Fix this answer.",
-          content: {
-            reflection:
-              "Better. You correctly questioned the delivery guarantee. One thing is still missing: what happens between the database commit and publishing the event?",
-            interviewerQuestion: "How do you maintain consistency between services?",
-            flawedAnswer:
-              "I'd use Kafka because Kafka guarantees message delivery and makes the system eventually consistent.",
-            evaluationFocus:
-              "Whether the fix identifies the gap between the database write and the event publish, not just naming a technology.",
-          },
-        },
-      ],
-    },
-    {
-      order: 3,
-      conversation: [
-        {
-          role: "interviewer",
-          content:
-            "The database write succeeds. The service crashes before publishing to Kafka. What does the system believe happened?",
-        },
-      ],
-      takeaway: "Database write succeeded but event never published - system drifts out of sync.",
-      conceptSlugs: ["message-queues", "consistent-hashing"],
-      actions: [
-        {
-          type: LearningActionType.PREDICT,
-          title: "Predict the failure",
-          instructions: "What breaks first?",
-          content: {
-            reflection:
-              "The order was persisted, but downstream services never learn about it until the outbox relay catches up — the system silently drifts out of sync in the meantime.",
-            question:
-              "Order Service → Database → Kafka → Inventory Service. The database write succeeds. The service crashes before publishing to Kafka. What does the system believe happened?",
-            revealExplanation:
-              "The Inventory Service has no idea the order exists yet. Without an outbox pattern, this gap is invisible until someone notices inventory never decremented.",
-          },
-        },
-        {
-          type: LearningActionType.JUDGE,
-          title: "Judge the answer",
-          instructions: "Your turn to interview. A candidate is designing a chat system.",
-          content: {
-            reflection:
-              "Exactly. The interesting boundary is between the database write and event publication — that's the failure mode you missed in your own interview.",
-            options: [
-              { id: "a", text: "Why Kafka instead of RabbitMQ?" },
-              { id: "b", text: "What happens if the database write succeeds but publishing fails?" },
-              { id: "c", text: "How many Kafka partitions would you use?" },
-              { id: "d", text: "Would you use WebSockets?" },
-            ],
-            correctOptionId: "b",
-          },
-        },
-        {
-          type: LearningActionType.COMPARE,
-          title: "Compare approaches",
-          instructions: "Who handled this better?",
-          content: {
-            reflection:
-              "Candidate B — not because they used a more advanced term, but because they scoped the consistency decision instead of applying one model to the entire system.",
-            candidateA:
-              "I'd use eventual consistency because availability is more important here.",
-            candidateB:
-              "I think eventual consistency is acceptable for the read model, but I wouldn't apply that assumption to payment state — those have different failure costs.",
-            correctChoice: "B",
-          },
-        },
-      ],
-    },
-  ] satisfies SegmentSeed[],
-};
-
-export async function seedLearningScenarios() {
-  const scenario = await prisma.learningScenario.upsert({
-    where: { slug: PAYMENT_SCENARIO.slug },
-    update: {
-      title: PAYMENT_SCENARIO.title,
-      description: PAYMENT_SCENARIO.description,
-      isActive: true,
-    },
-    create: {
-      slug: PAYMENT_SCENARIO.slug,
-      title: PAYMENT_SCENARIO.title,
-      description: PAYMENT_SCENARIO.description,
-    },
-  });
-
-  for (const segmentSeed of PAYMENT_SCENARIO.segments) {
-    const segment = await prisma.learningSegment.upsert({
-      where: { scenarioId_order: { scenarioId: scenario.id, order: segmentSeed.order } },
-      update: {
-        conversation: validateJson(segmentSeed.conversation),
-        takeaway: segmentSeed.takeaway,
-      },
-      create: {
-        scenarioId: scenario.id,
-        order: segmentSeed.order,
-        conversation: validateJson(segmentSeed.conversation),
-        takeaway: segmentSeed.takeaway,
-      },
-    });
-
-    for (const slug of segmentSeed.conceptSlugs) {
-      const concept = await prisma.concept.findUnique({ where: { slug } });
-
-      if (!concept) {
-        console.warn(`Skipping unknown concept slug "${slug}" for segment order ${segmentSeed.order}.`);
-        continue;
-      }
-
-      await prisma.learningSegmentConcept.upsert({
-        where: { scenarioId_segmentId_conceptId: { scenarioId: scenario.id, segmentId: segment.id, conceptId: concept.id } },
-        update: {},
-        create: { scenarioId: scenario.id, segmentId: segment.id, conceptId: concept.id },
-      });
-    }
-
-    for (const actionSeed of segmentSeed.actions) {
-      const existing = await prisma.learningAction.findFirst({
-        where: { segmentId: segment.id, title: actionSeed.title },
-      });
-
-      const data = {
-        segmentId: segment.id,
-        type: actionSeed.type,
-        title: actionSeed.title,
-        instructions: actionSeed.instructions,
-        content: validateJson(actionSeed.content),
-      };
-
-      if (existing) {
-        await prisma.learningAction.update({ where: { id: existing.id }, data });
-      } else {
-        await prisma.learningAction.create({ data });
-      }
-    }
-  }
-
-  console.log(
-    `Seeded learning scenario "${scenario.slug}" (${PAYMENT_SCENARIO.segments.length} segments).`
-  );
-}
-
-async function main() {
-  for (const problem of problems) {
-    await prisma.problem.upsert({
-      where: { slug: problem.slug },
-      update: {
-        title: problem.title,
-        description: problem.description,
-        category: problem.category,
-        difficulty: problem.difficulty,
-        interviewType: problem.interviewType,
-        cruxOfProblem: problem.cruxOfProblem,
-        estimatedMinutes: problem.estimatedMinutes,
-      },
-      create: {
-        slug: problem.slug,
-        title: problem.title,
-        description: problem.description,
-        category: problem.category,
-        difficulty: problem.difficulty,
-        interviewType: problem.interviewType,
-        cruxOfProblem: problem.cruxOfProblem,
-        estimatedMinutes: problem.estimatedMinutes,
-      },
-    });
-  }
-
-  console.log(`Seeded ${problems.length} problems.`);
-
-  await seedTemplates();
-
-  const conceptIdBySlug = await seedConcepts();
-  await seedProblemConcepts(conceptIdBySlug);
-  await seedLearningScenarios();
-}
-main()
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+]
 ================================================
 FILE: ./shared/prisma/client.ts
 ================================================
@@ -4030,6 +4324,33 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 
+================================================
+FILE: ./styles/animations.css
+================================================
+/* Global animation tokens — extracted from DESIGN_SPECIFICATION.md.
+   Import this once from your root global stylesheet; do not redefine
+   these keyframes in per-page CSS files. */
+
+@theme inline {
+  --animate-float: float 4.5s ease-in-out infinite;
+  --animate-breathe: breathe 3.2s ease-in-out infinite;
+  --animate-pulse-soft: pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.18); opacity: 0; }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
 ================================================
 FILE: ./public/mockTranscript.json
 ================================================
@@ -4846,6 +5167,28 @@ export default function NetflixDiagramPage() {
 }
 
 ================================================
+FILE: ./src/app/learn/diagrams/[system]/page.tsx
+================================================
+import { diagrams } from "@/data/systemDiagrams";
+
+export async function generateStaticParams() {
+  return diagrams.map((d) => ({
+    system: d.slug,
+  }));
+}
+
+export default function Page({ params }) {
+  const diagram = diagrams.find(
+    (d) => d.slug === params.system
+  );
+
+  if (!diagram) {
+    notFound();
+  }
+
+  return <SystemDiagram systemType={diagram.slug} />;
+}
+================================================
 FILE: ./src/app/learn/diagrams/page.tsx
 ================================================
 import SystemDiagram from "@/features/diagram/components/SystemDiagram";
@@ -5028,6 +5371,7 @@ FILE: ./src/app/learn/scenarios/page.tsx
 
 import Link from "next/link";
 import { useScenarios } from "@/features/learning/hooks/useScenario";
+import { ROUTES } from "@/shared/constants/routes";
 
 export default function ScenariosListPage() {
   const { scenarios, loading, error } = useScenarios();
@@ -5047,7 +5391,7 @@ export default function ScenariosListPage() {
       <div className="max-w-4xl mx-auto p-6">
         <div className="text-center py-12">
           <p className="text-destructive">{error}</p>
-          <Link href="/learn" className="text-primary hover:underline mt-4 inline-block">
+          <Link href={ROUTES.LEARN} className="text-primary hover:underline mt-4 inline-block">
             Back to Learn
           </Link>
         </div>
@@ -7849,10 +8193,14 @@ const SCENARIOS: Record<string, BugScenario> = {
 export default async function Page({ params }: { params: Promise<{ scenarioId: string }> }) {
   const { scenarioId } = await params;
   const scenario = SCENARIOS[scenarioId];
+
+  // TODO: CSS variable duplication — colors like var(--paper) and var(--ink)
+  // are used throughout the components but aren't fully integrated into a
+  // Tailwind theme config, leading to a mix of utility classes and inline styles.
   if (!scenario) notFound();
 
   return (
-    <div style={{ background: "var(--paper)", padding: "32px 20px" }}>
+    <div className="bg-paper px-5 py-8">
       <BugHuntingWorkspace scenario={scenario} />
     </div>
   );
@@ -7935,7 +8283,9 @@ export default function BugHuntingPage() {
 ================================================
 FILE: ./src/app/globals.css
 ================================================
+
 @import "tailwindcss";
+@import "../styles/animations.css";
 
 @theme inline {
   --color-background: var(--background);
@@ -8455,7 +8805,7 @@ export default function Hero() {
 
         <div className="mt-10 flex gap-4">
           <Link
-            href="/learn"
+            href={ROUTES.LEARN}
             className="rounded-lg bg-primary px-6 py-3 font-medium text-primary-foreground hover:opacity-90 transition-opacity"
           >
             Learn
@@ -21128,41 +21478,51 @@ export const env = envSchema.parse(process.env);
 
 export type Env = z.infer<typeof envSchema>;
 ================================================
+FILE: ./src/shared/constants/routes.ts
+================================================
+export const ROUTES = {
+  HOME: "/",
+  LEARN: "/learn",
+  LIBRARY: "/library",
+
+  interview(id: string) {
+    return `/interview/${id}`;
+  },
+
+  transcript(slug: string) {
+    return `/library/${slug}`;
+  },
+
+  diagram(system: string) {
+    return `/learn/diagrams/${system}`;
+  },
+
+  problem(slug: string) {
+    return `/problems/${slug}`;
+  },
+} as const;
+================================================
 FILE: ./src/shared/schemas/interviewSchemas.ts
 ================================================
 import { z } from "zod";
 
-export const GoalSchema = z.object({
-    id: z.string(),
-    title: z.string(),
-});
+export const GoalsSchema = z.array(z.string());
 
-export const GoalsSchema = z.array(GoalSchema);
+export const EvaluationDimensionsSchema = z.array(z.string());
 
-export const EvaluationDimensionSchema = z.object({
-    id: z.string(),
-    weight: z.number(),
-});
-
-export const EvaluationDimensionsSchema =
-    z.array(EvaluationDimensionSchema);
-
-export const ConversationMessageSchema = z.object({
-    role: z.enum(["assistant", "user"]),
+export const ConversationSchema = z.array(
+  z.object({
+    role: z.enum(["interviewer", "candidate", "assistant", "user"]),
     content: z.string(),
-});
+  })
+);
 
-export const ConversationSchema =
-    z.array(ConversationMessageSchema);
+export const JsonSchema = z.unknown();
 
-export type Goal =
-    z.infer<typeof GoalSchema>;
+export type Goal = z.infer<typeof GoalsSchema>[number];
 
 export type EvaluationDimension =
-    z.infer<typeof EvaluationDimensionSchema>;
-
-export type ConversationMessage =
-    z.infer<typeof ConversationMessageSchema>;
+  z.infer<typeof EvaluationDimensionsSchema>[number];
 ================================================
 FILE: ./src/shared/api/InterviewApiClient.ts
 ================================================
@@ -21263,73 +21623,115 @@ export const interviewApiClient = new InterviewApiClient();
 ================================================
 FILE: ./src/styles/bug-hunting.css
 ================================================
-/* src/styles/bug-hunting.css — copied from source HTML, unmodified */
-.app{ max-width:1180px; margin:0 auto; background:#fff; border-radius:28px; overflow:hidden;
-  box-shadow:0 24px 60px rgba(21,22,28,0.06); border:1px solid rgba(21,22,28,0.06); }
-.head{ display:flex; align-items:center; justify-content:space-between; padding:18px 26px; border-bottom:1px solid rgba(21,22,28,0.06); }
-.crumb{ display:flex; align-items:center; gap:10px; }
-.back{ width:30px; height:30px; border-radius:50%; border:1px solid rgba(21,22,28,0.1); background:none; color:var(--ink); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; }
-.crumb-text{ font-size:13px; color:var(--ink-soft); font-weight:500; }
-.crumb-text b{ color:var(--ink); font-weight:600; }
-.head-right{ display:flex; align-items:center; gap:14px; }
-.timer{ position:relative; width:44px; height:44px; }
-.timer .aura{ position:absolute; inset:-8px; border-radius:50%; background:radial-gradient(circle, rgba(0,217,163,0.28), transparent 70%); animation:breathe 3.2s ease-in-out infinite; }
-@keyframes breathe{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.15); } }
-.timer .ring{ position:absolute; inset:0; border-radius:50%; background:var(--ink); display:flex; align-items:center; justify-content:center; border:1.5px solid rgba(0,217,163,0.4); }
-.timer .t{ font-family:'Poppins',sans-serif; font-size:10.5px; font-weight:600; color:var(--mint); }
-.submit-btn{ background:var(--ink); color:#fff; border:none; padding:10px 18px; border-radius:999px; font-weight:600; font-size:13px; cursor:pointer; }
-.body{ display:flex; min-height:560px; }
-.report{ flex:0 0 260px; border-right:1px solid rgba(21,22,28,0.06); padding:22px 20px; display:flex; flex-direction:column; }
-.report h2{ font-size:14px; font-weight:600; margin-bottom:12px; }
-.sev{ display:inline-block; font-size:10.5px; font-weight:700; padding:4px 10px; border-radius:999px; background:rgba(255,90,60,0.1); color:var(--coral); margin-bottom:12px; }
-.report p.symptom{ font-size:12.5px; color:var(--ink-soft); line-height:1.6; margin-bottom:16px; }
-.meta-row{ display:flex; justify-content:space-between; font-size:11.5px; padding:8px 0; border-top:1px solid rgba(21,22,28,0.06); }
-.meta-row .k{ color:var(--ink-soft); } .meta-row .v{ font-weight:600; }
-.hyp-label{ font-size:10.5px; font-weight:700; letter-spacing:.05em; color:var(--mint-deep); text-transform:uppercase; margin:20px 0 8px; }
-.hyp-box{ width:100%; border:1px solid rgba(21,22,28,0.1); border-radius:12px; padding:10px 12px; font-size:12.5px; font-family:'Inter',sans-serif; resize:none; min-height:80px; outline:none; }
-.hyp-box:focus{ border-color:var(--mint-deep); }
-.hyp-submit{ margin-top:10px; background:var(--mint-deep); color:#fff; border:none; padding:10px; border-radius:10px; font-weight:600; font-size:12.5px; cursor:pointer; }
-.main{ flex:1; display:flex; flex-direction:column; }
-.tabbar{ display:flex; gap:6px; padding:16px 20px 0; }
-.tab{ font-size:12.5px; font-weight:600; padding:8px 15px; border-radius:999px 999px 0 0; color:var(--ink-soft); cursor:pointer; border-bottom:2px solid transparent; }
-.tab.active{ color:var(--ink); background:var(--paper); border-bottom:2px solid var(--ink); }
-.panel{ flex:1; background:var(--paper); padding:20px; display:none; overflow-y:auto; max-height:480px; }
-.panel.active{ display:block; }
-.log-search{ display:flex; align-items:center; gap:8px; background:#fff; border:1px solid rgba(21,22,28,0.08); border-radius:999px; padding:8px 14px; font-size:12.5px; color:var(--ink-soft); margin-bottom:14px; max-width:320px; }
-.log-line{ font-size:12px; padding:6px 4px; display:flex; gap:10px; border-bottom:1px solid rgba(21,22,28,0.05); }
-.log-line .lvl{ font-weight:700; width:44px; flex-shrink:0; }
-.log-line.error .lvl{ color:var(--coral); } .log-line.warn .lvl{ color:var(--amber); } .log-line.info .lvl{ color:var(--ink-soft); }
-.log-line .ts{ color:var(--ink-soft); flex-shrink:0; }
-.sql-box{ width:100%; min-height:80px; background:var(--ink); color:var(--mint); border:none; border-radius:14px; padding:14px 16px; font-size:12.5px; resize:none; outline:none; }
-.run-btn{ margin-top:10px; background:var(--mint-deep); color:#fff; border:none; padding:9px 18px; border-radius:999px; font-weight:600; font-size:12.5px; cursor:pointer; display:flex; align-items:center; gap:7px; }
-table{ width:100%; border-collapse:collapse; margin-top:16px; font-size:12px; background:#fff; border-radius:12px; overflow:hidden; }
-th{ text-align:left; padding:10px 12px; background:var(--ink); color:#fff; font-weight:600; }
-td{ padding:9px 12px; border-bottom:1px solid rgba(21,22,28,0.06); }
-td.flag{ color:var(--coral); font-weight:700; }
-.code-stage{ display:flex; gap:14px; }
-.filetree{ flex:0 0 160px; display:flex; flex-direction:column; gap:4px; }
-.ftitem{ font-size:12px; padding:7px 10px; border-radius:8px; cursor:pointer; color:var(--ink-soft); }
-.ftitem.active{ background:#fff; color:var(--ink); font-weight:600; }
-.code-view{ flex:1; background:var(--ink); border-radius:14px; padding:16px 18px; overflow-x:auto; }
-.code-view pre{ font-size:12px; color:#E8E6E1; line-height:1.7; }
-.kw{ color:#FF8A6E; } .str{ color:var(--mint); } .cm{ color:#7A7B85; font-style:italic; } .ty{ color:#7A9BFF; }
-.doc h3{ font-size:14.5px; font-weight:600; margin:18px 0 8px; }
-.doc h3:first-child{ margin-top:0; }
-.doc p{ font-size:12.5px; color:var(--ink-soft); line-height:1.7; }
-.timeline{ position:relative; padding-left:22px; }
-.timeline::before{ content:''; position:absolute; left:5px; top:6px; bottom:6px; width:2px; background:rgba(21,22,28,0.1); }
-.dep{ position:relative; margin-bottom:20px; }
-.dep::before{ content:''; position:absolute; left:-22px; top:3px; width:11px; height:11px; border-radius:50%; }
-.dep.rolled::before{ background:var(--coral); }
-.dep.ok::before{ background:var(--mint-deep); }
-.dep-top{ display:flex; align-items:center; gap:8px; }
-.dep-ver{ font-size:13px; font-weight:600; }
-.dep-status{ font-size:10px; font-weight:700; padding:3px 9px; border-radius:999px; text-transform:uppercase; }
-.dep-status.rolled{ background:rgba(255,90,60,0.12); color:var(--coral); }
-.dep-status.ok{ background:rgba(0,168,126,0.12); color:var(--mint-deep); }
-.dep-msg{ font-size:12.5px; color:var(--ink-soft); margin-top:4px; }
-.dep-time{ font-size:11px; color:var(--ink-soft); margin-top:2px; opacity:.7; }
-@media (max-width:820px){ .body{ flex-direction:column; } .report{ flex:none; border-right:none; border-bottom:1px solid rgba(21,22,28,0.06); } }
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+
+  /* Full paper/ink/mint scales */
+  --color-paper: var(--paper);
+  --color-paper-50: var(--paper-50);
+  --color-paper-100: var(--paper-100);
+  --color-paper-200: var(--paper-200);
+  --color-paper-300: var(--paper-300);
+  --color-paper-400: var(--paper-400);
+  --color-paper-500: var(--paper-500);
+  --color-paper-600: var(--paper-600);
+  --color-paper-700: var(--paper-700);
+  --color-paper-800: var(--paper-800);
+  --color-paper-900: var(--paper-900);
+  --color-paper-950: var(--paper-950);
+
+  --color-ink: var(--ink);
+  --color-ink-50: var(--ink-50);
+  --color-ink-100: var(--ink-100);
+  --color-ink-200: var(--ink-200);
+  --color-ink-300: var(--ink-300);
+  --color-ink-400: var(--ink-400);
+  --color-ink-500: var(--ink-500);
+  --color-ink-600: var(--ink-600);
+  --color-ink-700: var(--ink-700);
+  --color-ink-800: var(--ink-800);
+  --color-ink-900: var(--ink-900);
+  --color-ink-950: var(--ink-950);
+
+  --color-mint: var(--mint);
+  --color-mint-deep: var(--mint-deep);
+  --color-mint-50: var(--mint-50);
+  --color-mint-100: var(--mint-100);
+  --color-mint-200: var(--mint-200);
+  --color-mint-300: var(--mint-300);
+  --color-mint-400: var(--mint-400);
+  --color-mint-500: var(--mint-500);
+  --color-mint-600: var(--mint-600);
+  --color-mint-700: var(--mint-700);
+  --color-mint-800: var(--mint-800);
+  --color-mint-900: var(--mint-900);
+  --color-mint-950: var(--mint-950);
+
+  /* Semantic status colors */
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+  --color-info: var(--info);
+
+  /* Brand */
+  --color-brand: var(--brand);
+  --color-brand-50: var(--brand-50);
+  --color-brand-100: var(--brand-100);
+  --color-brand-200: var(--brand-200);
+  --color-brand-300: var(--brand-300);
+  --color-brand-400: var(--brand-400);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
+  --color-brand-800: var(--brand-800);
+  --color-brand-900: var(--brand-900);
+  --color-brand-950: var(--brand-950);
+
+  /* Radii */
+  --radius-panel: var(--radius-panel);
+  --radius-card: var(--radius-card);
+  --radius-bubble: var(--radius-bubble);
+  --radius-small: var(--radius-small);
+  --radius-pill: var(--radius-pill);
+
+  /* Shadows */
+  --shadow-panel: var(--shadow-panel);
+  --shadow-hover: var(--shadow-hover);
+  --shadow-floating: var(--shadow-floating);
+}
+================================================
+FILE: ./src/styles/animations.css
+================================================
+@theme inline {
+  --animate-float: float 4.5s ease-in-out infinite;
+  --animate-breathe: breathe 3.2s ease-in-out infinite;
+  --animate-pulse-soft: pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.18); opacity: 0; }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
 ================================================
 FILE: ./src/components/ui/Card.tsx
 ================================================
@@ -21372,6 +21774,30 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
 Card.displayName = "Card";
 
 export default Card;
+================================================
+FILE: ./src/components/ui/Animations.tsx
+================================================
+import { type ReactNode, type ElementType } from "react";
+import { cn } from "@/lib/utils";
+
+type AnimationName = "float" | "breathe" | "pulse-soft";
+
+const ANIMATION_CLASS: Record<AnimationName, string> = {
+  float: "animate-float",
+  breathe: "animate-breathe",
+  "pulse-soft": "animate-pulse-soft",
+};
+
+interface AnimatedProps {
+  animation: AnimationName;
+  as?: ElementType;
+  className?: string;
+  children: ReactNode;
+}
+
+export function Animated({ animation, as: Tag = "div", className, children }: AnimatedProps) {
+  return <Tag className={cn(ANIMATION_CLASS[animation], className)}>{children}</Tag>;
+}
 ================================================
 FILE: ./src/components/ui/Search.tsx
 ================================================
@@ -22098,7 +22524,7 @@ export default function Navbar() {
   const navItems = [
     { name: "Home", path: "/" },
     { name: "Problems", path: "/problems" },
-    { name: "Dashboard", path: "/dashboard" },
+    { name: "Dashboard", path: {ROUTES.DASHBOARD} },
     { name: "Library", path: "/library" },
   ];
 
@@ -22553,6 +22979,249 @@ export function accentFor(id: string) {
 }
 
 export { CARD_PALETTE };
+================================================
+FILE: ./src/lib/api.ts
+================================================
+/**
+ * Unified API client — wraps fetch with typed request/response shapes so
+ * components never construct raw fetch('/api/...') calls with string paths
+ * that can typo silently.
+ *
+ * Usage:
+ *   import { api } from "@/lib/api";
+ *   const interview = await api.interviews.get(id);
+ *   await api.interviews.sendMessage(id, { content: "..." });
+ *
+ * NOTE: The request/response shapes below are inferred from the route file
+ * layout under src/app/api/**. I don't have the actual route handler bodies,
+ * so field names in each Request/Response type are best-effort placeholders —
+ * swap them for your real DTOs (ideally imported from wherever your route
+ * handlers already define/validate them with zod) rather than trusting these
+ * verbatim.
+ */
+
+class ApiError extends Error {
+  status: number;
+  body: unknown;
+
+  constructor(message: string, status: number, body: unknown) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.body = body;
+  }
+}
+
+type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+
+interface RequestOptions {
+  signal?: AbortSignal;
+}
+
+async function request<TResponse>(
+  path: string,
+  method: HttpMethod,
+  body?: unknown,
+  options?: RequestOptions
+): Promise<TResponse> {
+  const res = await fetch(path, {
+    method,
+    headers: body !== undefined ? { "Content-Type": "application/json" } : undefined,
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+    signal: options?.signal,
+  });
+
+  const contentType = res.headers.get("content-type") ?? "";
+  const data = contentType.includes("application/json")
+    ? await res.json().catch(() => null)
+    : await res.text().catch(() => null);
+
+  if (!res.ok) {
+    const message =
+      (data && typeof data === "object" && "message" in data && typeof (data as any).message === "string"
+        ? (data as any).message
+        : `Request failed: ${method} ${path} (${res.status})`);
+    throw new ApiError(message, res.status, data);
+  }
+
+  return data as TResponse;
+}
+
+function get<TResponse>(path: string, options?: RequestOptions) {
+  return request<TResponse>(path, "GET", undefined, options);
+}
+function post<TResponse>(path: string, body?: unknown, options?: RequestOptions) {
+  return request<TResponse>(path, "POST", body, options);
+}
+function put<TResponse>(path: string, body?: unknown, options?: RequestOptions) {
+  return request<TResponse>(path, "PUT", body, options);
+}
+function patch<TResponse>(path: string, body?: unknown, options?: RequestOptions) {
+  return request<TResponse>(path, "PATCH", body, options);
+}
+function del<TResponse>(path: string, options?: RequestOptions) {
+  return request<TResponse>(path, "DELETE", undefined, options);
+}
+
+// ---------------------------------------------------------------------------
+// Shared/placeholder types — replace with real DTOs once available.
+// ---------------------------------------------------------------------------
+
+export interface Interview {
+  id: string;
+  status: string;
+  [key: string]: unknown;
+}
+
+export interface InterviewMessage {
+  id: string;
+  role: string;
+  content: string;
+  [key: string]: unknown;
+}
+
+export interface Problem {
+  id: string;
+  slug: string;
+  title: string;
+  [key: string]: unknown;
+}
+
+export interface BugScenario {
+  id: string;
+  slug: string;
+  [key: string]: unknown;
+}
+
+export interface LearningScenario {
+  slug: string;
+  title: string;
+  [key: string]: unknown;
+}
+
+export interface Transcript {
+  slug: string;
+  title: string;
+  [key: string]: unknown;
+}
+
+export interface Company {
+  id: string;
+  name: string;
+  [key: string]: unknown;
+}
+
+export interface Recommendation {
+  id: string;
+  [key: string]: unknown;
+}
+
+export interface SkillGraph {
+  nodes: unknown[];
+  edges: unknown[];
+  [key: string]: unknown;
+}
+
+// ---------------------------------------------------------------------------
+// Endpoint groups — mirrors src/app/api/** route layout 1:1
+// ---------------------------------------------------------------------------
+
+export const api = {
+  interviews: {
+    list: (options?: RequestOptions) => get<Interview[]>("/api/interviews", options),
+
+    start: (body: { problemId: string; [key: string]: unknown }, options?: RequestOptions) =>
+      post<Interview>("/api/interviews/start", body, options),
+
+    status: (options?: RequestOptions) => get<{ status: string }>("/api/interviews/status", options),
+
+    get: (id: string, options?: RequestOptions) =>
+      get<Interview>(`/api/interviews/${id}`, options),
+
+    sendMessage: (id: string, body: { content: string }, options?: RequestOptions) =>
+      post<InterviewMessage>(`/api/interviews/${id}/message`, body, options),
+
+    finish: (id: string, options?: RequestOptions) =>
+      post<Interview>(`/api/interviews/${id}/finish`, undefined, options),
+
+    updateWhiteboard: (id: string, body: { state: unknown }, options?: RequestOptions) =>
+      put<{ state: unknown }>(`/api/interviews/${id}/whiteboard`, body, options),
+  },
+
+  interviewTemplates: {
+    list: (options?: RequestOptions) => get<unknown[]>("/api/interview-templates", options),
+  },
+
+  problems: {
+    list: (options?: RequestOptions) => get<Problem[]>("/api/problems", options),
+
+    history: (id: string, options?: RequestOptions) =>
+      get<unknown[]>(`/api/problems/${id}/history`, options),
+  },
+
+  bugHunting: {
+    submitHypothesis: (
+      body: { scenarioId: string; hypothesis: string; [key: string]: unknown },
+      options?: RequestOptions
+    ) => post<{ correct: boolean; feedback: string }>("/api/bug-hunting/hypothesis", body, options),
+  },
+
+  learningActions: {
+    attempt: (
+      id: string,
+      body: { response: unknown; [key: string]: unknown },
+      options?: RequestOptions
+    ) => post<{ correct: boolean; feedback?: string }>(`/api/learning-actions/${id}/attempt`, body, options),
+  },
+
+  learningScenarios: {
+    list: (options?: RequestOptions) => get<LearningScenario[]>("/api/learning-scenarios", options),
+
+    get: (slug: string, options?: RequestOptions) =>
+      get<LearningScenario>(`/api/learning-scenarios/${slug}`, options),
+  },
+
+  transcripts: {
+    list: (options?: RequestOptions) => get<Transcript[]>("/api/transcripts", options),
+
+    get: (slug: string, options?: RequestOptions) =>
+      get<Transcript>(`/api/transcripts/${slug}`, options),
+  },
+
+  companies: {
+    list: (options?: RequestOptions) => get<Company[]>("/api/companies", options),
+  },
+
+  judge: {
+    evaluate: (body: { [key: string]: unknown }, options?: RequestOptions) =>
+      post<{ score: number; feedback: string }>("/api/judge", body, options),
+  },
+
+  recommendations: {
+    list: (options?: RequestOptions) => get<Recommendation[]>("/api/recommendations", options),
+  },
+
+  users: {
+    recommendations: (id: string, options?: RequestOptions) =>
+      get<Recommendation[]>(`/api/users/${id}/recommendations`, options),
+
+    skillGraph: (id: string, options?: RequestOptions) =>
+      get<SkillGraph>(`/api/users/${id}/skill-graph`, options),
+  },
+
+  auth: {
+    register: (
+      body: { email: string; password: string; [key: string]: unknown },
+      options?: RequestOptions
+    ) => post<{ id: string; email: string }>("/api/auth/register", body, options),
+
+    session: (options?: RequestOptions) => get<{ user: unknown | null }>("/api/auth/session", options),
+
+    signOut: (options?: RequestOptions) => post<void>("/api/auth/signout", undefined, options),
+  },
+};
+
+export { ApiError };
 ================================================
 FILE: ./src/lib/logger.ts
 ================================================

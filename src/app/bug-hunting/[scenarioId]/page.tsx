@@ -13,10 +13,14 @@ const SCENARIOS: Record<string, BugScenario> = {
 export default async function Page({ params }: { params: Promise<{ scenarioId: string }> }) {
   const { scenarioId } = await params;
   const scenario = SCENARIOS[scenarioId];
+
+  // TODO: CSS variable duplication — colors like var(--paper) and var(--ink)
+  // are used throughout the components but aren't fully integrated into a
+  // Tailwind theme config, leading to a mix of utility classes and inline styles.
   if (!scenario) notFound();
 
   return (
-    <div style={{ background: "var(--paper)", padding: "32px 20px" }}>
+    <div className="bg-paper px-5 py-8">
       <BugHuntingWorkspace scenario={scenario} />
     </div>
   );

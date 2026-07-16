@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useScenarios } from "@/features/learning/hooks/useScenario";
+import { ROUTES } from "@/shared/constants/routes";
 
 export default function ScenariosListPage() {
   const { scenarios, loading, error } = useScenarios();
@@ -21,7 +22,7 @@ export default function ScenariosListPage() {
       <div className="max-w-4xl mx-auto p-6">
         <div className="text-center py-12">
           <p className="text-destructive">{error}</p>
-          <Link href="/learn" className="text-primary hover:underline mt-4 inline-block">
+          <Link href={ROUTES.LEARN} className="text-primary hover:underline mt-4 inline-block">
             Back to Learn
           </Link>
         </div>
