@@ -6,6 +6,7 @@ interface HeaderProps extends React.HTMLAttributes<HTMLDivElement> {
   subtitle?: string;
   actions?: React.ReactNode;
   className?: string;
+  onBack?: () => void;
 }
 
 export const Header = React.forwardRef<HTMLDivElement, HeaderProps>(

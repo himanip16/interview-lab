@@ -3,7 +3,7 @@ import { useRouter } from "next/navigation";
 import { useInvestigation } from "../hooks/useInvestigation";
 import type { BugScenario } from "../types/Scenario";
 
-import { Header } from "@/components/layout/Header";
+import Header from "./Header/Header";
 import ReportSidebar from "./Sidebar/ReportSidebar";
 import TabBar from "./shared/Tabs";
 import LogsPanel from "./Tabs/LogsPanel";

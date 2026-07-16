@@ -50,7 +50,8 @@ export default function DialogueBubble({
       );
     }
 
-    return <span>{String(contentBlock)}</span>;
+    // This should never happen if types are correct, but provides runtime safety
+    throw new Error(`Unknown content block type`);
   }
 
   function renderContentBlocks(blocks: ContentBlock[] | string): React.ReactNode {
