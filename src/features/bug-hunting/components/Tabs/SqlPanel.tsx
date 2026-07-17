@@ -1,38 +1,103 @@
-import type { SqlResultRow } from "../../types/Scenario";
+"use client";
 
-type Props = {
-  active: boolean;
-  query: string;
-  onQueryChange: (v: string) => void;
-  onRun: () => void;
-  results: SqlResultRow[];
-};
+import { useState } from "react";
 
-export default function SqlPanel({ active, query, onQueryChange, onRun, results }: Props) {
+import type {
+  BugScenario,
+} from "../../types/Scenario";
+
+interface Props {
+  scenario: BugScenario;
+}
+
+export default function SqlPanel({
+  scenario,
+}: Props) {
+  const [query, setQuery] = useState(
+    scenario.sql?.initialQuery ?? ""
+  );
+
+  const columns = scenario.sql?.columns ?? [];
+  const rows = scenario.sql?.rows ?? [];
+
   return (
-    <div className={`panel${active ? " active" : ""}`}>
+    <>
       <textarea
         className="sql-box mono"
         value={query}
-        onChange={(e) => onQueryChange(e.target.value)}
+        onChange={(e) =>
+          setQuery(e.target.value)
+        }
+        spellCheck={false}
       />
-      <button className="run-btn" onClick={onRun}>
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
+
+      <button
+        type="button"
+        className="run-btn"
+      >
+        <svg
+          width="11"
+          height="11"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+        >
+          <path d="M8 5v14l11-7z" />
+        </svg>
+
         Run query
       </button>
-      <table>
-        <tbody>
-          <tr><th>order_id</th><th>status</th><th>retry_count</th><th>created_at</th></tr>
-          {results.map((r) => (
-            <tr key={r.order_id}>
-              <td>{r.order_id}</td>
-              <td>{r.status}</td>
-              <td className={r.flagged ? "flag" : undefined}>{r.retry_count}</td>
-              <td>{r.created_at}</td>
+
+      {columns.length > 0 && (
+        <table>
+          <thead>
+            <tr>
+              {columns.map((column) => (
+                <th key={column}>
+                  {column}
+                </th>
+              ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+
+          <tbody>
+            {rows.map((row, rowIndex) => (
+              <tr key={rowIndex}>
+                {row.map((cell, cellIndex) => {
+                  const isRetry =
+                    columns[cellIndex] ===
+                    "retry_count";
+
+                  return (
+                    <td
+                      key={cellIndex}
+                      className={
+                        isRetry &&
+                        Number(cell) >= 3
+                          ? "flag"
+                          : undefined
+                      }
+                    >
+                      {cell}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      {columns.length === 0 && (
+        <div
+          style={{
+            paddingTop: 24,
+            color: "var(--ink-soft)",
+            fontSize: 12,
+          }}
+        >
+          No query results.
+        </div>
+      )}
+    </>
   );
 }

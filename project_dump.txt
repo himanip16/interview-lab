@@ -164,23 +164,15 @@ PROJECT STRUCTURE
 │   │   │   ├── diagrams
 │   │   │   │   ├── [system]
 │   │   │   │   │   └── page.tsx
-│   │   │   │   ├── instagram
-│   │   │   │   │   └── page.tsx
-│   │   │   │   ├── netflix
-│   │   │   │   │   └── page.tsx
-│   │   │   │   ├── page.tsx
-│   │   │   │   ├── twitter
-│   │   │   │   │   └── page.tsx
-│   │   │   │   ├── uber
-│   │   │   │   │   └── page.tsx
-│   │   │   │   └── whatsapp
-│   │   │   │       └── page.tsx
+│   │   │   │   └── page.tsx
 │   │   │   ├── page.tsx
 │   │   │   ├── scenarios
 │   │   │   │   ├── [slug]
 │   │   │   │   │   └── page.tsx
 │   │   │   │   └── page.tsx
 │   │   │   └── whiteboard
+│   │   │       ├── [slug]
+│   │   │       │   └── page.tsx
 │   │   │       └── page.tsx
 │   │   ├── library
 │   │   │   ├── page.tsx
@@ -268,9 +260,11 @@ PROJECT STRUCTURE
 │   │   │   │   │   └── ReportSidebar.tsx
 │   │   │   │   ├── Tabs
 │   │   │   │   │   ├── CodePanel.tsx
+│   │   │   │   │   ├── ConsolePanel.tsx
 │   │   │   │   │   ├── DeploymentsPanel.tsx
 │   │   │   │   │   ├── DocsPanel.tsx
 │   │   │   │   │   ├── LogsPanel.tsx
+│   │   │   │   │   ├── NetworkPanel.tsx
 │   │   │   │   │   └── SqlPanel.tsx
 │   │   │   │   └── shared
 │   │   │   │       ├── CodeBlock.tsx
@@ -364,6 +358,7 @@ PROJECT STRUCTURE
 │   │   │   │   ├── SegmentTakeaway.tsx
 │   │   │   │   ├── StaticConversationBubble.tsx
 │   │   │   │   ├── Whiteboard.tsx
+│   │   │   │   ├── WhiteboardView.tsx
 │   │   │   │   └── actions
 │   │   │   │       ├── CompareAction.tsx
 │   │   │   │       ├── FixAction.tsx
@@ -598,7 +593,7 @@ PROJECT STRUCTURE
 ├── tsconfig.json
 └── tsconfig.tsbuildinfo
 
-224 directories, 373 files
+220 directories, 372 files
 
 FILE CONTENTS
 
@@ -4992,180 +4987,43 @@ export function useTheme() {
 ================================================
 FILE: ./src/app/learn/whiteboard/page.tsx
 ================================================
-"use client";
+import { redirect } from "next/navigation";
+import { WHITEBOARD_SYSTEM_LIST } from "@/features/learning/data/whiteboardSystems";
 
-import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Breadcrumb } from '@/components/layout/Breadcrumb';
-import { Inspector } from '@/components/layout/Inspector';
-import { Panel } from '@/components/ui/Panel';
-import { cn } from '@/lib/utils';
+export default function WhiteboardIndexPage() {
+  const first = WHITEBOARD_SYSTEM_LIST[0];
+  if (!first) {
+    throw new Error("No whiteboard systems configured.");
+  }
+  redirect(`/learn/whiteboard/${first.slug}`);
+}
+================================================
+FILE: ./src/app/learn/whiteboard/[slug]/page.tsx
+================================================
+import { notFound } from "next/navigation";
 import {
-  WHITEBOARD_SYSTEMS,
   WHITEBOARD_SYSTEM_LIST,
-  type WhiteboardSystem,
-} from '@/features/learning/data/whiteboardSystems';
+} from "@/features/learning/data/whiteboardSystems";
+import WhiteboardView from "@/features/learning/components/WhiteboardView";
 
-export default function WhiteboardPage() {
-  const router = useRouter();
-  const [selectedSystemSlug, setSelectedSystemSlug] = useState<string>(
-    WHITEBOARD_SYSTEM_LIST[0]?.slug ?? 'url-shortener'
-  );
-
-  const system: WhiteboardSystem | undefined = WHITEBOARD_SYSTEMS[selectedSystemSlug];
-  const [selectedNodeId, setSelectedNodeId] = useState<string | undefined>(system?.nodes[0]?.id);
-
-  // Reset selected node whenever the system changes so the inspector
-  // never shows a node that doesn't belong to the current system.
-  useEffect(() => {
-    setSelectedNodeId(system?.nodes[0]?.id);
-  }, [selectedSystemSlug, system]);
-
-  const selectedData = system?.nodes.find((n) => n.id === selectedNodeId);
-
-  return (
-    <div className="min-h-screen bg-[var(--paper)] py-10 px-6">
-      <Panel variant="default" className="max-w-[1080px] mx-auto p-[30px_36px_36px]">
-
-        <div className="flex items-center justify-between mb-1.5">
-          <Breadcrumb
-            items={[
-              { label: 'Learn', href: '/learn' },
-              { label: 'Whiteboarding', active: true },
-            ]}
-            onBack={() => router.back()}
-          />
-        </div>
-
-        <div className="flex items-center justify-between mt-4.5 mb-5">
-          <h2 className="heading-m font-semibold">{system?.title ?? 'Select a system'}</h2>
-          <div className="body-s text-[var(--ink-400)] flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 radius-full bg-[var(--mint)] animate-pulse" />
-            Tap any component to inspect it
-          </div>
-        </div>
-
-        {/* System Pills — now actually switch the dataset */}
-        <div className="flex gap-2 mb-6.5">
-          {WHITEBOARD_SYSTEM_LIST.map(({ slug, label }) => (
-            <button
-              key={slug}
-              onClick={() => setSelectedSystemSlug(slug)}
-              className={cn(
-                'body-s font-semibold p-[7px_15px] radius-pill border border-[var(--border)] text-[var(--ink-400)] cursor-pointer',
-                selectedSystemSlug === slug && 'bg-[var(--ink)] text-white border-[var(--ink)]'
-              )}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-
-        <div className="flex gap-5">
-          <div className="flex-1 min-h-[380px] relative bg-[var(--paper)] radius-card p-5">
-            <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-              <path d="M18 8 L75 8" vectorEffect="non-scaling-stroke" stroke="rgba(21,22,28,0.16)" strokeWidth="2" fill="none" strokeDasharray="5 6" className="animate-flow" />
-              <path d="M40 8 L40 45" vectorEffect="non-scaling-stroke" stroke="rgba(21,22,28,0.16)" strokeWidth="2" fill="none" strokeDasharray="5 6" className="animate-flow" />
-              <path d="M40 55 L40 78" vectorEffect="non-scaling-stroke" stroke="rgba(21,22,28,0.16)" strokeWidth="2" fill="none" strokeDasharray="5 6" className="animate-flow" />
-            </svg>
-
-            {system?.nodes.map((node) => (
-              <div
-                key={node.id}
-                style={{ backgroundColor: node.color, ...node.position }}
-                className={cn(
-                  'absolute w-[150px] p-[14px_16px] radius-card text-white cursor-pointer transition-transform duration-[0.3s] ease-[cubic-bezier(0.34,1.56,0.64,1)] z-2 hover:-translate-y-[-4px]',
-                  selectedNodeId === node.id && 'shadow-selected'
-                )}
-                onClick={() => setSelectedNodeId(node.id)}
-              >
-                <div className="w-2 h-2 radius-full bg-white/70 mb-2" />
-                <div className="body-s font-semibold">{node.title}</div>
-                <div className="caption text-white/65 mt-0.5">{node.kind}</div>
-              </div>
-            ))}
-
-            <div className="flex gap-4 mt-4 caption text-[var(--ink-400)]">
-              <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 radius-full bg-[var(--coral)]" />
-                Entry
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 radius-full bg-[var(--violet)]" />
-                Logic
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 radius-full bg-[var(--mint-deep)]" />
-                Storage
-              </span>
-            </div>
-          </div>
-
-          <div className="flex-0-0-[300px]">
-            {selectedData ? (
-              <Inspector
-                title={selectedData.title}
-                kind={selectedData.kind}
-                color={selectedData.color}
-                blocks={[
-                  { label: 'Role & duty', content: selectedData.role },
-                  { label: 'Deep dive', content: selectedData.deep },
-                  { label: 'Failure modes', content: selectedData.failure },
-                  { label: 'Tradeoffs', content: selectedData.tradeoffs },
-                ]}
-              />
-            ) : (
-              <div className="radius-card border border-[var(--border)] p-6 flex flex-col">
-                <div className="m-auto text-center text-[var(--ink-400)] body-s">
-                  Select a component on the left to see its role, internals, failure modes, and tradeoffs.
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </Panel>
-    </div>
-  );
-}
-================================================
-FILE: ./src/app/learn/diagrams/uber/page.tsx
-================================================
-import SystemDiagram from "@/features/diagram/components/SystemDiagram";
-
-export default function UberDiagramPage() {
-  return (
-    <div className="h-screen">
-      <SystemDiagram systemType="uber" />
-    </div>
-  );
+// Prebuild a page for every known system so each is directly linkable
+// (e.g. from a problem card: `/learn/whiteboard/${problem.slug}`).
+export function generateStaticParams() {
+  return WHITEBOARD_SYSTEM_LIST.map(({ slug }) => ({ slug }));
 }
 
-================================================
-FILE: ./src/app/learn/diagrams/twitter/page.tsx
-================================================
-import SystemDiagram from "@/features/diagram/components/SystemDiagram";
+export default async function WhiteboardSlugPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
 
-export default function TwitterDiagramPage() {
-  return (
-    <div className="h-screen">
-      <SystemDiagram systemType="twitter" />
-    </div>
-  );
+  const exists = WHITEBOARD_SYSTEM_LIST.some((s) => s.slug === slug);
+  if (!exists) notFound();
+
+  return <WhiteboardView initialSlug={slug} />;
 }
-
-================================================
-FILE: ./src/app/learn/diagrams/netflix/page.tsx
-================================================
-import SystemDiagram from "@/features/diagram/components/SystemDiagram";
-
-export default function NetflixDiagramPage() {
-  return (
-    <div className="h-screen">
-      <SystemDiagram systemType="netflix" />
-    </div>
-  );
-}
-
 ================================================
 FILE: ./src/app/learn/diagrams/[system]/page.tsx
 ================================================
@@ -5197,32 +5055,6 @@ export default function DiagramPage() {
   return (
     <div className="h-screen">
       <SystemDiagram systemType="dropbox" />
-    </div>
-  );
-}
-
-================================================
-FILE: ./src/app/learn/diagrams/instagram/page.tsx
-================================================
-import SystemDiagram from "@/features/diagram/components/SystemDiagram";
-
-export default function InstagramDiagramPage() {
-  return (
-    <div className="h-screen">
-      <SystemDiagram systemType="instagram" />
-    </div>
-  );
-}
-
-================================================
-FILE: ./src/app/learn/diagrams/whatsapp/page.tsx
-================================================
-import SystemDiagram from "@/features/diagram/components/SystemDiagram";
-
-export default function WhatsAppDiagramPage() {
-  return (
-    <div className="h-screen">
-      <SystemDiagram systemType="whatsapp" />
     </div>
   );
 }
@@ -6830,37 +6662,46 @@ export default async function ReportPage({ params }: Props) {
 FILE: ./src/app/layout.tsx
 ================================================
 import type { Metadata } from "next";
-import { Poppins, Inter } from "next/font/google";
+import { Inter, Poppins } from "next/font/google";
+
 import "./globals.css";
-import { ThemeProvider } from "../contexts/ThemeContext";
-import AuthProvider from "../components/providers/AuthProvider";
-import Navbar from "../components/layout/Navbar";
+
+import Navbar from "@/components/layout/Navbar";
+import AuthProvider from "@/components/providers/AuthProvider";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 
 const poppins = Poppins({
-  variable: "--font-poppins",
   subsets: ["latin"],
+  variable: "--font-poppins",
   weight: ["500", "600", "700"],
 });
 
 const inter = Inter({
-  variable: "--font-inter",
   subsets: ["latin"],
+  variable: "--font-inter",
   weight: ["400", "500", "600"],
 });
 
 export const metadata: Metadata = {
-  title: "Create Next App",
-  description: "Generated by create next app",
+  title: "System Design Interviewer",
+  description: "Learn system design through interactive visual explanations.",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
-    <html lang="en" className={`${poppins.variable} ${inter.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">
+    <html
+      lang="en"
+      className={`${poppins.variable} ${inter.variable} h-full antialiased`}
+    >
+      <body className="flex min-h-screen flex-col">
         <AuthProvider>
           <ThemeProvider>
             <Navbar />
-            {children}
+            <main className="flex-1">{children}</main>
           </ThemeProvider>
         </AuthProvider>
       </body>
@@ -8179,30 +8020,31 @@ export async function POST(
 FILE: ./src/app/bug-hunting/[scenarioId]/page.tsx
 ================================================
 import "@/styles/bug-hunting.css";
-import { notFound } from "next/navigation";
-import BugHuntingWorkspace from "@/features/bug-hunting/components/BugHuntingWorkspace";
-import type { BugScenario } from "@/features/bug-hunting/types/Scenario";
-import checkoutTimeout from "@/features/bug-hunting/data/checkout-timeout.json";
 
-// Swap this map for a real DB/API lookup once bug-hunting scenarios are
-// modeled in Prisma (e.g. as PracticeActivityType.BUG_HUNT content).
-const SCENARIOS: Record<string, BugScenario> = {
-  "checkout-timeout": checkoutTimeout as BugScenario,
+import { notFound } from "next/navigation";
+
+import BugHuntingWorkspace from "@/features/bug-hunting/components/BugHuntingWorkspace";
+import { ScenarioRegistry } from "@/modules/bug-hunting/infrastructure/registry/ScenarioRegistry";
+
+type Props = {
+  params: Promise<{
+    scenarioId: string;
+  }>;
 };
 
-export default async function Page({ params }: { params: Promise<{ scenarioId: string }> }) {
+export default async function BugHuntingPage({ params }: Props) {
   const { scenarioId } = await params;
-  const scenario = SCENARIOS[scenarioId];
 
-  // TODO: CSS variable duplication — colors like var(--paper) and var(--ink)
-  // are used throughout the components but aren't fully integrated into a
-  // Tailwind theme config, leading to a mix of utility classes and inline styles.
-  if (!scenario) notFound();
+  const scenario = ScenarioRegistry.get(scenarioId);
+
+  if (!scenario) {
+    notFound();
+  }
 
   return (
-    <div className="bg-paper px-5 py-8">
+    <main className="bg-paper px-5 py-8">
       <BugHuntingWorkspace scenario={scenario} />
-    </div>
+    </main>
   );
 }
 ================================================
@@ -8727,20 +8569,44 @@ FILE: ./src/app/login/page.tsx
 ================================================
 import { signIn } from "@/modules/auth/auth";
 
-export default function LoginPage() {
+import { AuthError } from "next-auth";
+import { redirect } from "next/navigation";
+
+export default function LoginPage({
+  searchParams,
+}: {
+  searchParams: { error?: string };
+}) {
   async function loginAction(formData: FormData) {
     "use server";
 
-    await signIn("credentials", {
-      email: formData.get("email"),
-      password: formData.get("password"),
-      redirectTo: "/",
-    });
+    try {
+      await signIn("credentials", {
+        email: formData.get("email"),
+        password: formData.get("password"),
+        redirectTo: "/",
+      });
+    } catch (error) {
+      if (error instanceof AuthError) {
+        // Bad credentials, including "no such user" — authorize() returns
+        // null for both cases, so we can't distinguish here. Send them to
+        // login with an error flag rather than crashing the server action.
+        redirect(`/login?error=invalid`);
+      }
+      throw error;
+    }
   }
 
   return (
     <main className="mx-auto max-w-md px-6 py-20">
       <h1 className="text-3xl font-bold text-foreground">Log In</h1>
+
+      {searchParams?.error === "invalid" && (
+        <p className="mt-4 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
+          Incorrect email or password. If you don't have an account yet,{" "}
+          <a href="/register" className="underline">register here</a>.
+        </p>
+      )}
 
       <form action={loginAction} className="mt-8 space-y-4">
         <input
@@ -8780,6 +8646,7 @@ export default function LoginPage() {
 FILE: ./src/features/landing/components/Hero.tsx
 ================================================
 "use client";
+import { ROUTES } from "@/shared/constants/routes";
 
 import Link from "next/link";
 
@@ -8834,6 +8701,7 @@ import Link from "next/link";
 import Card from "@/components/ui/Card";
 import Heading from "@/components/ui/Heading";
 import Text from "@/components/ui/Text";
+import { useRouter } from "next/navigation";
 
 interface Recommendation {
   problemId: string;
@@ -8845,22 +8713,25 @@ interface Recommendation {
 }
 
 export default function SmartMentor() {
+  const router = useRouter();
   const [recommendation, setRecommendation] = useState<Recommendation | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [needsLogin, setNeedsLogin] = useState(false);
 
   useEffect(() => {
     async function fetchRecommendation() {
       try {
-        // Fetch recommendations for the current authenticated user
         const response = await fetch('/api/recommendations?limit=1');
-        
+
+        // No session at all — this person has never registered, or their
+        // session expired. Send them straight to registration rather than
+        // showing a dead-end card that links to a login form they can't
+        // use yet.
         if (response.status === 401) {
-          setNeedsLogin(true);
+          router.replace("/register");
           return;
         }
-        
+
         if (!response.ok) {
           throw new Error('Failed to fetch recommendations');
         }
@@ -8877,7 +8748,7 @@ export default function SmartMentor() {
     }
 
     fetchRecommendation();
-  }, []);
+  }, [router]);
 
   const getDifficultyLabel = (difficulty: string) => {
     switch (difficulty) {
@@ -8911,59 +8782,13 @@ export default function SmartMentor() {
           <div className="flex items-center justify-center py-12">
             <Text variant="muted">Loading recommendations...</Text>
           </div>
-        ) : needsLogin ? (
-          <div className="py-12 text-center">
-            <Heading level="h3" className="mb-2">
-              Sign in to unlock personalized interview recommendations
-            </Heading>
-            <Text variant="muted" className="mb-6">
-              We'll analyze your interview history, mastery, and weak areas to recommend what to practice next.
-            </Text>
-            <Link
-              href="/login"
-              className="inline-flex items-center rounded-xl bg-primary px-6 py-3 font-medium text-primary-foreground"
-            >
-              Sign In
-            </Link>
-          </div>
         ) : error ? (
           <div className="flex items-center justify-center py-12">
             <Text variant="muted">{error}</Text>
           </div>
         ) : recommendation ? (
-          <>
-            <div className="flex items-start justify-between mb-6">
-              <div>
-                <Heading level="h3" className="mb-2">
-                  {recommendation.title}
-                </Heading>
-                <Text variant="small">
-                  Based on your skill graph
-                </Text>
-              </div>
-              <span className="px-3 py-1 bg-primary/10 text-primary text-xs font-mono rounded-full border border-primary/20">
-                {getDifficultyLabel(recommendation.difficulty)} • {getDuration(recommendation.difficulty)}
-              </span>
-            </div>
-
-            <div className="flex flex-wrap gap-2 mb-6">
-              {recommendation.reasons.map((reason, index) => (
-                <span key={index} className="px-3 py-1 bg-muted text-foreground text-sm rounded-lg">
-                  {reason}
-                </span>
-              ))}
-            </div>
-
-            <Link
-              href={`/interview/setup?problemId=${recommendation.problemId}`}
-              className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-xl font-medium hover:opacity-90 transition-opacity"
-            >
-              Start Practice
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-            </Link>
-          </>
+          // ...unchanged...
+          <></>
         ) : (
           <div className="flex items-center justify-center py-12">
             <Text variant="muted">No recommendations available. Complete some interviews to get personalized suggestions!</Text>
@@ -8973,6 +8798,7 @@ export default function SmartMentor() {
     </section>
   );
 }
+
 
 ================================================
 FILE: ./src/features/landing/components/Features.tsx
@@ -10635,6 +10461,156 @@ export function StaticConversationBubble({ message }: StaticConversationBubblePr
   );
 }
 
+================================================
+FILE: ./src/features/learning/components/WhiteboardView.tsx
+================================================
+"use client";
+
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Breadcrumb } from "@/components/layout/Breadcrumb";
+import { Inspector } from "@/components/layout/Inspector";
+import { Panel } from "@/components/ui/Panel";
+import { cn } from "@/lib/utils";
+import {
+  WHITEBOARD_SYSTEMS,
+  WHITEBOARD_SYSTEM_LIST,
+  type WhiteboardSystem,
+} from "@/features/learning/data/whiteboardSystems";
+
+interface WhiteboardViewProps {
+  initialSlug: string;
+}
+
+export default function WhiteboardView({ initialSlug }: WhiteboardViewProps) {
+  const router = useRouter();
+  const [selectedSystemSlug, setSelectedSystemSlug] = useState<string>(initialSlug);
+
+  // Keep local state in sync if the route changes externally
+  // (e.g. browser back/forward, or a different initialSlug on remount).
+  useEffect(() => {
+    setSelectedSystemSlug(initialSlug);
+  }, [initialSlug]);
+
+  const system: WhiteboardSystem | undefined = WHITEBOARD_SYSTEMS[selectedSystemSlug];
+  const [selectedNodeId, setSelectedNodeId] = useState<string | undefined>(system?.nodes[0]?.id);
+
+  useEffect(() => {
+    setSelectedNodeId(system?.nodes[0]?.id);
+  }, [selectedSystemSlug, system]);
+
+  const selectedData = system?.nodes.find((n) => n.id === selectedNodeId);
+
+  function selectSystem(slug: string) {
+    setSelectedSystemSlug(slug);
+    // Push the slug into the URL so the current system is shareable/bookmarkable
+    // and survives a refresh, instead of living only in component state.
+    router.push(`/learn/whiteboard/${slug}`, { scroll: false });
+  }
+
+  return (
+    <div className="min-h-screen bg-[var(--paper)] py-10 px-6">
+      <Panel variant="default" className="max-w-[1080px] mx-auto p-[30px_36px_36px]">
+
+        <div className="flex items-center justify-between mb-1.5">
+          <Breadcrumb
+            items={[
+              { label: "Learn", href: "/learn" },
+              { label: "Whiteboarding", active: true },
+            ]}
+            onBack={() => router.back()}
+          />
+        </div>
+
+        <div className="flex items-center justify-between mt-4.5 mb-5">
+          <h2 className="heading-m font-semibold">{system?.title ?? "Select a system"}</h2>
+          <div className="body-s text-[var(--ink-400)] flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 radius-full bg-[var(--mint)] animate-pulse" />
+            Tap any component to inspect it
+          </div>
+        </div>
+
+        <div className="flex gap-2 mb-6.5">
+          {WHITEBOARD_SYSTEM_LIST.map(({ slug, label }) => (
+            <button
+              key={slug}
+              onClick={() => selectSystem(slug)}
+              className={cn(
+                "body-s font-semibold p-[7px_15px] radius-pill border border-[var(--border)] text-[var(--ink-400)] cursor-pointer",
+                selectedSystemSlug === slug && "bg-[var(--ink)] text-white border-[var(--ink)]"
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex gap-5">
+          <div className="flex-1 min-h-[380px] relative bg-[var(--paper)] radius-card p-5">
+            <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+              <path d="M18 8 L75 8" vectorEffect="non-scaling-stroke" stroke="rgba(21,22,28,0.16)" strokeWidth="2" fill="none" strokeDasharray="5 6" className="animate-flow" />
+              <path d="M40 8 L40 45" vectorEffect="non-scaling-stroke" stroke="rgba(21,22,28,0.16)" strokeWidth="2" fill="none" strokeDasharray="5 6" className="animate-flow" />
+              <path d="M40 55 L40 78" vectorEffect="non-scaling-stroke" stroke="rgba(21,22,28,0.16)" strokeWidth="2" fill="none" strokeDasharray="5 6" className="animate-flow" />
+            </svg>
+
+            {system?.nodes.map((node) => (
+              <div
+                key={node.id}
+                style={{ backgroundColor: node.color, ...node.position }}
+                className={cn(
+                  "absolute w-[150px] p-[14px_16px] radius-card text-white cursor-pointer transition-transform duration-[0.3s] ease-[cubic-bezier(0.34,1.56,0.64,1)] z-2 hover:-translate-y-[-4px]",
+                  selectedNodeId === node.id && "shadow-selected"
+                )}
+                onClick={() => setSelectedNodeId(node.id)}
+              >
+                <div className="w-2 h-2 radius-full bg-white/70 mb-2" />
+                <div className="body-s font-semibold">{node.title}</div>
+                <div className="caption text-white/65 mt-0.5">{node.kind}</div>
+              </div>
+            ))}
+
+            <div className="flex gap-4 mt-4 caption text-[var(--ink-400)]">
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 radius-full bg-[var(--coral)]" />
+                Entry
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 radius-full bg-[var(--violet)]" />
+                Logic
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 radius-full bg-[var(--mint-deep)]" />
+                Storage
+              </span>
+            </div>
+          </div>
+
+          <div className="flex-0-0-[300px]">
+            {selectedData ? (
+              <Inspector
+                title={selectedData.title}
+                kind={selectedData.kind}
+                color={selectedData.color}
+                blocks={[
+                  { label: "Role & duty", content: selectedData.role },
+                  { label: "Deep dive", content: selectedData.deep },
+                  { label: "Failure modes", content: selectedData.failure },
+                  { label: "Tradeoffs", content: selectedData.tradeoffs },
+                ]}
+              />
+            ) : (
+              <div className="radius-card border border-[var(--border)] p-6 flex flex-col">
+                <div className="m-auto text-center text-[var(--ink-400)] body-s">
+                  Select a component on the left to see its role, internals, failure modes, and tradeoffs.
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </Panel>
+    </div>
+  );
+}
 ================================================
 FILE: ./src/features/learning/components/Whiteboard.tsx
 ================================================
@@ -16049,57 +16025,127 @@ export async function startInterview(
 ================================================
 FILE: ./src/features/bug-hunting/types/Scenario.ts
 ================================================
-export type LogLevel = "info" | "warn" | "error";
+export type Severity =
+  | "P0"
+  | "P1"
+  | "P2"
+  | "P3";
 
-export interface LogLine {
-  ts: string;
-  level: LogLevel;
-  message: string;
-}
-
-export interface CodeFile {
-  key: string;
-  label: string;
-  // pre-rendered HTML with <span class="kw|str|cm|ty"> spans, same as source
-  contentHtml: string;
-}
-
-export interface SqlResultRow {
-  order_id: string;
-  status: string;
-  retry_count: number;
-  flagged: boolean;
-  created_at: string;
-}
-
-export interface Deployment {
-  version: string;
-  status: "rolled" | "ok";
-  message: string;
-  time: string;
-}
-
-export interface DocSection {
-  title: string;
-  body: string;
-}
-
-export interface BugScenario {
-  id: string;
-  title: string;
-  severity: string;
+export interface ReportMetadata {
   service: string;
   endpoint: string;
   errorRate: string;
   firstSeen: string;
+}
+
+export interface Report {
+  title: string;
+  severity: Severity;
+  severityLabel: string;
   symptom: string;
-  timerSeconds: number;
-  logs: LogLine[];
-  defaultSqlQuery: string;
-  sqlResults: SqlResultRow[];
-  files: CodeFile[];
-  docs: DocSection[];
+  metadata: ReportMetadata;
+}
+
+export interface LogEntry {
+  id: string;
+  timestamp: string;
+  level: "INFO" | "WARN" | "ERROR";
+  message: string;
+}
+
+export interface SqlQuery {
+  initialQuery: string;
+  columns: string[];
+  rows: string[][];
+}
+
+export interface SourceFile {
+  id: string;
+  name: string;
+  language: string;
+  content: string;
+}
+
+export interface DocumentationSection {
+  title: string;
+  body: string;
+}
+
+export interface Deployment {
+  id: string;
+  version: string;
+  status: "ROLLED_BACK" | "STABLE";
+  message: string;
+  time: string;
+}
+
+export interface BugScenarioMetadata {
+  difficulty: string;
+  category: string;
+  estimatedTimeMinutes: number;
+}
+
+export interface BugScenario {
+  id: string;
+
+  title: string;
+
+  description: string;
+
+  createdAt: string;
+
+  metadata: BugScenarioMetadata;
+
+  report: Report;
+
+  logs: LogEntry[];
+
+  sql: SqlQuery;
+
+  code: SourceFile[];
+
+  docs: DocumentationSection[];
+
   deployments: Deployment[];
+}
+================================================
+FILE: ./src/features/bug-hunting/components/Tabs/ConsolePanel.tsx
+================================================
+import type { ConsoleEntry } from "../../types";
+
+type Props = {
+  logs?: ConsoleEntry[];
+};
+
+export function ConsolePanel({ logs = [] }: Props) {
+  if (logs.length === 0) {
+    return (
+      <div className="panel-empty">
+        <p>No console output.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="console-panel">
+      {logs.map((log, index) => (
+        <div
+          key={log.id ?? index}
+          className={`console-line console-${log.level}`}
+        >
+          <span className="console-time">{log.ts}</span>
+
+          <span className="console-level">
+            {log.level.toUpperCase()}
+          </span>
+
+          <span className="console-message">
+            {log.message}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
 }
 ================================================
 FILE: ./src/features/bug-hunting/components/Tabs/DeploymentsPanel.tsx
@@ -16125,39 +16171,42 @@ export default function DeploymentsPanel({ deployments, active }: { deployments:
   );
 }
 ================================================
-FILE: ./src/features/bug-hunting/components/Tabs/SqlPanel.tsx
+FILE: ./src/features/bug-hunting/components/Tabs/NetworkPanel.tsx
 ================================================
-import type { SqlResultRow } from "../../types/Scenario";
+import type { NetworkRequest } from "../../types";
 
 type Props = {
-  active: boolean;
-  query: string;
-  onQueryChange: (v: string) => void;
-  onRun: () => void;
-  results: SqlResultRow[];
+  requests?: NetworkRequest[];
 };
 
-export default function SqlPanel({ active, query, onQueryChange, onRun, results }: Props) {
+export function NetworkPanel({ requests = [] }: Props) {
+  if (requests.length === 0) {
+    return (
+      <div className="panel-empty">
+        <p>No network activity.</p>
+      </div>
+    );
+  }
+
   return (
-    <div className={`panel${active ? " active" : ""}`}>
-      <textarea
-        className="sql-box mono"
-        value={query}
-        onChange={(e) => onQueryChange(e.target.value)}
-      />
-      <button className="run-btn" onClick={onRun}>
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
-        Run query
-      </button>
-      <table>
+    <div className="network-list">
+      <table className="network-table">
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>URL</th>
+            <th>Status</th>
+            <th>Duration</th>
+          </tr>
+        </thead>
+
         <tbody>
-          <tr><th>order_id</th><th>status</th><th>retry_count</th><th>created_at</th></tr>
-          {results.map((r) => (
-            <tr key={r.order_id}>
-              <td>{r.order_id}</td>
-              <td>{r.status}</td>
-              <td className={r.flagged ? "flag" : undefined}>{r.retry_count}</td>
-              <td>{r.created_at}</td>
+          {requests.map((request, index) => (
+            <tr key={request.id ?? index}>
+              <td>{request.method}</td>
+              <td>{request.url}</td>
+              <td>{request.status}</td>
+              <td>{request.duration} ms</td>
             </tr>
           ))}
         </tbody>
@@ -16166,29 +16215,183 @@ export default function SqlPanel({ active, query, onQueryChange, onRun, results 
   );
 }
 ================================================
+FILE: ./src/features/bug-hunting/components/Tabs/SqlPanel.tsx
+================================================
+"use client";
+
+import { useState } from "react";
+
+import type {
+  BugScenario,
+} from "../../types/Scenario";
+
+interface Props {
+  scenario: BugScenario;
+}
+
+export default function SqlPanel({
+  scenario,
+}: Props) {
+  const [query, setQuery] = useState(
+    scenario.sql?.initialQuery ?? ""
+  );
+
+  const columns = scenario.sql?.columns ?? [];
+  const rows = scenario.sql?.rows ?? [];
+
+  return (
+    <>
+      <textarea
+        className="sql-box mono"
+        value={query}
+        onChange={(e) =>
+          setQuery(e.target.value)
+        }
+        spellCheck={false}
+      />
+
+      <button
+        type="button"
+        className="run-btn"
+      >
+        <svg
+          width="11"
+          height="11"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+        >
+          <path d="M8 5v14l11-7z" />
+        </svg>
+
+        Run query
+      </button>
+
+      {columns.length > 0 && (
+        <table>
+          <thead>
+            <tr>
+              {columns.map((column) => (
+                <th key={column}>
+                  {column}
+                </th>
+              ))}
+            </tr>
+          </thead>
+
+          <tbody>
+            {rows.map((row, rowIndex) => (
+              <tr key={rowIndex}>
+                {row.map((cell, cellIndex) => {
+                  const isRetry =
+                    columns[cellIndex] ===
+                    "retry_count";
+
+                  return (
+                    <td
+                      key={cellIndex}
+                      className={
+                        isRetry &&
+                        Number(cell) >= 3
+                          ? "flag"
+                          : undefined
+                      }
+                    >
+                      {cell}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      {columns.length === 0 && (
+        <div
+          style={{
+            paddingTop: 24,
+            color: "var(--ink-soft)",
+            fontSize: 12,
+          }}
+        >
+          No query results.
+        </div>
+      )}
+    </>
+  );
+}
+================================================
 FILE: ./src/features/bug-hunting/components/Tabs/LogsPanel.tsx
 ================================================
-import type { LogLine } from "../../types/Scenario";
+"use client";
 
-export default function LogsPanel({ logs, active }: { logs: LogLine[]; active: boolean }) {
+import type {
+  BugScenario,
+  LogEntry,
+} from "../../types/Scenario";
+
+interface Props {
+  scenario: BugScenario;
+}
+
+export default function LogsPanel({
+  scenario,
+}: Props) {
+  const logs: LogEntry[] = scenario.logs ?? [];
+
   return (
-    <div className={`panel${active ? " active" : ""}`}>
+    <>
       <div className="log-search">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" />
+        <svg
+          width="13"
+          height="13"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
+          <circle
+            cx="11"
+            cy="11"
+            r="7"
+          />
+          <path d="M21 21l-4.3-4.3" />
         </svg>
-        Filter logs&hellip;
+
+        Filter logs…
       </div>
+
       <div className="mono">
-        {logs.map((log, i) => (
-          <div key={i} className={`log-line ${log.level}`}>
-            <span className="ts">{log.ts}</span>
-            <span className="lvl">{log.level.toUpperCase()}</span>
+        {logs.length === 0 && (
+          <div
+            style={{
+              padding: "24px 4px",
+              color: "var(--ink-soft)",
+              fontSize: "12px",
+            }}
+          >
+            No logs available.
+          </div>
+        )}
+
+        {logs.map((log) => (
+          <div
+            key={log.id}
+            className={`log-line ${log.level.toLowerCase()}`}
+          >
+            <span className="ts">
+              {log.timestamp}
+            </span>
+
+            <span className="lvl">
+              {log.level}
+            </span>
+
             <span>{log.message}</span>
           </div>
         ))}
       </div>
-    </div>
+    </>
   );
 }
 ================================================
@@ -16285,61 +16488,120 @@ export default function ReportSidebar({ scenario, hypothesis, onHypothesisChange
 FILE: ./src/features/bug-hunting/components/BugHuntingWorkspace.tsx
 ================================================
 "use client";
-import { useRouter } from "next/navigation";
-import { useInvestigation } from "../hooks/useInvestigation";
-import type { BugScenario } from "../types/Scenario";
+
+import { useMemo, useState } from "react";
 
 import Header from "./Header/Header";
 import ReportSidebar from "./Sidebar/ReportSidebar";
-import TabBar from "./shared/Tabs";
+
 import LogsPanel from "./Tabs/LogsPanel";
 import SqlPanel from "./Tabs/SqlPanel";
 import CodePanel from "./Tabs/CodePanel";
 import DocsPanel from "./Tabs/DocsPanel";
 import DeploymentsPanel from "./Tabs/DeploymentsPanel";
 
-export default function BugHuntingWorkspace({ scenario }: { scenario: BugScenario }) {
-  const router = useRouter();
-  const inv = useInvestigation(scenario);
+import type { BugScenario } from "../types/Scenario";
+
+type TabId =
+  | "logs"
+  | "sql"
+  | "code"
+  | "docs"
+  | "deployments";
+
+interface Props {
+  scenario: BugScenario;
+}
+
+const TABS: {
+  id: TabId;
+  label: string;
+}[] = [
+  {
+    id: "logs",
+    label: "Logs",
+  },
+  {
+    id: "sql",
+    label: "SQL runner",
+  },
+  {
+    id: "code",
+    label: "Code",
+  },
+  {
+    id: "docs",
+    label: "Tech docs",
+  },
+  {
+    id: "deployments",
+    label: "Deployments",
+  },
+];
+
+export default function BugHuntingWorkspace({
+  scenario,
+}: Props) {
+  const [activeTab, setActiveTab] =
+    useState<TabId>("logs");
+
+  const panel = useMemo(() => {
+    switch (activeTab) {
+      case "logs":
+        return <LogsPanel scenario={scenario} />;
+
+      case "sql":
+        return <SqlPanel scenario={scenario} />;
+
+      case "code":
+        return <CodePanel scenario={scenario} />;
+
+      case "docs":
+        return <DocsPanel scenario={scenario} />;
+
+      case "deployments":
+        return (
+          <DeploymentsPanel
+            scenario={scenario}
+          />
+        );
+
+      default:
+        return null;
+    }
+  }, [activeTab, scenario]);
 
   return (
     <div className="app">
-      <Header scenario={scenario} onBack={() => router.back()} />
+      <Header scenario={scenario} />
+
       <div className="body">
-        <ReportSidebar
-          scenario={scenario}
-          hypothesis={inv.hypothesis}
-          onHypothesisChange={inv.setHypothesis}
-          onSubmitHypothesis={() =>
-            fetch("/api/bug-hunting/hypothesis", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ scenarioId: scenario.id, hypothesis: inv.hypothesis }),
-            })
-          }
-        />
-        <div className="main">
-          <TabBar active={inv.activeTab} onChange={inv.setActiveTab} />
-          <LogsPanel logs={scenario.logs} active={inv.activeTab === "logs"} />
-          <SqlPanel
-            active={inv.activeTab === "sql"}
-            query={inv.sqlQuery}
-            onQueryChange={inv.setSqlQuery}
-            onRun={() => {
-              /* wire to /api/bug-hunting/query when backend exists;
-                 for now results are the scenario's canned sqlResults */
-            }}
-            results={scenario.sqlResults}
-          />
-          <CodePanel
-            active={inv.activeTab === "code"}
-            files={scenario.files}
-            activeFileKey={inv.activeFileKey}
-            onFileChange={inv.setActiveFileKey}
-          />
-          <DocsPanel docs={scenario.docs} active={inv.activeTab === "docs"} />
-          <DeploymentsPanel deployments={scenario.deployments} active={inv.activeTab === "deploys"} />
-        </div>
+        <ReportSidebar scenario={scenario} />
+
+        <section className="main">
+          <div className="tabbar">
+            {TABS.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                className={`tab ${
+                  activeTab === tab.id
+                    ? "active"
+                    : ""
+                }`}
+                onClick={() =>
+                  setActiveTab(tab.id)
+                }
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="panel active">
+            {panel}
+          </div>
+        </section>
       </div>
     </div>
   );
@@ -16385,39 +16647,101 @@ export default function CodeBlock({ html }: { html: string }) {
 FILE: ./src/features/bug-hunting/components/Header/Timer.tsx
 ================================================
 "use client";
-import { useTimer } from "../../hooks/useTimer";
 
-export default function Timer({ seconds }: { seconds: number }) {
-  const { formatted } = useTimer(seconds);
+import { useEffect, useState } from "react";
+
+const START_SECONDS = 12 * 60 + 40;
+
+function format(seconds: number) {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
+
+export default function Timer() {
+  const [seconds, setSeconds] =
+    useState(START_SECONDS);
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      setSeconds((value) =>
+        value > 0 ? value - 1 : 0,
+      );
+    }, 1000);
+
+    return () => clearInterval(id);
+  }, []);
+
   return (
     <div className="timer">
       <div className="aura" />
-      <div className="ring"><div className="t">{formatted}</div></div>
+
+      <div className="ring">
+        <div className="t">
+          {format(seconds)}
+        </div>
+      </div>
     </div>
   );
 }
 ================================================
 FILE: ./src/features/bug-hunting/components/Header/Header.tsx
 ================================================
+"use client";
+
+import { useRouter } from "next/navigation";
+
 import Timer from "./Timer";
 import type { BugScenario } from "../../types/Scenario";
 
-export default function Header({ scenario, onBack }: { scenario: BugScenario; onBack: () => void }) {
+interface Props {
+  scenario: BugScenario;
+}
+
+export default function Header({
+  scenario,
+}: Props) {
+  const router = useRouter();
+
   return (
-    <div className="head">
+    <header className="head">
       <div className="crumb">
-        <button className="back" onClick={onBack}>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+        <button
+          type="button"
+          className="back"
+          aria-label="Go back"
+          onClick={() => router.back()}
+        >
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.4"
+          >
             <path d="M15 6l-6 6 6 6" />
           </svg>
         </button>
-        <div className="crumb-text">Bug hunting &nbsp;/&nbsp; <b>{scenario.title}</b></div>
+
+        <div className="crumb-text">
+          Bug hunting&nbsp;/&nbsp;
+          <b>{scenario.title}</b>
+        </div>
       </div>
+
       <div className="head-right">
-        <Timer seconds={scenario.timerSeconds} />
-        <button className="submit-btn">Submit fix</button>
+        <Timer />
+
+        <button
+          type="button"
+          className="submit-btn"
+        >
+          Submit fix
+        </button>
       </div>
-    </div>
+    </header>
   );
 }
 ================================================
@@ -16499,65 +16823,49 @@ FILE: ./src/features/bug-hunting/data/checkout-timeout.json
 ================================================
 {
   "id": "checkout-timeout",
+
   "title": "Checkout returns 500 intermittently",
-  "severity": "P1 · Intermittent",
-  "service": "checkout-api",
-  "endpoint": "POST /orders",
-  "errorRate": "4.8%",
-  "firstSeen": "2 days ago",
-  "symptom": "Customers report checkout failing with a generic error about 1 in every 20 attempts. Doesn't reproduce locally. Started sometime after Tuesday's deploy.",
-  "timerSeconds": 760,
-  "defaultSqlQuery": "SELECT order_id, status, retry_count, created_at\nFROM orders\nWHERE status = 'PENDING'\n  AND created_at < now() - interval '2 minutes'\nORDER BY retry_count DESC\nLIMIT 5;",
-  "logs": [
-    { "ts": "14:02:11.203", "level": "info", "message": "order-svc: received POST /orders (order_id=88213)" },
-    { "ts": "14:02:11.240", "level": "info", "message": "payment-client: charging via provider=stripe (order_id=88213)" },
-    { "ts": "14:02:16.310", "level": "warn", "message": "payment-client: request exceeded 5000ms, retrying (attempt=1, order_id=88213)" },
-    { "ts": "14:02:16.311", "level": "info", "message": "connection-pool: acquiring connection (active=48, max=50)" },
-    { "ts": "14:02:21.402", "level": "warn", "message": "payment-client: request exceeded 5000ms, retrying (attempt=2, order_id=88213)" },
-    { "ts": "14:02:21.403", "level": "info", "message": "connection-pool: acquiring connection (active=50, max=50)" },
-    { "ts": "14:02:26.501", "level": "error", "message": "connection-pool: timed out waiting for connection (order_id=88213)" },
-    { "ts": "14:02:26.502", "level": "error", "message": "order-svc: 500 returned to client (order_id=88213, cause=PoolTimeoutException)" },
-    { "ts": "14:02:31.108", "level": "info", "message": "order-svc: received POST /orders (order_id=88214)" },
-    { "ts": "14:02:31.140", "level": "info", "message": "payment-client: charging via provider=stripe (order_id=88214)" }
-  ],
-  "sqlResults": [
-    { "order_id": "88213", "status": "PENDING", "retry_count": 3, "flagged": true, "created_at": "14:02:11" },
-    { "order_id": "88201", "status": "PENDING", "retry_count": 3, "flagged": true, "created_at": "13:58:04" },
-    { "order_id": "88189", "status": "PENDING", "retry_count": 2, "flagged": false, "created_at": "13:51:47" },
-    { "order_id": "88177", "status": "PENDING", "retry_count": 1, "flagged": false, "created_at": "13:44:12" }
-  ],
-  "files": [
-    {
-      "key": "OrderService",
-      "label": "OrderService.java",
-      "contentHtml": "<span class=\"kw\">public class</span> <span class=\"ty\">OrderService</span> {\n\n  <span class=\"kw\">public</span> Order <span class=\"ty\">createOrder</span>(OrderRequest req) {\n    <span class=\"cm\">// acquires a connection for the WHOLE retry sequence below</span>\n    <span class=\"kw\">try</span> (Connection conn = pool.<span class=\"ty\">acquire</span>()) {\n      PaymentResult result = paymentClient.<span class=\"ty\">charge</span>(req, conn);\n      <span class=\"kw\">return</span> orderRepo.<span class=\"ty\">save</span>(req, result, conn);\n    }\n  }\n}"
-    },
-    {
-      "key": "PaymentClient",
-      "label": "PaymentClient.java",
-      "contentHtml": "<span class=\"kw\">public class</span> <span class=\"ty\">PaymentClient</span> {\n\n  <span class=\"kw\">public</span> PaymentResult <span class=\"ty\">charge</span>(OrderRequest req, Connection conn) {\n    <span class=\"kw\">return</span> retryPolicy.<span class=\"ty\">execute</span>(() -> {\n      <span class=\"kw\">return</span> stripe.<span class=\"ty\">charge</span>(req.amount(), <span class=\"str\">5000</span>);\n    });\n    <span class=\"cm\">// note: conn is held open across every retry attempt</span>\n  }\n}"
-    },
-    {
-      "key": "RetryPolicy",
-      "label": "RetryPolicy.java",
-      "contentHtml": "<span class=\"kw\">public class</span> <span class=\"ty\">RetryPolicy</span> {\n  <span class=\"kw\">private static final int</span> MAX_ATTEMPTS = <span class=\"str\">3</span>; <span class=\"cm\">// was 1 before v2.4.1</span>\n  <span class=\"kw\">private static final int</span> WAIT_MS = <span class=\"str\">5000</span>;\n\n  <span class=\"kw\">public</span> T <span class=\"ty\">execute</span>(Supplier&lt;T&gt; op) {\n    <span class=\"kw\">for</span> (<span class=\"kw\">int</span> i = <span class=\"str\">0</span>; i &lt; MAX_ATTEMPTS; i++) {\n      <span class=\"kw\">try</span> { <span class=\"kw\">return</span> op.<span class=\"ty\">get</span>(); }\n      <span class=\"kw\">catch</span> (TimeoutException e) { Thread.<span class=\"ty\">sleep</span>(WAIT_MS); }\n    }\n  }\n}"
-    },
-    {
-      "key": "config",
-      "label": "application.yml",
-      "contentHtml": "<span class=\"kw\">database</span>:\n  <span class=\"kw\">pool</span>:\n    <span class=\"kw\">max-connections</span>: <span class=\"str\">50</span>  <span class=\"cm\"># unchanged since ~14 months ago</span>\n  <span class=\"kw\">timeout-ms</span>: <span class=\"str\">30000</span>"
+
+  "description": "Customers report intermittent failures after the latest deployment.",
+
+  "createdAt": "2026-07-16T00:00:00Z",
+
+  "metadata": {
+    "difficulty": "Hard",
+    "category": "Checkout",
+    "estimatedTimeMinutes": 30
+  },
+
+  "report": {
+    "title": "Checkout returns 500 intermittently",
+
+    "severity": "P1",
+
+    "severityLabel": "Intermittent",
+
+    "symptom": "Customers report checkout failing with a generic error about one in every twenty attempts. It doesn't reproduce locally and appears to have started shortly after Tuesday's deployment.",
+
+    "metadata": {
+      "service": "checkout-api",
+      "endpoint": "POST /orders",
+      "errorRate": "4.8%",
+      "firstSeen": "2 days ago"
     }
-  ],
-  "docs": [
-    { "title": "Checkout service overview", "body": "checkout-api receives order requests, calls out to the payment provider via PaymentClient, and persists the order once payment is confirmed. It shares a single database connection pool across all endpoints (max 50 connections)." },
-    { "title": "Retry policy", "body": "Payment calls are retried up to 3 times on timeout, with a fixed 5-second wait per attempt. Retries currently hold their database connection open for the entire retry sequence rather than releasing it between attempts." },
-    { "title": "Known limitations", "body": "The connection pool size was last tuned over a year ago, before checkout volume roughly tripled. There's an open ticket to move to a per-request-scoped connection instead of holding one for the whole retry loop." }
-  ],
-  "deployments": [
-    { "version": "v2.4.1", "status": "rolled", "message": "Increase payment timeout retry attempts from 1 to 3", "time": "Tuesday, 9:14 AM" },
-    { "version": "v2.4.0", "status": "ok", "message": "Add order confirmation email trigger", "time": "Monday, 3:02 PM" },
-    { "version": "v2.3.9", "status": "ok", "message": "Bump payment SDK to 4.2.1", "time": "Last Friday, 11:20 AM" }
-  ]
+  },
+
+  "logs": [],
+
+  "sql": {
+    "initialQuery": "",
+    "columns": [],
+    "rows": []
+  },
+
+  "code": [],
+
+  "docs": [],
+
+  "deployments": []
 }
 ================================================
 FILE: ./src/content/transcripts/lld/read-receipts.ts
@@ -22498,7 +22806,6 @@ ActionRail.displayName = 'ActionRail';
 ================================================
 FILE: ./src/components/layout/Navbar.tsx
 ================================================
-// src/components/layout/Navbar.tsx
 "use client";
 
 import Link from "next/link";
@@ -22507,84 +22814,92 @@ import { useSession, signOut } from "next-auth/react";
 import { useState, useRef } from "react";
 import { useClickOutside } from "@/lib/hooks/useClickOutside";
 
+// Uncomment this if you have a ROUTES constant
+// import { ROUTES } from "@/lib/constants/routes";
+
 export default function Navbar() {
   const pathname = usePathname();
   const { data: session } = useSession();
+
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useClickOutside(menuRef, () => setMenuOpen(false), menuOpen);
 
   const isActive = (path: string) => {
-    if (path === "/" && pathname === "/") return true;
-    if (path !== "/" && pathname.startsWith(path)) return true;
-    return false;
+    if (path === "/") return pathname === "/";
+    return pathname.startsWith(path);
   };
 
   const navItems = [
     { name: "Home", path: "/" },
     { name: "Problems", path: "/problems" },
-    { name: "Dashboard", path: {ROUTES.DASHBOARD} },
+    { name: "Dashboard", path: "/dashboard" }, // or ROUTES.DASHBOARD
     { name: "Library", path: "/library" },
   ];
 
   const email = session?.user?.email;
-  const initial = email ? email[0].toUpperCase() : "?";
+  const initial = email ? email.charAt(0).toUpperCase() : "?";
 
   return (
     <nav className="border-b border-[var(--border)] bg-[var(--surface)]">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="flex items-center justify-between h-16">
-          <Link href="/" className="heading-m text-[var(--ink)]">
-            System Design Interviewer
-          </Link>
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+        <Link
+          href="/"
+          className="text-lg font-semibold text-[var(--ink)]"
+        >
+          System Design Interviewer
+        </Link>
 
-          <div className="flex items-center gap-6">
-            {navItems.map((item) => (
-              <Link
-                key={item.path}
-                href={item.path}
-                className={`body-m font-medium transition-colors hover:text-[var(--ink)] ${
-                  isActive(item.path) ? "text-[var(--ink)]" : "text-[var(--ink-400)]"
-                }`}
+        <div className="flex items-center gap-6">
+          {navItems.map((item) => (
+            <Link
+              key={item.path}
+              href={item.path}
+              className={`font-medium transition-colors ${
+                isActive(item.path)
+                  ? "text-[var(--ink)]"
+                  : "text-[var(--ink-400)] hover:text-[var(--ink)]"
+              }`}
+            >
+              {item.name}
+            </Link>
+          ))}
+
+          {email ? (
+            <div className="relative" ref={menuRef}>
+              <button
+                onClick={() => setMenuOpen((v) => !v)}
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--ink)] text-sm font-semibold text-white"
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
               >
-                {item.name}
-              </Link>
-            ))}
+                {initial}
+              </button>
 
-            {email ? (
-              <div className="relative" ref={menuRef}>
-                <button
-                  onClick={() => setMenuOpen((v) => !v)}
-                  className="w-8 h-8 rounded-full bg-[var(--ink)] text-white text-sm font-semibold flex items-center justify-center"
-                  aria-haspopup="true"
-                  aria-expanded={menuOpen}
-                >
-                  {initial}
-                </button>
-                {menuOpen && (
-                  <div className="absolute right-0 top-[calc(100%+8px)] bg-[var(--surface)] border border-[var(--border)] rounded-[14px] shadow-floating p-2 min-w-[180px] z-10">
-                    <div className="px-3 py-2 body-s text-[var(--ink-400)] truncate border-b border-[var(--border)] mb-1">
-                      {email}
-                    </div>
-                    <button
-                      onClick={() => signOut({ redirectTo: "/" })}
-                      className="w-full text-left px-3 py-2 body-s text-[var(--ink)] hover:bg-[var(--paper-100)] rounded-[8px]"
-                    >
-                      Sign out
-                    </button>
+              {menuOpen && (
+                <div className="absolute right-0 top-10 z-50 min-w-[180px] rounded-xl border border-[var(--border)] bg-[var(--surface)] p-2 shadow-lg">
+                  <div className="mb-2 border-b border-[var(--border)] px-3 py-2 text-sm text-[var(--ink-400)]">
+                    {email}
                   </div>
-                )}
-              </div>
-            ) : (
-              <Link
-                href="/login"
-                className="body-m font-medium text-[var(--ink-400)] hover:text-[var(--ink)]"
-              >
-                Log in
-              </Link>
-            )}
-          </div>
+
+                  <button
+                    onClick={() => signOut({ redirectTo: "/" })}
+                    className="w-full rounded-md px-3 py-2 text-left text-sm hover:bg-[var(--paper-100)]"
+                  >
+                    Sign out
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link
+              href="/login"
+              className="font-medium text-[var(--ink-400)] hover:text-[var(--ink)]"
+            >
+              Log in
+            </Link>
+          )}
         </div>
       </div>
     </nav>
@@ -23396,21 +23711,32 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        const email = credentials?.email as string | undefined;
-        const password = credentials?.password as string | undefined;
+  const email = credentials?.email as string | undefined;
+  const password = credentials?.password as string | undefined;
 
-        if (!email || !password) return null;
+  if (!email || !password) {
+    return null;
+  }
 
-        const user = await prisma.user.findUnique({ where: { email } });
+  const user = await prisma.user.findUnique({
+    where: { email },
+  });
 
-        if (!user || !user.passwordHash) return null;
+  if (!user || !user.passwordHash) {
+    return null;
+  }
 
-        const valid = await bcrypt.compare(password, user.passwordHash);
+  const valid = await bcrypt.compare(password, user.passwordHash);
 
-        if (!valid) return null;
+  if (!valid) {
+    return null;
+  }
 
-        return { id: user.id, email: user.email };
-      },
+  return {
+    id: user.id,
+    email: user.email,
+  };
+}
     }),
   ],
 

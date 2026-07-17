@@ -1,52 +1,65 @@
-export type LogLevel = "info" | "warn" | "error";
+// src/features/bug-hunting/types/Scenario.ts
+export type Severity = "P0" | "P1" | "P2" | "P3";
 
-export interface LogLine {
-  ts: string;
-  level: LogLevel;
+export interface ReportMetadata {
+  service: string;
+  endpoint: string;
+  errorRate: string;
+  firstSeen: string;
+}
+
+export interface Report {
+  title: string;
+  severity: Severity;
+  severityLabel: string; // e.g. "Intermittent"
+  symptom: string;
+  metadata: ReportMetadata;
+}
+
+export interface LogEntry {
+  id: string;
+  timestamp: string;
+  level: "INFO" | "WARN" | "ERROR";
   message: string;
 }
 
-export interface CodeFile {
-  key: string;
-  label: string;
-  // pre-rendered HTML with <span class="kw|str|cm|ty"> spans, same as source
-  contentHtml: string;
+export interface SqlQuery {
+  initialQuery: string;
+  columns: string[];
+  rows: string[][];
 }
 
-export interface SqlResultRow {
-  order_id: string;
-  status: string;
-  retry_count: number;
-  flagged: boolean;
-  created_at: string;
+export interface SourceFile {
+  id: string;
+  key: string;
+  name: string;
+  language: string;
+  contentHtml: string; // pre-highlighted markup, matches CodeBlock's dangerouslySetInnerHTML
+}
+
+export interface DocumentationSection {
+  title: string;
+  body: string;
 }
 
 export interface Deployment {
+  id: string;
   version: string;
-  status: "rolled" | "ok";
+  status: "rolled" | "ok"; // matches mockup's .dep.rolled / .dep.ok classes
   message: string;
   time: string;
 }
 
-export interface DocSection {
-  title: string;
-  body: string;
+export interface BugScenarioMetadata {
+  difficulty: string;
+  category: string;
+  estimatedTimeMinutes: number;
 }
 
 export interface BugScenario {
   id: string;
   title: string;
-  severity: string;
-  service: string;
-  endpoint: string;
-  errorRate: string;
-  firstSeen: string;
-  symptom: string;
-  timerSeconds: number;
-  logs: LogLine[];
-  defaultSqlQuery: string;
-  sqlResults: SqlResultRow[];
-  files: CodeFile[];
-  docs: DocSection[];
-  deployments: Deployment[];
-}
+  description: string;
+  createdAt: string;
+  metadata: BugScenarioMetadata;
+  report: Report;
