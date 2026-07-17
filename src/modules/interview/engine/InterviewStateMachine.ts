@@ -277,7 +277,7 @@ export class InterviewStateMachine {
       0
     );
 
-    return total / phase.goals.length;
+    return total / Math.max(phase.goals.length, 1);
   }
 
   private clamp(value: number): number {

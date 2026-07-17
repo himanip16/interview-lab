@@ -8,6 +8,7 @@ const TYPE_COLORS: Record<string, string> = {
   hld: "bg-[var(--violet)]",
   lld: "bg-[var(--coral)]",
   dsa: "bg-[var(--mint-deep)]",
+  general: "bg-[var(--ink-400)]",
 };
 
 const DIFF_CLASSES: Record<Difficulty, string> = {

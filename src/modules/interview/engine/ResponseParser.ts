@@ -61,7 +61,20 @@ const AIResponseSchema = z.object({
   nextPhase: z.string().optional(),
   confidence: z.number().optional(),
 }).transform((data) => {
-  if (!data.phaseAssessment && (data.confidence !== undefined || data.transition !== undefined)) {
+  // If phaseAssessment exists but top-level confidence/transition also exist, merge them
+  if (data.phaseAssessment) {
+    return {
+      reply: data.reply,
+      phaseAssessment: {
+        goalCoverage: data.phaseAssessment.goalCoverage ?? {},
+        confidence: data.confidence ?? data.phaseAssessment.confidence ?? 0.5,
+        unresolvedTopics: data.phaseAssessment.unresolvedTopics ?? [],
+      },
+    };
+  }
+
+  // If phaseAssessment doesn't exist but top-level values do, create phaseAssessment
+  if (data.confidence !== undefined || data.transition !== undefined) {
     return {
       reply: data.reply,
       phaseAssessment: {
@@ -71,6 +84,7 @@ const AIResponseSchema = z.object({
       },
     };
   }
+
   return data;
 });
 

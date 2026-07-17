@@ -16,10 +16,29 @@ export class ValidatedJSONParser {
       const parsed = JSON.parse(cleaned);
 
       if (typeof parsed.confidence === "number") {
-        if (parsed.confidence > 1 && parsed.confidence <= 100) {
+        // Handle negative numbers by clamping to 0
+        if (parsed.confidence < 0) {
+          parsed.confidence = 0;
+        } else if (parsed.confidence > 1 && parsed.confidence <= 100) {
           parsed.confidence = parsed.confidence / 100;
         } else if (parsed.confidence > 100) {
           parsed.confidence = 1;
+        }
+      } else if (typeof parsed.confidence === "string") {
+        // Handle non-numeric strings by attempting to parse
+        const numValue = parseFloat(parsed.confidence);
+        if (!isNaN(numValue)) {
+          parsed.confidence = numValue;
+          if (parsed.confidence < 0) {
+            parsed.confidence = 0;
+          } else if (parsed.confidence > 1 && parsed.confidence <= 100) {
+            parsed.confidence = parsed.confidence / 100;
+          } else if (parsed.confidence > 100) {
+            parsed.confidence = 1;
+          }
+        } else {
+          // If string cannot be parsed to number, default to 0.5
+          parsed.confidence = 0.5;
         }
       }
 
