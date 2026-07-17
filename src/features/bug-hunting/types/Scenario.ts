@@ -60,17 +60,17 @@ export interface BugScenario {
   title: string;
   description: string;
   symptom: string;
-  service: string;       // Add this
+  service: string;
   severity: 'low' | 'medium' | 'high' | 'critical';
   timerSeconds: number;
-  createdAt: string;     // Add this
-  metadata: any;         // Add this
-  
+  createdAt: string;
+  metadata: any;
+
   // Tab Data
-  logs: any[];
-  docs: any[];
-  deployments: any[];
-  sql: string;
-  code: any;
-  report: any;           // The finding/report structure
+  logs: LogEntry[];
+  docs: DocumentationSection[];
+  deployments: Deployment[];
+  sql: SqlQuery;
+  code: SourceFile[];
+  report: Report;
 }

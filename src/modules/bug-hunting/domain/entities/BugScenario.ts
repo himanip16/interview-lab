@@ -1,4 +1,6 @@
 // src/modules/bug-hunting/domain/entities/BugScenario.ts
+export type Severity = "P0" | "P1" | "P2" | "P3";
+
 export interface LogEntry {
   id: string;
   timestamp: string;
@@ -17,7 +19,7 @@ export interface CodeFile {
   key: string;
   name: string;
   language: string;
-  content: string; // plain source — no HTML
+  contentHtml: string; // pre-highlighted markup, matches CodeBlock's dangerouslySetInnerHTML
 }
 
 export interface DocSection {
@@ -42,7 +44,7 @@ export interface ScenarioReportMetadata {
 
 export interface ScenarioReport {
   title: string;
-  severity: string;
+  severity: Severity;
   severityLabel: string;
   symptom: string;
   metadata: ScenarioReportMetadata;
@@ -56,6 +58,18 @@ interface BugScenarioProps {
   code: CodeFile[];
   docs: DocSection[];
   deployments: Deployment[];
+  // Flattened fields for feature layer compatibility
+  title: string;
+  description: string;
+  symptom: string;
+  service: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  endpoint: string;
+  errorRate: string;
+  firstSeen: string;
+  timerSeconds: number;
+  createdAt: string;
+  metadata: any;
 }
 
 /** Domain entity — the UI only ever sees this shape via toJSON(). */

@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import { getBugHuntingService } from "@/modules/bug-hunting";
 
-// Fixed the broken "/problemsnting/" paths to correct feature paths
 import BugHuntingShell from "@/features/bug-hunting/components/BugHuntingShell";
 import DeploymentsPanel from "@/features/bug-hunting/components/Tabs/DeploymentsPanel";
 import DocsPanel from "@/features/bug-hunting/components/Tabs/DocsPanel";
@@ -29,20 +28,21 @@ export default async function BugHuntingPage({ params }: Props) {
 
   return (
     <main className="bug-hunting-page">
-      {/* FIX: Use 'data' (plain object) instead of 'scenario' (class instance) */}
       <Header scenario={data} />
 
       <div className="bh-body">
         <ReportSidebar
-          report={data.report}
-          scenarioId={data.id}
+          scenario={data}
+          hypothesis=""
+          onHypothesisChange={() => {}}
+          onSubmitHypothesis={() => {}}
         />
 
         <BugHuntingShell
-          logsPanel={<LogsPanel logs={data.logs} />}
-          docsPanel={<DocsPanel docs={data.docs} />}
+          logsPanel={<LogsPanel scenario={data} />}
+          docsPanel={<DocsPanel docs={data.docs} active={false} />}
           deploymentsPanel={
-            <DeploymentsPanel deployments={data.deployments} />
+            <DeploymentsPanel deployments={data.deployments} active={false} />
           }
           sqlFixture={data.sql}
           codeFiles={data.code}
