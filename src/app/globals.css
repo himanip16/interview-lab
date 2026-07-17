@@ -61,6 +61,21 @@
   --mint-900: #064e3b;
   --mint-950: #022c22;
 
+  /* Amber / Accent Colors */
+  --amber: #f59e0b;
+  --amber-deep: #d97706;
+  --amber-50: #fffbeb;
+  --amber-100: #fef3c7;
+  --amber-200: #fde68a;
+  --amber-300: #fcd34d;
+  --amber-400: #fbbf24;
+  --amber-500: #f59e0b;
+  --amber-600: #d97706;
+  --amber-700: #b45309;
+  --amber-800: #92400e;
+  --amber-900: #78350f;
+  --amber-950: #451a03;
+
   /* Semantic Colors - Success */
   --success: #10b981;
   --success-50: #ecfdf5;
@@ -387,7 +402,7 @@ body {
   }
 }
 
-@keyframes flow {
+@keyframes gradient-flow {
   0% {
     background-position: 0% 50%;
   }
@@ -428,8 +443,8 @@ body {
   animation: typing 2s steps(40, end) infinite;
 }
 
-.animate-flow {
-  animation: flow 3s ease infinite;
+.animate-gradient-flow {
+  animation: gradient-flow 3s ease infinite;
   background-size: 200% 200%;
 }
 

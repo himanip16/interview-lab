@@ -18,3 +18,12 @@
   0%, 100% { opacity: 1; }
   50% { opacity: 0.25; }
 }
+
+@keyframes flow {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: -22; }
+}
+
+.animate-flow {
+  animation: flow 1.4s linear infinite;
+}

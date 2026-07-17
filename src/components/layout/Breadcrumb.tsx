@@ -24,7 +24,7 @@ export const Breadcrumb: React.FC<BreadcrumbProps> = ({
       {onBack && (
         <button
           onClick={onBack}
-          className="w-8 h-8 radius-pillborder border border-[var(--border)] bg-transparent text-[var(--ink)] flex items-center justify-center cursor-pointer flex-shrink-0 hover:bg-[var(--paper-100)] transition-colors"
+          className="w-8 h-8 radius-pill border border-[var(--border)] bg-transparent text-[var(--ink)] flex items-center justify-center cursor-pointer flex-shrink-0 hover:bg-[var(--paper-100)] transition-colors"
         >
           <ChevronRight className="w-3 h-3 rotate-180" />
         </button>

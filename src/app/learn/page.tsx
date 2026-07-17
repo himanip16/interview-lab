@@ -6,7 +6,7 @@ import { Search } from "@/components/ui/Search";
 import { Panel } from "@/components/ui/Panel";
 
 const CARD_WIDTH = 380;
-const GAP = 18; // px, matches gap-4.5
+const GAP = 18; // px
 
 const CARDS = [
   {
@@ -146,7 +146,7 @@ export default function LearnPage() {
 
   return (
     <div className="min-h-screen bg-[var(--paper)] py-12 px-6">
-      <Panel variant="default" className="max-w-[1500px] mx-auto p-[36px_40px_44px]">
+      <Panel variant="default" className="max-w-[1500px] mx-auto" style={{ padding: '36px 40px 44px' }}>
         {/* Top Navigation */}
         <div className="flex items-center justify-between mb-8.5 gap-6">
           <div className="heading-m font-semibold">
@@ -170,8 +170,8 @@ export default function LearnPage() {
         {/* Carousel */}
         <div
           ref={railRef}
-          className="flex gap-4.5 overflow-x-auto scroll-smooth snap-x snap-mandatory p-[34px_4px_8px] m-0 -mx-1"
-          style={{ scrollbarWidth: "none" }}
+          className="flex overflow-x-auto scroll-smooth snap-x snap-mandatory m-0 -mx-1"
+          style={{ gap: '18px', padding: '34px 4px 8px', scrollbarWidth: "none" }}
         >
           {CARDS.map((card) => (
             <div
@@ -209,7 +209,7 @@ export default function LearnPage() {
 
         {/* Footer */}
         <div className="flex items-center justify-between mt-5">
-          <div className="flex gap-4.5 body-s text-[var(--ink-400)] font-medium">
+          <div className="flex body-s text-[var(--ink-400)] font-medium" style={{ gap: '18px' }}>
             <span>Facebook</span>
             <span>Twitter</span>
           </div>

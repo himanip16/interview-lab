@@ -383,23 +383,36 @@ PROJECT STRUCTURE
 │   │   │   │   ├── StaticConversationBubble.tsx
 │   │   │   │   ├── Whiteboard.tsx
 │   │   │   │   ├── WhiteboardView.tsx
+│   │   │   │   ├── WhiteboardWorkspace.tsx
 │   │   │   │   ├── actions
 │   │   │   │   │   ├── CompareAction.tsx
 │   │   │   │   │   ├── FixAction.tsx
 │   │   │   │   │   ├── JudgeAction.tsx
 │   │   │   │   │   ├── ObserveAction.tsx
 │   │   │   │   │   └── PredictAction.tsx
-│   │   │   │   └── diagrams
-│   │   │   │       ├── CassandraDiagram.tsx
-│   │   │   │       ├── Kafka.tsx
-│   │   │   │       └── Redis.tsx
+│   │   │   │   ├── diagrams
+│   │   │   │   │   ├── CassandraDiagram.tsx
+│   │   │   │   │   ├── Kafka.tsx
+│   │   │   │   │   └── Redis.tsx
+│   │   │   │   └── whiteboard
+│   │   │   │       ├── DiagramEdges.tsx
+│   │   │   │       ├── DiagramNode.tsx
+│   │   │   │       └── Node.tsx
 │   │   │   ├── data
 │   │   │   │   ├── deepDives.ts
+│   │   │   │   ├── mockData.ts
 │   │   │   │   └── whiteboardSystems.ts
 │   │   │   ├── hooks
 │   │   │   │   └── useScenario.ts
-│   │   │   └── types
-│   │   │       └── learning.ts
+│   │   │   ├── services
+│   │   │   │   └── WhiteboardService.ts
+│   │   │   ├── types
+│   │   │   │   ├── learning.ts
+│   │   │   │   └── whiteboard.ts
+│   │   │   └── utils
+│   │   │       ├── geometry.ts
+│   │   │       ├── layoutEngine.ts
+│   │   │       └── validation.ts
 │   │   ├── library
 │   │   │   ├── components
 │   │   │   │   ├── DiagramGallery.tsx
@@ -625,7 +638,7 @@ PROJECT STRUCTURE
 ├── tsconfig.json
 └── tsconfig.tsbuildinfo
 
-232 directories, 392 files
+235 directories, 402 files
 
 FILE CONTENTS
 
@@ -5187,29 +5200,17 @@ export default function WhiteboardIndexPage() {
 ================================================
 FILE: ./src/app/learn/whiteboard/[slug]/page.tsx
 ================================================
-import { notFound } from "next/navigation";
-import {
-  WHITEBOARD_SYSTEM_LIST,
-} from "@/features/learning/data/whiteboardSystems";
-import WhiteboardView from "@/features/learning/components/WhiteboardView";
+import WhiteboardWorkspace from "@/features/learning/components/WhiteboardWorkspace";
+import { use } from "react";
 
-// Prebuild a page for every known system so each is directly linkable
-// (e.g. from a problem card: `/learn/whiteboard/${problem.slug}`).
-export function generateStaticParams() {
-  return WHITEBOARD_SYSTEM_LIST.map(({ slug }) => ({ slug }));
-}
-
-export default async function WhiteboardSlugPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
-  const { slug } = await params;
-
-  const exists = WHITEBOARD_SYSTEM_LIST.some((s) => s.slug === slug);
-  if (!exists) notFound();
-
-  return <WhiteboardView initialSlug={slug} />;
+export default function WhiteboardPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = use(params);
+  
+  return (
+    <div className="min-h-screen bg-[var(--paper)] py-10 px-6">
+       <WhiteboardWorkspace initialSlug={slug} />
+    </div>
+  );
 }
 ================================================
 FILE: ./src/app/learn/diagrams/cassandra/page.tsx
@@ -8448,9 +8449,9 @@ export async function POST(
 FILE: ./src/app/bug-hunting/[scenarioId]/page.tsx
 ================================================
 import { notFound } from "next/navigation";
-
 import { getBugHuntingService } from "@/modules/bug-hunting";
 
+// Fixed the broken "/problemsnting/" paths to correct feature paths
 import BugHuntingShell from "@/features/bug-hunting/components/BugHuntingShell";
 import DeploymentsPanel from "@/features/bug-hunting/components/Tabs/DeploymentsPanel";
 import DocsPanel from "@/features/bug-hunting/components/Tabs/DocsPanel";
@@ -8464,24 +8465,22 @@ type Props = {
   }>;
 };
 
-export default async function BugHuntingPage({
-  params,
-}: Props) {
+export default async function BugHuntingPage({ params }: Props) {
   const { scenarioId } = await params;
-
   const service = getBugHuntingService();
-
   const scenario = await service.getScenario(scenarioId);
 
   if (!scenario) {
     notFound();
   }
 
+  // Use the plain JSON representation for ALL components
   const data = scenario.toJSON();
 
   return (
     <main className="bug-hunting-page">
-      <Header scenario={scenario} />
+      {/* FIX: Use 'data' (plain object) instead of 'scenario' (class instance) */}
+      <Header scenario={data} />
 
       <div className="bh-body">
         <ReportSidebar
@@ -8493,9 +8492,7 @@ export default async function BugHuntingPage({
           logsPanel={<LogsPanel logs={data.logs} />}
           docsPanel={<DocsPanel docs={data.docs} />}
           deploymentsPanel={
-            <DeploymentsPanel
-              deployments={data.deployments}
-            />
+            <DeploymentsPanel deployments={data.deployments} />
           }
           sqlFixture={data.sql}
           codeFiles={data.code}
@@ -8509,20 +8506,19 @@ export default async function BugHuntingPage({
 FILE: ./src/app/bug-hunting/page.tsx
 ================================================
 import { Panel } from "@/components/ui/Panel";
+// Fixed paths
 import type { BugScenario } from "@/features/bug-hunting/types/Scenario";
 import checkoutTimeout from "@/features/bug-hunting/data/checkout-timeout.json";
 
-// Swap this map for a real DB/API lookup once bug-hunting scenarios are
-// modeled in Prisma (e.g. as PracticeActivityType.BUG_HUNT content).
 const SCENARIOS: BugScenario[] = [
-  checkoutTimeout as BugScenario,
+  // Ensure we are getting the plain object from the JSON import
+  (checkoutTimeout as any).default || checkoutTimeout,
 ];
 
-export default function BugHuntingPage() {
+export default function BugHuntingListPage() {
   return (
     <div className="min-h-screen bg-[var(--paper)] py-12 px-6">
       <Panel variant="default" className="max-w-[1500px] mx-auto p-[36px_40px_44px]">
-        {/* Header */}
         <div className="mb-12">
           <h1 className="text-4xl font-bold text-[var(--ink)] mb-3">
             Bug Hunting
@@ -8532,7 +8528,6 @@ export default function BugHuntingPage() {
           </p>
         </div>
 
-        {/* Scenarios Grid */}
         <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
           {SCENARIOS.map((scenario) => (
             <a
@@ -8542,12 +8537,10 @@ export default function BugHuntingPage() {
               style={{ minHeight: "240px" }}
             >
               <div className="flex flex-col h-full">
-                {/* Title */}
                 <h3 className="text-xl font-bold text-[var(--ink)] mb-2 group-hover:text-[var(--mint)] transition-colors">
                   {scenario.title}
                 </h3>
 
-                {/* Meta tags */}
                 <div className="flex flex-wrap gap-2 mb-4">
                   <span className="px-2.5 py-1 text-xs font-medium bg-blue-50 text-blue-700 rounded-full">
                     {scenario.service}
@@ -8560,12 +8553,10 @@ export default function BugHuntingPage() {
                   </span>
                 </div>
 
-                {/* Description */}
                 <p className="text-sm text-[var(--ink-400)] leading-relaxed mb-6 flex-1">
                   {scenario.symptom}
                 </p>
 
-                {/* CTA */}
                 <div className="flex items-center justify-end">
                   <span className="text-sm font-semibold text-[var(--mint)] group-hover:translate-x-1 transition-transform">
                     Start →
@@ -8579,7 +8570,6 @@ export default function BugHuntingPage() {
     </div>
   );
 }
-
 ================================================
 FILE: ./src/app/globals.css
 ================================================
@@ -10762,107 +10752,197 @@ export default function SystemDiagram({ systemType }: SystemDiagramProps) {
 ================================================
 FILE: ./src/features/learning/types/learning.ts
 ================================================
-import { LearningActionType } from "@prisma/client";
+// src/features/learning/types/learning.ts
 
-export interface ObserveActionContent {
-  schemaVersion?: number;
-  reflection: string;
-}
-
-export interface JudgeActionContent {
-  schemaVersion?: number;
-  reflection: string;
-  options: Array<{
-    id: string;
-    text: string;
-  }>;
-  correctOptionId: string;
-}
-
-export interface FixActionContent {
-  schemaVersion?: number;
-  reflection: string;
-  interviewerQuestion: string;
-  flawedAnswer: string;
-  evaluationFocus?: string;
-}
-
-export interface PredictActionContent {
-  schemaVersion?: number;
-  reflection: string;
-  question: string;
-  revealExplanation: string;
-}
-
-export interface CompareActionContent {
-  schemaVersion?: number;
-  reflection: string;
-  candidateA: string;
-  candidateB: string;
-  correctChoice: "A" | "B";
-}
-
-export type LearningActionContent =
-  | { type: "OBSERVE"; content: ObserveActionContent }
-  | { type: "JUDGE"; content: JudgeActionContent }
-  | { type: "FIX"; content: FixActionContent }
-  | { type: "PREDICT"; content: PredictActionContent }
-  | { type: "COMPARE"; content: CompareActionContent };
-
-export interface Scenario {
+export interface WhiteboardNode {
   id: string;
+  title: string;
+  kind: string;
+  color: string;
+  position: {
+    top?: string;
+    left?: string;
+    right?: string;
+    bottom?: string;
+  };
+  role: string;
+  deep: string;
+  failure: string;
+  tradeoffs: string;
+}
+
+export interface WhiteboardSystem {
   slug: string;
   title: string;
-  description: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-  segments: Segment[];
+  nodes: WhiteboardNode[];
+}
+================================================
+FILE: ./src/features/learning/types/whiteboard.ts
+================================================
+
+export type NodeId = string & { readonly __brand: unique symbol };
+
+export interface DiagramConfig {
+  readonly CANVAS_W: number;
+  readonly CANVAS_H: number;
+  readonly GRID_COLS: number;
+  readonly GRID_ROWS: number;
+  readonly NODE_W: number;
+  readonly NODE_H: number;
 }
 
-export interface Segment {
-  id: string;
-  order: number;
-  conversation: any;
-  takeaway: string | null;
-  actions: Action[];
-  concepts: ConceptLink[];
-}
+export const DEFAULT_CONFIG: DiagramConfig = {
+  CANVAS_W: 1000,
+  CANVAS_H: 800,
+  GRID_COLS: 12,
+  GRID_ROWS: 12,
+  NODE_W: 160,
+  NODE_H: 80,
+};
 
-export interface Action {
-  id: string;
-  type: LearningActionType;
+export interface DiagramNode {
+  id: NodeId;
   title: string;
-  instructions: string | null;
-  content: any;
-  contentVersion: number;
-  isActive: boolean;
-  concepts: ConceptLink[];
+  category: 'entry' | 'logic' | 'storage' | 'network' | 'queue';
+  details: { role: string; deepDive: string; failureModes: string; tradeoffs: string; };
 }
 
-export interface ConceptLink {
-  id: string;
-  weight: number;
-  concept: {
-    id: string;
-    slug: string;
-    name: string;
-    description: string | null;
-    category: string;
-  };
-}
+export interface DiagramEdge { from: NodeId; to: NodeId; }
 
-export interface ScenarioListItem {
-  id: string;
+export interface SystemDesign {
   slug: string;
-  title: string;
-  description: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-  _count: {
-    segments: number;
-  };
+  nodes: DiagramNode[];
+  edges: DiagramEdge[];
 }
 
+// Fixed-structure Layout (Prevents orphaned IDs)
+export interface NodeLayout {
+  nodeId: NodeId;
+  gridPos: { x: number; y: number };
+}
+
+export interface Point { x: number; y: number; }
+export interface Rect extends Point { width: number; height: number; }
+
+// The "Calculated Frame" - Renderer only cares about these
+export interface PositionedNode extends Rect { data: DiagramNode; }
+export interface PositionedEdge { start: Point; end: Point; fromId: NodeId; toId: NodeId; }
+
+export interface WhiteboardFrame {
+  nodes: PositionedNode[];
+  edges: PositionedEdge[];
+}
+================================================
+FILE: ./src/features/learning/utils/validation.ts
+================================================
+import { SystemDesign, NodeLayout, NodeId } from "../types/whiteboard";
+
+export class DesignValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "DesignValidationError";
+  }
+}
+
+export function validateDesignIntegrity(design: SystemDesign, layout: NodeLayout[]): void {
+  const nodeIds = new Set(design.nodes.map(n => n.id));
+
+  // 1. Check for Duplicate Node IDs
+  if (nodeIds.size !== design.nodes.length) {
+    throw new DesignValidationError("Duplicate Node IDs found in design.");
+  }
+
+  // 2. Check for Missing Layouts
+  for (const node of design.nodes) {
+    if (!layout.find(l => l.nodeId === node.id)) {
+      throw new DesignValidationError(`Missing layout coordinates for node: ${node.id}`);
+    }
+  }
+
+  // 3. Check for Orphaned Layouts (Extra layouts with no nodes)
+  if (layout.length > design.nodes.length) {
+    console.warn("Whiteboard: Orphaned layout entries detected.");
+  }
+
+  // 4. Check for Broken Edges
+  for (const edge of design.edges) {
+    if (!nodeIds.has(edge.from)) throw new DesignValidationError(`Edge source invalid: ${edge.from}`);
+    if (!nodeIds.has(edge.to)) throw new DesignValidationError(`Edge target invalid: ${edge.to}`);
+  }
+}
+================================================
+FILE: ./src/features/learning/utils/geometry.ts
+================================================
+export interface Point { x: number; y: number; }
+export interface Rect extends Point { width: number; height: number; }
+
+/**
+ * Calculates the connection point on the perimeter of a rectangle
+ * looking toward a target point (the center of the other node).
+ */
+export function getConnectionPoint(source: Rect, target: Point): Point {
+  const dx = target.x - source.x;
+  const dy = target.y - source.y;
+
+  // Calculate the scale to the horizontal and vertical edges
+  const hScale = dx === 0 ? Infinity : Math.abs((source.width / 2) / dx);
+  const vScale = dy === 0 ? Infinity : Math.abs((source.height / 2) / dy);
+
+  const scale = Math.min(hScale, vScale);
+
+  return {
+    x: source.x + dx * scale,
+    y: source.y + dy * scale
+  };
+}
+================================================
+FILE: ./src/features/learning/utils/layoutEngine.ts
+================================================
+import { 
+  SystemDesign, NodeLayout, WhiteboardFrame, 
+  PositionedNode, PositionedEdge, Rect 
+} from "../types/whiteboard";
+import { getConnectionPoint } from "./geometry";
+
+const CANVAS = { COLS: 12, ROWS: 12, W: 1000, H: 800, NODE_W: 160, NODE_H: 80 };
+
+export function calculateWhiteboardFrame(
+  design: SystemDesign, 
+  layout: NodeLayout[]
+): WhiteboardFrame {
+  // 1. Position Nodes
+  const positionedNodes: PositionedNode[] = design.nodes.map(node => {
+    const l = layout.find(lp => lp.nodeId === node.id);
+    if (!l) throw new Error(`Missing layout for node: ${node.id}`);
+
+    return {
+      id: node.id,
+      data: node,
+      x: (l.gridPos.x / CANVAS.COLS) * CANVAS.W,
+      y: (l.gridPos.y / CANVAS.ROWS) * CANVAS.H,
+      width: CANVAS.NODE_W,
+      height: CANVAS.NODE_H
+    };
+  });
+
+  const nodeMap = new Map(positionedNodes.map(n => [n.data.id, n]));
+
+  // 2. Position Edges (Geometry happens here, not in the component)
+  const positionedEdges: PositionedEdge[] = design.edges.map(edge => {
+    const s = nodeMap.get(edge.from);
+    const t = nodeMap.get(edge.to);
+    if (!s || !t) throw new Error(`Edge connection error: ${edge.from} -> ${edge.to}`);
+
+    return {
+      fromId: edge.from,
+      toId: edge.to,
+      start: getConnectionPoint(s, t),
+      end: getConnectionPoint(t, s)
+    };
+  });
+
+  return { nodes: positionedNodes, edges: positionedEdges };
+}
 ================================================
 FILE: ./src/features/learning/components/SegmentTakeaway.tsx
 ================================================
@@ -10884,6 +10964,125 @@ export function SegmentTakeaway({ takeaway }: SegmentTakeawayProps) {
   );
 }
 
+================================================
+FILE: ./src/features/learning/components/whiteboard/DiagramEdges.tsx
+================================================
+import { DiagramNode, DiagramEdge } from "../../types/whiteboard";
+
+export const DiagramEdges = ({ nodes, edges }: { nodes: DiagramNode[], edges: DiagramEdge[] }) => {
+  return (
+    <svg className="absolute inset-0 w-full h-full pointer-events-none z-10">
+      {edges.map((edge, i) => {
+        const from = nodes.find(n => n.id === edge.from);
+        const to = nodes.find(n => n.id === edge.to);
+        if (!from || !to) return null;
+
+        // Calculate line start/end as percentages based on grid
+        const x1 = `${(from.gridPos.x / 12) * 100}%`;
+        const y1 = `${(from.gridPos.y / 8) * 100}%`;
+        const x2 = `${(to.gridPos.x / 12) * 100}%`;
+        const y2 = `${(to.gridPos.y / 8) * 100}%`;
+
+        return (
+          <line
+            key={`${edge.from}-${edge.to}-${i}`}
+            x1={x1} y1={y1} x2={x2} y2={y2}
+            stroke="rgba(21,22,28,0.1)"
+            strokeWidth="2"
+            strokeDasharray="5,5"
+            className="animate-flow" // CSS defined in globals
+          />
+        );
+      })}
+    </svg>
+  );
+};
+================================================
+FILE: ./src/features/learning/components/whiteboard/Node.tsx
+================================================
+import { cn } from "@/lib/utils";
+import { Point } from "../../utils/geometry";
+
+const CATEGORY_MAP = {
+  entry: "bg-coral border-coral/20 focus:ring-coral/40",
+  logic: "bg-violet border-violet/20 focus:ring-violet/40",
+  storage: "bg-mint-deep border-mint-deep/20 focus:ring-mint-deep/40",
+} as const;
+
+export const Node = ({ 
+  node, 
+  position, 
+  isSelected, 
+  onClick 
+}: { 
+  node: any, 
+  position: Point, 
+  isSelected: boolean, 
+  onClick: () => void 
+}) => (
+  <button
+    role="button"
+    aria-pressed={isSelected}
+    aria-label={`Inspect ${node.title}`}
+    onClick={onClick}
+    style={{ 
+      transform: `translate(calc(${position.x}px - 50%), calc(${position.y}px - 50%))` 
+    }}
+    className={cn(
+      "absolute left-0 top-0 w-[160px] p-4 rounded-xl text-white text-left transition-all",
+      "hover:scale-105 focus:outline-none focus:ring-4",
+      CATEGORY_MAP[node.category as keyof typeof CATEGORY_MAP],
+      isSelected ? "ring-4 ring-ink/20 scale-105 z-30" : "z-20 opacity-90 shadow-sm"
+    )}
+  >
+    <span className="block text-xs font-bold truncate">{node.title}</span>
+    <span className="block text-[10px] opacity-70 uppercase font-bold">{node.category}</span>
+  </button>
+);
+================================================
+FILE: ./src/features/learning/components/whiteboard/DiagramNode.tsx
+================================================
+import { cn } from "@/lib/utils";
+import { DiagramNode as NodeType } from "../../types/whiteboard";
+
+const CATEGORY_STYLES: Record<string, string> = {
+  entry: "bg-coral border-coral/20",
+  logic: "bg-violet border-violet/20",
+  storage: "bg-mint-deep border-mint-deep/20",
+  queue: "bg-amber border-amber/20",
+  network: "bg-ink border-ink/20",
+};
+
+export const DiagramNode = ({ 
+  node, 
+  isSelected, 
+  onClick 
+}: { 
+  node: NodeType; 
+  isSelected: boolean; 
+  onClick: () => void 
+}) => {
+  return (
+    <div
+      onClick={onClick}
+      style={{
+        // Calculate position based on grid
+        left: `${(node.gridPos.x / 12) * 100}%`,
+        top: `${(node.gridPos.y / 8) * 100}%`,
+      }}
+      className={cn(
+        "absolute w-40 -translate-x-1/2 -translate-y-1/2 p-4 rounded-xl text-white cursor-pointer transition-all z-20 border shadow-sm",
+        "hover:scale-105 active:scale-95",
+        CATEGORY_STYLES[node.category],
+        isSelected ? "ring-4 ring-offset-4 ring-offset-paper ring-ink/20" : "opacity-90"
+      )}
+    >
+      <div className="w-1.5 h-1.5 rounded-full bg-white/40 mb-2" />
+      <h4 className="text-xs font-bold leading-tight">{node.title}</h4>
+      <p className="text-[10px] opacity-70 uppercase tracking-tighter font-semibold">{node.category}</p>
+    </div>
+  );
+};
 ================================================
 FILE: ./src/features/learning/components/StaticConversationBubble.tsx
 ================================================
@@ -10924,148 +11123,74 @@ FILE: ./src/features/learning/components/WhiteboardView.tsx
 ================================================
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Breadcrumb } from "@/components/layout/Breadcrumb";
+import React, { useState, useMemo } from "react";
 import { Inspector } from "@/components/layout/Inspector";
-import { Panel } from "@/components/ui/Panel";
+import { WhiteboardFrame, DiagramNode } from "../types/whiteboard";
 import { cn } from "@/lib/utils";
-import {
-  WHITEBOARD_SYSTEMS,
-  WHITEBOARD_SYSTEM_LIST,
-  type WhiteboardSystem,
-} from "@/features/learning/data/whiteboardSystems";
 
-interface WhiteboardViewProps {
-  initialSlug: string;
-}
+const CATEGORY_COLORS = {
+  entry: "#FF5A3C", logic: "#6A5AE0", storage: "#00A87E", 
+  network: "#15161C", queue: "#E8940A"
+} as const;
 
-export default function WhiteboardView({ initialSlug }: WhiteboardViewProps) {
-  const router = useRouter();
-  const [selectedSystemSlug, setSelectedSystemSlug] = useState<string>(initialSlug);
+export default function WhiteboardView({ frame }: { frame: WhiteboardFrame }) {
+  const [selectedId, setSelectedId] = useState<string | null>(frame.nodes[0]?.data.id || null);
 
-  // Keep local state in sync if the route changes externally
-  // (e.g. browser back/forward, or a different initialSlug on remount).
-  useEffect(() => {
-    setSelectedSystemSlug(initialSlug);
-  }, [initialSlug]);
-
-  const system: WhiteboardSystem | undefined = WHITEBOARD_SYSTEMS[selectedSystemSlug];
-  const [selectedNodeId, setSelectedNodeId] = useState<string | undefined>(system?.nodes[0]?.id);
-
-  useEffect(() => {
-    setSelectedNodeId(system?.nodes[0]?.id);
-  }, [selectedSystemSlug, system]);
-
-  const selectedData = system?.nodes.find((n) => n.id === selectedNodeId);
-
-  function selectSystem(slug: string) {
-    setSelectedSystemSlug(slug);
-    // Push the slug into the URL so the current system is shareable/bookmarkable
-    // and survives a refresh, instead of living only in component state.
-    router.push(`/learn/whiteboard/${slug}`, { scroll: false });
-  }
+  // O(1) lookup for the inspector
+  const activeNode = useMemo(() => 
+    frame.nodes.find(n => n.data.id === selectedId)?.data || null, 
+  [selectedId, frame]);
 
   return (
-    <div className="min-h-screen bg-[var(--paper)] py-10 px-6">
-      <Panel variant="default" className="max-w-[1080px] mx-auto p-[30px_36px_36px]">
+    <div className="flex flex-col xl:flex-row gap-8 h-[700px] animate-in fade-in duration-500">
+      <div className="flex-1 relative overflow-auto rounded-panel border bg-paper shadow-inner border-ink/5">
+        <div className="relative w-[1100px] h-[900px] p-12">
+          
+          <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-20">
+            {frame.edges.map((edge, i) => (
+              <line key={`${edge.fromId}-${edge.toId}-${i}`} 
+                x1={edge.start.x} y1={edge.start.y} x2={edge.end.x} y2={edge.end.y}
+                stroke="currentColor" className="text-ink animate-flow"
+                strokeWidth="2" strokeDasharray="6,6" />
+            ))}
+          </svg>
 
-        <div className="flex items-center justify-between mb-1.5">
-          <Breadcrumb
-            items={[
-              { label: "Learn", href: "/learn" },
-              { label: "Whiteboarding", active: true },
-            ]}
-            onBack={() => router.back()}
-          />
-        </div>
-
-        <div className="flex items-center justify-between mt-4.5 mb-5">
-          <h2 className="heading-m font-semibold">{system?.title ?? "Select a system"}</h2>
-          <div className="body-s text-[var(--ink-400)] flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 radius-full bg-[var(--mint)] animate-pulse" />
-            Tap any component to inspect it
-          </div>
-        </div>
-
-        <div className="flex gap-2 mb-6.5">
-          {WHITEBOARD_SYSTEM_LIST.map(({ slug, label }) => (
+          {frame.nodes.map((node) => (
             <button
-              key={slug}
-              onClick={() => selectSystem(slug)}
+              key={node.data.id}
+              onClick={() => setSelectedId(node.data.id)}
+              style={{ transform: `translate(calc(${node.x}px - 50%), calc(${node.y}px - 50%))` }}
               className={cn(
-                "body-s font-semibold p-[7px_15px] radius-pill border border-[var(--border)] text-[var(--ink-400)] cursor-pointer",
-                selectedSystemSlug === slug && "bg-[var(--ink)] text-white border-[var(--ink)]"
+                "absolute left-0 top-0 w-40 p-4 rounded-xl text-white text-left transition-all",
+                "hover:scale-105 focus:outline-none focus:ring-4 shadow-md",
+                `category-bg-${node.data.category}`, // Ensure these are in safeList or mapped
+                selectedId === node.data.id ? "ring-4 ring-ink/20 z-30 scale-105" : "z-20 opacity-90"
               )}
             >
-              {label}
+              <span className="block text-xs font-bold truncate">{node.data.title}</span>
+              <span className="block text-[10px] opacity-70 uppercase font-extrabold tracking-tighter">
+                {node.data.category}
+              </span>
             </button>
           ))}
         </div>
-
-        <div className="flex gap-5">
-          <div className="flex-1 min-h-[380px] relative bg-[var(--paper)] radius-card p-5">
-            <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-              <path d="M18 8 L75 8" vectorEffect="non-scaling-stroke" stroke="rgba(21,22,28,0.16)" strokeWidth="2" fill="none" strokeDasharray="5 6" className="animate-flow" />
-              <path d="M40 8 L40 45" vectorEffect="non-scaling-stroke" stroke="rgba(21,22,28,0.16)" strokeWidth="2" fill="none" strokeDasharray="5 6" className="animate-flow" />
-              <path d="M40 55 L40 78" vectorEffect="non-scaling-stroke" stroke="rgba(21,22,28,0.16)" strokeWidth="2" fill="none" strokeDasharray="5 6" className="animate-flow" />
-            </svg>
-
-            {system?.nodes.map((node) => (
-              <div
-                key={node.id}
-                style={{ backgroundColor: node.color, ...node.position }}
-                className={cn(
-                  "absolute w-[150px] p-[14px_16px] radius-card text-white cursor-pointer transition-transform duration-[0.3s] ease-[cubic-bezier(0.34,1.56,0.64,1)] z-2 hover:-translate-y-[-4px]",
-                  selectedNodeId === node.id && "shadow-selected"
-                )}
-                onClick={() => setSelectedNodeId(node.id)}
-              >
-                <div className="w-2 h-2 radius-full bg-white/70 mb-2" />
-                <div className="body-s font-semibold">{node.title}</div>
-                <div className="caption text-white/65 mt-0.5">{node.kind}</div>
-              </div>
-            ))}
-
-            <div className="flex gap-4 mt-4 caption text-[var(--ink-400)]">
-              <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 radius-full bg-[var(--coral)]" />
-                Entry
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 radius-full bg-[var(--violet)]" />
-                Logic
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 radius-full bg-[var(--mint-deep)]" />
-                Storage
-              </span>
-            </div>
-          </div>
-
-          <div className="flex-0-0-[300px]">
-            {selectedData ? (
-              <Inspector
-                title={selectedData.title}
-                kind={selectedData.kind}
-                color={selectedData.color}
-                blocks={[
-                  { label: "Role & duty", content: selectedData.role },
-                  { label: "Deep dive", content: selectedData.deep },
-                  { label: "Failure modes", content: selectedData.failure },
-                  { label: "Tradeoffs", content: selectedData.tradeoffs },
-                ]}
-              />
-            ) : (
-              <div className="radius-card border border-[var(--border)] p-6 flex flex-col">
-                <div className="m-auto text-center text-[var(--ink-400)] body-s">
-                  Select a component on the left to see its role, internals, failure modes, and tradeoffs.
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </Panel>
+      </div>
+      
+      <aside className="w-full xl:w-[340px] shrink-0">
+         {activeNode && (
+           <Inspector 
+             title={activeNode.title}
+             kind={activeNode.category.toUpperCase()}
+             color={CATEGORY_COLORS[activeNode.category]}
+             blocks={[
+               { label: "Role", content: activeNode.details.role },
+               { label: "Deep Dive", content: activeNode.details.deepDive },
+               { label: "Failures", content: activeNode.details.failureModes },
+               { label: "Tradeoffs", content: activeNode.details.tradeoffs },
+             ]}
+           />
+         )}
+      </aside>
     </div>
   );
 }
@@ -11328,236 +11453,283 @@ export function KafkaDiagram() {
   );
 }
 ================================================
-FILE: ./src/features/learning/components/Whiteboard.tsx
+FILE: ./src/features/learning/components/WhiteboardWorkspace.tsx
 ================================================
 "use client";
 
-import { useState } from "react";
+import React, { useState, useMemo } from 'react';
+import { cn } from '@/lib/utils';
+import { Panel } from '@/components/ui/Panel';
+import { Inspector } from '@/components/layout/Inspector';
+import { Breadcrumb } from '@/components/layout/Breadcrumb';
+import { WHITEBOARD_SYSTEMS, WHITEBOARD_SYSTEM_LIST } from '../data/whiteboardSystems';
+import { useRouter } from 'next/navigation';
 
-const DATA = {
-  client: { 
-    color:'var(--coral)', 
-    kind:'Client · entry point', 
-    role:'Sends a long URL, gets back a short code, and redirects when that code is visited later.',
-    deep:'Caches the last few redirects locally so repeat visits skip the network round trip.',
-    failure:'If the gateway is unreachable, falls back to a "try again" state rather than a blank redirect.',
-    tradeoffs:'Could resolve short codes locally for speed, but that would mean shipping the whole mapping to every client — not worth it at this scale.' 
-  },
-  gateway: { 
-    color:'var(--ink)', 
-    kind:'Gateway · routing', 
-    role:'Single entry point for reads and writes — validates the request and routes to the shortener service.',
-    deep:'Rate-limits by IP to stop one client from generating millions of codes.',
-    failure:'Stateless, so any instance can go down without losing in-flight requests — the load balancer just stops sending it traffic.',
-    tradeoffs:'Centralizing here adds a hop, but keeping auth and rate-limiting in one place beats duplicating it in every service.' 
-  },
-  service: { 
-    color:'var(--violet)', 
-    kind:'Service · core logic', 
-    role:'Generates a unique short code and writes the mapping; resolves a code back to the original URL on read.',
-    deep:'Uses base62 encoding over an auto-incrementing counter, so codes stay short and collisions are structurally impossible.',
-    failure:'If code generation fails mid-write, the write is retried with a fresh counter value rather than silently returning a broken link.',
-    tradeoffs:'Hash-based codes would avoid a shared counter, but base62-over-counter is simpler and collisions become the harder problem to solve.' 
-  },
-  db: { 
-    color:'var(--mint-deep)', 
-    kind:'Storage · key-value', 
-    role:'Stores the short-code to long-URL mapping and serves reads with very low latency.',
-    deep:'Reads are cached in front of the store, since the access pattern is extremely read-heavy relative to writes.',
-    failure:'Replicated across zones — losing one replica costs latency, not data.',
-    tradeoffs:'A relational database would make analytics easier, but a key-value store is a better match for how this data is actually accessed: by exact key, constantly.' 
-  }
-};
+export default function WhiteboardWorkspace({ initialSlug }: { initialSlug: string }) {
+  const router = useRouter();
+  const [currentSlug, setCurrentSlug] = useState(initialSlug);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
 
-export default function Whiteboard() {
-  const [selectedId, setSelectedId] = useState('client');
-  const [selectedSystem, setSelectedSystem] = useState('URL shortener');
+  const system = WHITEBOARD_SYSTEMS[currentSlug] || WHITEBOARD_SYSTEMS['url-shortener'];
+  const activeNode = system.nodes.find(n => n.id === selectedNodeId);
 
-  const handleSelect = (id: string, el: HTMLDivElement) => {
-    setSelectedId(id);
+  // Categorized colors based on DESIGN_SPECIFICATION.md
+  const getCategoryColor = (kind: string) => {
+    const k = kind.toLowerCase();
+    if (k.includes('client')) return '#FF5A3C'; // var(--coral)
+    if (k.includes('gateway')) return '#15161C'; // var(--ink)
+    if (k.includes('service')) return '#6A5AE0'; // var(--violet)
+    if (k.includes('storage') || k.includes('database')) return '#00A87E'; // var(--mint-deep)
+    return '#5A5B66';
   };
 
   return (
-    <div className="panel max-w-[1080px] mx-auto bg-white rounded-[32px] p-[30px_36px_36px] shadow-[0_24px_60px_rgba(21,22,28,0.06)] border border-[rgba(21,22,28,0.06)]">
-      {/* Top Section */}
-      <div className="top flex items-center justify-between mb-1.5">
-        <div className="crumb flex items-center gap-2 text-[13px] text-[#5A5B66] font-medium">
-          <button className="back w-8 h-8 rounded-full border border-[rgba(21,22,28,0.1)] bg-none text-[#15161C] flex items-center justify-center cursor-pointer">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
-              <path d="M15 6l-6 6 6 6"/>
-            </svg>
-          </button>
-          Learn &nbsp;/&nbsp; <b className="text-[#15161C] font-semibold">Whiteboarding</b>
+    <Panel variant="default" className="max-w-[1080px] mx-auto p-[30px_36px_36px] bg-white">
+      {/* Navigation */}
+      <div className="mb-8">
+        <Breadcrumb
+          items={[
+            { label: 'Learn', href: '/learn' },
+            { label: 'Whiteboarding', active: true }
+          ]}
+          onBack={() => router.push('/learn')}
+        />
+      </div>
+
+      {/* Header & System Pills */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <h1 className="heading-m font-semibold text-[var(--ink)]">{system.title}</h1>
+            <div className="w-1.5 h-1.5 rounded-full bg-[var(--mint)] animate-pulse" />
+          </div>
+          <p className="body-s text-[var(--ink-400)]">Click nodes to inspect architectural tradeoffs</p>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {WHITEBOARD_SYSTEM_LIST.map((sys) => (
+            <button
+              key={sys.slug}
+              onClick={() => {
+                setCurrentSlug(sys.slug);
+                setSelectedNodeId(null);
+              }}
+              className={cn(
+                "px-4 py-1.5 radius-pill text-xs font-semibold transition-all border",
+                currentSlug === sys.slug 
+                  ? "bg-[var(--ink)] text-white border-[var(--ink)]" 
+                  : "bg-white text-[var(--ink-400)] border-[var(--border)] hover:border-[var(--ink-200)]"
+              )}
+            >
+              {sys.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Title Section */}
-      <div className="title-row flex items-center justify-between mt-4.5 mb-5">
-        <h2 className="text-[23px] font-semibold text-[#15161C] font-['Poppins']">Design a URL shortener</h2>
-        <div className="hint text-[12.5px] text-[#5A5B66] flex items-center gap-1.5">
-          <span className="pulse w-1.5 h-1.5 rounded-full bg-[var(--mint)]">
-            <style>{`
-              @keyframes pulse {
-                0%, 100% { opacity: 1; }
-                50% { opacity: 0.25; }
-              }
-              .pulse {
-                animation: pulse 1.8s ease-in-out infinite;
-              }
-            `}</style>
-          </span>
-          Tap any component to inspect it
-        </div>
-      </div>
-
-      {/* System Pills */}
-      <div className="system-pills flex gap-2 mb-6.5">
-        {['URL shortener', 'Uber', 'Netflix', 'WhatsApp'].map((system) => (
-          <button
-            key={system}
-            onClick={() => setSelectedSystem(system)}
-            className={`pill text-[12.5px] font-semibold p-[7px_15px] rounded-[999px] border border-[rgba(21,22,28,0.1)] text-[#5A5B66] cursor-pointer ${selectedSystem === system ? 'active bg-[#15161C] text-white border-[#15161C]' : ''}`}
-          >
-            {system}
-          </button>
-        ))}
-      </div>
-
-      {/* Stage */}
-      <div className="stage flex gap-5">
-        {/* Diagram */}
-        <div className="diagram flex-1 min-h-[380px] relative bg-[#FAF9F6] rounded-[22px] p-5">
-          <svg className="wires absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-            <path d="M18 8 L75 8" vectorEffect="non-scaling-stroke" stroke="rgba(21,22,28,0.16)" strokeWidth="2" fill="none" strokeDasharray="5 6">
-              <style>{`
-                @keyframes flow {
-                  to { stroke-dashoffset: -22; }
-                }
-                path {
-                  animation: flow 1.4s linear infinite;
-                }
-              `}</style>
-            </path>
-            <path d="M40 8 L40 45" vectorEffect="non-scaling-stroke" stroke="rgba(21,22,28,0.16)" strokeWidth="2" fill="none" strokeDasharray="5 6">
-              <style>{`
-                @keyframes flow {
-                  to { stroke-dashoffset: -22; }
-                }
-                path {
-                  animation: flow 1.4s linear infinite;
-                }
-              `}</style>
-            </path>
-            <path d="M40 55 L40 78" vectorEffect="non-scaling-stroke" stroke="rgba(21,22,28,0.16)" strokeWidth="2" fill="none" strokeDasharray="5 6">
-              <style>{`
-                @keyframes flow {
-                  to { stroke-dashoffset: -22; }
-                }
-                path {
-                  animation: flow 1.4s linear infinite;
-                }
-              `}</style>
-            </path>
+      {/* Main Workspace Stage */}
+      <div className="flex flex-col xl:flex-row gap-6 min-h-[500px]">
+        {/* Diagram Area */}
+        <div className="flex-1 relative bg-[#FAF9F6] radius-panel border border-[rgba(21,22,28,0.04)] overflow-hidden min-h-[400px]">
+          {/* Animated Wires Layer */}
+          <svg className="absolute inset-0 w-full h-full pointer-events-none">
+            <defs>
+              <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="rgba(21,22,28,0.15)" />
+              </marker>
+            </defs>
+            {/* Horizontal flow line example from spec */}
+            <path 
+              d="M 50,50 Q 540,50 900,50" 
+              fill="none" 
+              stroke="rgba(21,22,28,0.1)" 
+              strokeWidth="2" 
+              strokeDasharray="6 8"
+              className="animate-flow"
+            />
           </svg>
 
-          {/* Nodes */}
-          <div 
-            className={`node n-client absolute w-[150px] p-[14px_16px] rounded-[16px] text-white cursor-pointer transition-transform duration-[0.3s] ease-[cubic-bezier(0.34,1.56,0.64,1)] z-10 ${selectedId === 'client' ? 'selected shadow-[0_0_0_3px_rgba(0,217,163,0.35)]' : ''}`}
-            style={{ top: '24px', left: '24px', background: 'var(--coral)' }}
-            onClick={(e) => handleSelect('client', e.currentTarget)}
-          >
-            <div className="dot w-2 h-2 rounded-full bg-white/70 mb-2"></div>
-            <div className="name text-[13.5px] font-semibold">Client app</div>
-            <div className="kind text-[10.5px] text-white/65 mt-0.5">Entry point</div>
-          </div>
-
-          <div 
-            className={`node n-gateway absolute w-[150px] p-[14px_16px] rounded-[16px] text-white cursor-pointer transition-transform duration-[0.3s] ease-[cubic-bezier(0.34,1.56,0.64,1)] z-10 ${selectedId === 'gateway' ? 'selected shadow-[0_0_0_3px_rgba(0,217,163,0.35)]' : ''}`}
-            style={{ top: '24px', right: '24px', background: 'var(--ink)' }}
-            onClick={(e) => handleSelect('gateway', e.currentTarget)}
-          >
-            <div className="dot w-2 h-2 rounded-full bg-white/70 mb-2"></div>
-            <div className="name text-[13.5px] font-semibold">API gateway</div>
-            <div className="kind text-[10.5px] text-white/65 mt-0.5">Routing &amp; auth</div>
-          </div>
-
-          <div 
-            className={`node n-service absolute w-[150px] p-[14px_16px] rounded-[16px] text-white cursor-pointer transition-transform duration-[0.3s] ease-[cubic-bezier(0.34,1.56,0.64,1)] z-10 ${selectedId === 'service' ? 'selected shadow-[0_0_0_3px_rgba(0,217,163,0.35)]' : ''}`}
-            style={{ top: '200px', left: '50%', transform: 'translateX(-50%)', background: 'var(--violet)' }}
-            onClick={(e) => handleSelect('service', e.currentTarget)}
-          >
-            <div className="dot w-2 h-2 rounded-full bg-white/70 mb-2"></div>
-            <div className="name text-[13.5px] font-semibold">Shortener service</div>
-            <div className="kind text-[10.5px] text-white/65 mt-0.5">Core logic</div>
-          </div>
-
-          <div 
-            className={`node n-db absolute w-[150px] p-[14px_16px] rounded-[16px] text-white cursor-pointer transition-transform duration-[0.3s] ease-[cubic-bezier(0.34,1.56,0.64,1)] z-10 ${selectedId === 'db' ? 'selected shadow-[0_0_0_3px_rgba(0,217,163,0.35)]' : ''}`}
-            style={{ bottom: '24px', left: '50%', transform: 'translateX(-50%)', background: 'var(--mint-deep)' }}
-            onClick={(e) => handleSelect('db', e.currentTarget)}
-          >
-            <div className="dot w-2 h-2 rounded-full bg-white/70 mb-2"></div>
-            <div className="name text-[13.5px] font-semibold">Key-value store</div>
-            <div className="kind text-[10.5px] text-white/65 mt-0.5">Storage</div>
-          </div>
+          {/* Interactive Nodes */}
+          {system.nodes.map((node) => (
+            <div
+              key={node.id}
+              onClick={() => setSelectedNodeId(node.id)}
+              style={{
+                top: node.position.top,
+                left: node.position.left,
+                right: node.position.right,
+                bottom: node.position.bottom,
+                transform: node.position.transform,
+                backgroundColor: node.color || getCategoryColor(node.kind)
+              }}
+              className={cn(
+                "absolute w-[150px] p-4 radius-card text-white cursor-pointer transition-all duration-300 shadow-sm z-20 hover:-translate-y-1",
+                selectedNodeId === node.id ? "ring-4 ring-offset-4 ring-offset-[#FAF9F6] ring-[rgba(0,217,163,0.35)]" : "opacity-95"
+              )}
+            >
+              <div className="w-2 h-2 rounded-full bg-white/40 mb-3" />
+              <div className="text-[13.5px] font-semibold leading-tight">{node.title}</div>
+              <div className="text-[10.5px] text-white/70 mt-1 uppercase font-bold tracking-tighter">
+                {node.kind.split(' · ')[0]}
+              </div>
+            </div>
+          ))}
 
           {/* Legend */}
-          <div className="legend flex gap-4 mt-4 text-[11.5px] text-[#5A5B66]">
-            <span className="flex items-center gap-1.5"><span className="sw w-2 h-2 rounded-full" style={{ background: 'var(--coral)' }}></span>Entry</span>
-            <span className="flex items-center gap-1.5"><span className="sw w-2 h-2 rounded-full" style={{ background: 'var(--violet)' }}></span>Logic</span>
-            <span className="flex items-center gap-1.5"><span className="sw w-2 h-2 rounded-full" style={{ background: 'var(--mint-deep)' }}></span>Storage</span>
+          <div className="absolute bottom-6 left-6 flex gap-4">
+            {[
+              { label: 'Entry', color: '#FF5A3C' },
+              { label: 'Logic', color: '#6A5AE0' },
+              { label: 'Storage', color: '#00A87E' }
+            ].map(item => (
+              <div key={item.label} className="flex items-center gap-2 text-[11px] font-bold text-[var(--ink-400)] uppercase tracking-wider">
+                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
+                {item.label}
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Inspector */}
-        <div className="inspector flex-0-0-[300px] rounded-[22px] border border-[rgba(21,22,28,0.08)] p-6 flex flex-col">
-          {selectedId && DATA[selectedId as keyof typeof DATA] ? (
-            <>
-              <div className="ins-head flex items-center gap-2.5 mb-4.5">
-                <div className="ins-dot w-[34px] h-[34px] rounded-[10px] flex items-center justify-center text-white" style={{ background: DATA[selectedId as keyof typeof DATA].color }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <circle cx="12" cy="12" r="8"/>
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-[16px] font-semibold text-[#15161C] font-['Poppins']">
-                    {selectedId === 'client' ? 'Client app' : selectedId === 'gateway' ? 'API gateway' : selectedId === 'service' ? 'Shortener service' : 'Key-value store'}
-                  </h3>
-                  <div className="kind text-[11px] text-[#5A5B66]">{DATA[selectedId as keyof typeof DATA].kind}</div>
-                </div>
-              </div>
-
-              <div className="ins-block mb-4">
-                <div className="ins-label text-[10.5px] font-bold tracking-[0.06em] text-[var(--mint-deep)] mb-1.5 text-transform:uppercase">Role &amp; duty</div>
-                <div className="ins-text text-[12.5px] text-[#5A5B66] leading-[1.6]">{DATA[selectedId as keyof typeof DATA].role}</div>
-              </div>
-
-              <div className="ins-block mb-4">
-                <div className="ins-label text-[10.5px] font-bold tracking-[0.06em] text-[var(--mint-deep)] mb-1.5 text-transform:uppercase">Deep dive</div>
-                <div className="ins-text text-[12.5px] text-[#5A5B66] leading-[1.6]">{DATA[selectedId as keyof typeof DATA].deep}</div>
-              </div>
-
-              <div className="ins-block mb-4">
-                <div className="ins-label text-[10.5px] font-bold tracking-[0.06em] text-[var(--mint-deep)] mb-1.5 text-transform:uppercase">Failure modes</div>
-                <div className="ins-text text-[12.5px] text-[#5A5B66] leading-[1.6]">{DATA[selectedId as keyof typeof DATA].failure}</div>
-              </div>
-
-              <div className="ins-block">
-                <div className="ins-label text-[10.5px] font-bold tracking-[0.06em] text-[var(--mint-deep)] mb-1.5 text-transform:uppercase">Tradeoffs</div>
-                <div className="ins-text text-[12.5px] text-[#5A5B66] leading-[1.6]">{DATA[selectedId as keyof typeof DATA].tradeoffs}</div>
-              </div>
-            </>
+        {/* Inspector Panel */}
+        <div className="w-full xl:w-[300px] shrink-0">
+          {activeNode ? (
+            <Inspector
+              title={activeNode.title}
+              kind={activeNode.kind}
+              color={activeNode.color || getCategoryColor(activeNode.kind)}
+              className="h-full border-none shadow-none bg-transparent p-0"
+              blocks={[
+                { label: 'Role & Duty', content: activeNode.role },
+                { label: 'Extreme Deep-Dive', content: activeNode.deep },
+                { label: 'Failure Scenarios', content: activeNode.failure },
+                { label: 'Design Tradeoffs', content: activeNode.tradeoffs }
+              ]}
+            />
           ) : (
-            <div className="empty m-auto text-center text-[13px] text-[#5A5B66]">
-              Select a component on the left to see its role, internals, failure modes, and tradeoffs.
+            <div className="h-full radius-card border border-dashed border-[var(--border)] p-8 flex flex-col justify-center items-center text-center">
+              <p className="body-s text-[var(--ink-400)]">
+                Select a component on the whiteboard to inspect its architecture.
+              </p>
             </div>
           )}
         </div>
       </div>
+    </Panel>
+  );
+}
+================================================
+FILE: ./src/features/learning/components/Whiteboard.tsx
+================================================
+"use client";
+
+import React from 'react';
+import { cn } from '@/lib/utils';
+import { Inspector } from '@/components/layout/Inspector';
+import { WhiteboardSystem } from '../types/learning';
+
+interface WhiteboardProps {
+  systemData: WhiteboardSystem;
+  selectedNodeId: string;
+  onSelectNode: (id: string) => void;
+}
+
+export default function Whiteboard({ 
+  systemData, 
+  selectedNodeId, 
+  onSelectNode 
+}: WhiteboardProps) {
+  const selectedData = systemData.nodes.find(n => n.id === selectedNodeId);
+
+  return (
+    <div className="flex flex-col xl:flex-row gap-8">
+      {/* 1. Diagram Stage with Horizontal Scroll Prevention */}
+      <div className="flex-1 min-w-0 overflow-x-auto pb-4 custom-scrollbar">
+        <div
+          className={cn(
+            "relative rounded-3xl bg-[#FAF9F6] p-8 border border-[rgba(21,22,28,0.04)]",
+            "min-h-[560px] min-w-[760px]" // Enforced minimums to prevent node overlap
+          )}
+        >
+          {/* SVG Wires - Scaled to the min-w/h */}
+          <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <path 
+              d="M20 15 L80 15" 
+              vectorEffect="non-scaling-stroke"
+              stroke="rgba(21,22,28,0.12)"
+              strokeWidth="2"
+              fill="none"
+              strokeDasharray="6 8"
+              className="animate-flow"
+            />
+            {/* Add logic here to render wires based on systemData.connections if needed */}
+          </svg>
+
+          {/* Dynamic Nodes */}
+          {systemData.nodes.map((node) => (
+            <div
+              key={node.id}
+              style={{ 
+                top: node.position.top, 
+                left: node.position.left,
+                right: node.position.right,
+                bottom: node.position.bottom,
+                backgroundColor: node.color 
+              }}
+              className={cn(
+                'absolute w-[160px] p-4 rounded-2xl text-white cursor-pointer transition-all duration-300 shadow-sm z-10',
+                'hover:-translate-y-1 hover:shadow-lg active:scale-95',
+                selectedNodeId === node.id && 'ring-4 ring-offset-2 ring-offset-[#FAF9F6] ring-opacity-40',
+              )}
+              onClick={() => onSelectNode(node.id)}
+            >
+              <div className="w-2 h-2 rounded-full bg-white/60 mb-3" />
+              <div className="text-[14px] font-bold leading-tight">{node.title}</div>
+              <div className="text-[11px] text-white/70 mt-1 uppercase tracking-wider font-medium">
+                {node.kind.split(' · ')[0]}
+              </div>
+            </div>
+          ))}
+
+          {/* Legend */}
+          <div className="absolute bottom-8 left-8 flex gap-5 text-[11px] font-semibold text-[#5A5B66] uppercase tracking-widest">
+            <span className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[#FF5A3C]" /> Entry
+            </span>
+            <span className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[#6A5AE0]" /> Logic
+            </span>
+            <span className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[#00A87E]" /> Storage
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* 2. Inspector with Fixed Basis (The flex fix) */}
+      <div className="w-full xl:w-[340px] shrink-0">
+        {selectedData ? (
+          <Inspector
+            title={selectedData.title}
+            kind={selectedData.kind}
+            color={selectedData.color}
+            blocks={[
+              { label: 'Role & duty', content: selectedData.role },
+              { label: 'Deep dive', content: selectedData.deep },
+              { label: 'Failure modes', content: selectedData.failure },
+              { label: 'Tradeoffs', content: selectedData.tradeoffs }
+            ]}
+          />
+        ) : (
+          <div className="h-full rounded-3xl border border-dashed border-[rgba(21,22,28,0.15)] p-8 flex flex-col justify-center items-center text-center">
+            <p className="text-[13px] text-[#5A5B66] leading-relaxed">
+              Select a component on the whiteboard to inspect its architecture, failures, and tradeoffs.
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
-
 ================================================
 FILE: ./src/features/learning/components/DeepDiveHero.tsx
 ================================================
@@ -12625,6 +12797,104 @@ export function getNextSystem(
   const index = sorted.findIndex((s) => s.slug === slug);
 
   return index < sorted.length - 1 ? sorted[index + 1] : undefined;
+}
+================================================
+FILE: ./src/features/learning/data/mockData.ts
+================================================
+import { SystemDesign, NodeLayout, NodeId } from "../types/whiteboard";
+
+// Helper to cast strings to our Branded NodeId type
+const id = (val: string) => val as NodeId;
+
+export const DESIGN: SystemDesign = {
+  slug: "url-shortener",
+  title: "Design a URL Shortener",
+  nodes: [
+    { 
+      id: id("client"), 
+      title: "Client App", 
+      category: "entry", 
+      details: { 
+        role: "Sends long URLs and receives short codes; handles redirects.", 
+        deepDive: "Local caching of frequent redirects to reduce latency.", 
+        failureModes: "DNS issues or client-side timeout handling.", 
+        tradeoffs: "Thick client vs Thin client logic distribution." 
+      } 
+    },
+    { 
+      id: id("gateway"), 
+      title: "API Gateway", 
+      category: "network", 
+      details: { 
+        role: "Entry point for all requests; handles auth and rate limiting.", 
+        deepDive: "Uses Token Bucket algorithm for per-IP rate limiting.", 
+        failureModes: "Single point of failure if not multi-AZ.", 
+        tradeoffs: "Adds 5-10ms latency but centralizes security." 
+      } 
+    },
+    { 
+      id: id("service"), 
+      title: "Shortener Service", 
+      category: "logic", 
+      details: { 
+        role: "Core logic for generating and resolving short codes.", 
+        deepDive: "Base62 encoding of a distributed counter.", 
+        failureModes: "Counter service unavailability prevents new links.", 
+        tradeoffs: "Hash-based vs Counter-based ID generation." 
+      } 
+    },
+    { 
+      id: id("db"), 
+      title: "KV Store", 
+      category: "storage", 
+      details: { 
+        role: "Highly available storage for mapping codes to URLs.", 
+        deepDive: "LSM-tree based storage for high write throughput.", 
+        failureModes: "Eventual consistency during partition events.", 
+        tradeoffs: "SQL for durability vs NoSQL for horizontal scale." 
+      } 
+    }
+  ],
+  edges: [
+    { from: id("client"), to: id("gateway") },
+    { from: id("gateway"), to: id("service") },
+    { from: id("service"), to: id("db") }
+  ]
+};
+
+export const LAYOUT: NodeLayout[] = [
+  { nodeId: id("client"), gridPos: { x: 2, y: 2 } },
+  { nodeId: id("gateway"), gridPos: { x: 10, y: 2 } },
+  { nodeId: id("service"), gridPos: { x: 6, y: 5 } },
+  { nodeId: id("db"), gridPos: { x: 6, y: 10 } }
+];
+================================================
+FILE: ./src/features/learning/services/WhiteboardService.ts
+================================================
+import { SystemDesign, NodeLayout, WhiteboardFrame, DEFAULT_CONFIG } from "../types/whiteboard";
+import { validateDesignIntegrity } from "../utils/validation";
+import { calculateWhiteboardFrame } from "../utils/layoutEngine";
+
+/**
+ * Production Scene Loader
+ * Handles the full lifecycle from raw data to a calculcated render frame.
+ */
+export function loadWhiteboardScene(
+  design: SystemDesign, 
+  layout: NodeLayout[],
+  config = DEFAULT_CONFIG
+): WhiteboardFrame {
+  try {
+    // 1. Validate
+    validateDesignIntegrity(design, layout);
+
+    // 2. Project Layout
+    return calculateWhiteboardFrame(design, layout, config);
+  } catch (error) {
+    // In production, log to Sentry/NewRelic here
+    console.error("Failed to load whiteboard scene:", error);
+    throw error;
+  }
 }
 ================================================
 FILE: ./src/features/problems/types/problem.ts
@@ -15508,70 +15778,69 @@ FILE: ./src/features/interview/live/components/LiveInterview.tsx
 ================================================
 'use client';
 
+import { useCallback } from 'react';
+import { Prisma } from '@prisma/client';
+
 import { InterviewHeader } from './InterviewHeader';
 import { PhaseProgress } from './PhaseProgress';
 import { MessageList } from './MessageList';
 import { ChatInput } from './ChatInput';
 import { Sidebar } from './Sidebar';
+
 import { useInterview } from '../hooks/useInterview';
 import { useMessages } from '../hooks/useMessages';
 import { useTimer } from '../hooks/useTimer';
+import { logger } from '@/lib/logger'; // Replace with your logger path
+
+// 1. Accurate type representing the API response with relations included
+export type InterviewWithRelations = Prisma.InterviewGetPayload<{
+  include: {
+    problem: true;
+    transcript: true;
+  };
+}>;
 
 interface LiveInterviewProps {
   interviewId: string;
 }
 
-/**
- * LiveInterview - Main container
- *
- * Orchestrates:
- * - Interview state (from useInterview hook)
- * - Message history (from useMessages hook)
- * - Message sending (delegates to useMessages, then refetches interview state)
- * - Layout and component composition
- *
- * Data flow:
- * 1. Mount → fetch interview state and transcript
- * 2. User sends message → POST to backend via useMessages
- * 3. Message added to state optimistically
- * 4. AI response returned immediately (no polling)
- * 5. Refetch interview state to get updated phase/summary
- *
- * Backend owns:
- * - Phase transitions
- * - Summary updates
- * - Interview completion
- * - Evaluation queuing
- *
- * Frontend shows:
- * - Messages from transcript
- * - Current phase and progress
- * - Design summary (from interview.summary)
- * - Problem context
- * - Timer (duration - elapsed)
- */
 export function LiveInterview({ interviewId }: LiveInterviewProps) {
   const { interview, loading, error, refetch } = useInterview(interviewId);
   const {
-  sendMessage,
-  isSending,
-  error: messageError,
-} = useMessages(interviewId);
-  const handleSendMessage = async (text: string) => {
-    try {
-      // Send message (optimistically updates local state)
-      const result = await sendMessage(text);
+    sendMessage,
+    isSending,
+    error: messageError,
+  } = useMessages(interviewId);
 
-      // Refetch interview state to get:
-      // - Updated phase (if transition occurred)
-      // - Updated summary
-      // - Interview completion status
-      // - New evaluation state
-      await refetch();
-    } catch (err) {
-      console.error('Failed to send message:', err);
-      // Error is stored in hook, displayed in UI
-    }
+  // 2 & 8. Hook owns calculation logic directly — no wrapper component or empty callback needed
+  const { remainingSeconds } = useTimer({
+    startedAt: interview?.createdAt ?? null,
+    durationMinutes: interview?.duration ?? 0,
+    isRunning: interview?.status === 'IN_PROGRESS',
+  });
+
+  const handleSendMessage = useCallback(
+    async (text: string) => {
+      // 5. Send guard
+      if (isSending || !text.trim()) return;
+
+      try {
+        await sendMessage(text);
+        
+        // 6. Refresh interview state because the backend owns transcript updates,
+        // phase transitions, and summary generation.
+        await refetch();
+      } catch (err) {
+        // 3. Logger instead of console.error
+        logger.error('Failed to send interview message', { err, interviewId });
+      }
+    },
+    [isSending, sendMessage, refetch, interviewId]
+  );
+
+  const problemForSidebar = {
+    ...interview?.problem,
+    description: (interview?.problem as { description?: string | null } | undefined)?.description ?? null,
   };
 
   if (loading) {
@@ -15590,31 +15859,20 @@ export function LiveInterview({ interviewId }: LiveInterviewProps) {
     );
   }
 
-  // Calculate elapsed time
-  const startedAt = interview.startedAt
-    ? new Date(interview.startedAt).getTime()
-    : new Date(interview.createdAt).getTime();
-  const elapsedSeconds = Math.floor((Date.now() - startedAt) / 1000);
-  const remainingSeconds = Math.max(0, interview.duration * 60 - elapsedSeconds);
-
   return (
     <div className="flex flex-col h-screen bg-white">
-      {/* Header */}
       <InterviewHeader
         title={interview.problem.title}
         isLive={interview.status === 'IN_PROGRESS'}
         remainingSeconds={remainingSeconds}
       />
 
-      {/* Phase Progress */}
       <PhaseProgress
         currentPhase={interview.currentPhase}
         isCompleted={interview.status === 'COMPLETED'}
       />
 
-      {/* Main Content */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Chat Area */}
         <div className="flex-1 flex flex-col">
           <MessageList messages={interview.transcript} />
           <ChatInput
@@ -15625,7 +15883,6 @@ export function LiveInterview({ interviewId }: LiveInterviewProps) {
           />
         </div>
 
-        {/* Sidebar */}
         <Sidebar
           problem={interview.problem}
           currentPhase={interview.currentPhase}
@@ -16327,39 +16584,71 @@ export function useMessages(
 ================================================
 FILE: ./src/features/interview/live/hooks/useTimer.ts
 ================================================
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
-export function useTimer(durationInMinutes: number, onFinish: () => void) {
-  const [timeLeft, setTimeLeft] = useState(durationInMinutes * 60);
-  const [isPaused, setIsPaused] = useState(false);
+export interface UseTimerOptions {
+  startedAt?: Date | string | number | null;
+  durationMinutes: number;
+  isRunning?: boolean;
+  onFinish?: () => void;
+}
+
+export function useTimer({
+  startedAt,
+  durationMinutes,
+  isRunning = true,
+  onFinish,
+}: UseTimerOptions) {
+  const onFinishRef = useRef(onFinish);
+
+  // Keep onFinish callback reference updated without re-triggering interval reset
+  useEffect(() => {
+    onFinishRef.current = onFinish;
+  }, [onFinish]);
+
+  const calculateRemaining = useCallback(() => {
+    if (!startedAt || durationMinutes <= 0) return 0;
+
+    const startMs = new Date(startedAt).getTime();
+    if (isNaN(startMs)) return 0;
+
+    const durationMs = durationMinutes * 60 * 1000;
+    const endMs = startMs + durationMs;
+    const remaining = Math.max(0, Math.floor((endMs - Date.now()) / 1000));
+
+    return remaining;
+  }, [startedAt, durationMinutes]);
+
+  const [remainingSeconds, setRemainingSeconds] = useState<number>(calculateRemaining);
 
   useEffect(() => {
-    if (timeLeft <= 0) {
-      onFinish();
-      return;
-    }
+    // Sync immediately when parameters change
+    const remaining = calculateRemaining();
+    setRemainingSeconds(remaining);
 
-    if (isPaused) return;
+    if (!isRunning || !startedAt || remaining <= 0) return;
 
     const timer = setInterval(() => {
-      setTimeLeft((prev) => prev - 1);
+      const updated = calculateRemaining();
+      setRemainingSeconds(updated);
+
+      if (updated <= 0) {
+        clearInterval(timer);
+        onFinishRef.current?.();
+      }
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [timeLeft, isPaused, onFinish]);
+  }, [startedAt, durationMinutes, isRunning, calculateRemaining]);
 
-  const pause = useCallback(() => setIsPaused(true), []);
-  const resume = useCallback(() => setIsPaused(false), []);
-
-  const minutes = Math.floor(timeLeft / 60);
-  const seconds = timeLeft % 60;
+  const minutes = Math.floor(remainingSeconds / 60);
+  const seconds = remainingSeconds % 60;
+  const formattedTime = `${minutes}:${seconds.toString().padStart(2, '0')}`;
 
   return {
-    timeLeft,
-    formattedTime: `${minutes}:${seconds.toString().padStart(2, '0')}`,
-    isPaused,
-    pause,
-    resume,
+    remainingSeconds,
+    timeLeft: remainingSeconds, // Aliased for backwards compatibility
+    formattedTime,
   };
 }
 ================================================
@@ -16914,14 +17203,25 @@ export interface BugScenarioMetadata {
   category: string;
   estimatedTimeMinutes: number;
 }
-
 export interface BugScenario {
   id: string;
   title: string;
   description: string;
-  createdAt: string;
-  metadata: BugScenarioMetadata;
-  report: Report;
+  symptom: string;
+  service: string;       // Add this
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  timerSeconds: number;
+  createdAt: string;     // Add this
+  metadata: any;         // Add this
+  
+  // Tab Data
+  logs: any[];
+  docs: any[];
+  deployments: any[];
+  sql: string;
+  code: any;
+  report: any;           // The finding/report structure
+}
 ================================================
 FILE: ./src/features/bug-hunting/constants/tabs.ts
 ================================================
@@ -16946,7 +17246,14 @@ export const TAB_LIST: { id: TabId; label: string }[] = [
 ================================================
 FILE: ./src/features/bug-hunting/components/Tabs/ConsolePanel.tsx
 ================================================
-import type { ConsoleEntry } from "../../types";
+
+
+type ConsoleEntry = {
+  id?: string | number;
+  level: string;
+  ts?: string;
+  message: string;
+};
 
 type Props = {
   logs?: ConsoleEntry[];
@@ -17008,7 +17315,15 @@ export default function DeploymentsPanel({ deployments, active }: { deployments:
 ================================================
 FILE: ./src/features/bug-hunting/components/Tabs/NetworkPanel.tsx
 ================================================
-import type { NetworkRequest } from "../../types";
+
+
+type NetworkRequest = {
+  id?: string | number;
+  method: string;
+  url: string;
+  status: number | string;
+  duration: number;
+};
 
 type Props = {
   requests?: NetworkRequest[];
@@ -17325,11 +17640,19 @@ export default function BugHuntingShell({
   scenarioId,
 }: Props) {
   const [activeTab, setActiveTab] = useState<TabId>(BUG_TABS.LOGS);
+  const [activeFileKey, setActiveFileKey] = useState<string>("");
 
   const panels: Record<TabId, ReactNode> = {
     [BUG_TABS.LOGS]: logsPanel,
     [BUG_TABS.SQL]: <SqlPanel scenarioId={scenarioId} fixture={sqlFixture} />,
-    [BUG_TABS.CODE]: <CodePanel files={codeFiles} />,
+    [BUG_TABS.CODE]: (
+      <CodePanel
+        files={codeFiles}
+        active={activeTab === BUG_TABS.CODE}
+        activeFileKey={activeFileKey}
+        onFileChange={setActiveFileKey}
+      />
+    ),
     [BUG_TABS.DOCS]: docsPanel,
     [BUG_TABS.DEPLOYMENTS]: deploymentsPanel,
   };
@@ -22508,6 +22831,8 @@ export * from "./BugAttemptRepository";
 ================================================
 FILE: ./src/shared/logger/logger.ts
 ================================================
+// src/shared/logger/logger.ts
+
 export interface LogContext {
   requestId?: string;
   interviewId?: string;
@@ -22525,9 +22850,6 @@ export class Logger {
       timestamp: new Date().toISOString(),
       level,
       message,
-      requestId: context.requestId,
-      interviewId: context.interviewId,
-      model: context.model,
       ...context,
     };
 
@@ -22560,6 +22882,18 @@ export class Logger {
     this.log("ERROR", message, context);
   }
 }
+
+/**
+ * Default export so callers can do:
+ * import logger from "@/shared/logger/logger";
+ */
+const logger = {
+  info: Logger.info.bind(Logger),
+  warn: Logger.warn.bind(Logger),
+  error: Logger.error.bind(Logger),
+};
+
+export default logger;
 ================================================
 FILE: ./src/shared/logger/Logger.test.ts
 ================================================
@@ -23023,6 +23357,15 @@ FILE: ./src/styles/animations.css
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.25; }
+}
+
+@keyframes flow {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: -22; }
+}
+
+.animate-flow {
+  animation: flow 1.4s linear infinite;
 }
 ================================================
 FILE: ./src/components/ui/Card.tsx

@@ -1,69 +1,68 @@
 'use client';
 
+import { useCallback } from 'react';
+import { Prisma } from '@prisma/client';
+
 import { InterviewHeader } from './InterviewHeader';
 import { PhaseProgress } from './PhaseProgress';
 import { MessageList } from './MessageList';
 import { ChatInput } from './ChatInput';
 import { Sidebar } from './Sidebar';
+
 import { useInterview } from '../hooks/useInterview';
 import { useMessages } from '../hooks/useMessages';
 import { useTimer } from '../hooks/useTimer';
+import { logger } from '@/lib/logger'; // Replace with your logger path
+
+// 1. Accurate type representing the API response with relations included
+export type InterviewWithRelations = Prisma.InterviewGetPayload<{
+  include: {
+    problem: true;
+    transcript: true;
+  };
+}>;
 
 interface LiveInterviewProps {
   interviewId: string;
 }
 
-/**
- * LiveInterview - Main container
- *
- * Orchestrates:
- * - Interview state (from useInterview hook)
- * - Message history (from useMessages hook)
- * - Message sending (delegates to useMessages, then refetches interview state)
- * - Layout and component composition
- *
- * Data flow:
- * 1. Mount → fetch interview state and transcript
- * 2. User sends message → POST to backend via useMessages
- * 3. Message added to state optimistically
- * 4. AI response returned immediately (no polling)
- * 5. Refetch interview state to get updated phase/summary
- *
- * Backend owns:
- * - Phase transitions
- * - Summary updates
- * - Interview completion
- * - Evaluation queuing
- *
- * Frontend shows:
- * - Messages from transcript
- * - Current phase and progress
- * - Design summary (from interview.summary)
- * - Problem context
- * - Timer (duration - elapsed)
- */
 export function LiveInterview({ interviewId }: LiveInterviewProps) {
   const { interview, loading, error, refetch } = useInterview(interviewId);
   const {
-  sendMessage,
-  isSending,
-  error: messageError,
-} = useMessages(interviewId);
-  const handleSendMessage = async (text: string) => {
-    try {
-      // Send message (optimistically updates local state)
-      const result = await sendMessage(text);
+    sendMessage,
+    isSending,
+    error: messageError,
+  } = useMessages(interviewId);
 
-      // Refetch interview state to get:
-      // - Updated phase (if transition occurred)
-      // - Updated summary
-      // - Interview completion status
-      // - New evaluation state
-      await refetch();
-    } catch (err) {
-      console.error('Failed to send message:', err);
-      // Error is stored in hook, displayed in UI
-    }
+  // 2 & 8. Hook owns calculation logic directly — no wrapper component or empty callback needed
+  const { remainingSeconds } = useTimer({
+    startedAt: interview?.createdAt ?? null,
+    durationMinutes: interview?.duration ?? 0,
+    isRunning: interview?.status === 'IN_PROGRESS',
+  });
+
+  const handleSendMessage = useCallback(
+    async (text: string) => {
+      // 5. Send guard
+      if (isSending || !text.trim()) return;
+
+      try {
+        await sendMessage(text);
+        
+        // 6. Refresh interview state because the backend owns transcript updates,
+        // phase transitions, and summary generation.
+        await refetch();
+      } catch (err) {
+        // 3. Logger instead of console.error
+        logger.error('Failed to send interview message', { err, interviewId });
+      }
+    },
+    [isSending, sendMessage, refetch, interviewId]
+  );
+
+  const problemForSidebar = {
+    ...interview?.problem,
+    description: (interview?.problem as { description?: string | null } | undefined)?.description ?? null,
   };
 
   if (loading) {
@@ -82,31 +81,20 @@ export function LiveInterview({ interviewId }: LiveInterviewProps) {
     );
   }
 
-  // Calculate elapsed time
-  const startedAt = interview.startedAt
-    ? new Date(interview.startedAt).getTime()
-    : new Date(interview.createdAt).getTime();
-  const elapsedSeconds = Math.floor((Date.now() - startedAt) / 1000);
-  const remainingSeconds = Math.max(0, interview.duration * 60 - elapsedSeconds);
-
   return (
     <div className="flex flex-col h-screen bg-white">
-      {/* Header */}
       <InterviewHeader
         title={interview.problem.title}
         isLive={interview.status === 'IN_PROGRESS'}
         remainingSeconds={remainingSeconds}
       />
 
-      {/* Phase Progress */}
       <PhaseProgress
         currentPhase={interview.currentPhase}
         isCompleted={interview.status === 'COMPLETED'}
       />
 
-      {/* Main Content */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Chat Area */}
         <div className="flex-1 flex flex-col">
           <MessageList messages={interview.transcript} />
           <ChatInput
@@ -117,7 +105,6 @@ export function LiveInterview({ interviewId }: LiveInterviewProps) {
           />
         </div>
 
-        {/* Sidebar */}
         <Sidebar
           problem={interview.problem}
           currentPhase={interview.currentPhase}

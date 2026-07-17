@@ -1,4 +1,11 @@
-import type { ConsoleEntry } from "../../types";
+
+
+type ConsoleEntry = {
+  id?: string | number;
+  level: string;
+  ts?: string;
+  message: string;
+};
 
 type Props = {
   logs?: ConsoleEntry[];

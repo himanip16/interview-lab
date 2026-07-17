@@ -1,4 +1,12 @@
-import type { NetworkRequest } from "../../types";
+
+
+type NetworkRequest = {
+  id?: string | number;
+  method: string;
+  url: string;
+  status: number | string;
+  duration: number;
+};
 
 type Props = {
   requests?: NetworkRequest[];

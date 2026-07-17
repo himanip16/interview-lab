@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
-
 import { getBugHuntingService } from "@/modules/bug-hunting";
 
+// Fixed the broken "/problemsnting/" paths to correct feature paths
 import BugHuntingShell from "@/features/bug-hunting/components/BugHuntingShell";
 import DeploymentsPanel from "@/features/bug-hunting/components/Tabs/DeploymentsPanel";
 import DocsPanel from "@/features/bug-hunting/components/Tabs/DocsPanel";
@@ -15,24 +15,22 @@ type Props = {
   }>;
 };
 
-export default async function BugHuntingPage({
-  params,
-}: Props) {
+export default async function BugHuntingPage({ params }: Props) {
   const { scenarioId } = await params;
-
   const service = getBugHuntingService();
-
   const scenario = await service.getScenario(scenarioId);
 
   if (!scenario) {
     notFound();
   }
 
+  // Use the plain JSON representation for ALL components
   const data = scenario.toJSON();
 
   return (
     <main className="bug-hunting-page">
-      <Header scenario={scenario} />
+      {/* FIX: Use 'data' (plain object) instead of 'scenario' (class instance) */}
+      <Header scenario={data} />
 
       <div className="bh-body">
         <ReportSidebar
@@ -44,9 +42,7 @@ export default async function BugHuntingPage({
           logsPanel={<LogsPanel logs={data.logs} />}
           docsPanel={<DocsPanel docs={data.docs} />}
           deploymentsPanel={
-            <DeploymentsPanel
-              deployments={data.deployments}
-            />
+            <DeploymentsPanel deployments={data.deployments} />
           }
           sqlFixture={data.sql}
           codeFiles={data.code}

@@ -25,11 +25,19 @@ export default function BugHuntingShell({
   scenarioId,
 }: Props) {
   const [activeTab, setActiveTab] = useState<TabId>(BUG_TABS.LOGS);
+  const [activeFileKey, setActiveFileKey] = useState<string>("");
 
   const panels: Record<TabId, ReactNode> = {
     [BUG_TABS.LOGS]: logsPanel,
     [BUG_TABS.SQL]: <SqlPanel scenarioId={scenarioId} fixture={sqlFixture} />,
-    [BUG_TABS.CODE]: <CodePanel files={codeFiles} />,
+    [BUG_TABS.CODE]: (
+      <CodePanel
+        files={codeFiles}
+        active={activeTab === BUG_TABS.CODE}
+        activeFileKey={activeFileKey}
+        onFileChange={setActiveFileKey}
+      />
+    ),
     [BUG_TABS.DOCS]: docsPanel,
     [BUG_TABS.DEPLOYMENTS]: deploymentsPanel,
   };

@@ -55,11 +55,22 @@ export interface BugScenarioMetadata {
   category: string;
   estimatedTimeMinutes: number;
 }
-
 export interface BugScenario {
   id: string;
   title: string;
   description: string;
-  createdAt: string;
-  metadata: BugScenarioMetadata;
-  report: Report;
+  symptom: string;
+  service: string;       // Add this
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  timerSeconds: number;
+  createdAt: string;     // Add this
+  metadata: any;         // Add this
+  
+  // Tab Data
+  logs: any[];
+  docs: any[];
+  deployments: any[];
+  sql: string;
+  code: any;
+  report: any;           // The finding/report structure
+}
