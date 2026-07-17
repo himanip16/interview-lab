@@ -50,30 +50,125 @@ model User {
   practiceAttempts        PracticeAttempt[]
   practiceRecommendations PracticeRecommendation[]
   learningRecommendations LearningRecommendation[]
+  bugAttempts             BugAttempt[]
+  bugHypothesisAttempts   BugHypothesisAttempt[]
+}
+
+// ---------------------------------------------------------------------------
+// Bug Hunting feature. Scenario content itself lives in JSON fixtures
+// (see modules/bug-hunting/data/scenarios), not the DB — these tables track
+// user progress: attempts, the evolving hypotheses logged along the way,
+// findings marked as evidence, and the final submission.
+// ---------------------------------------------------------------------------
+
+model BugAttempt {
+  id         String @id @default(cuid())
+  userId     String
+  scenarioId String // JSON fixture id — no FK, same reasoning as PracticeActivity content
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  status BugAttemptStatus @default(STARTED)
+
+  score    Float?
+  feedback String?
+
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  submission BugSubmission?
+  hypotheses BugHypothesisAttempt[]
+  findings   Finding[]
+
+  @@index([userId, completedAt])
+  @@index([userId, scenarioId])
+}
+
+// The final answer. One per attempt — submitting again should update this
+// record (or be rejected), not create a second one.
+model BugSubmission {
+  id        String @id @default(cuid())
+  attemptId String @unique
+
+  attempt BugAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  rootCause   String // what the user believes caused the bug
+  proposedFix String // the user's proposed fix / code change
+
+  submittedAt DateTime @default(now())
+}
+
+// Evolving thoughts during investigation — a running log, not a final answer.
+model BugHypothesisAttempt {
+  id          String   @id @default(cuid())
+  attemptId   String
+  scenarioId  String
+  userId      String
+  hypothesis  String
+  submittedAt DateTime @default(now())
+
+  attempt BugAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  user    User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([scenarioId, userId])
+  @@index([attemptId])
+}
+
+// Evidence the user marked as important while investigating (a log line,
+// a SQL row, a code file, etc.), referenced back into the JSON fixture.
+model Finding {
+  id        String @id @default(cuid())
+  attemptId String
+
+  attempt BugAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  source InvestigationArtifactSource
+  refId  String // id of the log line / code file / deployment etc. within the fixture
+  note   String?
+
+  createdAt DateTime @default(now())
+
+  @@index([attemptId])
+}
+
+enum BugAttemptStatus {
+  STARTED
+  INVESTIGATING
+  SUBMITTED
+  COMPLETED
+  ABANDONED
+}
+
+enum InvestigationArtifactSource {
+  LOG
+  SQL
+  CODE
+  DOC
+  DEPLOYMENT
 }
 
 model Transcript {
-  id          String   @id @default(cuid())
+  id String @id @default(cuid())
 
-  slug        String   @unique
+  slug String @unique
 
-  title       String
+  title String
 
-  category    String
+  category String
 
-  difficulty  String
+  difficulty String
 
-  company     String?
+  company String?
 
   interviewer String?
 
-  candidate   String?
+  candidate String?
 
-  duration    Int?
+  duration Int?
 
-  summary     String?
+  summary String?
 
-  transcript  Json
+  transcript Json
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -104,6 +199,7 @@ model InterviewTemplate {
   rubrics    RubricTemplate[]
   interviews Interview[]
 }
+
 model InterviewPhaseTemplate {
   id         String            @id @default(cuid())
   templateId String
@@ -142,13 +238,13 @@ model RubricTemplate {
 }
 
 model Interview {
-  id            String          @id @default(cuid())
-  userId        String
-  templateId    String
-  difficulty    Difficulty
-  duration      Int
-  company       String
-  status        InterviewStatus
+  id             String          @id @default(cuid())
+  userId         String
+  templateId     String
+  difficulty     Difficulty
+  duration       Int
+  company        String
+  status         InterviewStatus
   currentPhase   String
   phaseStartedAt DateTime?
   summary        String          @default("Interview has not started yet.")
@@ -170,12 +266,13 @@ model Interview {
   // NEW — metadata for storing error states and other runtime information
   metadata Json? // Arbitrary metadata, no versioning needed
 
-  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  template   InterviewTemplate @relation(fields: [templateId], references: [id])
-  evaluation Evaluation?
-  problem    Problem           @relation(fields: [problemId], references: [id])
-  transcript Message[]
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  template        InterviewTemplate @relation(fields: [templateId], references: [id])
+  evaluation      Evaluation?
+  problem         Problem           @relation(fields: [problemId], references: [id])
+  transcript      Message[]
   whiteboardState Json? // Frozen application state, no versioning needed
+
   @@index([templateId])
   @@index([userId])
 }
@@ -191,8 +288,8 @@ model Message {
   elapsedSeconds Int     @default(0)
   phase          String?
 
-  createdAt   DateTime    @default(now())
-  interview   Interview   @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  interview Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
 
   evidenceItems EvidenceItem[]
 
@@ -200,7 +297,7 @@ model Message {
 }
 
 model Problem {
-  id   String @id @default(uuid())
+  id               String                @id @default(uuid())
   slug             String                @unique
   title            String
   description      String?
@@ -319,10 +416,10 @@ model Concept {
   masteries     ConceptMastery[]
   problems      ProblemConcept[]
 
-  learningSegments LearningSegmentConcept[]
-  learningActionConcepts LearningActionConcept[]
-  learningRecommendations LearningRecommendation[]
-  practiceActivityConcepts PracticeActivityConcept[]
+  learningSegments            LearningSegmentConcept[]
+  learningActionConcepts      LearningActionConcept[]
+  learningRecommendations     LearningRecommendation[]
+  practiceActivityConcepts    PracticeActivityConcept[]
   practiceRecommendationItems PracticeRecommendationItem[]
 }
 
@@ -331,14 +428,14 @@ model EvidenceItem {
   evaluationId     String
   evaluation       Evaluation   @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
   messageId        String
-  message          Message       @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  message          Message      @relation(fields: [messageId], references: [id], onDelete: Cascade)
   dimension        String
   timestampSeconds Int
   quote            String
   comment          String
   type             EvidenceType
-  normalizedScore  Float         @default(0)
-  createdAt        DateTime      @default(now())
+  normalizedScore  Float        @default(0)
+  createdAt        DateTime     @default(now())
 
   concepts EvidenceConcept[]
 
@@ -349,7 +446,7 @@ model EvidenceItem {
 model EvidenceConcept {
   evidenceItemId String
   conceptId      String
-  weight         Float @default(1.0) // how strongly this item demonstrates the concept, 0-1
+  weight         Float  @default(1.0) // how strongly this item demonstrates the concept, 0-1
 
   evidenceItem EvidenceItem @relation(fields: [evidenceItemId], references: [id], onDelete: Cascade)
   concept      Concept      @relation(fields: [conceptId], references: [id], onDelete: Cascade)
@@ -379,14 +476,13 @@ model ConceptMastery {
 model ProblemConcept {
   problemId String
   conceptId String
-  weight    Float @default(1.0) // how heavily this problem exercises the concept
+  weight    Float  @default(1.0) // how heavily this problem exercises the concept
 
   problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
   concept Concept @relation(fields: [conceptId], references: [id], onDelete: Cascade)
 
   @@id([problemId, conceptId])
 }
-
 
 model LearningScenario {
   id          String  @id @default(cuid())
@@ -453,8 +549,8 @@ model LearningAction {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  attempts UserLearningAttempt[]
-  concepts LearningActionConcept[]
+  attempts            UserLearningAttempt[]
+  concepts            LearningActionConcept[]
   recommendationItems LearningRecommendation[]
 
   @@index([segmentId])
@@ -486,12 +582,12 @@ model UserLearningAttempt {
 
   status LearningAttemptStatus @default(STARTED)
 
-  response        Json? // Schema version embedded if response format evolves
+  response Json? // Schema version embedded if response format evolves
 
   score    Float?
   feedback String?
 
-  startedAt   DateTime @default(now())
+  startedAt   DateTime  @default(now())
   completedAt DateTime?
 
   @@index([userId, completedAt])
@@ -500,9 +596,9 @@ model UserLearningAttempt {
 }
 
 model LearningRecommendation {
-  id       String @id @default(cuid())
-  userId   String
-  actionId String
+  id        String @id @default(cuid())
+  userId    String
+  actionId  String
   conceptId String
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -516,7 +612,7 @@ model LearningRecommendation {
 
   reason String
 
-  createdAt DateTime @default(now())
+  createdAt   DateTime  @default(now())
   dismissedAt DateTime?
   consumedAt  DateTime?
 
@@ -586,8 +682,8 @@ enum EvidenceType {
 }
 
 model PracticeActivity {
-  id          String @id @default(cuid())
-  slug        String @unique
+  id          String  @id @default(cuid())
+  slug        String  @unique
   title       String
   description String?
 
@@ -597,7 +693,7 @@ model PracticeActivity {
 
   estimatedMinutes Int?
 
-  content        Json // Schema version embedded: {"schemaVersion": 1, ...}
+  content Json // Schema version embedded: {"schemaVersion": 1, ...}
 
   isPublished Boolean @default(false)
 
@@ -638,12 +734,12 @@ model PracticeAttempt {
 
   status PracticeAttemptStatus @default(STARTED)
 
-  response        Json? // Schema version embedded if response format evolves
+  response Json? // Schema version embedded if response format evolves
 
   score    Float?
   feedback String?
 
-  startedAt   DateTime @default(now())
+  startedAt   DateTime  @default(now())
   completedAt DateTime?
 
   @@index([userId, completedAt])
@@ -658,7 +754,7 @@ model PracticeRecommendation {
 
   reason String?
 
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
   expiresAt DateTime?
 
   items PracticeRecommendationItem[]

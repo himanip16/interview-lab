@@ -1,52 +1,76 @@
-import { InvestigationArtifact } from "./InvestigationArtifact";
-import { ScenarioMetadata } from "../value-objects/ScenarioMetadata";
-import { Finding } from "./Finding";
+// src/modules/bug-hunting/domain/entities/BugScenario.ts
+export interface LogEntry {
+  id: string;
+  timestamp: string;
+  level: "INFO" | "WARN" | "ERROR";
+  message: string;
+}
 
+export interface SqlFixture {
+  initialQuery: string;
+  columns: string[];
+  rows: string[][];
+}
+
+export interface CodeFile {
+  id: string;
+  key: string;
+  name: string;
+  language: string;
+  content: string; // plain source — no HTML
+}
+
+export interface DocSection {
+  title: string;
+  body: string;
+}
+
+export interface Deployment {
+  id: string;
+  version: string;
+  status: "rolled" | "ok";
+  message: string;
+  time: string;
+}
+
+export interface ScenarioReportMetadata {
+  service: string;
+  endpoint: string;
+  errorRate: string;
+  firstSeen: string;
+}
+
+export interface ScenarioReport {
+  title: string;
+  severity: string;
+  severityLabel: string;
+  symptom: string;
+  metadata: ScenarioReportMetadata;
+}
+
+interface BugScenarioProps {
+  id: string;
+  report: ScenarioReport;
+  logs: LogEntry[];
+  sql: SqlFixture;
+  code: CodeFile[];
+  docs: DocSection[];
+  deployments: Deployment[];
+}
+
+/** Domain entity — the UI only ever sees this shape via toJSON(). */
 export class BugScenario {
-  private completed = false;
+  private constructor(private readonly props: BugScenarioProps) {}
 
-  private findings: Finding[] = [];
-
-  constructor(
-    readonly id: string,
-    readonly title: string,
-    readonly description: string,
-    readonly metadata: ScenarioMetadata,
-    private readonly artifacts: InvestigationArtifact[],
-    readonly createdAt: Date,
-  ) {}
-
-  unlockArtifact(id: string) {
-    const artifact = this.artifacts.find(
-      item => item.id === id,
-    );
-
-    if (!artifact) {
-      throw new Error(
-        `Artifact ${id} not found`,
-      );
-    }
-
-    artifact.unlock();
+  static fromJSON(raw: BugScenarioProps): BugScenario {
+    return new BugScenario(raw);
   }
 
-  addFinding(finding: Finding) {
-    this.findings.push(finding);
+  get id() {
+    return this.props.id;
   }
 
-  complete() {
-    this.completed = true;
-  }
-
-  isCompleted() {
-    return this.completed;
-  }
-
-  getArtifacts() {
-    return [...this.artifacts];
-  }
-
-  getFindings() {
-    return [...this.findings];
+  toJSON(): BugScenarioProps {
+    return this.props;
   }
 }

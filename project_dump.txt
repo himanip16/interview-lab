@@ -58,6 +58,8 @@ PROJECT STRUCTURE
 │   │   │   └── migration.sql
 │   │   ├── 20260716194607_add_transcripts
 │   │   │   └── migration.sql
+│   │   ├── 20260717091443_add_bug_hunting_models
+│   │   │   └── migration.sql
 │   │   └── migration_lock.toml
 │   ├── schema.prisma
 │   └── seed.ts
@@ -91,7 +93,18 @@ PROJECT STRUCTURE
 │   │   │   │   └── signout
 │   │   │   │       └── route.ts
 │   │   │   ├── bug-hunting
-│   │   │   │   └── hypothesis
+│   │   │   │   ├── attempts
+│   │   │   │   │   ├── [attemptId]
+│   │   │   │   │   │   ├── findings
+│   │   │   │   │   │   │   └── route.ts
+│   │   │   │   │   │   ├── hypothesis
+│   │   │   │   │   │   │   └── route.ts
+│   │   │   │   │   │   └── submit
+│   │   │   │   │   │       └── route.ts
+│   │   │   │   │   └── route.ts
+│   │   │   │   ├── hypothesis
+│   │   │   │   │   └── route.ts
+│   │   │   │   └── sql
 │   │   │   │       └── route.ts
 │   │   │   ├── companies
 │   │   │   │   └── route.ts
@@ -162,7 +175,11 @@ PROJECT STRUCTURE
 │   │   │   ├── card-detail
 │   │   │   │   └── page.tsx
 │   │   │   ├── diagrams
+│   │   │   │   ├── [slug]
+│   │   │   │   │   └── page.tsx
 │   │   │   │   ├── [system]
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── cassandra
 │   │   │   │   │   └── page.tsx
 │   │   │   │   └── page.tsx
 │   │   │   ├── page.tsx
@@ -231,6 +248,8 @@ PROJECT STRUCTURE
 │   │   │   ├── lld
 │   │   │   └── shared
 │   │   └── transcripts
+│   │       ├── behavioral
+│   │       ├── coding
 │   │       ├── hld
 │   │       │   ├── amazon-lockers.ts
 │   │       │   ├── autocomplete.ts
@@ -252,11 +271,14 @@ PROJECT STRUCTURE
 │   ├── features
 │   │   ├── bug-hunting
 │   │   │   ├── components
+│   │   │   │   ├── BugHunting.module.css
+│   │   │   │   ├── BugHuntingShell.tsx
 │   │   │   │   ├── BugHuntingWorkspace.tsx
 │   │   │   │   ├── Header
 │   │   │   │   │   ├── Header.tsx
 │   │   │   │   │   └── Timer.tsx
 │   │   │   │   ├── Sidebar
+│   │   │   │   │   ├── HypothesisForm.tsx
 │   │   │   │   │   └── ReportSidebar.tsx
 │   │   │   │   ├── Tabs
 │   │   │   │   │   ├── CodePanel.tsx
@@ -269,11 +291,14 @@ PROJECT STRUCTURE
 │   │   │   │   └── shared
 │   │   │   │       ├── CodeBlock.tsx
 │   │   │   │       └── Tabs.tsx
+│   │   │   ├── constants
+│   │   │   │   └── tabs.ts
 │   │   │   ├── data
 │   │   │   │   └── checkout-timeout.json
 │   │   │   ├── hooks
 │   │   │   │   ├── useInvestigation.ts
 │   │   │   │   ├── useScenario.ts
+│   │   │   │   ├── useSubmitHypothesis.ts
 │   │   │   │   └── useTimer.ts
 │   │   │   └── types
 │   │   │       └── Scenario.ts
@@ -353,19 +378,25 @@ PROJECT STRUCTURE
 │   │   ├── learning
 │   │   │   ├── components
 │   │   │   │   ├── ActionCarousel.tsx
+│   │   │   │   ├── DeepDiveHero.tsx
 │   │   │   │   ├── LearningScenarioReader.tsx
 │   │   │   │   ├── SegmentConversation.tsx
 │   │   │   │   ├── SegmentTakeaway.tsx
 │   │   │   │   ├── StaticConversationBubble.tsx
 │   │   │   │   ├── Whiteboard.tsx
 │   │   │   │   ├── WhiteboardView.tsx
-│   │   │   │   └── actions
-│   │   │   │       ├── CompareAction.tsx
-│   │   │   │       ├── FixAction.tsx
-│   │   │   │       ├── JudgeAction.tsx
-│   │   │   │       ├── ObserveAction.tsx
-│   │   │   │       └── PredictAction.tsx
+│   │   │   │   ├── actions
+│   │   │   │   │   ├── CompareAction.tsx
+│   │   │   │   │   ├── FixAction.tsx
+│   │   │   │   │   ├── JudgeAction.tsx
+│   │   │   │   │   ├── ObserveAction.tsx
+│   │   │   │   │   └── PredictAction.tsx
+│   │   │   │   └── diagrams
+│   │   │   │       ├── CassandraDiagram.tsx
+│   │   │   │       ├── Kafka.tsx
+│   │   │   │       └── Redis.tsx
 │   │   │   ├── data
+│   │   │   │   ├── deepDives.ts
 │   │   │   │   └── whiteboardSystems.ts
 │   │   │   ├── hooks
 │   │   │   │   └── useScenario.ts
@@ -453,6 +484,7 @@ PROJECT STRUCTURE
 │   │   │   │   ├── entities
 │   │   │   │   │   ├── BugAttempt.ts
 │   │   │   │   │   ├── BugScenario.ts
+│   │   │   │   │   ├── BugSubmission.ts
 │   │   │   │   │   ├── Finding.ts
 │   │   │   │   │   └── InvestigationArtifact.ts
 │   │   │   │   ├── errors
@@ -470,7 +502,8 @@ PROJECT STRUCTURE
 │   │   │   │   ├── registry
 │   │   │   │   │   └── ScenarioRegistry.ts
 │   │   │   │   └── repositories
-│   │   │   │       └── JsonBugScenarioRepository.ts
+│   │   │   │       ├── JsonBugScenarioRepository.ts
+│   │   │   │       └── PrismaBugAttemptRepository.ts
 │   │   │   ├── repositories
 │   │   │   │   ├── BugAttemptRepository.ts
 │   │   │   │   └── BugScenarioRepository.ts
@@ -589,11 +622,12 @@ PROJECT STRUCTURE
 │       └── interview.ts
 ├── styles
 │   └── animations.css
+├── tailwind.config.ts
 ├── tests
 ├── tsconfig.json
 └── tsconfig.tsbuildinfo
 
-220 directories, 372 files
+233 directories, 393 files
 
 FILE CONTENTS
 
@@ -663,30 +697,125 @@ model User {
   practiceAttempts        PracticeAttempt[]
   practiceRecommendations PracticeRecommendation[]
   learningRecommendations LearningRecommendation[]
+  bugAttempts             BugAttempt[]
+  bugHypothesisAttempts   BugHypothesisAttempt[]
+}
+
+// ---------------------------------------------------------------------------
+// Bug Hunting feature. Scenario content itself lives in JSON fixtures
+// (see modules/bug-hunting/data/scenarios), not the DB — these tables track
+// user progress: attempts, the evolving hypotheses logged along the way,
+// findings marked as evidence, and the final submission.
+// ---------------------------------------------------------------------------
+
+model BugAttempt {
+  id         String @id @default(cuid())
+  userId     String
+  scenarioId String // JSON fixture id — no FK, same reasoning as PracticeActivity content
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  status BugAttemptStatus @default(STARTED)
+
+  score    Float?
+  feedback String?
+
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  submission BugSubmission?
+  hypotheses BugHypothesisAttempt[]
+  findings   Finding[]
+
+  @@index([userId, completedAt])
+  @@index([userId, scenarioId])
+}
+
+// The final answer. One per attempt — submitting again should update this
+// record (or be rejected), not create a second one.
+model BugSubmission {
+  id        String @id @default(cuid())
+  attemptId String @unique
+
+  attempt BugAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  rootCause   String // what the user believes caused the bug
+  proposedFix String // the user's proposed fix / code change
+
+  submittedAt DateTime @default(now())
+}
+
+// Evolving thoughts during investigation — a running log, not a final answer.
+model BugHypothesisAttempt {
+  id          String   @id @default(cuid())
+  attemptId   String
+  scenarioId  String
+  userId      String
+  hypothesis  String
+  submittedAt DateTime @default(now())
+
+  attempt BugAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  user    User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([scenarioId, userId])
+  @@index([attemptId])
+}
+
+// Evidence the user marked as important while investigating (a log line,
+// a SQL row, a code file, etc.), referenced back into the JSON fixture.
+model Finding {
+  id        String @id @default(cuid())
+  attemptId String
+
+  attempt BugAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  source InvestigationArtifactSource
+  refId  String // id of the log line / code file / deployment etc. within the fixture
+  note   String?
+
+  createdAt DateTime @default(now())
+
+  @@index([attemptId])
+}
+
+enum BugAttemptStatus {
+  STARTED
+  INVESTIGATING
+  SUBMITTED
+  COMPLETED
+  ABANDONED
+}
+
+enum InvestigationArtifactSource {
+  LOG
+  SQL
+  CODE
+  DOC
+  DEPLOYMENT
 }
 
 model Transcript {
-  id          String   @id @default(cuid())
+  id String @id @default(cuid())
 
-  slug        String   @unique
+  slug String @unique
 
-  title       String
+  title String
 
-  category    String
+  category String
 
-  difficulty  String
+  difficulty String
 
-  company     String?
+  company String?
 
   interviewer String?
 
-  candidate   String?
+  candidate String?
 
-  duration    Int?
+  duration Int?
 
-  summary     String?
+  summary String?
 
-  transcript  Json
+  transcript Json
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -717,6 +846,7 @@ model InterviewTemplate {
   rubrics    RubricTemplate[]
   interviews Interview[]
 }
+
 model InterviewPhaseTemplate {
   id         String            @id @default(cuid())
   templateId String
@@ -755,13 +885,13 @@ model RubricTemplate {
 }
 
 model Interview {
-  id            String          @id @default(cuid())
-  userId        String
-  templateId    String
-  difficulty    Difficulty
-  duration      Int
-  company       String
-  status        InterviewStatus
+  id             String          @id @default(cuid())
+  userId         String
+  templateId     String
+  difficulty     Difficulty
+  duration       Int
+  company        String
+  status         InterviewStatus
   currentPhase   String
   phaseStartedAt DateTime?
   summary        String          @default("Interview has not started yet.")
@@ -783,12 +913,13 @@ model Interview {
   // NEW — metadata for storing error states and other runtime information
   metadata Json? // Arbitrary metadata, no versioning needed
 
-  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  template   InterviewTemplate @relation(fields: [templateId], references: [id])
-  evaluation Evaluation?
-  problem    Problem           @relation(fields: [problemId], references: [id])
-  transcript Message[]
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  template        InterviewTemplate @relation(fields: [templateId], references: [id])
+  evaluation      Evaluation?
+  problem         Problem           @relation(fields: [problemId], references: [id])
+  transcript      Message[]
   whiteboardState Json? // Frozen application state, no versioning needed
+
   @@index([templateId])
   @@index([userId])
 }
@@ -804,8 +935,8 @@ model Message {
   elapsedSeconds Int     @default(0)
   phase          String?
 
-  createdAt   DateTime    @default(now())
-  interview   Interview   @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  interview Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
 
   evidenceItems EvidenceItem[]
 
@@ -813,7 +944,7 @@ model Message {
 }
 
 model Problem {
-  id   String @id @default(uuid())
+  id               String                @id @default(uuid())
   slug             String                @unique
   title            String
   description      String?
@@ -932,10 +1063,10 @@ model Concept {
   masteries     ConceptMastery[]
   problems      ProblemConcept[]
 
-  learningSegments LearningSegmentConcept[]
-  learningActionConcepts LearningActionConcept[]
-  learningRecommendations LearningRecommendation[]
-  practiceActivityConcepts PracticeActivityConcept[]
+  learningSegments            LearningSegmentConcept[]
+  learningActionConcepts      LearningActionConcept[]
+  learningRecommendations     LearningRecommendation[]
+  practiceActivityConcepts    PracticeActivityConcept[]
   practiceRecommendationItems PracticeRecommendationItem[]
 }
 
@@ -944,14 +1075,14 @@ model EvidenceItem {
   evaluationId     String
   evaluation       Evaluation   @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
   messageId        String
-  message          Message       @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  message          Message      @relation(fields: [messageId], references: [id], onDelete: Cascade)
   dimension        String
   timestampSeconds Int
   quote            String
   comment          String
   type             EvidenceType
-  normalizedScore  Float         @default(0)
-  createdAt        DateTime      @default(now())
+  normalizedScore  Float        @default(0)
+  createdAt        DateTime     @default(now())
 
   concepts EvidenceConcept[]
 
@@ -962,7 +1093,7 @@ model EvidenceItem {
 model EvidenceConcept {
   evidenceItemId String
   conceptId      String
-  weight         Float @default(1.0) // how strongly this item demonstrates the concept, 0-1
+  weight         Float  @default(1.0) // how strongly this item demonstrates the concept, 0-1
 
   evidenceItem EvidenceItem @relation(fields: [evidenceItemId], references: [id], onDelete: Cascade)
   concept      Concept      @relation(fields: [conceptId], references: [id], onDelete: Cascade)
@@ -992,14 +1123,13 @@ model ConceptMastery {
 model ProblemConcept {
   problemId String
   conceptId String
-  weight    Float @default(1.0) // how heavily this problem exercises the concept
+  weight    Float  @default(1.0) // how heavily this problem exercises the concept
 
   problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
   concept Concept @relation(fields: [conceptId], references: [id], onDelete: Cascade)
 
   @@id([problemId, conceptId])
 }
-
 
 model LearningScenario {
   id          String  @id @default(cuid())
@@ -1066,8 +1196,8 @@ model LearningAction {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  attempts UserLearningAttempt[]
-  concepts LearningActionConcept[]
+  attempts            UserLearningAttempt[]
+  concepts            LearningActionConcept[]
   recommendationItems LearningRecommendation[]
 
   @@index([segmentId])
@@ -1099,12 +1229,12 @@ model UserLearningAttempt {
 
   status LearningAttemptStatus @default(STARTED)
 
-  response        Json? // Schema version embedded if response format evolves
+  response Json? // Schema version embedded if response format evolves
 
   score    Float?
   feedback String?
 
-  startedAt   DateTime @default(now())
+  startedAt   DateTime  @default(now())
   completedAt DateTime?
 
   @@index([userId, completedAt])
@@ -1113,9 +1243,9 @@ model UserLearningAttempt {
 }
 
 model LearningRecommendation {
-  id       String @id @default(cuid())
-  userId   String
-  actionId String
+  id        String @id @default(cuid())
+  userId    String
+  actionId  String
   conceptId String
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -1129,7 +1259,7 @@ model LearningRecommendation {
 
   reason String
 
-  createdAt DateTime @default(now())
+  createdAt   DateTime  @default(now())
   dismissedAt DateTime?
   consumedAt  DateTime?
 
@@ -1199,8 +1329,8 @@ enum EvidenceType {
 }
 
 model PracticeActivity {
-  id          String @id @default(cuid())
-  slug        String @unique
+  id          String  @id @default(cuid())
+  slug        String  @unique
   title       String
   description String?
 
@@ -1210,7 +1340,7 @@ model PracticeActivity {
 
   estimatedMinutes Int?
 
-  content        Json // Schema version embedded: {"schemaVersion": 1, ...}
+  content Json // Schema version embedded: {"schemaVersion": 1, ...}
 
   isPublished Boolean @default(false)
 
@@ -1251,12 +1381,12 @@ model PracticeAttempt {
 
   status PracticeAttemptStatus @default(STARTED)
 
-  response        Json? // Schema version embedded if response format evolves
+  response Json? // Schema version embedded if response format evolves
 
   score    Float?
   feedback String?
 
-  startedAt   DateTime @default(now())
+  startedAt   DateTime  @default(now())
   completedAt DateTime?
 
   @@index([userId, completedAt])
@@ -1271,7 +1401,7 @@ model PracticeRecommendation {
 
   reason String?
 
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
   expiresAt DateTime?
 
   items PracticeRecommendationItem[]
@@ -1314,6 +1444,7 @@ enum PracticeAttemptStatus {
   COMPLETED
   ABANDONED
 }
+
 ================================================
 FILE: ./prisma/seed.ts
 ================================================
@@ -4320,6 +4451,37 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 
 ================================================
+FILE: ./tailwind.config.ts
+================================================
+export default {
+  theme: {
+    extend: {
+      colors: {
+        paper: "var(--paper)",
+        ink: "var(--ink)",
+        "ink-soft": "var(--ink-soft)",
+        mint: "var(--mint)",
+        "mint-deep": "var(--mint-deep)",
+        coral: "var(--coral)",
+      },
+      animation: {
+        breathe: "breathe 8s ease-in-out infinite",
+        float: "float 5s ease-in-out infinite",
+      },
+      keyframes: {
+        breathe: {
+          "0%, 100%": { transform: "scale(1)" },
+          "50%": { transform: "scale(1.12)" },
+        },
+        float: {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-14px)" },
+        },
+      },
+    },
+  },
+};
+================================================
 FILE: ./styles/animations.css
 ================================================
 /* Global animation tokens — extracted from DESIGN_SPECIFICATION.md.
@@ -4694,48 +4856,75 @@ import { readdirSync, writeFileSync } from "fs";
 import { join } from "path";
 
 const ROOT = join(process.cwd(), "src/content/transcripts");
-const response = await fetch("/api/transcripts");
-
-const transcripts = await response.json();
-const OUT = join(process.cwd(), "src/features/library/data/generated.ts");
+const OUT = join(
+  process.cwd(),
+  "src/features/library/data/generated.ts"
+);
 
 function scanCategory(category: string): string[] {
   const dir = join(ROOT, category);
+
   return readdirSync(dir, { withFileTypes: true })
-    .filter((d) => d.isFile() && /\.(ts|tsx)$/.test(d.name))
-    .map((d) => d.name.replace(/\.(ts|tsx)$/, ""));
+    .filter(
+      (entry) =>
+        entry.isFile() &&
+        /\.(ts|tsx)$/.test(entry.name) &&
+        entry.name !== "index.ts"
+    )
+    .map((entry) => entry.name.replace(/\.(ts|tsx)$/, ""))
+    .sort();
 }
 
 const categories = readdirSync(ROOT, { withFileTypes: true })
-  .filter((d) => d.isDirectory())
-  .map((d) => d.name);
+  .filter((entry) => entry.isDirectory())
+  .map((entry) => entry.name)
+  .sort();
 
-const entries: { category: string; slug: string }[] = [];
+const entries: Array<{
+  category: string;
+  slug: string;
+  variable: string;
+}> = [];
+
+function toIdentifier(slug: string): string {
+  return slug.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+}
+
 for (const category of categories) {
   for (const slug of scanCategory(category)) {
-    entries.push({ category, slug });
+    entries.push({
+      category,
+      slug,
+      variable: toIdentifier(slug),
+    });
   }
 }
 
 const imports = entries
-  .map((e, i) => `import transcript${i} from "@/content/transcripts/${e.category}/${e.slug}";`)
+  .map(
+    ({ category, slug, variable }) =>
+      `import ${variable} from "@/content/transcripts/${category}/${slug}";`
+  )
   .join("\n");
 
-const arr = entries.map((_, i) => `  transcript${i},`).join("\n");
+const array = entries
+  .map(({ variable }) => `  ${variable},`)
+  .join("\n");
 
-writeFileSync(
-  OUT,
-  `// AUTO-GENERATED — do not edit by hand. Run \`npm run generate:transcripts\`.
+const output = `// AUTO-GENERATED FILE.
+// DO NOT EDIT.
+// Run: npm run generate-transcripts
+
 ${imports}
 
-export const TRANSCRIPTS = Object.freeze([
-${arr}
-]);
-`
-);
+export const TRANSCRIPTS = [
+${array}
+] as const;
+`;
+
+writeFileSync(OUT, output);
 
 console.log(`Generated ${entries.length} transcript imports.`);
-
 ================================================
 FILE: ./tsconfig.json
 ================================================
@@ -5025,6 +5214,38 @@ export default async function WhiteboardSlugPage({
   return <WhiteboardView initialSlug={slug} />;
 }
 ================================================
+FILE: ./src/app/learn/diagrams/cassandra/page.tsx
+================================================
+"use client";
+
+import { DeepDiveHero } from "@/features/learning/components/DeepDiveHero";
+import { CassandraDiagram } from "@/features/learning/components/diagrams/CassandraDiagram";
+import { useRouter } from "next/navigation";
+
+export default function CassandraPage() {
+  const router = useRouter();
+
+  return (
+    <DeepDiveHero
+      systemName="Cassandra"
+      category="Wide-Column NoSQL"
+      eyebrow="WIDE-COLUMN · NoSQL"
+      description={[
+        "<b>Cassandra</b> is a distributed, wide-column NoSQL database...",
+        "Writes go straight to a commit log...",
+      ]}
+      tags={["Distributed", "High write throughput", "Eventually consistent"]}
+      credit="Maintained by"
+      creditOrg="Apache Software Foundation"
+      diagramSvg={<CassandraDiagram />}
+      prevSystem={{ name: "Redis", slug: "redis" }}
+      nextSystem={{ name: "Kafka", slug: "kafka" }}
+      onReadMore={() => router.push("/learn/scenarios/cassandra")}
+      onDocuments={() => window.open("https://cassandra.apache.org/", "_blank")}
+    />
+  );
+}
+================================================
 FILE: ./src/app/learn/diagrams/[system]/page.tsx
 ================================================
 import { diagrams } from "@/data/systemDiagrams";
@@ -5049,16 +5270,129 @@ export default function Page({ params }) {
 ================================================
 FILE: ./src/app/learn/diagrams/page.tsx
 ================================================
-import SystemDiagram from "@/features/diagram/components/SystemDiagram";
+"use client";
 
-export default function DiagramPage() {
+import Link from "next/link";
+import { DEEP_DIVE_SYSTEMS } from "@/features/learning/data/deepDives";
+
+export default function DiagramsPage() {
+  const sorted = [...DEEP_DIVE_SYSTEMS].sort((a, b) => a.order - b.order);
+
   return (
-    <div className="h-screen">
-      <SystemDiagram systemType="dropbox" />
-    </div>
+    <main className="max-w-4xl mx-auto px-6 py-12">
+      <h1 className="text-3xl font-bold tracking-tight mb-2">Deep Dives</h1>
+      <p className="text-muted-foreground mb-8">
+        Explore distributed systems and technologies in depth.
+      </p>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {sorted.map((system) => (
+          <Link
+            key={system.slug}
+            href={`/learn/diagrams/${system.slug}`}
+            className="rounded-lg border border-border bg-card p-5 transition hover:border-foreground/40"
+          >
+            <h3 className="font-semibold text-foreground mb-1">
+              {system.name}
+            </h3>
+            <p className="text-sm text-muted-foreground mb-3">
+              {system.category}
+            </p>
+            <div className="flex gap-2 flex-wrap">
+              {system.tags.slice(0, 2).map((tag) => (
+                <span
+                  key={tag}
+                  className="text-xs font-mono text-muted-foreground"
+                >
+                  #{tag.toLowerCase().replace(/\s+/g, "-")}
+                </span>
+              ))}
+            </div>
+          </Link>
+        ))}
+      </div>
+    </main>
+  );
+}
+================================================
+FILE: ./src/app/learn/diagrams/[slug]/page.tsx
+================================================
+"use client";
+
+import { DeepDiveHero } from "@/features/learning/components/DeepDiveHero";
+import {
+  getDeepDiveSystem,
+  getPrevSystem,
+  getNextSystem,
+  DEEP_DIVE_SYSTEMS,
+} from "@/features/learning/data/deepDives";
+import { useRouter, useParams } from "next/navigation";
+
+// Lazy import diagrams
+const DIAGRAM_MAP: Record<string, React.ComponentType> = {
+  cassandra: () => require("@/features/learning/components/diagrams/CassandraDiagram").CassandraDiagram(),
+  redis: () => require("@/features/learning/components/diagrams/RedisDiagram").RedisDiagram(),
+  kafka: () => require("@/features/learning/components/diagrams/KafkaDiagram").KafkaDiagram(),
+};
+
+export default function DeepDivePage() {
+  const router = useRouter();
+  const params = useParams();
+  const slug = params.slug as string;
+
+  const system = getDeepDiveSystem(slug);
+  const prevSystem = getPrevSystem(slug);
+  const nextSystem = getNextSystem(slug);
+
+  if (!system) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold mb-4">Deep Dive Not Found</h1>
+          <p className="text-lg mb-6 text-gray-600">
+            This system doesn't have a deep dive yet.
+          </p>
+          <button
+            onClick={() => router.push("/learn/diagrams")}
+            className="px-6 py-2 bg-blue-500 text-white rounded"
+          >
+            Back to Diagrams
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const DiagramComponent = DIAGRAM_MAP[slug];
+
+  return (
+    <DeepDiveHero
+      systemName={system.name}
+      category={system.category}
+      eyebrow={system.eyebrow}
+      description={system.description}
+      tags={system.tags}
+      credit={system.credit}
+      creditOrg={system.creditOrg}
+      diagramSvg={DiagramComponent ? <DiagramComponent /> : <div />}
+      prevSystem={prevSystem ? { name: prevSystem.name, slug: prevSystem.slug } : undefined}
+      nextSystem={nextSystem ? { name: nextSystem.name, slug: nextSystem.slug } : undefined}
+      onReadMore={() => {
+        if (system.scenarioSlug) {
+          router.push(`/learn/scenarios/${system.scenarioSlug}`);
+        }
+      }}
+      onDocuments={() => window.open(system.docsUrl, "_blank")}
+    />
   );
 }
 
+// Generate static pages for all systems
+export function generateStaticParams() {
+  return DEEP_DIVE_SYSTEMS.map((system) => ({
+    slug: system.slug,
+  }));
+}
 ================================================
 FILE: ./src/app/learn/card-detail/page.tsx
 ================================================
@@ -5893,7 +6227,10 @@ FILE: ./src/app/library/transcript/[slug]/page.tsx
 ================================================
 import { notFound } from "next/navigation";
 
-import { getTranscript } from "@/content/transcripts";
+import {
+  getTranscript,
+  getAllTranscripts,
+} from "@/content/transcripts";
 
 import TranscriptDetail from "@/features/library/components/TranscriptDetail";
 
@@ -5903,8 +6240,11 @@ type Props = {
   }>;
 };
 
-export default async function TranscriptPage({ params }: Props) {
+export default async function TranscriptPage({
+  params,
+}: Props) {
   const { slug } = await params;
+
   const transcript = getTranscript(slug);
 
   if (!transcript) {
@@ -5923,15 +6263,16 @@ export default async function TranscriptPage({ params }: Props) {
 }
 
 export async function generateStaticParams() {
-  const { getAllTranscripts } = await import("@/content/transcripts");
-
   return getAllTranscripts().map((transcript) => ({
     slug: transcript.summary.slug,
   }));
 }
 
-export async function generateMetadata({ params }: Props) {
+export async function generateMetadata({
+  params,
+}: Props) {
   const { slug } = await params;
+
   const transcript = getTranscript(slug);
 
   if (!transcript) {
@@ -7307,53 +7648,126 @@ export async function POST() {
 ================================================
 FILE: ./src/app/api/bug-hunting/hypothesis/route.ts
 ================================================
+// src/app/api/bug-hunting/hypothesis/route.ts
 import { NextResponse } from "next/server";
+import { getBugHuntingService } from "@/modules/bug-hunting";
+import { ensureGuestUser } from "@/modules/auth/getCurrentUserId";
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { scenarioId, hypothesis } = body;
-
-    if (!scenarioId || !hypothesis) {
-      return NextResponse.json(
-        { error: "Missing scenarioId or hypothesis" },
-        { status: 400 }
-      );
+    const { scenarioId, hypothesis } = await request.json();
+    if (!scenarioId || typeof hypothesis !== "string") {
+      return NextResponse.json({ error: "scenarioId and hypothesis are required" }, { status: 400 });
     }
 
-    // TODO: Integrate with Prisma models when bug hunting is fully implemented
-    // - Create/Update PracticeAttempt record
-    // - Store hypothesis in response JSON field
-    // - Link to user if authenticated
-    // - Track completion status
+    const userId = await ensureGuestUser();
+    const service = getBugHuntingService();
+    await service.submitHypothesis(scenarioId, userId, hypothesis);
 
-    // For now, just acknowledge the hypothesis submission
-    // In a full implementation, this would:
-    // 1. Create a PracticeAttempt with type BUG_HUNT
-    // 2. Store the hypothesis in the response field
-    // 3. Potentially evaluate the hypothesis against the scenario solution
-
-    console.log(`Hypothesis submitted for scenario ${scenarioId}:`, hypothesis);
-
-    return NextResponse.json(
-      { 
-        success: true, 
-        message: "Hypothesis recorded successfully",
-        scenarioId,
-        hypothesis 
-      },
-      { status: 200 }
-    );
+    return NextResponse.json({ ok: true }, { status: 201 });
   } catch (error) {
-    console.error("Error processing hypothesis submission:", error);
-
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: error instanceof Error ? error.message : "Internal server error" },
       { status: 500 }
     );
   }
 }
+================================================
+FILE: ./src/app/api/bug-hunting/attempts/route.ts
+================================================
+// src/app/api/bug-hunting/attempts/route.ts
+import { NextResponse } from "next/server";
+import { getBugHuntingService } from "@/modules/bug-hunting";
+import { ensureGuestUser } from "@/modules/auth/getCurrentUserId";
 
+export async function POST(request: Request) {
+  try {
+    const { scenarioId } = await request.json();
+    if (!scenarioId) return NextResponse.json({ error: "scenarioId is required" }, { status: 400 });
+
+    const userId = await ensureGuestUser();
+    const attempt = await getBugHuntingService().startOrResumeAttempt(userId, scenarioId);
+    return NextResponse.json(attempt.toJSON(), { status: 201 });
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Failed" }, { status: 500 });
+  }
+}
+================================================
+FILE: ./src/app/api/bug-hunting/attempts/[attemptId]/submit/route.ts
+================================================
+// src/app/api/bug-hunting/attempts/[attemptId]/submit/route.ts
+import { NextResponse } from "next/server";
+import { getBugHuntingService } from "@/modules/bug-hunting";
+
+export async function POST(request: Request, { params }: { params: Promise<{ attemptId: string }> }) {
+  try {
+    const { attemptId } = await params;
+    const { rootCause, proposedFix } = await request.json();
+
+    const submission = await getBugHuntingService().submitFix(attemptId, rootCause, proposedFix);
+    return NextResponse.json(submission.toJSON(), { status: 201 });
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Failed" }, { status: 500 });
+  }
+}
+================================================
+FILE: ./src/app/api/bug-hunting/attempts/[attemptId]/findings/route.ts
+================================================
+// src/app/api/bug-hunting/attempts/[attemptId]/findings/route.ts
+import { NextResponse } from "next/server";
+import { getBugHuntingService } from "@/modules/bug-hunting";
+
+export async function POST(request: Request, { params }: { params: Promise<{ attemptId: string }> }) {
+  try {
+    const { attemptId } = await params;
+    const { source, refId, note } = await request.json();
+
+    const finding = await getBugHuntingService().recordFinding(attemptId, source, refId, note);
+    return NextResponse.json(finding.toJSON(), { status: 201 });
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Failed" }, { status: 500 });
+  }
+}
+================================================
+FILE: ./src/app/api/bug-hunting/attempts/[attemptId]/hypothesis/route.ts
+================================================
+// src/app/api/bug-hunting/attempts/[attemptId]/hypothesis/route.ts
+import { NextResponse } from "next/server";
+import { getBugHuntingService } from "@/modules/bug-hunting";
+import { ensureGuestUser } from "@/modules/auth/getCurrentUserId";
+
+export async function POST(request: Request, { params }: { params: Promise<{ attemptId: string }> }) {
+  try {
+    const { attemptId } = await params;
+    const { scenarioId, hypothesis } = await request.json();
+    const userId = await ensureGuestUser();
+
+    await getBugHuntingService().logHypothesis(attemptId, scenarioId, userId, hypothesis);
+    return NextResponse.json({ ok: true }, { status: 201 });
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Failed" }, { status: 500 });
+  }
+}
+================================================
+FILE: ./src/app/api/bug-hunting/sql/route.ts
+================================================
+// src/app/api/bug-hunting/sql/route.ts
+import { NextResponse } from "next/server";
+import { getBugHuntingService } from "@/modules/bug-hunting";
+
+export async function POST(request: Request) {
+  try {
+    const { scenarioId, query } = await request.json();
+    const service = getBugHuntingService();
+    const result = await service.runSqlQuery(scenarioId, query);
+    return NextResponse.json(result);
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Query failed" },
+      { status: 500 }
+    );
+  }
+}
 ================================================
 FILE: ./src/app/api/interviews/start/route.ts
 ================================================
@@ -8019,12 +8433,16 @@ export async function POST(
 ================================================
 FILE: ./src/app/bug-hunting/[scenarioId]/page.tsx
 ================================================
-import "@/styles/bug-hunting.css";
-
 import { notFound } from "next/navigation";
 
-import BugHuntingWorkspace from "@/features/bug-hunting/components/BugHuntingWorkspace";
-import { ScenarioRegistry } from "@/modules/bug-hunting/infrastructure/registry/ScenarioRegistry";
+import { getBugHuntingService } from "@/modules/bug-hunting";
+
+import BugHuntingShell from "@/features/bug-hunting/components/BugHuntingShell";
+import DeploymentsPanel from "@/features/bug-hunting/components/Tabs/DeploymentsPanel";
+import DocsPanel from "@/features/bug-hunting/components/Tabs/DocsPanel";
+import LogsPanel from "@/features/bug-hunting/components/Tabs/LogsPanel";
+import Header from "@/features/bug-hunting/components/Header/Header";
+import ReportSidebar from "@/features/bug-hunting/components/Sidebar/ReportSidebar";
 
 type Props = {
   params: Promise<{
@@ -8032,18 +8450,44 @@ type Props = {
   }>;
 };
 
-export default async function BugHuntingPage({ params }: Props) {
+export default async function BugHuntingPage({
+  params,
+}: Props) {
   const { scenarioId } = await params;
 
-  const scenario = ScenarioRegistry.get(scenarioId);
+  const service = getBugHuntingService();
+
+  const scenario = await service.getScenario(scenarioId);
 
   if (!scenario) {
     notFound();
   }
 
+  const data = scenario.toJSON();
+
   return (
-    <main className="bg-paper px-5 py-8">
-      <BugHuntingWorkspace scenario={scenario} />
+    <main className="bug-hunting-page">
+      <Header scenario={scenario} />
+
+      <div className="bh-body">
+        <ReportSidebar
+          report={data.report}
+          scenarioId={data.id}
+        />
+
+        <BugHuntingShell
+          logsPanel={<LogsPanel logs={data.logs} />}
+          docsPanel={<DocsPanel docs={data.docs} />}
+          deploymentsPanel={
+            <DeploymentsPanel
+              deployments={data.deployments}
+            />
+          }
+          sqlFixture={data.sql}
+          codeFiles={data.code}
+          scenarioId={data.id}
+        />
+      </div>
     </main>
   );
 }
@@ -10612,6 +11056,87 @@ export default function WhiteboardView({ initialSlug }: WhiteboardViewProps) {
   );
 }
 ================================================
+FILE: ./src/features/learning/components/diagrams/CassandraDiagram.tsx
+================================================
+export function CassandraDiagram() {
+  return (
+    <svg viewBox="0 0 220 220" fill="none" className="w-full h-auto">
+      {/* Ring topology with center node */}
+      <circle cx="110" cy="110" r="88" stroke="#15161C" strokeWidth="2" strokeDasharray="4 7" opacity="0.25" />
+      
+      {/* 6 ring nodes */}
+      <circle cx="110" cy="30" r="11" fill="#00D9A3" />
+      <circle cx="182" cy="70" r="11" fill="#00A87E" />
+      <circle cx="182" cy="150" r="11" fill="#15161C" />
+      <circle cx="110" cy="190" r="11" fill="#00A87E" />
+      <circle cx="38" cy="150" r="11" fill="#00D9A3" />
+      <circle cx="38" cy="70" r="11" fill="#15161C" />
+      
+      {/* Center coordinator node */}
+      <circle cx="110" cy="110" r="16" fill="#FF5A3C" />
+      
+      {/* Connections */}
+      <path d="M110 30L182 70M182 70L182 150M182 150L110 190M110 190L38 150M38 150L38 70M38 70L110 30" stroke="#15161C" strokeWidth="1.5" opacity="0.3" />
+      <path d="M110 110L110 30M110 110L182 70M110 110L182 150M110 110L110 190M110 110L38 150M110 110L38 70" stroke="#FF5A3C" strokeWidth="1.5" opacity="0.35" />
+    </svg>
+  );
+}
+================================================
+FILE: ./src/features/learning/components/diagrams/Redis.tsx
+================================================
+export function RedisDiagram() {
+  return (
+    <svg viewBox="0 0 220 220" fill="none">
+      {/* Central cache with satellite key-value stores */}
+      <circle cx="110" cy="110" r="20" fill="#FF5A3C" />
+      {/* 5 surrounding stores */}
+      {[0, 72, 144, 216, 288].map((angle) => {
+        const rad = (angle * Math.PI) / 180;
+        const x = 110 + 70 * Math.cos(rad);
+        const y = 110 + 70 * Math.sin(rad);
+        return (
+          <g key={angle}>
+            <circle cx={x} cy={y} r="12" fill="#00D9A3" />
+            <line x1="110" y1="110" x2={x} y2={y} stroke="#15161C" strokeWidth="1.5" opacity="0.3" />
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+================================================
+FILE: ./src/features/learning/components/diagrams/Kafka.tsx
+================================================
+export function KafkaDiagram() {
+  return (
+    <svg viewBox="0 0 220 220" fill="none">
+      {/* Topic as a column, partitions as rows */}
+      {[0, 1, 2].map((i) => (
+        <g key={i}>
+          <rect
+            x={60 + i * 50}
+            y="40"
+            width="40"
+            height="140"
+            fill="none"
+            stroke="#15161C"
+            strokeWidth="2"
+          />
+          {[0, 1, 2].map((j) => (
+            <circle
+              key={j}
+              cx={80 + i * 50}
+              cy={70 + j * 45}
+              r="6"
+              fill={j === 0 ? "#FF5A3C" : "#00D9A3"}
+            />
+          ))}
+        </g>
+      ))}
+    </svg>
+  );
+}
+================================================
 FILE: ./src/features/learning/components/Whiteboard.tsx
 ================================================
 "use client";
@@ -10842,6 +11367,23 @@ export default function Whiteboard() {
   );
 }
 
+================================================
+FILE: ./src/features/learning/components/DeepDiveHero.tsx
+================================================
+interface DeepDiveHeroProps {
+  systemName: string;              // "Cassandra"
+  category: string;                 // "Wide-Column NoSQL"
+  eyebrow: string;                  // "WIDE-COLUMN · NoSQL"
+  description: string[];            // Array of paragraphs
+  tags: string[];                   // ["Distributed", "High write throughput"]
+  credit: string;                   // "Maintained by"
+  creditOrg: string;                // "Apache Software Foundation"
+  diagramSvg: React.ReactNode;      // <CassandraDiagram />
+  prevSystem?: { name: string; slug: string };
+  nextSystem?: { name: string; slug: string };
+  onReadMore?: () => void;
+  onDocuments?: () => void;
+}
 ================================================
 FILE: ./src/features/learning/components/SegmentConversation.tsx
 ================================================
@@ -11797,6 +12339,102 @@ export const WHITEBOARD_SYSTEM_LIST = Object.values(WHITEBOARD_SYSTEMS).map((s) 
   slug: s.slug,
   label: s.label,
 }));
+================================================
+FILE: ./src/features/learning/data/deepDives.ts
+================================================
+import { ReactNode } from "react";
+
+export interface DeepDiveSystem {
+  slug: string;
+  name: string;
+  category: string;
+  eyebrow: string;
+  description: string[];
+  tags: string[];
+  credit: string;
+  creditOrg: string;
+  docsUrl: string;
+  scenarioSlug?: string;
+  order: number;
+}
+
+export const DEEP_DIVE_SYSTEMS: DeepDiveSystem[] = [
+  {
+    slug: "cassandra",
+    name: "Cassandra",
+    category: "Wide-Column NoSQL",
+    eyebrow: "WIDE-COLUMN · NoSQL",
+    description: [
+      "<b>Cassandra</b> is a distributed, wide-column NoSQL database. Every node in the ring is an equal peer — there's no single leader to bottleneck writes or become a point of failure.",
+      "Writes go straight to a commit log and an in-memory table before being flushed, which is why write throughput is exceptional. Reads have to reconcile across replicas, which is why they're comparatively slower.",
+    ],
+    tags: ["Distributed", "High write throughput", "Eventually consistent"],
+    credit: "Maintained by",
+    creditOrg: "Apache Software Foundation",
+    docsUrl: "https://cassandra.apache.org/",
+    scenarioSlug: "cassandra-deep-dive",
+    order: 1,
+  },
+  {
+    slug: "redis",
+    name: "Redis",
+    category: "In-Memory Cache",
+    eyebrow: "KEY-VALUE · CACHE",
+    description: [
+      "<b>Redis</b> is an in-memory data structure store. It's single-threaded, which means operations are atomic and there's no locking overhead.",
+      "Because everything lives in RAM, speed is exceptional. Persistence is optional (RDB snapshots or AOF).",
+    ],
+    tags: ["In-memory", "Single-threaded", "Sub-millisecond latency"],
+    credit: "Created by",
+    creditOrg: "Salvatore Sanfilippo",
+    docsUrl: "https://redis.io/",
+    order: 0,
+  },
+  {
+    slug: "kafka",
+    name: "Kafka",
+    category: "Event Streaming",
+    eyebrow: "MESSAGE QUEUE · STREAMING",
+    description: [
+      "<b>Kafka</b> is a distributed event streaming platform. Topics are split into partitions, each with a leader and replicas.",
+      "Consumers read from offsets, which means they can replay history. It's the backbone of event-driven architectures.",
+    ],
+    tags: ["Event streaming", "Partitioned", "Persistent log"],
+    credit: "Maintained by",
+    creditOrg: "Apache Software Foundation",
+    docsUrl: "https://kafka.apache.org/",
+    order: 2,
+  },
+  // Add more systems: MongoDB, PostgreSQL, Elasticsearch, RabbitMQ, etc.
+];
+
+export function getDeepDiveSystem(slug: string): DeepDiveSystem | undefined {
+  return DEEP_DIVE_SYSTEMS.find((s) => s.slug === slug);
+}
+
+export function getPrevSystem(
+  slug: string
+): DeepDiveSystem | undefined {
+  const system = getDeepDiveSystem(slug);
+  if (!system) return undefined;
+
+  const sorted = [...DEEP_DIVE_SYSTEMS].sort((a, b) => a.order - b.order);
+  const index = sorted.findIndex((s) => s.slug === slug);
+
+  return index > 0 ? sorted[index - 1] : undefined;
+}
+
+export function getNextSystem(
+  slug: string
+): DeepDiveSystem | undefined {
+  const system = getDeepDiveSystem(slug);
+  if (!system) return undefined;
+
+  const sorted = [...DEEP_DIVE_SYSTEMS].sort((a, b) => a.order - b.order);
+  const index = sorted.findIndex((s) => s.slug === slug);
+
+  return index < sorted.length - 1 ? sorted[index + 1] : undefined;
+}
 ================================================
 FILE: ./src/features/problems/types/problem.ts
 ================================================
@@ -13754,22 +14392,25 @@ export default function TranscriptCard({ transcript }: Props) {
 ================================================
 FILE: ./src/features/library/data/generated.ts
 ================================================
-// AUTO-GENERATED — do not edit by hand. Run `npm run generate:transcripts`.
-import transcript0 from "@/content/transcripts/hld/amazon-lockers";
-import transcript1 from "@/content/transcripts/hld/autocomplete";
-import transcript2 from "@/content/transcripts/hld/config-sync";
-import transcript3 from "@/content/transcripts/hld/payment-system";
-import transcript4 from "@/content/transcripts/lld/read-receipts";
-import transcript5 from "@/content/transcripts/lld/vending-machine";
+// AUTO-GENERATED FILE.
+// DO NOT EDIT.
+// Run: npm run generate-transcripts
 
-export const TRANSCRIPTS = Object.freeze([
-  transcript0,
-  transcript1,
-  transcript2,
-  transcript3,
-  transcript4,
-  transcript5,
-]);
+import amazonLockers from "@/content/transcripts/hld/amazon-lockers";
+import autocomplete from "@/content/transcripts/hld/autocomplete";
+import configSync from "@/content/transcripts/hld/config-sync";
+import paymentSystem from "@/content/transcripts/hld/payment-system";
+import readReceipts from "@/content/transcripts/lld/read-receipts";
+import vendingMachine from "@/content/transcripts/lld/vending-machine";
+
+export const TRANSCRIPTS = [
+  amazonLockers,
+  autocomplete,
+  configSync,
+  paymentSystem,
+  readReceipts,
+  vendingMachine,
+] as const;
 
 ================================================
 FILE: ./src/features/dashboard/components/NextRecommendedInterview.tsx
@@ -16025,11 +16666,8 @@ export async function startInterview(
 ================================================
 FILE: ./src/features/bug-hunting/types/Scenario.ts
 ================================================
-export type Severity =
-  | "P0"
-  | "P1"
-  | "P2"
-  | "P3";
+// src/features/bug-hunting/types/Scenario.ts
+export type Severity = "P0" | "P1" | "P2" | "P3";
 
 export interface ReportMetadata {
   service: string;
@@ -16041,7 +16679,7 @@ export interface ReportMetadata {
 export interface Report {
   title: string;
   severity: Severity;
-  severityLabel: string;
+  severityLabel: string; // e.g. "Intermittent"
   symptom: string;
   metadata: ReportMetadata;
 }
@@ -16061,9 +16699,10 @@ export interface SqlQuery {
 
 export interface SourceFile {
   id: string;
+  key: string;
   name: string;
   language: string;
-  content: string;
+  contentHtml: string; // pre-highlighted markup, matches CodeBlock's dangerouslySetInnerHTML
 }
 
 export interface DocumentationSection {
@@ -16074,7 +16713,7 @@ export interface DocumentationSection {
 export interface Deployment {
   id: string;
   version: string;
-  status: "ROLLED_BACK" | "STABLE";
+  status: "rolled" | "ok"; // matches mockup's .dep.rolled / .dep.ok classes
   message: string;
   time: string;
 }
@@ -16087,27 +16726,32 @@ export interface BugScenarioMetadata {
 
 export interface BugScenario {
   id: string;
-
   title: string;
-
   description: string;
-
   createdAt: string;
-
   metadata: BugScenarioMetadata;
-
   report: Report;
+================================================
+FILE: ./src/features/bug-hunting/constants/tabs.ts
+================================================
+// src/features/bug-hunting/constants/tabs.ts
+export const BUG_TABS = {
+  LOGS: "logs",
+  SQL: "sql",
+  CODE: "code",
+  DOCS: "docs",
+  DEPLOYMENTS: "deployments",
+} as const;
 
-  logs: LogEntry[];
+export type TabId = (typeof BUG_TABS)[keyof typeof BUG_TABS];
 
-  sql: SqlQuery;
-
-  code: SourceFile[];
-
-  docs: DocumentationSection[];
-
-  deployments: Deployment[];
-}
+export const TAB_LIST: { id: TabId; label: string }[] = [
+  { id: BUG_TABS.LOGS, label: "Logs" },
+  { id: BUG_TABS.SQL, label: "SQL runner" },
+  { id: BUG_TABS.CODE, label: "Code" },
+  { id: BUG_TABS.DOCS, label: "Tech docs" },
+  { id: BUG_TABS.DEPLOYMENTS, label: "Deployments" },
+];
 ================================================
 FILE: ./src/features/bug-hunting/components/Tabs/ConsolePanel.tsx
 ================================================
@@ -16217,105 +16861,52 @@ export function NetworkPanel({ requests = [] }: Props) {
 ================================================
 FILE: ./src/features/bug-hunting/components/Tabs/SqlPanel.tsx
 ================================================
+// src/features/bug-hunting/components/Tabs/SqlPanel.tsx
 "use client";
 
 import { useState } from "react";
+import type { SqlFixture } from "@/modules/bug-hunting/domain/entities/BugScenario";
 
-import type {
-  BugScenario,
-} from "../../types/Scenario";
+export default function SqlPanel({ scenarioId, fixture }: { scenarioId: string; fixture: SqlFixture }) {
+  const [query, setQuery] = useState(fixture.initialQuery);
+  const [result, setResult] = useState<{ columns: string[]; rows: string[][] } | null>({
+    columns: fixture.columns,
+    rows: fixture.rows,
+  });
+  const [running, setRunning] = useState(false);
 
-interface Props {
-  scenario: BugScenario;
-}
-
-export default function SqlPanel({
-  scenario,
-}: Props) {
-  const [query, setQuery] = useState(
-    scenario.sql?.initialQuery ?? ""
-  );
-
-  const columns = scenario.sql?.columns ?? [];
-  const rows = scenario.sql?.rows ?? [];
+  const runQuery = async () => {
+    setRunning(true);
+    try {
+      const res = await fetch("/api/bug-hunting/sql", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ scenarioId, query }),
+      });
+      const data = await res.json();
+      setResult(data);
+    } finally {
+      setRunning(false);
+    }
+  };
 
   return (
     <>
-      <textarea
-        className="sql-box mono"
-        value={query}
-        onChange={(e) =>
-          setQuery(e.target.value)
-        }
-        spellCheck={false}
-      />
-
-      <button
-        type="button"
-        className="run-btn"
-      >
-        <svg
-          width="11"
-          height="11"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-        >
-          <path d="M8 5v14l11-7z" />
-        </svg>
-
-        Run query
+      <textarea className="bh-sql-box mono" value={query} onChange={(e) => setQuery(e.target.value)} spellCheck={false} />
+      <button className="bh-run-btn" onClick={runQuery} disabled={running}>
+        {running ? "Running…" : "Run query"}
       </button>
-
-      {columns.length > 0 && (
+      {result && (
         <table>
           <thead>
-            <tr>
-              {columns.map((column) => (
-                <th key={column}>
-                  {column}
-                </th>
-              ))}
-            </tr>
+            <tr>{result.columns.map((c) => <th key={c}>{c}</th>)}</tr>
           </thead>
-
           <tbody>
-            {rows.map((row, rowIndex) => (
-              <tr key={rowIndex}>
-                {row.map((cell, cellIndex) => {
-                  const isRetry =
-                    columns[cellIndex] ===
-                    "retry_count";
-
-                  return (
-                    <td
-                      key={cellIndex}
-                      className={
-                        isRetry &&
-                        Number(cell) >= 3
-                          ? "flag"
-                          : undefined
-                      }
-                    >
-                      {cell}
-                    </td>
-                  );
-                })}
-              </tr>
+            {result.rows.map((row, i) => (
+              <tr key={i}>{row.map((cell, j) => <td key={j}>{cell}</td>)}</tr>
             ))}
           </tbody>
         </table>
-      )}
-
-      {columns.length === 0 && (
-        <div
-          style={{
-            paddingTop: 24,
-            color: "var(--ink-soft)",
-            fontSize: 12,
-          }}
-        >
-          No query results.
-        </div>
       )}
     </>
   );
@@ -16450,6 +17041,35 @@ export default function DocsPanel({ docs, active }: { docs: DocSection[]; active
   );
 }
 ================================================
+FILE: ./src/features/bug-hunting/components/Sidebar/HypothesisForm.tsx
+================================================
+// src/features/bug-hunting/components/Sidebar/HypothesisForm.tsx
+"use client";
+
+import { useState } from "react";
+import { useSubmitHypothesis } from "../../hooks/useSubmitHypothesis";
+
+export default function HypothesisForm({ scenarioId }: { scenarioId: string }) {
+  const [hypothesis, setHypothesis] = useState("");
+  const { submit, status } = useSubmitHypothesis(scenarioId);
+
+  return (
+    <>
+      <div className="bh-hyp-label">Your hypothesis</div>
+      <textarea
+        className="bh-hyp-box"
+        placeholder="What do you think is going on so far?"
+        value={hypothesis}
+        onChange={(e) => setHypothesis(e.target.value)}
+      />
+      <button className="bh-hyp-submit" onClick={() => submit(hypothesis)} disabled={status === "saving"}>
+        {status === "saving" ? "Saving…" : status === "saved" ? "Saved ✓" : "Log hypothesis"}
+      </button>
+      {status === "error" && <p className="text-xs text-red-500 mt-1">Couldn't save — try again.</p>}
+    </>
+  );
+}
+================================================
 FILE: ./src/features/bug-hunting/components/Sidebar/ReportSidebar.tsx
 ================================================
 import type { BugScenario } from "../../types/Scenario";
@@ -16482,6 +17102,63 @@ export default function ReportSidebar({ scenario, hypothesis, onHypothesisChange
       />
       <button className="hyp-submit" onClick={onSubmitHypothesis}>Log hypothesis</button>
     </div>
+  );
+}
+================================================
+FILE: ./src/features/bug-hunting/components/BugHuntingShell.tsx
+================================================
+// src/features/bug-hunting/components/BugHuntingShell.tsx
+"use client";
+
+import { useState, type ReactNode } from "react";
+import { BUG_TABS, TAB_LIST, type TabId } from "../constants/tabs";
+import CodePanel from "./Tabs/CodePanel";
+import SqlPanel from "./Tabs/SqlPanel";
+import type { CodeFile, SqlFixture } from "@/modules/bug-hunting/domain/entities/BugScenario";
+
+type Props = {
+  logsPanel: ReactNode;
+  docsPanel: ReactNode;
+  deploymentsPanel: ReactNode;
+  sqlFixture: SqlFixture;
+  codeFiles: CodeFile[];
+  scenarioId: string;
+};
+
+export default function BugHuntingShell({
+  logsPanel,
+  docsPanel,
+  deploymentsPanel,
+  sqlFixture,
+  codeFiles,
+  scenarioId,
+}: Props) {
+  const [activeTab, setActiveTab] = useState<TabId>(BUG_TABS.LOGS);
+
+  const panels: Record<TabId, ReactNode> = {
+    [BUG_TABS.LOGS]: logsPanel,
+    [BUG_TABS.SQL]: <SqlPanel scenarioId={scenarioId} fixture={sqlFixture} />,
+    [BUG_TABS.CODE]: <CodePanel files={codeFiles} />,
+    [BUG_TABS.DOCS]: docsPanel,
+    [BUG_TABS.DEPLOYMENTS]: deploymentsPanel,
+  };
+
+  return (
+    <section className="bh-main">
+      <div className="bh-tabbar">
+        {TAB_LIST.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            className={`bh-tab ${activeTab === tab.id ? "active" : ""}`}
+            onClick={() => setActiveTab(tab.id)}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+      <div className="bh-panel">{panels[activeTab]}</div>
+    </section>
   );
 }
 ================================================
@@ -16638,10 +17315,67 @@ export default function TabBar({ active, onChange }: { active: TabId; onChange: 
 ================================================
 FILE: ./src/features/bug-hunting/components/shared/CodeBlock.tsx
 ================================================
-export default function CodeBlock({ html }: { html: string }) {
-  // static, author-authored highlight markup — same trust boundary as the
-  // original innerHTML assignment in the source <script>
-  return <pre dangerouslySetInnerHTML={{ __html: html }} />;
+// src/features/bug-hunting/components/shared/CodeBlock.tsx
+// Small local tokenizer — swap for Shiki/Prism if you want real grammars;
+// the point is content stays data, and highlighting stays presentation.
+const KEYWORDS = new Set([
+  "public", "private", "class", "static", "final", "int", "return", "try",
+  "catch", "for", "database", "pool", "timeout-ms", "max-connections",
+]);
+
+type Token = { text: string; type: "kw" | "str" | "cm" | "plain" };
+
+function tokenize(line: string): Token[] {
+  const tokens: Token[] = [];
+  const commentMatch = line.match(/(\/\/.*|#.*)$/);
+  const code = commentMatch ? line.slice(0, commentMatch.index) : line;
+  const comment = commentMatch?.[0];
+
+  for (const word of code.split(/(\s+|[(){};,.])/)) {
+    if (!word) continue;
+    if (/^\d+$/.test(word)) tokens.push({ text: word, type: "str" });
+    else if (KEYWORDS.has(word)) tokens.push({ text: word, type: "kw" });
+    else tokens.push({ text: word, type: "plain" });
+  }
+  if (comment) tokens.push({ text: comment, type: "cm" });
+  return tokens;
+}
+
+export default function CodeBlock({ content }: { content: string }) {
+  return (
+    <pre className="bh-code-pre">
+      {content.split("\n").map((line, i) => (
+        <div key={i}>
+          {tokenize(line).map((t, j) => (
+            <span key={j} className={t.type !== "plain" ? `bh-${t.type}` : undefined}>
+              {t.text}
+            </span>
+          ))}
+        </div>
+      ))}
+    </pre>
+  );
+}
+================================================
+FILE: ./src/features/bug-hunting/components/BugHunting.module.css
+================================================
+/* src/features/bug-hunting/components/BugHunting.module.css */
+.aura {
+  animation: breathe 3.2s ease-in-out infinite;
+}
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+.timeline::before {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  background: rgba(21, 22, 28, 0.1);
 }
 ================================================
 FILE: ./src/features/bug-hunting/components/Header/Timer.tsx
@@ -16693,6 +17427,7 @@ FILE: ./src/features/bug-hunting/components/Header/Header.tsx
 import { useRouter } from "next/navigation";
 
 import Timer from "./Timer";
+
 import type { BugScenario } from "../../types/Scenario";
 
 interface Props {
@@ -16705,24 +17440,15 @@ export default function Header({
   const router = useRouter();
 
   return (
-    <header className="head">
-      <div className="crumb">
+    <header className="bh-header">
+      <div className="head-left">
         <button
           type="button"
           className="back"
           aria-label="Go back"
           onClick={() => router.back()}
         >
-          <svg
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.4"
-          >
-            <path d="M15 6l-6 6 6 6" />
-          </svg>
+          ←
         </button>
 
         <div className="crumb-text">
@@ -16777,6 +17503,38 @@ export function useScenario(scenarioId: string) {
   return { scenario, loading, error };
 }
 ================================================
+FILE: ./src/features/bug-hunting/hooks/useSubmitHypothesis.ts
+================================================
+// src/features/bug-hunting/hooks/useSubmitHypothesis.ts
+"use client";
+
+import { useState, useCallback } from "react";
+
+export function useSubmitHypothesis(scenarioId: string) {
+  const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+
+  const submit = useCallback(
+    async (hypothesis: string) => {
+      if (!hypothesis.trim()) return;
+      setStatus("saving");
+      try {
+        const res = await fetch("/api/bug-hunting/hypothesis", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ scenarioId, hypothesis }),
+        });
+        if (!res.ok) throw new Error("Failed to save hypothesis");
+        setStatus("saved");
+      } catch {
+        setStatus("error");
+      }
+    },
+    [scenarioId]
+  );
+
+  return { submit, status };
+}
+================================================
 FILE: ./src/features/bug-hunting/hooks/useInvestigation.ts
 ================================================
 "use client";
@@ -16821,30 +17579,22 @@ export function useTimer(initialSeconds: number) {
 ================================================
 FILE: ./src/features/bug-hunting/data/checkout-timeout.json
 ================================================
+
 {
   "id": "checkout-timeout",
-
   "title": "Checkout returns 500 intermittently",
-
   "description": "Customers report intermittent failures after the latest deployment.",
-
   "createdAt": "2026-07-16T00:00:00Z",
-
   "metadata": {
     "difficulty": "Hard",
     "category": "Checkout",
     "estimatedTimeMinutes": 30
   },
-
   "report": {
     "title": "Checkout returns 500 intermittently",
-
     "severity": "P1",
-
     "severityLabel": "Intermittent",
-
-    "symptom": "Customers report checkout failing with a generic error about one in every twenty attempts. It doesn't reproduce locally and appears to have started shortly after Tuesday's deployment.",
-
+    "symptom": "Customers report checkout failing with a generic error about 1 in every 20 attempts. Doesn't reproduce locally. Started sometime after Tuesday's deploy.",
     "metadata": {
       "service": "checkout-api",
       "endpoint": "POST /orders",
@@ -16852,20 +17602,68 @@ FILE: ./src/features/bug-hunting/data/checkout-timeout.json
       "firstSeen": "2 days ago"
     }
   },
-
-  "logs": [],
-
+  "logs": [
+    { "id": "l1", "timestamp": "14:02:11.203", "level": "INFO", "message": "order-svc: received POST /orders (order_id=88213)" },
+    { "id": "l2", "timestamp": "14:02:11.240", "level": "INFO", "message": "payment-client: charging via provider=stripe (order_id=88213)" },
+    { "id": "l3", "timestamp": "14:02:16.310", "level": "WARN", "message": "payment-client: request exceeded 5000ms, retrying (attempt=1, order_id=88213)" },
+    { "id": "l4", "timestamp": "14:02:16.311", "level": "INFO", "message": "connection-pool: acquiring connection (active=48, max=50)" },
+    { "id": "l5", "timestamp": "14:02:21.402", "level": "WARN", "message": "payment-client: request exceeded 5000ms, retrying (attempt=2, order_id=88213)" },
+    { "id": "l6", "timestamp": "14:02:21.403", "level": "INFO", "message": "connection-pool: acquiring connection (active=50, max=50)" },
+    { "id": "l7", "timestamp": "14:02:26.501", "level": "ERROR", "message": "connection-pool: timed out waiting for connection (order_id=88213)" },
+    { "id": "l8", "timestamp": "14:02:26.502", "level": "ERROR", "message": "order-svc: 500 returned to client (order_id=88213, cause=PoolTimeoutException)" },
+    { "id": "l9", "timestamp": "14:02:31.108", "level": "INFO", "message": "order-svc: received POST /orders (order_id=88214)" },
+    { "id": "l10", "timestamp": "14:02:31.140", "level": "INFO", "message": "payment-client: charging via provider=stripe (order_id=88214)" }
+  ],
   "sql": {
-    "initialQuery": "",
-    "columns": [],
-    "rows": []
+    "initialQuery": "SELECT order_id, status, retry_count, created_at\nFROM orders\nWHERE status = 'PENDING'\n  AND created_at < now() - interval '2 minutes'\nORDER BY retry_count DESC\nLIMIT 5;",
+    "columns": ["order_id", "status", "retry_count", "created_at"],
+    "rows": [
+      ["88213", "PENDING", "3", "14:02:11"],
+      ["88201", "PENDING", "3", "13:58:04"],
+      ["88189", "PENDING", "2", "13:51:47"],
+      ["88177", "PENDING", "1", "13:44:12"]
+    ]
   },
-
-  "code": [],
-
-  "docs": [],
-
-  "deployments": []
+  "code": [
+    {
+      "id": "c1",
+      "key": "OrderService",
+      "name": "OrderService.java",
+      "language": "java",
+      "contentHtml": "<span class=\"kw\">public class</span> <span class=\"ty\">OrderService</span> {\n\n  <span class=\"kw\">public</span> Order <span class=\"ty\">createOrder</span>(OrderRequest req) {\n    <span class=\"cm\">// acquires a connection for the WHOLE retry sequence below</span>\n    <span class=\"kw\">try</span> (Connection conn = pool.<span class=\"ty\">acquire</span>()) {\n      PaymentResult result = paymentClient.<span class=\"ty\">charge</span>(req, conn);\n      <span class=\"kw\">return</span> orderRepo.<span class=\"ty\">save</span>(req, result, conn);\n    }\n  }\n}"
+    },
+    {
+      "id": "c2",
+      "key": "PaymentClient",
+      "name": "PaymentClient.java",
+      "language": "java",
+      "contentHtml": "<span class=\"kw\">public class</span> <span class=\"ty\">PaymentClient</span> {\n\n  <span class=\"kw\">public</span> PaymentResult <span class=\"ty\">charge</span>(OrderRequest req, Connection conn) {\n    <span class=\"kw\">return</span> retryPolicy.<span class=\"ty\">execute</span>(() -> {\n      <span class=\"kw\">return</span> stripe.<span class=\"ty\">charge</span>(req.amount(), <span class=\"str\">5000</span>);\n    });\n    <span class=\"cm\">// note: conn is held open across every retry attempt</span>\n  }\n}"
+    },
+    {
+      "id": "c3",
+      "key": "RetryPolicy",
+      "name": "RetryPolicy.java",
+      "language": "java",
+      "contentHtml": "<span class=\"kw\">public class</span> <span class=\"ty\">RetryPolicy</span> {\n  <span class=\"kw\">private static final int</span> MAX_ATTEMPTS = <span class=\"str\">3</span>; <span class=\"cm\">// was 1 before v2.4.1</span>\n  <span class=\"kw\">private static final int</span> WAIT_MS = <span class=\"str\">5000</span>;\n\n  <span class=\"kw\">public</span> T <span class=\"ty\">execute</span>(Supplier&lt;T&gt; op) {\n    <span class=\"kw\">for</span> (<span class=\"kw\">int</span> i = <span class=\"str\">0</span>; i &lt; MAX_ATTEMPTS; i++) {\n      <span class=\"kw\">try</span> { <span class=\"kw\">return</span> op.<span class=\"ty\">get</span>(); }\n      <span class=\"kw\">catch</span> (TimeoutException e) { Thread.<span class=\"ty\">sleep</span>(WAIT_MS); }\n    }\n  }\n}"
+    },
+    {
+      "id": "c4",
+      "key": "config",
+      "name": "application.yml",
+      "language": "yaml",
+      "contentHtml": "<span class=\"kw\">database</span>:\n  <span class=\"kw\">pool</span>:\n    <span class=\"kw\">max-connections</span>: <span class=\"str\">50</span>  <span class=\"cm\"># unchanged since ~14 months ago</span>\n  <span class=\"kw\">timeout-ms</span>: <span class=\"str\">30000</span>"
+    }
+  ],
+  "docs": [
+    { "title": "Checkout service overview", "body": "checkout-api receives order requests, calls out to the payment provider via PaymentClient, and persists the order once payment is confirmed. It shares a single database connection pool across all endpoints (max 50 connections)." },
+    { "title": "Retry policy", "body": "Payment calls are retried up to 3 times on timeout, with a fixed 5-second wait per attempt. Retries currently hold their database connection open for the entire retry sequence rather than releasing it between attempts." },
+    { "title": "Known limitations", "body": "The connection pool size was last tuned over a year ago, before checkout volume roughly tripled. There's an open ticket to move to a per-request-scoped connection instead of holding one for the whole retry loop." }
+  ],
+  "deployments": [
+    { "id": "d1", "version": "v2.4.1", "status": "rolled", "message": "Increase payment timeout retry attempts from 1 to 3", "time": "Tuesday, 9:14 AM" },
+    { "id": "d2", "version": "v2.4.0", "status": "ok", "message": "Add order confirmation email trigger", "time": "Monday, 3:02 PM" },
+    { "id": "d3", "version": "v2.3.9", "status": "ok", "message": "Bump payment SDK to 4.2.1", "time": "Last Friday, 11:20 AM" }
+  ]
 }
 ================================================
 FILE: ./src/content/transcripts/lld/read-receipts.ts
@@ -21417,46 +22215,38 @@ import {
 
 import { TRANSCRIPTS } from "@/features/library/data/generated";
 
-
-
-const categoryMap = new Map<TranscriptCategory, TranscriptEntry[]>();
+const categoryMap = new Map<
+  TranscriptCategory,
+  TranscriptEntry[]
+>();
 
 for (const transcript of TRANSCRIPTS) {
-  const list = categoryMap.get(transcript.summary.category) ?? [];
+  const list =
+    categoryMap.get(transcript.summary.category) ?? [];
+
   list.push(transcript);
-  categoryMap.set(transcript.summary.category, list);
+
+  categoryMap.set(
+    transcript.summary.category,
+    list
+  );
 }
 
-export function getAllTranscripts(): ReadonlyArray<TranscriptEntry> {
+export function getAllTranscripts(): readonly TranscriptEntry[] {
   return TRANSCRIPTS;
 }
 
 export function getTranscript(
   slug: string
 ): TranscriptEntry | undefined {
-  const transcript = await prisma.transcript.findUnique({
-    where: {
-        slug
-    }
-});
-
-if (!transcript) {
-    notFound();
-}
+  return TRANSCRIPTS.find(
+    (t) => t.summary.slug === slug
+  );
 }
 
 export function getTranscriptsByCategory(
   category: TranscriptCategory
 ): TranscriptEntry[] {
-  const transcript = await prisma.transcript.findUnique({
-    where: {
-        slug
-    }
-});
-
-if (!transcript) {
-    notFound();
-}
   return categoryMap.get(category) ?? [];
 }
 
@@ -21473,14 +22263,17 @@ export function getCategories(): TranscriptCategory[] {
 export function getCategoryLabel(
   category: TranscriptCategory
 ): string {
-  const labels: Record<TranscriptCategory, string> = {
+  const labels: Record<
+    TranscriptCategory,
+    string
+  > = {
     hld: "High Level Design",
     lld: "Low Level Design",
     dsa: "Data Structures & Algorithms",
-    behavioural: "Behavioural"
+    behavioural: "Behavioural",
   };
 
-  return labels[category] ?? category;
+  return labels[category];
 }
 
 export function validateTranscripts(): void {
@@ -21501,9 +22294,9 @@ export function validateTranscripts(): void {
       );
     }
 
-    if (!transcript.summary.tags.length) {
+    if (transcript.summary.tags.length === 0) {
       throw new Error(
-        `${transcript.summary.slug}: no tags`
+        `${transcript.summary.slug}: missing tags`
       );
     }
 
@@ -29066,168 +29859,195 @@ The JSON must satisfy the requested schema.
 ================================================
 FILE: ./src/modules/bug-hunting/repositories/BugAttemptRepository.ts
 ================================================
+// src/modules/bug-hunting/repositories/BugAttemptRepository.ts
 import { BugAttempt } from "../domain/entities/BugAttempt";
+import { BugSubmission } from "../domain/entities/BugSubmission";
+import { Finding, InvestigationArtifactSource } from "../domain/entities/Finding";
+
+export interface CreateAttemptInput {
+  userId: string;
+  scenarioId: string;
+}
+
+export interface LogHypothesisInput {
+  attemptId: string;
+  scenarioId: string;
+  userId: string;
+  hypothesis: string;
+}
+
+export interface RecordFindingInput {
+  attemptId: string;
+  source: InvestigationArtifactSource;
+  refId: string;
+  note?: string;
+}
+
+export interface SubmitFixInput {
+  attemptId: string;
+  rootCause: string;
+  proposedFix: string;
+}
+
+export interface GradeAttemptInput {
+  attemptId: string;
+  score: number;
+  feedback: string;
+}
 
 export interface BugAttemptRepository {
-  findById(
-    id: string,
-  ): Promise<BugAttempt | null>;
+  create(input: CreateAttemptInput): Promise<BugAttempt>;
+  findById(attemptId: string): Promise<BugAttempt | null>;
+  findActiveAttempt(userId: string, scenarioId: string): Promise<BugAttempt | null>;
 
-  save(
-    attempt: BugAttempt,
-  ): Promise<void>;
+  logHypothesis(input: LogHypothesisInput): Promise<void>;
+  recordFinding(input: RecordFindingInput): Promise<Finding>;
+  submitFix(input: SubmitFixInput): Promise<BugSubmission>;
+  gradeAttempt(input: GradeAttemptInput): Promise<BugAttempt>;
+
+  getSubmission(attemptId: string): Promise<BugSubmission | null>;
+  listFindings(attemptId: string): Promise<Finding[]>;
 }
 ================================================
 FILE: ./src/modules/bug-hunting/repositories/BugScenarioRepository.ts
 ================================================
+// src/modules/bug-hunting/repositories/BugScenarioRepository.ts
 import { BugScenario } from "../domain/entities/BugScenario";
 
-export interface ScenarioQuery {
-  difficulty?: string;
-  category?: string;
-  severity?: string;
-  tags?: string[];
-  search?: string;
-  page: number;
-  pageSize: number;
-}
-
-export interface Page<T> {
-  items: T[];
-  total: number;
-  page: number;
-  pageSize: number;
-}
-
 export interface BugScenarioRepository {
-  findById(
-    id: string,
-  ): Promise<BugScenario | null>;
-
-  findMany(
-    query: ScenarioQuery,
-  ): Promise<Page<BugScenario>>;
+  findById(id: string): Promise<BugScenario | null>;
 }
 ================================================
 FILE: ./src/modules/bug-hunting/index.ts
 ================================================
-export * from "@/domain";
-export * from "@/repositories";
-export * from "./services";
-export * from "./infrastructure";
+// src/modules/bug-hunting/index.ts
+import { JsonBugScenarioRepository } from "./infrastructure/repositories/JsonBugScenarioRepository";
+import { PrismaBugAttemptRepository } from "./infrastructure/repositories/PrismaBugAttemptRepository";
+import { BugHuntingService } from "./services/BugHuntingService";
+
+let _service: BugHuntingService | null = null;
+
+export function getBugHuntingService(): BugHuntingService {
+  if (!_service) {
+    _service = new BugHuntingService(new JsonBugScenarioRepository(), new PrismaBugAttemptRepository());
+  }
+  return _service;
+}
 ================================================
 FILE: ./src/modules/bug-hunting/infrastructure/repositories/JsonBugScenarioRepository.ts
 ================================================
-import {
-  BugScenarioRepository,
-  Page,
-  ScenarioQuery,
-} from "@/repositories";
+// src/modules/bug-hunting/infrastructure/repositories/JsonBugScenarioRepository.ts
+import { BugScenario } from "../../domain/entities/BugScenario";
+import type { BugScenarioRepository } from "../../repositories/BugScenarioRepository";
 
-import {
-  BugScenario,
-  InvestigationArtifact,
-  ScenarioMetadata,
-  ScenarioDifficulty,
-  Severity,
-  ScenarioCategory,
-  EvidenceType,
-} from "@/domain";
-import { ScenarioRegistry } from "@/infrastructure/registry/ScenarioRegistry";
+// Swap this for a Prisma-backed repository later — nothing above this
+// layer needs to change.
+const SCENARIOS: Record<string, () => Promise<{ default: any }>> = {
+  "checkout-timeout": () => import("../../data/scenarios/checkout-timeout.json").then((m) => ({ default: m })),
+};
 
+export class JsonBugScenarioRepository implements BugScenarioRepository {
+  async findById(id: string): Promise<BugScenario | null> {
+    const loader = SCENARIOS[id];
+    if (!loader) return null;
 
-export class JsonBugScenarioRepository
-  implements BugScenarioRepository {
+    const { default: raw } = await loader();
+    return BugScenario.fromJSON(raw);
+  }
+}
+================================================
+FILE: ./src/modules/bug-hunting/infrastructure/repositories/PrismaBugAttemptRepository.ts
+================================================
+// src/modules/bug-hunting/infrastructure/repositories/PrismaBugAttemptRepository.ts
+import { prisma } from "@/shared/prisma/client";
+import { BugAttempt } from "../../domain/entities/BugAttempt";
+import { BugSubmission } from "../../domain/entities/BugSubmission";
+import { Finding } from "../../domain/entities/Finding";
+import type {
+  BugAttemptRepository,
+  CreateAttemptInput,
+  LogHypothesisInput,
+  RecordFindingInput,
+  SubmitFixInput,
+  GradeAttemptInput,
+} from "../../repositories/BugAttemptRepository";
 
-  async findById(
-    id: string,
-  ): Promise<BugScenario | null> {
-
-    const raw = ScenarioRegistry.get(id);
-
-    if (!raw) {
-      return null;
-    }
-
-    return this.mapToDomain(raw);
+export class PrismaBugAttemptRepository implements BugAttemptRepository {
+  async create({ userId, scenarioId }: CreateAttemptInput): Promise<BugAttempt> {
+    const row = await prisma.bugAttempt.create({
+      data: { userId, scenarioId, status: "STARTED" },
+    });
+    return BugAttempt.fromProps(row);
   }
 
-
-  async findMany(
-    query: ScenarioQuery,
-  ): Promise<Page<BugScenario>> {
-
-    let scenarios = ScenarioRegistry.getAll();
-
-
-    if (query.search) {
-      scenarios = scenarios.filter(
-        scenario =>
-          scenario.title
-            .toLowerCase()
-            .includes(
-              query.search!.toLowerCase(),
-            ),
-      );
-    }
-
-
-    const start =
-      query.page * query.pageSize;
-
-    const items =
-      scenarios
-        .slice(
-          start,
-          start + query.pageSize,
-        )
-        .map(item =>
-          this.mapToDomain(item),
-        );
-
-
-    return {
-      items,
-      total: scenarios.length,
-      page: query.page,
-      pageSize: query.pageSize,
-    };
+  async findById(attemptId: string): Promise<BugAttempt | null> {
+    const row = await prisma.bugAttempt.findUnique({ where: { id: attemptId } });
+    return row ? BugAttempt.fromProps(row) : null;
   }
 
+  async findActiveAttempt(userId: string, scenarioId: string): Promise<BugAttempt | null> {
+    const row = await prisma.bugAttempt.findFirst({
+      where: { userId, scenarioId, status: { in: ["STARTED", "INVESTIGATING"] } },
+      orderBy: { startedAt: "desc" },
+    });
+    return row ? BugAttempt.fromProps(row) : null;
+  }
 
-  private mapToDomain(
-    data: any,
-  ): BugScenario {
+  async logHypothesis({ attemptId, scenarioId, userId, hypothesis }: LogHypothesisInput): Promise<void> {
+    await prisma.$transaction([
+      prisma.bugHypothesisAttempt.create({
+        data: { attemptId, scenarioId, userId, hypothesis },
+      }),
+      // Logging a hypothesis is evidence the user has moved from "just
+      // started" to actively investigating.
+      prisma.bugAttempt.updateMany({
+        where: { id: attemptId, status: "STARTED" },
+        data: { status: "INVESTIGATING" },
+      }),
+    ]);
+  }
 
-    return new BugScenario(
-      data.id,
-      data.title,
-      data.description,
+  async recordFinding({ attemptId, source, refId, note }: RecordFindingInput): Promise<Finding> {
+    const row = await prisma.finding.create({
+      data: { attemptId, source, refId, note: note ?? null },
+    });
+    return Finding.fromProps(row);
+  }
 
-      new ScenarioMetadata(
-        data.metadata.difficulty as ScenarioDifficulty,
-        data.metadata.severity as Severity,
-        data.metadata.category as ScenarioCategory,
-        data.metadata.estimatedTimeMinutes,
-        data.metadata.tags,
-      ),
+  async submitFix({ attemptId, rootCause, proposedFix }: SubmitFixInput): Promise<BugSubmission> {
+    const [submission] = await prisma.$transaction([
+      prisma.bugSubmission.upsert({
+        where: { attemptId },
+        create: { attemptId, rootCause, proposedFix },
+        update: { rootCause, proposedFix, submittedAt: new Date() },
+      }),
+      prisma.bugAttempt.update({
+        where: { id: attemptId },
+        data: { status: "SUBMITTED" },
+      }),
+    ]);
+    return BugSubmission.fromProps(submission);
+  }
 
-      data.artifacts.map(
-        (artifact: any) =>
-          new InvestigationArtifact(
-            artifact.id,
-            artifact.type as EvidenceType,
-            artifact.label,
-            artifact.description,
-            artifact.content,
-            artifact.order,
-            artifact.points,
-            artifact.unlocked,
-          ),
-      ),
+  async gradeAttempt({ attemptId, score, feedback }: GradeAttemptInput): Promise<BugAttempt> {
+    const row = await prisma.bugAttempt.update({
+      where: { id: attemptId },
+      data: { score, feedback, status: "COMPLETED", completedAt: new Date() },
+    });
+    return BugAttempt.fromProps(row);
+  }
 
-      new Date(data.createdAt),
-    );
+  async getSubmission(attemptId: string): Promise<BugSubmission | null> {
+    const row = await prisma.bugSubmission.findUnique({ where: { attemptId } });
+    return row ? BugSubmission.fromProps(row) : null;
+  }
+
+  async listFindings(attemptId: string): Promise<Finding[]> {
+    const rows = await prisma.finding.findMany({
+      where: { attemptId },
+      orderBy: { createdAt: "asc" },
+    });
+    return rows.map(Finding.fromProps);
   }
 }
 ================================================
@@ -29265,33 +30085,13 @@ export * from "./registry/ScenarioRegistry";
 FILE: ./src/modules/bug-hunting/data/scenarios/checkout-timeout.json
 ================================================
 {
-  "id": "checkout-timeout",
-  "title": "Checkout API Timeout",
-  "description": "Checkout requests are timing out after deployment.",
-  "createdAt": "2026-07-16T00:00:00.000Z",
-
-  "metadata": {
-    "difficulty": "HARD",
-    "severity": "HIGH",
-    "category": "CHECKOUT",
-    "estimatedTimeMinutes": 30,
-    "tags": [
-      "latency",
-      "database",
-      "timeout"
-    ]
-  },
-
-  "artifacts": [
+  "code": [
     {
-      "id": "logs-001",
-      "type": "LOG",
-      "label": "Checkout Service Logs",
-      "description": "Application logs",
-      "content": "DB connection timeout...",
-      "order": 1,
-      "points": 10,
-      "unlocked": true
+      "id": "c1",
+      "key": "OrderService",
+      "name": "OrderService.java",
+      "language": "java",
+      "content": "public class OrderService {\n\n  public Order createOrder(OrderRequest req) {\n    // acquires a connection for the WHOLE retry sequence below\n    try (Connection conn = pool.acquire()) {\n      PaymentResult result = paymentClient.charge(req, conn);\n      return orderRepo.save(req, result, conn);\n    }\n  }\n}"
     }
   ]
 }
@@ -29388,96 +30188,147 @@ export class ArtifactLockedError extends Error {
 ================================================
 FILE: ./src/modules/bug-hunting/domain/entities/BugAttempt.ts
 ================================================
-import { Finding } from "./Finding";
-import { AttemptStatus } from "../value-objects/AttemptStatus";
+// src/modules/bug-hunting/domain/entities/BugAttempt.ts
+export type BugAttemptStatus = "STARTED" | "INVESTIGATING" | "SUBMITTED" | "COMPLETED" | "ABANDONED";
 
-export class BugAttempt {
-  private findings: Finding[] = [];
-
-  private status: AttemptStatus;
-
-  constructor(
-    readonly id: string,
-    readonly scenarioId: string,
-    readonly startedAt: Date,
-  ) {
-    this.status = AttemptStatus.IN_PROGRESS;
-  }
-
-  addFinding(finding: Finding) {
-    this.findings.push(finding);
-  }
-
-  complete() {
-    this.status = AttemptStatus.COMPLETED;
-  }
-
-  abandon() {
-    this.status = AttemptStatus.ABANDONED;
-  }
-
-  getFindings() {
-    return [...this.findings];
-  }
-
-  getStatus() {
-    return this.status;
-  }
+interface BugAttemptProps {
+  id: string;
+  userId: string;
+  scenarioId: string;
+  status: BugAttemptStatus;
+  score: number | null;
+  feedback: string | null;
+  startedAt: Date;
+  completedAt: Date | null;
 }
 
+export class BugAttempt {
+  private constructor(private readonly props: BugAttemptProps) {}
+
+  static fromProps(props: BugAttemptProps): BugAttempt {
+    return new BugAttempt(props);
+  }
+
+  get id() {
+    return this.props.id;
+  }
+
+  get status() {
+    return this.props.status;
+  }
+
+  get scenarioId() {
+    return this.props.scenarioId;
+  }
+
+  isActive(): boolean {
+    return this.props.status === "STARTED" || this.props.status === "INVESTIGATING";
+  }
+
+  toJSON(): BugAttemptProps {
+    return this.props;
+  }
+}
 ================================================
 FILE: ./src/modules/bug-hunting/domain/entities/BugScenario.ts
 ================================================
-import { InvestigationArtifact } from "./InvestigationArtifact";
-import { ScenarioMetadata } from "../value-objects/ScenarioMetadata";
-import { Finding } from "./Finding";
+// src/modules/bug-hunting/domain/entities/BugScenario.ts
+export interface LogEntry {
+  id: string;
+  timestamp: string;
+  level: "INFO" | "WARN" | "ERROR";
+  message: string;
+}
 
+export interface SqlFixture {
+  initialQuery: string;
+  columns: string[];
+  rows: string[][];
+}
+
+export interface CodeFile {
+  id: string;
+  key: string;
+  name: string;
+  language: string;
+  content: string; // plain source — no HTML
+}
+
+export interface DocSection {
+  title: string;
+  body: string;
+}
+
+export interface Deployment {
+  id: string;
+  version: string;
+  status: "rolled" | "ok";
+  message: string;
+  time: string;
+}
+
+export interface ScenarioReportMetadata {
+  service: string;
+  endpoint: string;
+  errorRate: string;
+  firstSeen: string;
+}
+
+export interface ScenarioReport {
+  title: string;
+  severity: string;
+  severityLabel: string;
+  symptom: string;
+  metadata: ScenarioReportMetadata;
+}
+
+interface BugScenarioProps {
+  id: string;
+  report: ScenarioReport;
+  logs: LogEntry[];
+  sql: SqlFixture;
+  code: CodeFile[];
+  docs: DocSection[];
+  deployments: Deployment[];
+}
+
+/** Domain entity — the UI only ever sees this shape via toJSON(). */
 export class BugScenario {
-  private completed = false;
+  private constructor(private readonly props: BugScenarioProps) {}
 
-  private findings: Finding[] = [];
-
-  constructor(
-    readonly id: string,
-    readonly title: string,
-    readonly description: string,
-    readonly metadata: ScenarioMetadata,
-    private readonly artifacts: InvestigationArtifact[],
-    readonly createdAt: Date,
-  ) {}
-
-  unlockArtifact(id: string) {
-    const artifact = this.artifacts.find(
-      item => item.id === id,
-    );
-
-    if (!artifact) {
-      throw new Error(
-        `Artifact ${id} not found`,
-      );
-    }
-
-    artifact.unlock();
+  static fromJSON(raw: BugScenarioProps): BugScenario {
+    return new BugScenario(raw);
   }
 
-  addFinding(finding: Finding) {
-    this.findings.push(finding);
+  get id() {
+    return this.props.id;
   }
 
-  complete() {
-    this.completed = true;
+  toJSON(): BugScenarioProps {
+    return this.props;
+  }
+}
+================================================
+FILE: ./src/modules/bug-hunting/domain/entities/BugSubmission.ts
+================================================
+// src/modules/bug-hunting/domain/entities/BugSubmission.ts
+interface BugSubmissionProps {
+  id: string;
+  attemptId: string;
+  rootCause: string;
+  proposedFix: string;
+  submittedAt: Date;
+}
+
+export class BugSubmission {
+  private constructor(private readonly props: BugSubmissionProps) {}
+
+  static fromProps(props: BugSubmissionProps): BugSubmission {
+    return new BugSubmission(props);
   }
 
-  isCompleted() {
-    return this.completed;
-  }
-
-  getArtifacts() {
-    return [...this.artifacts];
-  }
-
-  getFindings() {
-    return [...this.findings];
+  toJSON(): BugSubmissionProps {
+    return this.props;
   }
 }
 ================================================
@@ -29512,65 +30363,120 @@ export class InvestigationArtifact {
 ================================================
 FILE: ./src/modules/bug-hunting/domain/entities/Finding.ts
 ================================================
+// src/modules/bug-hunting/domain/entities/Finding.ts
+export type InvestigationArtifactSource = "LOG" | "SQL" | "CODE" | "DOC" | "DEPLOYMENT";
+
+interface FindingProps {
+  id: string;
+  attemptId: string;
+  source: InvestigationArtifactSource;
+  refId: string;
+  note: string | null;
+  createdAt: Date;
+}
+
 export class Finding {
-  constructor(
-    readonly id: string,
-    readonly hypothesis: string,
-    readonly evidence: string,
-    readonly rootCause: string,
-    readonly proposedFix: string,
-  ) {}
+  private constructor(private readonly props: FindingProps) {}
+
+  static fromProps(props: FindingProps): Finding {
+    return new Finding(props);
+  }
+
+  toJSON(): FindingProps {
+    return this.props;
+  }
 }
 ================================================
 FILE: ./src/modules/bug-hunting/services/BugHuntingService.ts
 ================================================
-import {
-  BugScenarioRepository,
-  ScenarioQuery,
-} from "@/repositories";
-
-import BugScenario from "@/domain";
-
+// src/modules/bug-hunting/services/BugHuntingService.ts
+import type { BugScenarioRepository } from "../repositories/BugScenarioRepository";
+import type { BugAttemptRepository } from "../repositories/BugAttemptRepository";
+import type { InvestigationArtifactSource } from "../domain/entities/Finding";
+import { BugScenario } from "../domain/entities/BugScenario";
+import { BugAttempt } from "../domain/entities/BugAttempt";
 
 export class BugHuntingService {
   constructor(
-    private readonly scenarioRepository: BugScenarioRepository,
+    private readonly scenarios: BugScenarioRepository,
+    private readonly attempts: BugAttemptRepository
   ) {}
 
-
-  async getScenarios(
-    query: ScenarioQuery,
-  ): Promise<BugScenario[]> {
-
-    const result =
-      await this.scenarioRepository.findMany(
-        query,
-      );
-
-    return result.items;
+  async getScenario(id: string): Promise<BugScenario | null> {
+    return this.scenarios.findById(id);
   }
 
+  /** Resumes an in-progress attempt if one exists, otherwise starts a new one. */
+  async startOrResumeAttempt(userId: string, scenarioId: string): Promise<BugAttempt> {
+    const scenario = await this.scenarios.findById(scenarioId);
+    if (!scenario) throw new Error("Scenario not found");
 
-  async getScenario(
-    id: string,
-  ): Promise<BugScenario | null> {
+    const existing = await this.attempts.findActiveAttempt(userId, scenarioId);
+    if (existing) return existing;
 
-    return this.scenarioRepository.findById(
-      id,
-    );
+    return this.attempts.create({ userId, scenarioId });
   }
 
+  async logHypothesis(attemptId: string, scenarioId: string, userId: string, hypothesis: string): Promise<void> {
+    if (!hypothesis.trim()) {
+      throw new Error("Hypothesis cannot be empty");
+    }
+    const attempt = await this.attempts.findById(attemptId);
+    if (!attempt) throw new Error("Attempt not found");
+    if (!attempt.isActive()) throw new Error("Cannot log a hypothesis on a completed attempt");
 
-  async exists(
-    id: string,
-  ): Promise<boolean> {
+    await this.attempts.logHypothesis({ attemptId, scenarioId, userId, hypothesis });
+  }
 
-    const scenario =
-      await this.scenarioRepository.findById(
-        id,
-      );
+  async recordFinding(attemptId: string, source: InvestigationArtifactSource, refId: string, note?: string) {
+    const attempt = await this.attempts.findById(attemptId);
+    if (!attempt) throw new Error("Attempt not found");
+    if (!attempt.isActive()) throw new Error("Cannot record findings on a completed attempt");
 
-    return scenario !== null;
+    return this.attempts.recordFinding({ attemptId, source, refId, note });
+  }
+
+  async submitFix(attemptId: string, rootCause: string, proposedFix: string) {
+    if (!rootCause.trim() || !proposedFix.trim()) {
+      throw new Error("rootCause and proposedFix are required");
+    }
+    const attempt = await this.attempts.findById(attemptId);
+    if (!attempt) throw new Error("Attempt not found");
+    if (!attempt.isActive()) throw new Error("This attempt has already been submitted");
+
+    const submission = await this.attempts.submitFix({ attemptId, rootCause, proposedFix });
+
+    // Grading is intentionally decoupled from submission — call gradeAttempt
+    // separately (sync or async via a queue) once real grading logic exists.
+    return submission;
+  }
+
+  async gradeAttempt(attemptId: string, score: number, feedback: string) {
+    return this.attempts.gradeAttempt({ attemptId, score, feedback });
+  }
+
+  async getAttemptSummary(attemptId: string) {
+    const attempt = await this.attempts.findById(attemptId);
+    if (!attempt) throw new Error("Attempt not found");
+
+    const [submission, findings] = await Promise.all([
+      this.attempts.getSubmission(attemptId),
+      this.attempts.listFindings(attemptId),
+    ]);
+
+    return {
+      attempt: attempt.toJSON(),
+      submission: submission?.toJSON() ?? null,
+      findings: findings.map((f) => f.toJSON()),
+    };
+  }
+
+  async runSqlQuery(scenarioId: string, query: string) {
+    const scenario = await this.scenarios.findById(scenarioId);
+    if (!scenario) throw new Error("Scenario not found");
+
+    const { sql } = scenario.toJSON();
+    return { columns: sql.columns, rows: sql.rows, executedQuery: query };
   }
 }
 ================================================

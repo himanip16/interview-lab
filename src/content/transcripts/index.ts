@@ -5,46 +5,38 @@ import {
 
 import { TRANSCRIPTS } from "@/features/library/data/generated";
 
-
-
-const categoryMap = new Map<TranscriptCategory, TranscriptEntry[]>();
+const categoryMap = new Map<
+  TranscriptCategory,
+  TranscriptEntry[]
+>();
 
 for (const transcript of TRANSCRIPTS) {
-  const list = categoryMap.get(transcript.summary.category) ?? [];
+  const list =
+    categoryMap.get(transcript.summary.category) ?? [];
+
   list.push(transcript);
-  categoryMap.set(transcript.summary.category, list);
+
+  categoryMap.set(
+    transcript.summary.category,
+    list
+  );
 }
 
-export function getAllTranscripts(): ReadonlyArray<TranscriptEntry> {
+export function getAllTranscripts(): readonly TranscriptEntry[] {
   return TRANSCRIPTS;
 }
 
 export function getTranscript(
   slug: string
 ): TranscriptEntry | undefined {
-  const transcript = await prisma.transcript.findUnique({
-    where: {
-        slug
-    }
-});
-
-if (!transcript) {
-    notFound();
-}
+  return TRANSCRIPTS.find(
+    (t) => t.summary.slug === slug
+  );
 }
 
 export function getTranscriptsByCategory(
   category: TranscriptCategory
 ): TranscriptEntry[] {
-  const transcript = await prisma.transcript.findUnique({
-    where: {
-        slug
-    }
-});
-
-if (!transcript) {
-    notFound();
-}
   return categoryMap.get(category) ?? [];
 }
 
@@ -61,14 +53,17 @@ export function getCategories(): TranscriptCategory[] {
 export function getCategoryLabel(
   category: TranscriptCategory
 ): string {
-  const labels: Record<TranscriptCategory, string> = {
+  const labels: Record<
+    TranscriptCategory,
+    string
+  > = {
     hld: "High Level Design",
     lld: "Low Level Design",
     dsa: "Data Structures & Algorithms",
-    behavioural: "Behavioural"
+    behavioural: "Behavioural",
   };
 
-  return labels[category] ?? category;
+  return labels[category];
 }
 
 export function validateTranscripts(): void {
@@ -89,9 +84,9 @@ export function validateTranscripts(): void {
       );
     }
 
-    if (!transcript.summary.tags.length) {
+    if (transcript.summary.tags.length === 0) {
       throw new Error(
-        `${transcript.summary.slug}: no tags`
+        `${transcript.summary.slug}: missing tags`
       );
     }
 

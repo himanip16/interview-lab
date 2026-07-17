@@ -1,102 +1,49 @@
+// src/features/bug-hunting/components/Tabs/SqlPanel.tsx
 "use client";
 
 import { useState } from "react";
+import type { SqlFixture } from "@/modules/bug-hunting/domain/entities/BugScenario";
 
-import type {
-  BugScenario,
-} from "../../types/Scenario";
+export default function SqlPanel({ scenarioId, fixture }: { scenarioId: string; fixture: SqlFixture }) {
+  const [query, setQuery] = useState(fixture.initialQuery);
+  const [result, setResult] = useState<{ columns: string[]; rows: string[][] } | null>({
+    columns: fixture.columns,
+    rows: fixture.rows,
+  });
+  const [running, setRunning] = useState(false);
 
-interface Props {
-  scenario: BugScenario;
-}
-
-export default function SqlPanel({
-  scenario,
-}: Props) {
-  const [query, setQuery] = useState(
-    scenario.sql?.initialQuery ?? ""
-  );
-
-  const columns = scenario.sql?.columns ?? [];
-  const rows = scenario.sql?.rows ?? [];
+  const runQuery = async () => {
+    setRunning(true);
+    try {
+      const res = await fetch("/api/bug-hunting/sql", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ scenarioId, query }),
+      });
+      const data = await res.json();
+      setResult(data);
+    } finally {
+      setRunning(false);
+    }
+  };
 
   return (
     <>
-      <textarea
-        className="sql-box mono"
-        value={query}
-        onChange={(e) =>
-          setQuery(e.target.value)
-        }
-        spellCheck={false}
-      />
-
-      <button
-        type="button"
-        className="run-btn"
-      >
-        <svg
-          width="11"
-          height="11"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-        >
-          <path d="M8 5v14l11-7z" />
-        </svg>
-
-        Run query
+      <textarea className="bh-sql-box mono" value={query} onChange={(e) => setQuery(e.target.value)} spellCheck={false} />
+      <button className="bh-run-btn" onClick={runQuery} disabled={running}>
+        {running ? "Running…" : "Run query"}
       </button>
-
-      {columns.length > 0 && (
+      {result && (
         <table>
           <thead>
-            <tr>
-              {columns.map((column) => (
-                <th key={column}>
-                  {column}
-                </th>
-              ))}
-            </tr>
+            <tr>{result.columns.map((c) => <th key={c}>{c}</th>)}</tr>
           </thead>
-
           <tbody>
-            {rows.map((row, rowIndex) => (
-              <tr key={rowIndex}>
-                {row.map((cell, cellIndex) => {
-                  const isRetry =
-                    columns[cellIndex] ===
-                    "retry_count";
-
-                  return (
-                    <td
-                      key={cellIndex}
-                      className={
-                        isRetry &&
-                        Number(cell) >= 3
-                          ? "flag"
-                          : undefined
-                      }
-                    >
-                      {cell}
-                    </td>
-                  );
-                })}
-              </tr>
+            {result.rows.map((row, i) => (
+              <tr key={i}>{row.map((cell, j) => <td key={j}>{cell}</td>)}</tr>
             ))}
           </tbody>
         </table>
-      )}
-
-      {columns.length === 0 && (
-        <div
-          style={{
-            paddingTop: 24,
-            color: "var(--ink-soft)",
-            fontSize: 12,
-          }}
-        >
-          No query results.
-        </div>
       )}
     </>
   );

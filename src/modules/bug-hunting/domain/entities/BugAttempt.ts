@@ -1,36 +1,41 @@
-import { Finding } from "./Finding";
-import { AttemptStatus } from "../value-objects/AttemptStatus";
+// src/modules/bug-hunting/domain/entities/BugAttempt.ts
+export type BugAttemptStatus = "STARTED" | "INVESTIGATING" | "SUBMITTED" | "COMPLETED" | "ABANDONED";
+
+interface BugAttemptProps {
+  id: string;
+  userId: string;
+  scenarioId: string;
+  status: BugAttemptStatus;
+  score: number | null;
+  feedback: string | null;
+  startedAt: Date;
+  completedAt: Date | null;
+}
 
 export class BugAttempt {
-  private findings: Finding[] = [];
+  private constructor(private readonly props: BugAttemptProps) {}
 
-  private status: AttemptStatus;
-
-  constructor(
-    readonly id: string,
-    readonly scenarioId: string,
-    readonly startedAt: Date,
-  ) {
-    this.status = AttemptStatus.IN_PROGRESS;
+  static fromProps(props: BugAttemptProps): BugAttempt {
+    return new BugAttempt(props);
   }
 
-  addFinding(finding: Finding) {
-    this.findings.push(finding);
+  get id() {
+    return this.props.id;
   }
 
-  complete() {
-    this.status = AttemptStatus.COMPLETED;
+  get status() {
+    return this.props.status;
   }
 
-  abandon() {
-    this.status = AttemptStatus.ABANDONED;
+  get scenarioId() {
+    return this.props.scenarioId;
   }
 
-  getFindings() {
-    return [...this.findings];
+  isActive(): boolean {
+    return this.props.status === "STARTED" || this.props.status === "INVESTIGATING";
   }
 
-  getStatus() {
-    return this.status;
+  toJSON(): BugAttemptProps {
+    return this.props;
   }
 }

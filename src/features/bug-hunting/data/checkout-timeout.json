@@ -1,4 +1,4 @@
-// src/features/bug-hunting/data/checkout-timeout.json
+
 {
   "id": "checkout-timeout",
   "title": "Checkout returns 500 intermittently",

@@ -1,6 +1,9 @@
 import { notFound } from "next/navigation";
 
-import { getTranscript } from "@/content/transcripts";
+import {
+  getTranscript,
+  getAllTranscripts,
+} from "@/content/transcripts";
 
 import TranscriptDetail from "@/features/library/components/TranscriptDetail";
 
@@ -10,8 +13,11 @@ type Props = {
   }>;
 };
 
-export default async function TranscriptPage({ params }: Props) {
+export default async function TranscriptPage({
+  params,
+}: Props) {
   const { slug } = await params;
+
   const transcript = getTranscript(slug);
 
   if (!transcript) {
@@ -30,15 +36,16 @@ export default async function TranscriptPage({ params }: Props) {
 }
 
 export async function generateStaticParams() {
-  const { getAllTranscripts } = await import("@/content/transcripts");
-
   return getAllTranscripts().map((transcript) => ({
     slug: transcript.summary.slug,
   }));
 }
 
-export async function generateMetadata({ params }: Props) {
+export async function generateMetadata({
+  params,
+}: Props) {
   const { slug } = await params;
+
   const transcript = getTranscript(slug);
 
   if (!transcript) {

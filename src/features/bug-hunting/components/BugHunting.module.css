@@ -1,0 +1,18 @@
+/* src/features/bug-hunting/components/BugHunting.module.css */
+.aura {
+  animation: breathe 3.2s ease-in-out infinite;
+}
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+.timeline::before {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  background: rgba(21, 22, 28, 0.1);
+}
