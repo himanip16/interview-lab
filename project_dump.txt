@@ -5676,7 +5676,7 @@ import { Search } from "@/components/ui/Search";
 import { Panel } from "@/components/ui/Panel";
 
 const CARD_WIDTH = 380;
-const GAP = 18; // px, matches gap-4.5
+const GAP = 18; // px
 
 const CARDS = [
   {
@@ -5816,7 +5816,7 @@ export default function LearnPage() {
 
   return (
     <div className="min-h-screen bg-[var(--paper)] py-12 px-6">
-      <Panel variant="default" className="max-w-[1500px] mx-auto p-[36px_40px_44px]">
+      <Panel variant="default" className="max-w-[1500px] mx-auto" style={{ padding: '36px 40px 44px' }}>
         {/* Top Navigation */}
         <div className="flex items-center justify-between mb-8.5 gap-6">
           <div className="heading-m font-semibold">
@@ -5840,8 +5840,8 @@ export default function LearnPage() {
         {/* Carousel */}
         <div
           ref={railRef}
-          className="flex gap-4.5 overflow-x-auto scroll-smooth snap-x snap-mandatory p-[34px_4px_8px] m-0 -mx-1"
-          style={{ scrollbarWidth: "none" }}
+          className="flex overflow-x-auto scroll-smooth snap-x snap-mandatory m-0 -mx-1"
+          style={{ gap: '18px', padding: '34px 4px 8px', scrollbarWidth: "none" }}
         >
           {CARDS.map((card) => (
             <div
@@ -5879,7 +5879,7 @@ export default function LearnPage() {
 
         {/* Footer */}
         <div className="flex items-center justify-between mt-5">
-          <div className="flex gap-4.5 body-s text-[var(--ink-400)] font-medium">
+          <div className="flex body-s text-[var(--ink-400)] font-medium" style={{ gap: '18px' }}>
             <span>Facebook</span>
             <span>Twitter</span>
           </div>
@@ -8259,6 +8259,32 @@ export async function POST(
     }
 
 
+    const evaluationService =
+      createEvaluationService();
+
+    let evaluation;
+    try {
+      evaluation = await evaluationService.evaluateInterview(id);
+    } catch (error) {
+      logger.error(
+        "AI evaluation failed, keeping interview in progress",
+        {
+          err: error,
+          interviewId: id,
+        }
+      );
+      return NextResponse.json(
+        {
+          error: "Evaluation failed. Please try again.",
+          retryable: true,
+        },
+        {
+          status: 503,
+        }
+      );
+    }
+
+    // Only mark as COMPLETED after successful evaluation
     await repository.updateProgress(
       id,
       {
@@ -8266,16 +8292,6 @@ export async function POST(
         completedAt: new Date(),
       }
     );
-
-
-    const evaluationService =
-      createEvaluationService();
-
-
-    const evaluation =
-      await evaluationService.evaluateInterview(
-        id
-      );
 
 
     return NextResponse.json(
@@ -8293,17 +8309,17 @@ export async function POST(
 
     if (error instanceof Error) {
   logger.error(
+    "Failed to process interview message",
     {
       err: error,
       message: error.message,
       stack: error.stack,
-    },
-    "Failed to process interview message"
+    }
   );
 } else {
   logger.error(
-    { error },
-    "Failed to process interview message"
+    "Failed to process interview message",
+    { error }
   );
 }
 
@@ -8451,7 +8467,6 @@ FILE: ./src/app/bug-hunting/[scenarioId]/page.tsx
 import { notFound } from "next/navigation";
 import { getBugHuntingService } from "@/modules/bug-hunting";
 
-// Fixed the broken "/problemsnting/" paths to correct feature paths
 import BugHuntingShell from "@/features/bug-hunting/components/BugHuntingShell";
 import DeploymentsPanel from "@/features/bug-hunting/components/Tabs/DeploymentsPanel";
 import DocsPanel from "@/features/bug-hunting/components/Tabs/DocsPanel";
@@ -8479,20 +8494,21 @@ export default async function BugHuntingPage({ params }: Props) {
 
   return (
     <main className="bug-hunting-page">
-      {/* FIX: Use 'data' (plain object) instead of 'scenario' (class instance) */}
       <Header scenario={data} />
 
       <div className="bh-body">
         <ReportSidebar
-          report={data.report}
-          scenarioId={data.id}
+          scenario={data}
+          hypothesis=""
+          onHypothesisChange={() => {}}
+          onSubmitHypothesis={() => {}}
         />
 
         <BugHuntingShell
-          logsPanel={<LogsPanel logs={data.logs} />}
-          docsPanel={<DocsPanel docs={data.docs} />}
+          logsPanel={<LogsPanel scenario={data} />}
+          docsPanel={<DocsPanel docs={data.docs} active={false} />}
           deploymentsPanel={
-            <DeploymentsPanel deployments={data.deployments} />
+            <DeploymentsPanel deployments={data.deployments} active={false} />
           }
           sqlFixture={data.sql}
           codeFiles={data.code}
@@ -8635,6 +8651,21 @@ FILE: ./src/app/globals.css
   --mint-800: #065f46;
   --mint-900: #064e3b;
   --mint-950: #022c22;
+
+  /* Amber / Accent Colors */
+  --amber: #f59e0b;
+  --amber-deep: #d97706;
+  --amber-50: #fffbeb;
+  --amber-100: #fef3c7;
+  --amber-200: #fde68a;
+  --amber-300: #fcd34d;
+  --amber-400: #fbbf24;
+  --amber-500: #f59e0b;
+  --amber-600: #d97706;
+  --amber-700: #b45309;
+  --amber-800: #92400e;
+  --amber-900: #78350f;
+  --amber-950: #451a03;
 
   /* Semantic Colors - Success */
   --success: #10b981;
@@ -8962,7 +8993,7 @@ body {
   }
 }
 
-@keyframes flow {
+@keyframes gradient-flow {
   0% {
     background-position: 0% 50%;
   }
@@ -9003,8 +9034,8 @@ body {
   animation: typing 2s steps(40, end) infinite;
 }
 
-.animate-flow {
-  animation: flow 3s ease infinite;
+.animate-gradient-flow {
+  animation: gradient-flow 3s ease infinite;
   background-size: 200% 200%;
 }
 
@@ -13170,6 +13201,7 @@ const TYPE_COLORS: Record<string, string> = {
   hld: "bg-[var(--violet)]",
   lld: "bg-[var(--coral)]",
   dsa: "bg-[var(--mint-deep)]",
+  general: "bg-[var(--ink-400)]",
 };
 
 const DIFF_CLASSES: Record<Difficulty, string> = {
@@ -15373,7 +15405,6 @@ export default function ExploreProblems({ exploreProblems }: Props) {
               <span className="line-clamp-1">
                 {problem.description ?? "System Design"}
               </span>
-              <span className="flex-shrink-0 text-muted-foreground">Coming soon</span>
             </div>
           </div>
         ))}
@@ -17208,19 +17239,19 @@ export interface BugScenario {
   title: string;
   description: string;
   symptom: string;
-  service: string;       // Add this
+  service: string;
   severity: 'low' | 'medium' | 'high' | 'critical';
   timerSeconds: number;
-  createdAt: string;     // Add this
-  metadata: any;         // Add this
-  
+  createdAt: string;
+  metadata: any;
+
   // Tab Data
-  logs: any[];
-  docs: any[];
-  deployments: any[];
-  sql: string;
-  code: any;
-  report: any;           // The finding/report structure
+  logs: LogEntry[];
+  docs: DocumentationSection[];
+  deployments: Deployment[];
+  sql: SqlQuery;
+  code: SourceFile[];
+  report: Report;
 }
 ================================================
 FILE: ./src/features/bug-hunting/constants/tabs.ts
@@ -22824,10 +22855,8 @@ export function validateTranscripts(): void {
 ================================================
 FILE: ./src/repositories/index.ts
 ================================================
-// Removed export of BugScenarioRepository because the module or its type
-// declarations were not found. Exporting available repositories only.
-export * from "./BugAttemptRepository";
-export * from "./BugAttemptRepository";
+export * from "../modules/bug-hunting/repositories/BugAttemptRepository";
+export * from "../modules/bug-hunting/repositories/BugScenarioRepository";
 ================================================
 FILE: ./src/shared/logger/logger.ts
 ================================================
@@ -24428,7 +24457,7 @@ export const Breadcrumb: React.FC<BreadcrumbProps> = ({
       {onBack && (
         <button
           onClick={onBack}
-          className="w-8 h-8 radius-pillborder border border-[var(--border)] bg-transparent text-[var(--ink)] flex items-center justify-center cursor-pointer flex-shrink-0 hover:bg-[var(--paper-100)] transition-colors"
+          className="w-8 h-8 radius-pill border border-[var(--border)] bg-transparent text-[var(--ink)] flex items-center justify-center cursor-pointer flex-shrink-0 hover:bg-[var(--paper-100)] transition-colors"
         >
           <ChevronRight className="w-3 h-3 rotate-180" />
         </button>
@@ -25269,6 +25298,29 @@ export class PromptGuard {
   /hidden instructions/i,
   /internal instructions/i,
   /prompt injection/i,
+
+  // Leet-speak variations (common obfuscation technique)
+  /r[3e]v[3e]a[l1]/i, // r3veal, rev3al, r3vea1, etc.
+  /s[0o]l[uo]t[1i][0o]n/i, // s0lut1on, s0lut10n, etc.
+  /[4a]n[s5]w[3e]r/i, // 4nsw3r, an5wer, etc.
+  /1n[s5]tr[uo]ct[1i][0o]n[s5]/i, // 1nstruct10ns, etc.
+
+  // Translation bypasses (attempting to get AI to translate instructions)
+  /translate.*instructions/i,
+  /translate.*prompt/i,
+  /translate.*system/i,
+  /convert.*to.*french/i,
+  /convert.*to.*spanish/i,
+  /convert.*to.*german/i,
+  /traduire.*instructions/i, // French
+  /traducir.*instrucciones/i, // Spanish
+  /übersetzen.*anweisungen/i, // German
+
+  // Character substitution patterns
+  /[4@]ct [4@]s/i, // act as with leet speak
+  /pr[e3]t[e3]nd t[o0] b[e3]/i, // pretend to be
+  /s[yi]st[e3]m pr[o0]mpt/i, // system prompt
+  /d[e3]v[e3]l[o0]p[e3]r pr[o0]mpt/i, // developer prompt
 ];
 
   isPromptInjection(message: string): boolean {
@@ -27488,7 +27540,20 @@ const AIResponseSchema = z.object({
   nextPhase: z.string().optional(),
   confidence: z.number().optional(),
 }).transform((data) => {
-  if (!data.phaseAssessment && (data.confidence !== undefined || data.transition !== undefined)) {
+  // If phaseAssessment exists but top-level confidence/transition also exist, merge them
+  if (data.phaseAssessment) {
+    return {
+      reply: data.reply,
+      phaseAssessment: {
+        goalCoverage: data.phaseAssessment.goalCoverage ?? {},
+        confidence: data.confidence ?? data.phaseAssessment.confidence ?? 0.5,
+        unresolvedTopics: data.phaseAssessment.unresolvedTopics ?? [],
+      },
+    };
+  }
+
+  // If phaseAssessment doesn't exist but top-level values do, create phaseAssessment
+  if (data.confidence !== undefined || data.transition !== undefined) {
     return {
       reply: data.reply,
       phaseAssessment: {
@@ -27498,6 +27563,7 @@ const AIResponseSchema = z.object({
       },
     };
   }
+
   return data;
 });
 
@@ -28227,7 +28293,7 @@ export class InterviewStateMachine {
       0
     );
 
-    return total / phase.goals.length;
+    return total / Math.max(phase.goals.length, 1);
   }
 
   private clamp(value: number): number {
@@ -29225,6 +29291,19 @@ export class InterviewService {
       interviewMode === InterviewMode.REVERSE
         ? pickPersona(interviewDifficulty)
         : null;
+
+    // Check for existing active interview before transaction to prevent race condition
+    const existingInterview = await prisma.interview.findFirst({
+      where: {
+        userId,
+        problemId: problem.id,
+        status: { not: "COMPLETED" },
+      },
+    });
+
+    if (existingInterview) {
+      return existingInterview.id;
+    }
 
     // Use transaction to ensure atomicity and handle race conditions
     const savedInterview = await prisma.$transaction(async (tx) => {
@@ -30229,10 +30308,29 @@ export class ValidatedJSONParser {
       const parsed = JSON.parse(cleaned);
 
       if (typeof parsed.confidence === "number") {
-        if (parsed.confidence > 1 && parsed.confidence <= 100) {
+        // Handle negative numbers by clamping to 0
+        if (parsed.confidence < 0) {
+          parsed.confidence = 0;
+        } else if (parsed.confidence > 1 && parsed.confidence <= 100) {
           parsed.confidence = parsed.confidence / 100;
         } else if (parsed.confidence > 100) {
           parsed.confidence = 1;
+        }
+      } else if (typeof parsed.confidence === "string") {
+        // Handle non-numeric strings by attempting to parse
+        const numValue = parseFloat(parsed.confidence);
+        if (!isNaN(numValue)) {
+          parsed.confidence = numValue;
+          if (parsed.confidence < 0) {
+            parsed.confidence = 0;
+          } else if (parsed.confidence > 1 && parsed.confidence <= 100) {
+            parsed.confidence = parsed.confidence / 100;
+          } else if (parsed.confidence > 100) {
+            parsed.confidence = 1;
+          }
+        } else {
+          // If string cannot be parsed to number, default to 0.5
+          parsed.confidence = 0.5;
         }
       }
 
@@ -30760,6 +30858,8 @@ export class BugAttempt {
 FILE: ./src/modules/bug-hunting/domain/entities/BugScenario.ts
 ================================================
 // src/modules/bug-hunting/domain/entities/BugScenario.ts
+export type Severity = "P0" | "P1" | "P2" | "P3";
+
 export interface LogEntry {
   id: string;
   timestamp: string;
@@ -30778,7 +30878,7 @@ export interface CodeFile {
   key: string;
   name: string;
   language: string;
-  content: string; // plain source — no HTML
+  contentHtml: string; // pre-highlighted markup, matches CodeBlock's dangerouslySetInnerHTML
 }
 
 export interface DocSection {
@@ -30803,7 +30903,7 @@ export interface ScenarioReportMetadata {
 
 export interface ScenarioReport {
   title: string;
-  severity: string;
+  severity: Severity;
   severityLabel: string;
   symptom: string;
   metadata: ScenarioReportMetadata;
@@ -30817,6 +30917,18 @@ interface BugScenarioProps {
   code: CodeFile[];
   docs: DocSection[];
   deployments: Deployment[];
+  // Flattened fields for feature layer compatibility
+  title: string;
+  description: string;
+  symptom: string;
+  service: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  endpoint: string;
+  errorRate: string;
+  firstSeen: string;
+  timerSeconds: number;
+  createdAt: string;
+  metadata: any;
 }
 
 /** Domain entity — the UI only ever sees this shape via toJSON(). */

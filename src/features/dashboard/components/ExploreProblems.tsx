@@ -55,7 +55,6 @@ export default function ExploreProblems({ exploreProblems }: Props) {
               <span className="line-clamp-1">
                 {problem.description ?? "System Design"}
               </span>
-              <span className="flex-shrink-0 text-muted-foreground">Coming soon</span>
             </div>
           </div>
         ))}
