@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { Difficulty, ProblemCategory } from "@prisma/client";
 
-// Single source of truth. features/interview/setup/components/problemSchema.ts
+// Single source of truth. features/interview/problems/components/problemSchema.ts
 // should be changed to `export * from "@/features/problems/types/problem"`
 // instead of redefining this — do that as a follow-up, not bundled here.
 

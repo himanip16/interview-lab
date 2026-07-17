@@ -1,3 +1,5 @@
+// src/shared/logger/logger.ts
+
 export interface LogContext {
   requestId?: string;
   interviewId?: string;
@@ -15,9 +17,6 @@ export class Logger {
       timestamp: new Date().toISOString(),
       level,
       message,
-      requestId: context.requestId,
-      interviewId: context.interviewId,
-      model: context.model,
       ...context,
     };
 
@@ -50,3 +49,15 @@ export class Logger {
     this.log("ERROR", message, context);
   }
 }
+
+/**
+ * Default export so callers can do:
+ * import logger from "@/shared/logger/logger";
+ */
+const logger = {
+  info: Logger.info.bind(Logger),
+  warn: Logger.warn.bind(Logger),
+  error: Logger.error.bind(Logger),
+};
+
+export default logger;

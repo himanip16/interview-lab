@@ -177,8 +177,6 @@ PROJECT STRUCTURE
 │   │   │   ├── diagrams
 │   │   │   │   ├── [slug]
 │   │   │   │   │   └── page.tsx
-│   │   │   │   ├── [system]
-│   │   │   │   │   └── page.tsx
 │   │   │   │   ├── cassandra
 │   │   │   │   │   └── page.tsx
 │   │   │   │   └── page.tsx
@@ -627,7 +625,7 @@ PROJECT STRUCTURE
 ├── tsconfig.json
 └── tsconfig.tsbuildinfo
 
-233 directories, 393 files
+232 directories, 392 files
 
 FILE CONTENTS
 
@@ -4760,7 +4758,7 @@ This document provides the explicit one-to-one mapping between HTML design speci
 
 **HTML Location**: `src/frontend/card.html`
 
-**React Target**: `src/features/interview/setup/components/ProblemCard.tsx`
+**React Target**: `src/features/interview/problems/components/ProblemCard.tsx`
 
 **Design Reference**: See `DESIGN_SPECIFICATION.md` - card.html section
 
@@ -5246,28 +5244,6 @@ export default function CassandraPage() {
   );
 }
 ================================================
-FILE: ./src/app/learn/diagrams/[system]/page.tsx
-================================================
-import { diagrams } from "@/data/systemDiagrams";
-
-export async function generateStaticParams() {
-  return diagrams.map((d) => ({
-    system: d.slug,
-  }));
-}
-
-export default function Page({ params }) {
-  const diagram = diagrams.find(
-    (d) => d.slug === params.system
-  );
-
-  if (!diagram) {
-    notFound();
-  }
-
-  return <SystemDiagram systemType={diagram.slug} />;
-}
-================================================
 FILE: ./src/app/learn/diagrams/page.tsx
 ================================================
 "use client";
@@ -5317,28 +5293,39 @@ export default function DiagramsPage() {
 ================================================
 FILE: ./src/app/learn/diagrams/[slug]/page.tsx
 ================================================
+// src/app/learn/diagrams/[slug]/page.tsx
+// FIXED: Consistent slug parameter throughout
+
 "use client";
 
 import { DeepDiveHero } from "@/features/learning/components/DeepDiveHero";
+import { CassandraDiagram } from "@/features/learning/components/diagrams/CassandraDiagram";
+import { RedisDiagram } from "@/features/learning/components/diagrams/RedisDiagram";
+import { KafkaDiagram } from "@/features/learning/components/diagrams/KafkaDiagram";
 import {
   getDeepDiveSystem,
   getPrevSystem,
   getNextSystem,
   DEEP_DIVE_SYSTEMS,
 } from "@/features/learning/data/deepDives";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
-// Lazy import diagrams
-const DIAGRAM_MAP: Record<string, React.ComponentType> = {
-  cassandra: () => require("@/features/learning/components/diagrams/CassandraDiagram").CassandraDiagram(),
-  redis: () => require("@/features/learning/components/diagrams/RedisDiagram").RedisDiagram(),
-  kafka: () => require("@/features/learning/components/diagrams/KafkaDiagram").KafkaDiagram(),
+// ✅ FIX: Inline diagram map (no require)
+const DIAGRAM_COMPONENTS: Record<string, React.ComponentType> = {
+  cassandra: CassandraDiagram,
+  redis: RedisDiagram,
+  kafka: KafkaDiagram,
 };
 
-export default function DeepDivePage() {
+interface PageProps {
+  params: {
+    slug: string;  // ✅ Must match folder name [slug]
+  };
+}
+
+export default function DeepDivePage({ params }: PageProps) {
   const router = useRouter();
-  const params = useParams();
-  const slug = params.slug as string;
+  const { slug } = params;
 
   const system = getDeepDiveSystem(slug);
   const prevSystem = getPrevSystem(slug);
@@ -5346,15 +5333,17 @@ export default function DeepDivePage() {
 
   if (!system) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-[var(--paper)]">
         <div className="text-center">
-          <h1 className="text-3xl font-bold mb-4">Deep Dive Not Found</h1>
-          <p className="text-lg mb-6 text-gray-600">
-            This system doesn't have a deep dive yet.
+          <h1 className="text-3xl font-bold mb-4 text-[var(--ink)]">
+            Deep Dive Not Found
+          </h1>
+          <p className="text-lg mb-6 text-[var(--ink-soft)]">
+            The system "{slug}" doesn't have a deep dive yet.
           </p>
           <button
             onClick={() => router.push("/learn/diagrams")}
-            className="px-6 py-2 bg-blue-500 text-white rounded"
+            className="px-6 py-2 bg-[var(--ink)] text-white rounded-full font-semibold hover:bg-[var(--ink-soft)]"
           >
             Back to Diagrams
           </button>
@@ -5363,7 +5352,8 @@ export default function DeepDivePage() {
     );
   }
 
-  const DiagramComponent = DIAGRAM_MAP[slug];
+  // ✅ Get diagram component (undefined is ok, component checks)
+  const DiagramComponent = DIAGRAM_COMPONENTS[slug];
 
   return (
     <DeepDiveHero
@@ -5375,8 +5365,16 @@ export default function DeepDivePage() {
       credit={system.credit}
       creditOrg={system.creditOrg}
       diagramSvg={DiagramComponent ? <DiagramComponent /> : <div />}
-      prevSystem={prevSystem ? { name: prevSystem.name, slug: prevSystem.slug } : undefined}
-      nextSystem={nextSystem ? { name: nextSystem.name, slug: nextSystem.slug } : undefined}
+      prevSystem={
+        prevSystem
+          ? { name: prevSystem.name, slug: prevSystem.slug }
+          : undefined
+      }
+      nextSystem={
+        nextSystem
+          ? { name: nextSystem.name, slug: nextSystem.slug }
+          : undefined
+      }
       onReadMore={() => {
         if (system.scenarioSlug) {
           router.push(`/learn/scenarios/${system.scenarioSlug}`);
@@ -5387,11 +5385,27 @@ export default function DeepDivePage() {
   );
 }
 
-// Generate static pages for all systems
-export function generateStaticParams() {
+// ✅ Generate static params for all systems (optional but recommended)
+export async function generateStaticParams() {
   return DEEP_DIVE_SYSTEMS.map((system) => ({
     slug: system.slug,
   }));
+}
+
+// ✅ Metadata for each page
+export async function generateMetadata({ params }: PageProps) {
+  const system = getDeepDiveSystem(params.slug);
+  
+  if (!system) {
+    return {
+      title: "Deep Dive Not Found",
+    };
+  }
+
+  return {
+    title: `${system.name} - Deep Dive | Learn`,
+    description: system.description[0]?.replace(/<b>|<\/b>/g, ""),
+  };
 }
 ================================================
 FILE: ./src/app/learn/card-detail/page.tsx
@@ -5740,7 +5754,7 @@ const CARDS = [
     description: "Practice with an AI interviewer.",
     from: "#FFB930",
     to: "#E8940A",
-    href: "/interview/setup", // exact match — the general setup flow
+    href: "/interview/problems", // exact match — the general setup flow
     icon: (
       <svg viewBox="0 0 110 110" fill="none">
         <circle cx="55" cy="55" r="52" fill="#fff"/>
@@ -5757,7 +5771,7 @@ const CARDS = [
     description: "Deep dive into specific topics.",
     from: "#7A6BFF",
     to: "#4C3FD6",
-    href: "/interview/setup?type=deep_dive", // matches InterviewTemplate slug "deep_dive"
+    href: "/interview/problems?type=deep_dive", // matches InterviewTemplate slug "deep_dive"
     icon: (
       <svg viewBox="0 0 110 110" fill="none">
         <circle cx="55" cy="55" r="52" fill="#fff"/>
@@ -5970,7 +5984,7 @@ const CARDS = [
     title: 'Live interview with AI',
     meta: 'Live · 45 min',
     gradient: 'from-[#FFB930] to-[#E8940A]',
-    href: '/interview/setup',
+    href: '/interview/problems',
     icon: (
       <svg viewBox="0 0 84 84" fill="none">
         <circle cx="42" cy="42" r="40" fill="#fff"/>
@@ -5985,7 +5999,7 @@ const CARDS = [
     title: 'Deep dives',
     meta: 'Learn · Topic-based',
     gradient: 'from-[#7A6BFF] to-[#4C3FD6]',
-    href: '/interview/setup?type=deep_dive',
+    href: '/interview/problems?type=deep_dive',
     icon: (
       <svg viewBox="0 0 84 84" fill="none">
         <circle cx="42" cy="42" r="40" fill="#fff"/>
@@ -11058,12 +11072,21 @@ export default function WhiteboardView({ initialSlug }: WhiteboardViewProps) {
 ================================================
 FILE: ./src/features/learning/components/diagrams/CassandraDiagram.tsx
 ================================================
+// src/features/learning/components/diagrams/CassandraDiagram.tsx
 export function CassandraDiagram() {
   return (
     <svg viewBox="0 0 220 220" fill="none" className="w-full h-auto">
-      {/* Ring topology with center node */}
-      <circle cx="110" cy="110" r="88" stroke="#15161C" strokeWidth="2" strokeDasharray="4 7" opacity="0.25" />
-      
+      {/* Ring topology */}
+      <circle
+        cx="110"
+        cy="110"
+        r="88"
+        stroke="#15161C"
+        strokeWidth="2"
+        strokeDasharray="4 7"
+        opacity="0.25"
+      />
+
       {/* 6 ring nodes */}
       <circle cx="110" cy="30" r="11" fill="#00D9A3" />
       <circle cx="182" cy="70" r="11" fill="#00A87E" />
@@ -11071,13 +11094,181 @@ export function CassandraDiagram() {
       <circle cx="110" cy="190" r="11" fill="#00A87E" />
       <circle cx="38" cy="150" r="11" fill="#00D9A3" />
       <circle cx="38" cy="70" r="11" fill="#15161C" />
-      
+
       {/* Center coordinator node */}
       <circle cx="110" cy="110" r="16" fill="#FF5A3C" />
-      
-      {/* Connections */}
-      <path d="M110 30L182 70M182 70L182 150M182 150L110 190M110 190L38 150M38 150L38 70M38 70L110 30" stroke="#15161C" strokeWidth="1.5" opacity="0.3" />
-      <path d="M110 110L110 30M110 110L182 70M110 110L182 150M110 110L110 190M110 110L38 150M110 110L38 70" stroke="#FF5A3C" strokeWidth="1.5" opacity="0.35" />
+
+      {/* Ring connections */}
+      <path
+        d="M110 30L182 70M182 70L182 150M182 150L110 190M110 190L38 150M38 150L38 70M38 70L110 30"
+        stroke="#15161C"
+        strokeWidth="1.5"
+        opacity="0.3"
+      />
+
+      {/* Center connections */}
+      <path
+        d="M110 110L110 30M110 110L182 70M110 110L182 150M110 110L110 190M110 110L38 150M110 110L38 70"
+        stroke="#FF5A3C"
+        strokeWidth="1.5"
+        opacity="0.35"
+      />
+    </svg>
+  );
+}
+
+// ---
+
+// src/features/learning/components/diagrams/RedisDiagram.tsx
+export function RedisDiagram() {
+  const positions = [
+    { angle: 0, x: 110, y: 30 },
+    { angle: 72, x: 182, y: 70 },
+    { angle: 144, x: 182, y: 150 },
+    { angle: 216, x: 38, y: 150 },
+    { angle: 288, x: 38, y: 70 },
+  ];
+
+  return (
+    <svg viewBox="0 0 220 220" fill="none" className="w-full h-auto">
+      {/* Central cache node */}
+      <circle cx="110" cy="110" r="20" fill="#FF5A3C" />
+      <text
+        x="110"
+        y="115"
+        textAnchor="middle"
+        fontSize="10"
+        fill="white"
+        fontWeight="600"
+      >
+        Cache
+      </text>
+
+      {/* 5 surrounding key-value stores */}
+      {positions.map((pos, i) => (
+        <g key={i}>
+          {/* Connection line */}
+          <line
+            x1="110"
+            y1="110"
+            x2={pos.x}
+            y2={pos.y}
+            stroke="#15161C"
+            strokeWidth="1.5"
+            opacity="0.3"
+          />
+          {/* Node */}
+          <circle cx={pos.x} cy={pos.y} r="12" fill="#00D9A3" />
+          <text
+            x={pos.x}
+            y={pos.y + 4}
+            textAnchor="middle"
+            fontSize="8"
+            fill="#15161C"
+            fontWeight="600"
+          >
+            {i + 1}
+          </text>
+        </g>
+      ))}
+
+      {/* Ring around center */}
+      <circle cx="110" cy="110" r="88" stroke="#15161C" strokeWidth="2" strokeDasharray="4 7" opacity="0.15" />
+    </svg>
+  );
+}
+
+// ---
+
+// src/features/learning/components/diagrams/KafkaDiagram.tsx
+export function KafkaDiagram() {
+  return (
+    <svg viewBox="0 0 220 220" fill="none" className="w-full h-auto">
+      {/* 3 Topics as vertical columns */}
+      {[0, 1, 2].map((i) => (
+        <g key={i}>
+          {/* Topic container */}
+          <rect
+            x={50 + i * 55}
+            y="35"
+            width="45"
+            height="150"
+            fill="none"
+            stroke="#15161C"
+            strokeWidth="2"
+            rx="4"
+            opacity="0.3"
+          />
+
+          {/* Topic label */}
+          <text
+            x={72.5 + i * 55}
+            y="25"
+            textAnchor="middle"
+            fontSize="11"
+            fill="#15161C"
+            fontWeight="600"
+          >
+            Topic {i + 1}
+          </text>
+
+          {/* 3 Partitions per topic */}
+          {[0, 1, 2].map((j) => (
+            <g key={j}>
+              {/* Partition container */}
+              <rect
+                x={55 + i * 55}
+                y={50 + j * 45}
+                width="35"
+                height="35"
+                fill="none"
+                stroke="#15161C"
+                strokeWidth="1"
+                opacity="0.2"
+              />
+
+              {/* Leader or replica indicator */}
+              <circle
+                cx={72.5 + i * 55}
+                cy={67.5 + j * 45}
+                r="8"
+                fill={j === 0 ? "#FF5A3C" : "#00D9A3"}
+              />
+
+              {/* Replica count */}
+              {j > 0 && (
+                <text
+                  x={72.5 + i * 55}
+                  y={71 + j * 45}
+                  textAnchor="middle"
+                  fontSize="9"
+                  fill="white"
+                  fontWeight="600"
+                >
+                  R
+                </text>
+              )}
+              {j === 0 && (
+                <text
+                  x={72.5 + i * 55}
+                  y={71 + j * 45}
+                  textAnchor="middle"
+                  fontSize="9"
+                  fill="white"
+                  fontWeight="600"
+                >
+                  L
+                </text>
+              )}
+            </g>
+          ))}
+        </g>
+      ))}
+
+      {/* Legend */}
+      <text x="55" y="210" fontSize="10" fill="#15161C" opacity="0.6">
+        L = Leader, R = Replica
+      </text>
     </svg>
   );
 }
@@ -12441,7 +12632,7 @@ FILE: ./src/features/problems/types/problem.ts
 import { z } from "zod";
 import { Difficulty, ProblemCategory } from "@prisma/client";
 
-// Single source of truth. features/interview/setup/components/problemSchema.ts
+// Single source of truth. features/interview/problems/components/problemSchema.ts
 // should be changed to `export * from "@/features/problems/types/problem"`
 // instead of redefining this — do that as a follow-up, not bundled here.
 
@@ -16619,7 +16810,7 @@ export default function EvidenceTimeline({ evidence }: Props) {
 FILE: ./src/features/interview/services/interviewApi.ts
 ================================================
 import { z } from "zod";
-import { StartInterviewResponseSchema } from "../setup/types/interview";
+import { StartInterviewResponseSchema } from "../problems/types/interview";
 
 export interface StartInterviewPayload {
   type: string;
@@ -24422,33 +24613,10 @@ import { cookies } from "next/headers";
 import { randomUUID } from "crypto";
 
 import { prisma } from "@/shared/prisma/client";
-
 import { auth } from "./auth";
 
-
 const GUEST_COOKIE = "guest_user_id";
-const GUEST_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 30; // 30 days
-
-export async function getCurrentUserId(): Promise<string | null> {
-  const session = await auth();
-
-  if (session?.user?.id) {
-    return session.user.id;
-  }
-
-  const cookieStore = await cookies();
-  const existingGuestId = cookieStore.get(GUEST_COOKIE)?.value;
-
-  if (existingGuestId) {
-    const guest = await prisma.user.findUnique({
-      where: { id: existingGuestId },
-    });
-
-    if (guest) return guest.id;
-  }
-
-  return null;
-}
+const GUEST_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
 
 export async function ensureGuestUser(): Promise<string> {
   const session = await auth();
@@ -24458,14 +24626,22 @@ export async function ensureGuestUser(): Promise<string> {
   }
 
   const cookieStore = await cookies();
-  const existingGuestId = cookieStore.get(GUEST_COOKIE)?.value;
 
-  if (existingGuestId) {
-    const guest = await prisma.user.findUnique({
-      where: { id: existingGuestId },
+  const guestId = cookieStore.get(GUEST_COOKIE)?.value;
+
+  if (guestId) {
+    const existingGuest = await prisma.user.findUnique({
+      where: {
+        id: guestId,
+      },
+      select: {
+        id: true,
+      },
     });
 
-    if (guest) return guest.id;
+    if (existingGuest) {
+      return existingGuest.id;
+    }
   }
 
   const guest = await prisma.user.create({
@@ -24473,16 +24649,24 @@ export async function ensureGuestUser(): Promise<string> {
       email: `guest-${randomUUID()}@guest.local`,
       isGuest: true,
     },
+    select: {
+      id: true,
+    },
   });
 
   cookieStore.set(GUEST_COOKIE, guest.id, {
     httpOnly: true,
     sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
     maxAge: GUEST_COOKIE_MAX_AGE_SECONDS,
     path: "/",
   });
 
   return guest.id;
+}
+
+export async function getCurrentUserId(): Promise<string> {
+  return ensureGuestUser();
 }
 ================================================
 FILE: ./src/modules/auth/auth.ts

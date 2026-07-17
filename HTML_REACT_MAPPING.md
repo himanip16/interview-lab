@@ -104,7 +104,7 @@ This document provides the explicit one-to-one mapping between HTML design speci
 
 **HTML Location**: `src/frontend/card.html`
 
-**React Target**: `src/features/interview/setup/components/ProblemCard.tsx`
+**React Target**: `src/features/interview/problems/components/ProblemCard.tsx`
 
 **Design Reference**: See `DESIGN_SPECIFICATION.md` - card.html section
 

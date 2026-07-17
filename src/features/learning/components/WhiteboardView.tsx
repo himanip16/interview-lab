@@ -1,147 +1,183 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Breadcrumb } from "@/components/layout/Breadcrumb";
+import React, { useState, useRef, useMemo } from "react";
 import { Inspector } from "@/components/layout/Inspector";
-import { Panel } from "@/components/ui/Panel";
+import { getConnectionPoint, Point, Rect } from "../utils/geometry";
 import { cn } from "@/lib/utils";
-import {
-  WHITEBOARD_SYSTEMS,
-  WHITEBOARD_SYSTEM_LIST,
-  type WhiteboardSystem,
-} from "@/features/learning/data/whiteboardSystems";
 
-interface WhiteboardViewProps {
-  initialSlug: string;
+/**
+ * 1. INTERNAL TYPES
+ */
+export interface DiagramNode {
+  id: string;
+  title: string;
+  category: 'entry' | 'logic' | 'storage';
+  gridPos: { x: number; y: number };
+  details: {
+    role: string;
+    deepDive: string;
+    failureModes: string;
+    tradeoffs: string;
+  };
 }
 
-export default function WhiteboardView({ initialSlug }: WhiteboardViewProps) {
-  const router = useRouter();
-  const [selectedSystemSlug, setSelectedSystemSlug] = useState<string>(initialSlug);
+export interface DiagramEdge {
+  from: string;
+  to: string;
+}
 
-  // Keep local state in sync if the route changes externally
-  // (e.g. browser back/forward, or a different initialSlug on remount).
-  useEffect(() => {
-    setSelectedSystemSlug(initialSlug);
-  }, [initialSlug]);
+interface NodeProps {
+  node: DiagramNode;
+  position: Rect;
+  isSelected: boolean;
+  onClick: () => void;
+}
 
-  const system: WhiteboardSystem | undefined = WHITEBOARD_SYSTEMS[selectedSystemSlug];
-  const [selectedNodeId, setSelectedNodeId] = useState<string | undefined>(system?.nodes[0]?.id);
+/**
+ * 2. CONFIG & CONSTANTS
+ */
+const GRID_CONFIG = { 
+  COLS: 12, 
+  ROWS: 8, 
+  NODE_WIDTH: 160, 
+  NODE_HEIGHT: 80 
+};
 
-  useEffect(() => {
-    setSelectedNodeId(system?.nodes[0]?.id);
-  }, [selectedSystemSlug, system]);
+const CATEGORY_MAP = {
+  entry: "bg-coral border-coral/20 focus:ring-coral/40",
+  logic: "bg-violet border-violet/20 focus:ring-violet/40",
+  storage: "bg-mint-deep border-mint-deep/20 focus:ring-mint-deep/40",
+} as const;
 
-  const selectedData = system?.nodes.find((n) => n.id === selectedNodeId);
+/**
+ * 3. ATOMIC NODE COMPONENT
+ */
+const Node: React.FC<NodeProps> = ({ node, position, isSelected, onClick }) => (
+  <button
+    role="button"
+    aria-pressed={isSelected}
+    onClick={onClick}
+    style={{ 
+      transform: `translate(calc(${position.x}px - 50%), calc(${position.y}px - 50%))` 
+    }}
+    className={cn(
+      "absolute left-0 top-0 w-[160px] p-4 rounded-xl text-white text-left transition-all",
+      "hover:scale-105 focus:outline-none focus:ring-4",
+      CATEGORY_MAP[node.category],
+      isSelected ? "ring-4 ring-ink/20 scale-105 z-30 shadow-lg" : "z-20 opacity-90 shadow-sm"
+    )}
+  >
+    <span className="block text-xs font-bold truncate">{node.title}</span>
+    <span className="block text-[10px] opacity-70 uppercase font-bold tracking-wider">
+      {node.category}
+    </span>
+  </button>
+);
 
-  function selectSystem(slug: string) {
-    setSelectedSystemSlug(slug);
-    // Push the slug into the URL so the current system is shareable/bookmarkable
-    // and survives a refresh, instead of living only in component state.
-    router.push(`/learn/whiteboard/${slug}`, { scroll: false });
-  }
+/**
+ * 4. MAIN ORCHESTRATOR
+ */
+export default function WhiteboardView({ 
+  design, 
+  edges 
+}: { 
+  design: DiagramNode[], 
+  edges: DiagramEdge[] 
+}) {
+  const [selectedId, setSelectedId] = useState<string | null>(design[0]?.id || null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // O(1) Data Lookup
+  const nodeMap = useMemo(() => 
+    new Map<string, DiagramNode>(design.map(n => [n.id, n])), 
+  [design]);
+
+  // Layout Projection (Grid -> Pixels)
+  const layout = useMemo<Rect[]>(() => {
+    return design.map((node) => ({
+      id: node.id,
+      x: (node.gridPos.x / GRID_CONFIG.COLS) * 1000,
+      y: (node.gridPos.y / GRID_CONFIG.ROWS) * 600,
+      width: GRID_CONFIG.NODE_WIDTH,
+      height: GRID_CONFIG.NODE_HEIGHT
+    }));
+  }, [design]);
+
+  const layoutMap = useMemo(() => 
+    new Map<string, Rect>(layout.map((l: any) => [l.id, l])), 
+  [layout]);
+
+  const activeNode = selectedId ? nodeMap.get(selectedId) : null;
 
   return (
-    <div className="min-h-screen bg-[var(--paper)] py-10 px-6">
-      <Panel variant="default" className="max-w-[1080px] mx-auto p-[30px_36px_36px]">
+    <div className="flex flex-col xl:flex-row gap-8 h-full min-h-[600px]">
+      {/* WHITEBOARD CANVAS */}
+      <div className="flex-1 relative overflow-auto rounded-panel bg-paper border border-[rgba(21,22,28,0.06)] custom-scrollbar">
+        <div className="relative w-[1100px] h-[700px] p-12">
+          <svg className="absolute inset-0 w-full h-full pointer-events-none">
+            {edges.map((edge) => {
+              const s = layoutMap.get(edge.from);
+              const t = layoutMap.get(edge.to);
+              
+              if (!s || !t) return null;
 
-        <div className="flex items-center justify-between mb-1.5">
-          <Breadcrumb
-            items={[
-              { label: "Learn", href: "/learn" },
-              { label: "Whiteboarding", active: true },
-            ]}
-            onBack={() => router.back()}
-          />
-        </div>
+              const start = getConnectionPoint(s, t);
+              const end = getConnectionPoint(t, s);
 
-        <div className="flex items-center justify-between mt-4.5 mb-5">
-          <h2 className="heading-m font-semibold">{system?.title ?? "Select a system"}</h2>
-          <div className="body-s text-[var(--ink-400)] flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 radius-full bg-[var(--mint)] animate-pulse" />
-            Tap any component to inspect it
-          </div>
-        </div>
+              return (
+                <line
+                  key={`${edge.from}-${edge.to}`}
+                  x1={start.x} y1={start.y} x2={end.x} y2={end.y}
+                  stroke="currentColor" 
+                  className="text-ink/10 animate-flow"
+                  strokeWidth="2" 
+                  strokeDasharray="6,6"
+                />
+              );
+            })}
+          </svg>
 
-        <div className="flex gap-2 mb-6.5">
-          {WHITEBOARD_SYSTEM_LIST.map(({ slug, label }) => (
-            <button
-              key={slug}
-              onClick={() => selectSystem(slug)}
-              className={cn(
-                "body-s font-semibold p-[7px_15px] radius-pill border border-[var(--border)] text-[var(--ink-400)] cursor-pointer",
-                selectedSystemSlug === slug && "bg-[var(--ink)] text-white border-[var(--ink)]"
-              )}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+          {design.map((node) => {
+            const pos = layoutMap.get(node.id);
+            if (!pos) return null;
 
-        <div className="flex gap-5">
-          <div className="flex-1 min-h-[380px] relative bg-[var(--paper)] radius-card p-5">
-            <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-              <path d="M18 8 L75 8" vectorEffect="non-scaling-stroke" stroke="rgba(21,22,28,0.16)" strokeWidth="2" fill="none" strokeDasharray="5 6" className="animate-flow" />
-              <path d="M40 8 L40 45" vectorEffect="non-scaling-stroke" stroke="rgba(21,22,28,0.16)" strokeWidth="2" fill="none" strokeDasharray="5 6" className="animate-flow" />
-              <path d="M40 55 L40 78" vectorEffect="non-scaling-stroke" stroke="rgba(21,22,28,0.16)" strokeWidth="2" fill="none" strokeDasharray="5 6" className="animate-flow" />
-            </svg>
-
-            {system?.nodes.map((node) => (
-              <div
+            return (
+              <Node
                 key={node.id}
-                style={{ backgroundColor: node.color, ...node.position }}
-                className={cn(
-                  "absolute w-[150px] p-[14px_16px] radius-card text-white cursor-pointer transition-transform duration-[0.3s] ease-[cubic-bezier(0.34,1.56,0.64,1)] z-2 hover:-translate-y-[-4px]",
-                  selectedNodeId === node.id && "shadow-selected"
-                )}
-                onClick={() => setSelectedNodeId(node.id)}
-              >
-                <div className="w-2 h-2 radius-full bg-white/70 mb-2" />
-                <div className="body-s font-semibold">{node.title}</div>
-                <div className="caption text-white/65 mt-0.5">{node.kind}</div>
-              </div>
-            ))}
-
-            <div className="flex gap-4 mt-4 caption text-[var(--ink-400)]">
-              <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 radius-full bg-[var(--coral)]" />
-                Entry
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 radius-full bg-[var(--violet)]" />
-                Logic
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 radius-full bg-[var(--mint-deep)]" />
-                Storage
-              </span>
-            </div>
-          </div>
-
-          <div className="flex-0-0-[300px]">
-            {selectedData ? (
-              <Inspector
-                title={selectedData.title}
-                kind={selectedData.kind}
-                color={selectedData.color}
-                blocks={[
-                  { label: "Role & duty", content: selectedData.role },
-                  { label: "Deep dive", content: selectedData.deep },
-                  { label: "Failure modes", content: selectedData.failure },
-                  { label: "Tradeoffs", content: selectedData.tradeoffs },
-                ]}
+                node={node}
+                position={pos}
+                isSelected={selectedId === node.id}
+                onClick={() => setSelectedId(node.id)}
               />
-            ) : (
-              <div className="radius-card border border-[var(--border)] p-6 flex flex-col">
-                <div className="m-auto text-center text-[var(--ink-400)] body-s">
-                  Select a component on the left to see its role, internals, failure modes, and tradeoffs.
-                </div>
-              </div>
-            )}
-          </div>
+            );
+          })}
         </div>
-      </Panel>
+      </div>
+      
+      {/* INSPECTOR PANEL */}
+      <aside className="w-full xl:w-[340px] shrink-0">
+         {activeNode ? (
+           <Inspector 
+             title={activeNode.title}
+             kind={activeNode.category.toUpperCase()}
+             // Colors match the Node styles for visual consistency
+             color={
+               activeNode.category === 'entry' ? 'var(--coral)' : 
+               activeNode.category === 'logic' ? 'var(--violet)' : 'var(--mint-deep)'
+             }
+             blocks={[
+               { label: "Role & Duty", content: activeNode.details.role },
+               { label: "Deep Dive", content: activeNode.details.deepDive },
+               { label: "Failure Modes", content: activeNode.details.failureModes },
+               { label: "Tradeoffs", content: activeNode.details.tradeoffs },
+             ]}
+           />
+         ) : (
+           <div className="h-full rounded-card border border-dashed border-ink/10 p-8 flex items-center justify-center text-center text-ink/40 text-sm">
+             Select a component on the whiteboard to view architectural details.
+           </div>
+         )}
+      </aside>
     </div>
   );
 }

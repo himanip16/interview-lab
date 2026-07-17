@@ -1,25 +1,36 @@
+// src/app/learn/diagrams/[slug]/page.tsx
+// FIXED: Consistent slug parameter throughout
+
 "use client";
 
 import { DeepDiveHero } from "@/features/learning/components/DeepDiveHero";
+import { CassandraDiagram } from "@/features/learning/components/diagrams/CassandraDiagram";
+import { RedisDiagram } from "@/features/learning/components/diagrams/RedisDiagram";
+import { KafkaDiagram } from "@/features/learning/components/diagrams/KafkaDiagram";
 import {
   getDeepDiveSystem,
   getPrevSystem,
   getNextSystem,
   DEEP_DIVE_SYSTEMS,
 } from "@/features/learning/data/deepDives";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
-// Lazy import diagrams
-const DIAGRAM_MAP: Record<string, React.ComponentType> = {
-  cassandra: () => require("@/features/learning/components/diagrams/CassandraDiagram").CassandraDiagram(),
-  redis: () => require("@/features/learning/components/diagrams/RedisDiagram").RedisDiagram(),
-  kafka: () => require("@/features/learning/components/diagrams/KafkaDiagram").KafkaDiagram(),
+// ✅ FIX: Inline diagram map (no require)
+const DIAGRAM_COMPONENTS: Record<string, React.ComponentType> = {
+  cassandra: CassandraDiagram,
+  redis: RedisDiagram,
+  kafka: KafkaDiagram,
 };
 
-export default function DeepDivePage() {
+interface PageProps {
+  params: {
+    slug: string;  // ✅ Must match folder name [slug]
+  };
+}
+
+export default function DeepDivePage({ params }: PageProps) {
   const router = useRouter();
-  const params = useParams();
-  const slug = params.slug as string;
+  const { slug } = params;
 
   const system = getDeepDiveSystem(slug);
   const prevSystem = getPrevSystem(slug);
@@ -27,15 +38,17 @@ export default function DeepDivePage() {
 
   if (!system) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-[var(--paper)]">
         <div className="text-center">
-          <h1 className="text-3xl font-bold mb-4">Deep Dive Not Found</h1>
-          <p className="text-lg mb-6 text-gray-600">
-            This system doesn't have a deep dive yet.
+          <h1 className="text-3xl font-bold mb-4 text-[var(--ink)]">
+            Deep Dive Not Found
+          </h1>
+          <p className="text-lg mb-6 text-[var(--ink-soft)]">
+            The system "{slug}" doesn't have a deep dive yet.
           </p>
           <button
             onClick={() => router.push("/learn/diagrams")}
-            className="px-6 py-2 bg-blue-500 text-white rounded"
+            className="px-6 py-2 bg-[var(--ink)] text-white rounded-full font-semibold hover:bg-[var(--ink-soft)]"
           >
             Back to Diagrams
           </button>
@@ -44,7 +57,8 @@ export default function DeepDivePage() {
     );
   }
 
-  const DiagramComponent = DIAGRAM_MAP[slug];
+  // ✅ Get diagram component (undefined is ok, component checks)
+  const DiagramComponent = DIAGRAM_COMPONENTS[slug];
 
   return (
     <DeepDiveHero
@@ -56,8 +70,16 @@ export default function DeepDivePage() {
       credit={system.credit}
       creditOrg={system.creditOrg}
       diagramSvg={DiagramComponent ? <DiagramComponent /> : <div />}
-      prevSystem={prevSystem ? { name: prevSystem.name, slug: prevSystem.slug } : undefined}
-      nextSystem={nextSystem ? { name: nextSystem.name, slug: nextSystem.slug } : undefined}
+      prevSystem={
+        prevSystem
+          ? { name: prevSystem.name, slug: prevSystem.slug }
+          : undefined
+      }
+      nextSystem={
+        nextSystem
+          ? { name: nextSystem.name, slug: nextSystem.slug }
+          : undefined
+      }
       onReadMore={() => {
         if (system.scenarioSlug) {
           router.push(`/learn/scenarios/${system.scenarioSlug}`);
@@ -68,9 +90,25 @@ export default function DeepDivePage() {
   );
 }
 
-// Generate static pages for all systems
-export function generateStaticParams() {
+// ✅ Generate static params for all systems (optional but recommended)
+export async function generateStaticParams() {
   return DEEP_DIVE_SYSTEMS.map((system) => ({
     slug: system.slug,
   }));
+}
+
+// ✅ Metadata for each page
+export async function generateMetadata({ params }: PageProps) {
+  const system = getDeepDiveSystem(params.slug);
+  
+  if (!system) {
+    return {
+      title: "Deep Dive Not Found",
+    };
+  }
+
+  return {
+    title: `${system.name} - Deep Dive | Learn`,
+    description: system.description[0]?.replace(/<b>|<\/b>/g, ""),
+  };
 }
