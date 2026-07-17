@@ -45,6 +45,32 @@ export async function POST(
     }
 
 
+    const evaluationService =
+      createEvaluationService();
+
+    let evaluation;
+    try {
+      evaluation = await evaluationService.evaluateInterview(id);
+    } catch (error) {
+      logger.error(
+        "AI evaluation failed, keeping interview in progress",
+        {
+          err: error,
+          interviewId: id,
+        }
+      );
+      return NextResponse.json(
+        {
+          error: "Evaluation failed. Please try again.",
+          retryable: true,
+        },
+        {
+          status: 503,
+        }
+      );
+    }
+
+    // Only mark as COMPLETED after successful evaluation
     await repository.updateProgress(
       id,
       {
@@ -52,16 +78,6 @@ export async function POST(
         completedAt: new Date(),
       }
     );
-
-
-    const evaluationService =
-      createEvaluationService();
-
-
-    const evaluation =
-      await evaluationService.evaluateInterview(
-        id
-      );
 
 
     return NextResponse.json(
@@ -79,17 +95,17 @@ export async function POST(
 
     if (error instanceof Error) {
   logger.error(
+    "Failed to process interview message",
     {
       err: error,
       message: error.message,
       stack: error.stack,
-    },
-    "Failed to process interview message"
+    }
   );
 } else {
   logger.error(
-    { error },
-    "Failed to process interview message"
+    "Failed to process interview message",
+    { error }
   );
 }
 

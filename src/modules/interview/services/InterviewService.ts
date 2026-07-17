@@ -78,6 +78,19 @@ export class InterviewService {
         ? pickPersona(interviewDifficulty)
         : null;
 
+    // Check for existing active interview before transaction to prevent race condition
+    const existingInterview = await prisma.interview.findFirst({
+      where: {
+        userId,
+        problemId: problem.id,
+        status: { not: "COMPLETED" },
+      },
+    });
+
+    if (existingInterview) {
+      return existingInterview.id;
+    }
+
     // Use transaction to ensure atomicity and handle race conditions
     const savedInterview = await prisma.$transaction(async (tx) => {
       try {
