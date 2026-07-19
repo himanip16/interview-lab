@@ -2,8 +2,9 @@
 
 import { useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Search } from "@/components/ui/Search";
 import { Panel } from "@/components/ui/Panel";
+import { LearnHeader } from "@/features/learning/components/LearnHeader";
+import { LearnFooter } from "@/features/learning/components/LearnFooter";
 
 const CARD_WIDTH = 380;
 const GAP = 18; // px
@@ -149,24 +150,7 @@ export default function LearnPage() {
     <div className="min-h-screen bg-[var(--paper)] py-12 px-6">
       <Panel variant="default" className="max-w-[1500px] mx-auto" style={{ padding: '36px 40px 44px' }}>
         {/* Top Navigation */}
-        <div className="flex items-center justify-between mb-8.5 gap-6">
-          <div className="heading-m font-semibold">
-            interview<span style={{ color: "var(--mint-deep)" }}>.</span>lab
-          </div>
-          <Search
-            placeholder="Search actions…"
-            className="flex-1 max-w-[340px]"
-            onSearch={() => {}}
-          />
-          <div className="body-s font-semibold text-[var(--ink-400)] cursor-pointer flex items-center gap-2 whitespace-nowrap">
-            Menu
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-              <circle cx="5" cy="12" r="2"/>
-              <circle cx="12" cy="12" r="2"/>
-              <circle cx="19" cy="12" r="2"/>
-            </svg>
-          </div>
-        </div>
+        <LearnHeader onSearch={() => {}} />
 
         {/* Carousel */}
         <div
@@ -209,31 +193,10 @@ export default function LearnPage() {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between mt-5">
-          <div className="flex body-s text-[var(--ink-400)] font-medium" style={{ gap: '18px' }}>
-            <span>Facebook</span>
-            <span>Twitter</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <button
-              type="button"
-              onClick={() => scroll("left")}
-              className="body-s text-[var(--ink-400)] font-semibold cursor-pointer flex items-center gap-1.5 bg-transparent border-none"
-            >
-              ← Prev
-            </button>
-            <button
-              type="button"
-              onClick={() => scroll("right")}
-              className="relative w-[46px] h-[46px] rounded-full border-none bg-[var(--ink)] text-white flex items-center justify-center cursor-pointer z-10"
-            >
-              <div className="absolute inset-[-6px] rounded-full border-[1.5px] border-[rgba(0,168,126,0.5)] animate-breathe" />
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M9 6l6 6-6 6"/>
-              </svg>
-            </button>
-          </div>
-        </div>
+        <LearnFooter 
+          onPrev={() => scroll("left")}
+          onNext={() => scroll("right")}
+        />
       </Panel>
     </div>
   );

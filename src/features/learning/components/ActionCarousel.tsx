@@ -1,6 +1,8 @@
 "use client";
 
 import { useRef } from "react";
+import { LearnHeader } from "./LearnHeader";
+import { LearnFooter } from "./LearnFooter";
 
 export default function ActionCarousel() {
   const railRef = useRef<HTMLDivElement>(null);
@@ -18,26 +20,7 @@ export default function ActionCarousel() {
   return (
     <div className="panel max-w-[1080px] mx-auto bg-white rounded-[32px] p-[36px_40px_44px] shadow-[0_24px_60px_rgba(21,22,28,0.06)] border border-[rgba(21,22,28,0.06)]">
       {/* Top Section */}
-      <div className="top flex items-center justify-between mb-[34px] gap-6">
-        <div className="logo font-['Poppins'] font-bold text-[18px] whitespace-nowrap">
-          interview<span className="text-[var(--mint-deep)]">.</span>lab
-        </div>
-        <div className="search flex-1 max-w-[340px] flex items-center gap-2.5 bg-[#FAF9F6] border border-[rgba(21,22,28,0.08)] rounded-[999px] p-[10px_18px] text-[13.5px] text-[#5A5B66]">
-          <svg className="w-[15px] h-[15px] opacity-50 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="11" cy="11" r="7"/>
-            <path d="M21 21l-4.3-4.3"/>
-          </svg>
-          <span>Search actions&hellip;</span>
-        </div>
-        <div className="menu flex items-center gap-2 text-[13.5px] font-semibold text-[#5A5B66] cursor-pointer whitespace-nowrap">
-          Menu
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-            <circle cx="5" cy="12" r="2"/>
-            <circle cx="12" cy="12" r="2"/>
-            <circle cx="19" cy="12" r="2"/>
-          </svg>
-        </div>
-      </div>
+      <LearnHeader showSearch={false} />
 
       {/* Carousel Section */}
       <div className="rail-wrap relative">
@@ -179,39 +162,10 @@ export default function ActionCarousel() {
       </div>
 
       {/* Footer Section */}
-      <div className="bottom flex items-center justify-between mt-5">
-        <div className="socials flex gap-[18px] text-[13px] text-[#5A5B66] font-medium">
-          <span>Facebook</span>
-          <span>Twitter</span>
-        </div>
-        <div className="nav-btns flex items-center gap-4">
-          <span
-            onClick={() => scroll("left")}
-            className="prev text-[13px] text-[#5A5B66] font-semibold cursor-pointer flex items-center gap-1.5"
-          >
-            &larr; Prev
-          </span>
-          <button
-            onClick={() => scroll("right")}
-            className="next-btn relative w-[46px] h-[46px] rounded-full border-none bg-[#15161C] text-white flex items-center justify-center cursor-pointer z-10"
-          >
-            <div className="next-ring absolute inset-[-6px] rounded-full border-[1.5px] border-[rgba(0,168,126,0.5)]">
-              <style>{`
-                @keyframes breathe {
-                  0%, 100% { transform: scale(1); opacity: 0.7; }
-                  50% { transform: scale(1.18); opacity: 0; }
-                }
-                .next-ring {
-                  animation: breathe 2.6s ease-in-out infinite;
-                }
-              `}</style>
-            </div>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M9 6l6 6-6 6"/>
-            </svg>
-          </button>
-        </div>
-      </div>
+      <LearnFooter 
+        onPrev={() => scroll("left")}
+        onNext={() => scroll("right")}
+      />
     </div>
   );
 }
