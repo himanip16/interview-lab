@@ -104,7 +104,7 @@ const CARDS = [
     description: "Deep dive into specific topics.",
     from: "#7A6BFF",
     to: "#4C3FD6",
-    href: "/interview/problems?type=deep_dive", // matches InterviewTemplate slug "deep_dive"
+    href: "/deep-dive",
     icon: (
       <svg viewBox="0 0 110 110" fill="none">
         <circle cx="55" cy="55" r="52" fill="#fff"/>

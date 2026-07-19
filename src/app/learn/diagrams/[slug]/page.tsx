@@ -1,19 +1,17 @@
 // src/app/learn/diagrams/[slug]/page.tsx
 // FIXED: Consistent slug parameter throughout
 
-"use client";
-
 import { DeepDiveHero } from "@/features/learning/components/DeepDiveHero";
 import { CassandraDiagram } from "@/features/learning/components/diagrams/CassandraDiagram";
-import { RedisDiagram } from "@/features/learning/components/diagrams/RedisDiagram";
-import { KafkaDiagram } from "@/features/learning/components/diagrams/KafkaDiagram";
+import { Redis as RedisDiagram } from "@/features/learning/components/diagrams/Redis";
+import { Kafka as KafkaDiagram } from "@/features/learning/components/diagrams/Kafka";
 import {
   getDeepDiveSystem,
   getPrevSystem,
   getNextSystem,
   DEEP_DIVE_SYSTEMS,
 } from "@/features/learning/data/deepDives";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 // ✅ FIX: Inline diagram map (no require)
 const DIAGRAM_COMPONENTS: Record<string, React.ComponentType> = {
@@ -28,9 +26,8 @@ interface PageProps {
   };
 }
 
-export default function DeepDivePage({ params }: PageProps) {
-  const router = useRouter();
-  const { slug } = params;
+export default async function DeepDivePage({ params }: PageProps) {
+  const { slug } = await params;
 
   const system = getDeepDiveSystem(slug);
   const prevSystem = getPrevSystem(slug);
@@ -46,12 +43,12 @@ export default function DeepDivePage({ params }: PageProps) {
           <p className="text-lg mb-6 text-[var(--ink-soft)]">
             The system "{slug}" doesn't have a deep dive yet.
           </p>
-          <button
-            onClick={() => router.push("/learn/diagrams")}
+          <Link
+            href="/learn/diagrams"
             className="px-6 py-2 bg-[var(--ink)] text-white rounded-full font-semibold hover:bg-[var(--ink-soft)]"
           >
             Back to Diagrams
-          </button>
+          </Link>
         </div>
       </div>
     );
@@ -80,12 +77,8 @@ export default function DeepDivePage({ params }: PageProps) {
           ? { name: nextSystem.name, slug: nextSystem.slug }
           : undefined
       }
-      onReadMore={() => {
-        if (system.scenarioSlug) {
-          router.push(`/learn/scenarios/${system.scenarioSlug}`);
-        }
-      }}
-      onDocuments={() => window.open(system.docsUrl, "_blank")}
+      readMoreHref={system.scenarioSlug ? `/learn/scenarios/${system.scenarioSlug}` : undefined}
+      docsUrl={system.docsUrl}
     />
   );
 }

@@ -88,7 +88,7 @@ const CARDS = [
     title: 'Deep dives',
     meta: 'Learn · Topic-based',
     gradient: 'from-[#7A6BFF] to-[#4C3FD6]',
-    href: '/interview/problems?type=deep_dive',
+    href: '/deep-dive',
     icon: (
       <svg viewBox="0 0 84 84" fill="none">
         <circle cx="42" cy="42" r="40" fill="#fff"/>
