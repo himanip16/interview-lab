@@ -151,12 +151,24 @@ export class InterviewRepository {
     interviewId: string,
     metadata: Prisma.InputJsonValue
   ) {
+    const interview = await prisma.interview.findUnique({
+      where: { id: interviewId },
+      select: { metadata: true },
+    });
+
+    const existingMetadata = (interview?.metadata as Prisma.JsonObject) || {};
+
+    const mergedMetadata: Prisma.JsonObject = {
+      ...existingMetadata,
+      ...(metadata as Prisma.JsonObject),
+    };
+
     return prisma.interview.update({
       where: {
         id: interviewId,
       },
       data: {
-        metadata,
+        metadata: mergedMetadata as Prisma.InputJsonValue,
       },
     });
   }

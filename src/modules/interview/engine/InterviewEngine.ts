@@ -77,14 +77,13 @@ export class InterviewEngine {
     const latestMessage =
       recentHistory.at(-1);
 
-    const latestQuestion = recentHistory.length >= 2
-      ? recentHistory[recentHistory.length - 2]?.content
-      : undefined;
-    const latestAnswer = latestMessage?.content;
-
-    const guardedAnswer = this.promptGuard.guard(
-      latestAnswer ?? ""
-    );
+    // In Reverse Mode, the latest message is the user's current question
+    // In Candidate Mode, we need the previous question for context
+    const latestQuestion = input.mode === "REVERSE"
+      ? latestMessage?.content
+      : recentHistory.length >= 2
+        ? recentHistory[recentHistory.length - 2]?.content
+        : undefined;
 
     const systemPrompt = input.mode === "REVERSE"
       ? await this.promptBuilder.buildReverseSystemPrompt(
@@ -100,7 +99,6 @@ export class InterviewEngine {
           input.problem,
           input.runningSummary,
           latestQuestion,
-          guardedAnswer,
           input.whiteboardDescription
         );
 
@@ -114,7 +112,7 @@ export class InterviewEngine {
 
       {
         role: "user",
-        content: guardedAnswer,
+        content: latestMessage?.content ?? "",
       },
     ];
 

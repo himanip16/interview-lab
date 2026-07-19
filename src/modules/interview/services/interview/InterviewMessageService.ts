@@ -105,7 +105,9 @@ export class InterviewMessageService {
         runningSummary:
           interview.summary,
         problem: problemDescription,
-        candidateName: "Candidate",
+        candidateName: interview.mode === "REVERSE" && interview.candidatePersona
+          ? (interview.candidatePersona as any).name || "Candidate"
+          : "Candidate",
         interviewDurationMinutes:
           interview.duration,
         interviewStartedAt,

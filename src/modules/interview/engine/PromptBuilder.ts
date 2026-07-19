@@ -18,7 +18,6 @@ export class PromptBuilder {
     problem: string,
     runningSummary = "",
     latestQuestion?: string,
-    latestAnswer?: string,
     whiteboardDescription?: string
   ): Promise<string> {
     const basePrompt =
@@ -29,7 +28,6 @@ export class PromptBuilder {
     const renderedBasePrompt = this.promptRenderer.render(basePrompt, {
       candidate: candidateName,
       question: latestQuestion || "Starting the interview",
-      answer: latestAnswer || "No response yet",
     });
 
     const goals = phase.goals
@@ -65,7 +63,7 @@ ${whiteboardDescription ? `CANDIDATE'S WHITEBOARD:\n${whiteboardDescription}\n` 
 
 PHASE INSTRUCTIONS:
 
-${phase.instructions}
+${phase.prompt.objective}
 
 PHASE GOALS:
 
@@ -159,7 +157,7 @@ ${phase.id}
 
 PHASE INSTRUCTIONS:
 
-${phase.instructions}
+${phase.prompt.objective}
 
 PHASE GOALS:
 

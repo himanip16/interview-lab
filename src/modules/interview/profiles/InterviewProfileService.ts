@@ -3,7 +3,10 @@ import { prisma } from "@/shared/prisma/client";
 import {
   InterviewPhaseDefinition,
   InterviewProfile,
+  GoalDefinition,
+  InterviewProfileMetadata,
 } from "./InterviewProfile";
+import { Goal } from "../constants";
 
 /**
  * Resolves an InterviewProfile from the database instead of a hardcoded
@@ -51,18 +54,32 @@ export class InterviewProfileService {
 
     const profile: InterviewProfile = {
       type: template.slug,
-
+      metadata: {
+        difficulty: "Medium",
+        estimatedQuestions: 10,
+        maxRetries: 3,
+        allowBacktracking: true,
+        supportsInterruptions: true,
+      },
       phases: template.phases.map(
         (phase): InterviewPhaseDefinition => ({
-          id: phase.phaseKey,
-          goals: phase.goals as string[],
+          id: phase.phaseKey as any,
+          goals: (phase.goals as string[]).map((goalId) => ({
+            id: Goal[goalId as keyof typeof Goal] || goalId as Goal,
+            required: true,
+            weight: 1,
+          })),
           evaluationDimensions:
-            phase.evaluationDimensions as string[],
+            phase.evaluationDimensions as any,
+          continuousEvaluation: [],
+          phaseEvaluation: phase.evaluationDimensions as any,
           targetDurationRatio:
             phase.targetDurationRatio,
           transitionThreshold:
             phase.transitionThreshold,
-          instructions: phase.instructions,
+          prompt: {
+            objective: phase.instructions,
+          },
           showWhiteboard: phase.showWhiteboard,
         })
       ),
