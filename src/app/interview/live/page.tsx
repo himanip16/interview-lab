@@ -16,6 +16,7 @@ interface Message {
   role: 'ai' | 'user';
   content: string;
   isTyping?: boolean;
+  requestId?: string;
 }
 
 const INITIAL_STEPS = [
@@ -55,19 +56,25 @@ export default function LiveInterviewPage() {
 
   const handleSendMessage = () => {
     if (inputValue.trim()) {
+      const requestId = crypto.randomUUID();
+      const userMessageId = crypto.randomUUID();
+      
       setMessages(prev => [
-        ...prev.filter(m => !m.isTyping),
-        { id: Date.now().toString(), role: 'user', content: inputValue },
-        { id: (Date.now() + 1).toString(), role: 'ai', content: '', isTyping: true }
+        ...prev,
+        { id: userMessageId, role: 'user', content: inputValue, requestId },
+        { id: crypto.randomUUID(), role: 'ai', content: '', isTyping: true, requestId }
       ]);
       setInputValue('');
 
       // Simulate AI response after delay
       setTimeout(() => {
-        setMessages(prev => [
-          ...prev.filter(m => !m.isTyping),
-          { id: Date.now().toString(), role: 'ai', content: 'Reasonable. How would you generate the short code itself, and how do you avoid collisions?' }
-        ]);
+        setMessages(prev => 
+          prev.map(msg => 
+            msg.requestId === requestId && msg.isTyping
+              ? { ...msg, id: crypto.randomUUID(), role: 'ai', content: 'Reasonable. How would you generate the short code itself, and how do you avoid collisions?', isTyping: false }
+              : msg
+          )
+        );
       }, 1600);
     }
   };

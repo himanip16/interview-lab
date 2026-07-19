@@ -11,7 +11,7 @@ import { useClickOutside } from "@/lib/hooks/useClickOutside";
 
 export default function Navbar() {
   const pathname = usePathname();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
 
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -58,7 +58,9 @@ export default function Navbar() {
             </Link>
           ))}
 
-          {email ? (
+          {status === "loading" ? (
+            <div className="h-8 w-8 rounded-full bg-[var(--paper-200)] animate-pulse" />
+          ) : email ? (
             <div className="relative" ref={menuRef}>
               <button
                 onClick={() => setMenuOpen((v) => !v)}

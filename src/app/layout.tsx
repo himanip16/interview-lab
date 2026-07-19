@@ -33,7 +33,25 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${poppins.variable} ${inter.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `
+            (function() {
+              function getTheme() {
+                const savedTheme = localStorage.getItem('theme');
+                if (savedTheme) {
+                  return savedTheme;
+                }
+                return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+              }
+              const theme = getTheme();
+              document.documentElement.setAttribute('data-theme', theme);
+            })();
+          `,
+        }}
+      />
       <body className="flex min-h-screen flex-col">
         <AuthProvider>
           <ThemeProvider>
