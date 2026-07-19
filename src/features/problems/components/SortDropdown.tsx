@@ -61,7 +61,7 @@ export default function SortDropdown({ value, onChange }: Props) {
         }}
         aria-haspopup="true"
         aria-expanded={open}
-        className="flex items-center gap-1.75 body-s font-semibold p-[8px_14px] radius-pill border border-[var(--border)] bg-[var(--surface)] cursor-pointer text-[var(--ink)]"
+        className="flex items-center gap-2 body-s font-semibold p-[8px_14px] radius-pill border border-[var(--border)] bg-[var(--surface)] cursor-pointer text-[var(--ink)]"
       >
         {SORT_LABELS[value]}
         <svg className="w-[11px] h-[11px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
@@ -72,7 +72,7 @@ export default function SortDropdown({ value, onChange }: Props) {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 top-[calc(100%+6px)] bg-[var(--surface)] radius-card border border-[var(--border)] shadow-floating p-1.5 z-10 min-w-[170px]"
+          className="absolute right-0 top-[calc(100%+6px)] bg-[var(--surface)] radius-card border border-[var(--border)] shadow-floating p-2 z-10 min-w-[170px]"
         >
           {SORT_OPTIONS.map((option, i) => (
             <button

@@ -15,9 +15,9 @@ type Props = {
 export default function ProblemFilters({ filters, onChange, count }: Props) {
   return (
     <div className="mb-2">
-      <div className="flex items-center gap-4.5 flex-wrap mb-3.5">
-        <span className="label text-[var(--ink-400)] mr-0.5">Type</span>
-        <div className="flex gap-1.5">
+      <div className="flex items-center gap-5 flex-wrap mb-4">
+        <span className="label text-[var(--ink-400)] mr-1">Type</span>
+        <div className="flex gap-2">
           {(["all", ...INTERVIEW_TYPES] as const).map((type) => (
             <button
               key={type}
@@ -33,9 +33,9 @@ export default function ProblemFilters({ filters, onChange, count }: Props) {
         </div>
       </div>
 
-      <div className="flex items-center gap-4.5 flex-wrap mb-3.5">
-        <span className="label text-[var(--ink-400)] mr-0.5">Difficulty</span>
-        <div className="flex gap-1.5">
+      <div className="flex items-center gap-5 flex-wrap mb-4">
+        <span className="label text-[var(--ink-400)] mr-1">Difficulty</span>
+        <div className="flex gap-2">
           {(["ALL", ...Object.values(Difficulty)] as const).map((diff) => (
             <button
               key={diff}
@@ -50,8 +50,8 @@ export default function ProblemFilters({ filters, onChange, count }: Props) {
           ))}
         </div>
 
-        <span className="label text-[var(--ink-400)] ml-2 mr-0.5">Status</span>
-        <div className="flex gap-1.5">
+        <span className="label text-[var(--ink-400)] ml-2 mr-1">Status</span>
+        <div className="flex gap-2">
           {STATUS_FILTERS.map((status) => (
             <button
               key={status}
@@ -67,7 +67,7 @@ export default function ProblemFilters({ filters, onChange, count }: Props) {
         </div>
       </div>
 
-      <div className="flex items-center justify-between pt-3.5 border-t border-[var(--border)] mb-1.5">
+      <div className="flex items-center justify-between pt-4 border-t border-[var(--border)] mb-2">
         <div className="body-s text-[var(--ink-400)]">
           <b className="text-[var(--ink)]">{count}</b> problem{count !== 1 ? "s" : ""}
         </div>
