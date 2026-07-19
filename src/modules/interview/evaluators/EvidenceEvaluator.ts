@@ -15,7 +15,7 @@ const EvidenceItemSchema = z.object({
   quote: z.string().min(1),
   comment: z.string().min(1),
   conceptSlugs: z.array(z.string()).default([]),
-  type: z.enum(["strength", "weakness"]),
+  type: z.enum(["STRENGTH", "WEAKNESS"]),
 });
 
 const DimensionScoreSchema = z.object({
@@ -61,7 +61,7 @@ export const EVALUATION_JSON_SCHEMA = {
                   type: "array",
                   items: { type: "string" },
                 },
-                type: { type: "string", enum: ["strength", "weakness"] },
+                type: { type: "string", enum: ["STRENGTH", "WEAKNESS"] },
               },
               required: ["messageId", "quote", "comment", "type"],
             },
@@ -354,7 +354,7 @@ For each dimension, provide:
   - quote: a short quote (${MAX_QUOTE_WORDS} words or fewer) copied VERBATIM from that exact message's content. DO NOT correct spelling, grammar, or punctuation. DO NOT add or remove words. If you cannot find an exact quote, return null for this evidence item.
   - comment: why this quote matters for this dimension
   - conceptSlugs: 0-3 slugs from the CONCEPT VOCABULARY that this specific quote demonstrates
-  - type: "strength" if this quote demonstrates competence, "weakness" if it demonstrates a gap
+  - type: "STRENGTH" if this quote demonstrates competence, "WEAKNESS" if it demonstrates a gap
 
 Additionally return:
 - missedConcepts: important concepts for this problem that the ${mode === "REVERSE" ? "interviewer" : "candidate"} never addressed (free text, 0-5 items)
