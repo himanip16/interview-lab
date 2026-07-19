@@ -156,7 +156,7 @@ export default function ActionCarouselPage() {
         <div className="relative">
           <div 
             ref={railRef}
-            className="flex gap-4.5 overflow-x-auto scroll-smooth scroll-snap-x-mandatory p-[34px_4px_8px] m-0 -mx-1 scrollbar-hide"
+            className="flex gap-5 overflow-x-auto scroll-smooth scroll-snap-x-mandatory p-[34px_4px_8px] m-0 -mx-1 scrollbar-hide"
             style={{ scrollbarWidth: 'none' }}
           >
             {CARDS.map((card) => (
@@ -186,7 +186,7 @@ export default function ActionCarouselPage() {
 
         {/* Footer */}
         <div className="flex items-center justify-between mt-5">
-          <div className="flex gap-4.5 body-s text-[var(--ink-400)] font-medium">
+          <div className="flex gap-5 body-s text-[var(--ink-400)] font-medium">
             <span>Facebook</span>
             <span>Twitter</span>
           </div>

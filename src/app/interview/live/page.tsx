@@ -93,8 +93,8 @@ export default function LiveInterviewPage() {
             ]}
             onBack={() => router.back()}
           />
-          <div className="flex items-center gap-4.5">
-            <div className="flex items-center gap-1.75 caption font-semibold text-[var(--coral)] p-[6px_13px] radius-pill bg-[rgba(255,90,60,0.1)]">
+          <div className="flex items-center gap-5">
+            <div className="flex items-center gap-2 caption font-semibold text-[var(--coral)] p-[6px_13px] radius-pill bg-[rgba(255,90,60,0.1)]">
               <span className="w-1.5 h-1.5 radius-full bg-[var(--coral)] animate-pulse" />
               Live
             </div>
@@ -186,19 +186,19 @@ export default function LiveInterviewPage() {
 
             <div className="label text-[var(--mint-deep)] mb-2.5">Design summary</div>
             <div className="body-s text-[var(--ink-400)] leading-relaxed pl-3.5 relative mb-2.5">
-              <div className="absolute left-0 top-1.5 w-1.25 h-1.25 radius-full bg-[var(--mint)]" />
+              <div className="absolute left-0 top-1.5 w-1.5 h-1.5 radius-full bg-[var(--mint)]" />
               Read-heavy workload assumed, ~100:1 read/write ratio.
             </div>
             <div className="body-s text-[var(--ink-400)] leading-relaxed pl-3.5 relative mb-2.5">
-              <div className="absolute left-0 top-1.5 w-1.25 h-1.25 radius-full bg-[var(--mint)]" />
+              <div className="absolute left-0 top-1.5 w-1.5 h-1.5 radius-full bg-[var(--mint)]" />
               Custom aliases scoped out of v1.
             </div>
             <div className="body-s text-[var(--ink-400)] leading-relaxed pl-3.5 relative mb-2.5">
-              <div className="absolute left-0 top-1.5 w-1.25 h-1.25 radius-full bg-[var(--mint)]" />
+              <div className="absolute left-0 top-1.5 w-1.5 h-1.5 radius-full bg-[var(--mint)]" />
               Candidate is leaning key-value store + cache over relational.
             </div>
             <div className="body-s text-[var(--ink-400)] leading-relaxed pl-3.5 relative">
-              <div className="absolute left-0 top-1.5 w-1.25 h-1.25 radius-full bg-[var(--mint)]" />
+              <div className="absolute left-0 top-1.5 w-1.5 h-1.5 radius-full bg-[var(--mint)]" />
               Not yet discussed: uniqueness strategy for short codes.
             </div>
           </Sidebar>

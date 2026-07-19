@@ -37,9 +37,9 @@ export const Inspector: React.FC<InspectorProps> = ({
 
   return (
     <div className={cn('radius-card border border-[var(--border)] p-6 flex flex-col', className)}>
-      <div className="flex items-center gap-2.5 mb-4.5">
+      <div className="flex items-center gap-2.5 mb-5">
         <div
-          className="w-8.5 h-8.5 radius-small flex items-center justify-center text-white"
+          className="w-9 h-9 radius-small flex items-center justify-center text-white"
           style={{ backgroundColor: color }}
         >
           <div className="w-4 h-4 rounded-full border-2 border-current" />

@@ -2,6 +2,7 @@ import { signIn } from "@/modules/auth/auth";
 
 import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 
 export default function LoginPage({
   searchParams,
@@ -35,7 +36,7 @@ export default function LoginPage({
       {searchParams?.error === "invalid" && (
         <p className="mt-4 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
           Incorrect email or password. If you don't have an account yet,{" "}
-          <a href="/register" className="underline">register here</a>.
+          <Link href="/register" className="underline">register here</Link>.
         </p>
       )}
 
@@ -66,9 +67,9 @@ export default function LoginPage({
 
       <p className="mt-4 text-sm text-muted-foreground">
         No account?{" "}
-        <a href="/register" className="text-primary hover:opacity-80">
+        <Link href="/register" className="text-primary hover:opacity-80">
           Register
-        </a>
+        </Link>
       </p>
     </main>
   );

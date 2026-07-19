@@ -15,7 +15,7 @@ export const Footer = React.forwardRef<HTMLDivElement, FooterProps>(
         className={cn('flex items-center justify-between mt-5', className)}
         {...props}
       >
-        {left && <div className="flex items-center gap-4.5 body-s text-[var(--ink-400)]">{left}</div>}
+        {left && <div className="flex items-center gap-5 body-s text-[var(--ink-400)]">{left}</div>}
         {right && <div className="flex items-center gap-4">{right}</div>}
         {children}
       </div>

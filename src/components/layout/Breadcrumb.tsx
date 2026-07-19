@@ -1,6 +1,7 @@
 import React from 'react';
 import { ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { BreadcrumbLink } from './BreadcrumbLink';
 
 interface BreadcrumbItem {
   label: string;
@@ -38,9 +39,9 @@ export const Breadcrumb: React.FC<BreadcrumbProps> = ({
             )}
           >
             {item.href ? (
-              <a href={item.href} className="hover:text-[var(--ink)] transition-colors">
+              <BreadcrumbLink href={item.href} className="hover:text-[var(--ink)] transition-colors">
                 {item.label}
-              </a>
+              </BreadcrumbLink>
             ) : (
               item.label
             )}
