@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Deep dives</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{ --paper:#FAF9F6; --ink:#15161C; --ink-soft:#5A5B66; --mint:#00D9A3; --mint-deep:#00A87E; --coral:#FF5A3C; --violet:#6A5AE0; --amber:#E8940A; }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; }
+  h1,h2,h3{ font-family:'Poppins',sans-serif; letter-spacing:-0.02em; }
+
+  .wrap{ max-width:1000px; margin:0 auto; padding:0 24px 80px; }
+
+  nav{ display:flex; align-items:center; justify-content:space-between; padding:30px 0; }
+  .navlinks{ display:flex; gap:30px; font-size:13.5px; color:var(--ink-soft); font-weight:500; }
+  .navlinks b{ color:var(--ink); font-weight:600; border-bottom:2px solid var(--ink); padding-bottom:2px; }
+  .ham{ width:36px; height:36px; border-radius:50%; border:1px solid rgba(21,22,28,0.14); background:none; color:var(--ink); display:flex; align-items:center; justify-content:center; cursor:pointer; }
+
+  .header{ padding:20px 0 30px; }
+  .eyebrow{ font-size:12.5px; font-weight:700; letter-spacing:.1em; color:var(--mint-deep); }
+  .header h1{ font-size:38px; font-weight:800; margin-top:10px; max-width:520px; }
+  .header p{ font-size:14.5px; color:var(--ink-soft); margin-top:12px; max-width:460px; line-height:1.6; }
+
+  .filters{ display:flex; gap:8px; margin:26px 0 30px; flex-wrap:wrap; }
+  .fpill{ font-size:12.5px; font-weight:600; padding:8px 16px; border-radius:999px; border:1px solid rgba(21,22,28,0.1); color:var(--ink-soft); cursor:pointer; }
+  .fpill.active{ background:var(--ink); color:#fff; border-color:var(--ink); }
+
+  .grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  .card{ background:#fff; border-radius:22px; padding:22px; border:1px solid rgba(21,22,28,0.07); cursor:pointer;
+    transition:transform .3s cubic-bezier(.34,1.56,.64,1), box-shadow .3s ease; }
+  .card:hover{ transform:translateY(-6px); box-shadow:0 20px 40px rgba(21,22,28,0.08); }
+  .mark{ width:56px; height:56px; margin-bottom:16px; }
+  .card h3{ font-size:16px; font-weight:600; }
+  .card .one-liner{ font-size:12.5px; color:var(--ink-soft); margin-top:6px; line-height:1.55; min-height:38px; }
+  .card-foot{ display:flex; align-items:center; justify-content:space-between; margin-top:16px; padding-top:14px; border-top:1px solid rgba(21,22,28,0.06); }
+  .tags{ display:flex; gap:5px; flex-wrap:wrap; }
+  .tag{ font-size:9.5px; font-weight:700; padding:3px 8px; border-radius:999px; background:var(--paper); color:var(--ink-soft); text-transform:uppercase; }
+  .read{ font-size:11px; color:var(--ink-soft); flex-shrink:0; margin-left:8px; }
+
+  @media (max-width:820px){ .grid{ grid-template-columns:repeat(2,1fr); } .navlinks{ display:none; } }
+  @media (max-width:560px){ .grid{ grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <nav>
+    <div class="navlinks"><span>About Learn</span><b>Deep Dives</b><span>Library</span></div>
+    <button class="ham"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </nav>
+
+  <div class="header">
+    <div class="eyebrow">DEEP DIVES</div>
+    <h1>What do you want to go deep on?</h1>
+    <p>Seven building blocks, explained the way you'd actually want to explain them in an interview &mdash; not just what they do, but why they're shaped that way.</p>
+  </div>
+
+  <div class="filters" id="filters">
+    <div class="fpill active" data-cat="all">All</div>
+    <div class="fpill" data-cat="db">Databases</div>
+    <div class="fpill" data-cat="msg">Messaging</div>
+    <div class="fpill" data-cat="concept">Core concepts</div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+</div>
+
+<script>
+const TOPICS = [
+  { slug:'cassandra', title:'Cassandra', one:'Distributed, wide-column, no single leader.', cat:'db',
+    tags:['NoSQL','Distributed'], read:'12 min',
+    mark:`<circle cx="28" cy="8" r="4" fill="#00D9A3"/><circle cx="46" cy="19" r="4" fill="#00A87E"/><circle cx="46" cy="37" r="4" fill="#15161C"/><circle cx="28" cy="48" r="4" fill="#00A87E"/><circle cx="10" cy="37" r="4" fill="#00D9A3"/><circle cx="10" cy="19" r="4" fill="#15161C"/><circle cx="28" cy="28" r="6" fill="#FF5A3C"/><circle cx="28" cy="28" r="24" stroke="#15161C" stroke-width="1" stroke-dasharray="3 4" opacity=".2" fill="none"/>` },
+  { slug:'redis', title:'Redis', one:'Single-threaded, in-memory, deceptively fast.', cat:'db',
+    tags:['In-memory','Key-value'], read:'9 min',
+    mark:`<circle cx="28" cy="28" r="9" fill="#FF5A3C"/><circle cx="10" cy="14" r="3.5" fill="#00D9A3"/><circle cx="46" cy="14" r="3.5" fill="#00A87E"/><circle cx="10" cy="42" r="3.5" fill="#15161C"/><circle cx="46" cy="42" r="3.5" fill="#00A87E"/><path d="M28 28L10 14M28 28L46 14M28 28L10 42M28 28L46 42" stroke="#15161C" stroke-width="1" opacity=".25"/>` },
+  { slug:'dynamodb', title:'DynamoDB', one:'Managed, partitioned, painfully rigid access patterns.', cat:'db',
+    tags:['NoSQL','Managed'], read:'10 min',
+    mark:`<rect x="12" y="12" width="32" height="32" rx="6" stroke="#6A5AE0" stroke-width="2" fill="none"/><line x1="12" y1="24" x2="44" y2="24" stroke="#6A5AE0" stroke-width="1.5" opacity=".5"/><line x1="12" y1="34" x2="44" y2="34" stroke="#6A5AE0" stroke-width="1.5" opacity=".5"/><line x1="24" y1="12" x2="24" y2="44" stroke="#6A5AE0" stroke-width="1.5" opacity=".5"/><circle cx="24" cy="24" r="3" fill="#FF5A3C"/>` },
+  { slug:'postgres', title:'Postgres', one:'Rows, indexes, and why B-trees are everywhere.', cat:'db',
+    tags:['SQL','ACID'], read:'11 min',
+    mark:`<circle cx="28" cy="10" r="4" fill="#15161C"/><circle cx="14" cy="26" r="4" fill="#00A87E"/><circle cx="42" cy="26" r="4" fill="#00A87E"/><circle cx="8" cy="44" r="3.5" fill="#00D9A3"/><circle cx="20" cy="44" r="3.5" fill="#00D9A3"/><circle cx="36" cy="44" r="3.5" fill="#00D9A3"/><circle cx="48" cy="44" r="3.5" fill="#00D9A3"/><path d="M28 10L14 26M28 10L42 26M14 26L8 44M14 26L20 44M42 26L36 44M42 26L48 44" stroke="#15161C" stroke-width="1" opacity=".3"/>` },
+  { slug:'kafka', title:'Kafka', one:'A log, not a queue &mdash; and that distinction matters.', cat:'msg',
+    tags:['Streaming','Log'], read:'13 min',
+    mark:`<rect x="8" y="12" width="40" height="7" rx="2" fill="#E8940A"/><rect x="8" y="24" width="40" height="7" rx="2" fill="#E8940A" opacity=".7"/><rect x="8" y="36" width="40" height="7" rx="2" fill="#E8940A" opacity=".4"/><circle cx="34" cy="15.5" r="2.2" fill="#15161C"/><circle cx="20" cy="27.5" r="2.2" fill="#15161C"/><circle cx="40" cy="39.5" r="2.2" fill="#15161C"/>` },
+  { slug:'consistent-hashing', title:'Consistent hashing', one:'Adding a node shouldn\u2019t reshuffle everything.', cat:'concept',
+    tags:['Distributed'], read:'8 min',
+    mark:`<circle cx="28" cy="28" r="20" stroke="#15161C" stroke-width="1.5" fill="none" opacity=".25"/><circle cx="28" cy="8" r="3.5" fill="#00D9A3"/><circle cx="44" cy="20" r="3.5" fill="#FF5A3C"/><circle cx="38" cy="42" r="3.5" fill="#00A87E"/><circle cx="16" cy="44" r="3.5" fill="#6A5AE0"/><circle cx="9" cy="18" r="3.5" fill="#00A87E"/>` },
+  { slug:'cap-theorem', title:'CAP theorem', one:'Pick two &mdash; but which two, and when?', cat:'concept',
+    tags:['Tradeoffs'], read:'7 min',
+    mark:`<path d="M28 8L48 44H8Z" stroke="#15161C" stroke-width="2" fill="none" stroke-linejoin="round"/><circle cx="28" cy="8" r="4" fill="#00D9A3"/><circle cx="48" cy="44" r="4" fill="#FF5A3C"/><circle cx="8" cy="44" r="4" fill="#6A5AE0"/>` },
+  { slug:'load-balancing', title:'Load balancing', one:'Round robin is the easy 10%. What\u2019s the other 90%?', cat:'concept',
+    tags:['Scalability'], read:'9 min',
+    mark:`<circle cx="10" cy="28" r="5" fill="#15161C"/><circle cx="40" cy="10" r="4" fill="#00D9A3"/><circle cx="46" cy="28" r="4" fill="#00A87E"/><circle cx="40" cy="46" r="4" fill="#00D9A3"/><path d="M10 28L40 10M10 28L46 28M10 28L40 46" stroke="#15161C" stroke-width="1.5" opacity=".3"/>` },
+];
+
+const grid = document.getElementById('grid');
+function render(cat){
+  const items = cat==='all' ? TOPICS : TOPICS.filter(t=>t.cat===cat);
+  grid.innerHTML = items.map(t => `
+    <div class="card" onclick="alert('Would navigate to /deep-dive/${t.slug}')">
+      <svg class="mark" viewBox="0 0 56 56" fill="none">${t.mark}</svg>
+      <h3>${t.title}</h3>
+      <div class="one-liner">${t.one}</div>
+      <div class="card-foot">
+        <div class="tags">${t.tags.map(tag=>`<span class="tag">${tag}</span>`).join('')}</div>
+        <div class="read">${t.read}</div>
+      </div>
+    </div>
+  `).join('');
+}
+document.querySelectorAll('.fpill').forEach(p => {
+  p.onclick = () => {
+    document.querySelectorAll('.fpill').forEach(x=>x.classList.remove('active'));
+    p.classList.add('active');
+    render(p.dataset.cat);
+  };
+});
+render('all');
+</script>
+
+</body>
+</html>

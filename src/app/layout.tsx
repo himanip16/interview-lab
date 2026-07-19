@@ -42,8 +42,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AuthProvider>
-            <Navbar />
-            <main className="flex-1">{children}</main>
+            {children}
           </AuthProvider>
         </ThemeProvider>
       </body>

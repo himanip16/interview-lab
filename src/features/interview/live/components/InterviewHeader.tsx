@@ -55,7 +55,7 @@ export function InterviewHeader({
       {/* Left: Back + Title */}
       <div className="flex items-center gap-4">
         <button
-          onClick={() => router.push('/problems')}
+          onClick={() => router.back()}
           className="p-2 rounded-full hover:bg-gray-100 transition-colors"
           aria-label="Go back"
         >
