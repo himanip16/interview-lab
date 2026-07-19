@@ -3,8 +3,8 @@
 
 import { DeepDiveHero } from "@/features/learning/components/DeepDiveHero";
 import { CassandraDiagram } from "@/features/learning/components/diagrams/CassandraDiagram";
-import { Redis as RedisDiagram } from "@/features/learning/components/diagrams/Redis";
-import { Kafka as KafkaDiagram } from "@/features/learning/components/diagrams/Kafka";
+import { RedisDiagram } from "@/features/learning/components/diagrams/Redis";
+import { KafkaDiagram } from "@/features/learning/components/diagrams/Kafka";
 import {
   getDeepDiveSystem,
   getPrevSystem,

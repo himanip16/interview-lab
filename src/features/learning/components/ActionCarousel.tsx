@@ -18,7 +18,7 @@ export default function ActionCarousel() {
   };
 
   return (
-    <div className="panel max-w-[1080px] mx-auto bg-white rounded-[32px] p-[36px_40px_44px] shadow-[0_24px_60px_rgba(21,22,28,0.06)] border border-[rgba(21,22,28,0.06)]">
+    <div className="panel max-w-[1080px] mx-auto bg-card rounded-[32px] p-[36px_40px_44px] shadow-[0_24px_60px_rgba(21,22,28,0.06)] border border-border">
       {/* Top Section */}
       <LearnHeader showSearch={false} />
 
@@ -48,12 +48,8 @@ export default function ActionCarousel() {
               <path d="M56 34 Q62 26 68 30" stroke="#FF6B4A" strokeWidth="3" strokeLinecap="round" fill="none"/>
             </svg>
             <style>{`
-              @keyframes float {
-                0%, 100% { transform: translateX(-50%) translateY(0); }
-                50% { transform: translateX(-50%) translateY(-8px); }
-              }
               .icon-float {
-                animation: float 4.5s ease-in-out infinite;
+                animation: float var(--motion-duration-float) var(--motion-ease-in-out) infinite;
               }
             `}</style>
             <h3 className="text-white text-[16.5px] font-semibold mb-1">Bug hunting</h3>

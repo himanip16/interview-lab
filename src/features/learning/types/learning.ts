@@ -1,24 +1,68 @@
 // src/features/learning/types/learning.ts
+// Whiteboard types migrated to whiteboard.ts - this file now contains only learning-specific types
 
-export interface WhiteboardNode {
+export interface Scenario {
   id: string;
   title: string;
-  kind: string;
-  color: string;
-  position: {
-    top?: string;
-    left?: string;
-    right?: string;
-    bottom?: string;
-  };
-  role: string;
-  deep: string;
-  failure: string;
-  tradeoffs: string;
+  description?: string;
+  segments: Segment[];
 }
 
-export interface WhiteboardSystem {
-  slug: string;
+export interface ScenarioListItem {
+  id: string;
   title: string;
-  nodes: WhiteboardNode[];
+  description?: string;
+  slug: string;
+}
+
+export interface Segment {
+  id: string;
+  conversation: ConversationMessage[];
+  takeaway?: string;
+  actions: Action[];
+}
+
+export interface ConversationMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+export interface Action {
+  id: string;
+  type: string;
+  title: string;
+  instructions?: string;
+  content: unknown;
+}
+
+export interface ObserveActionContent {
+  observation: string;
+  reflection: string;
+}
+
+export interface JudgeActionContent {
+  question: string;
+  options: string[];
+  correctAnswer: number;
+  explanation: string;
+}
+
+export interface FixActionContent {
+  problem: string;
+  solution: string;
+  hints?: string[];
+}
+
+export interface PredictActionContent {
+  context: string;
+  prediction: string;
+  explanation: string;
+}
+
+export interface CompareActionContent {
+  items: Array<{
+    name: string;
+    description: string;
+  }>;
+  comparison: string;
 }

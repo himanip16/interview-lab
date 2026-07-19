@@ -55,7 +55,7 @@ h1, h2, h3 {
   position: absolute;
   border-radius: 50%;
   filter: blur(50px);
-  animation: breathe 8s ease-in-out infinite;
+  animation: breathe var(--motion-duration-breathe) var(--motion-ease-in-out) infinite;
 }
 
 .b1 {
@@ -73,15 +73,6 @@ h1, h2, h3 {
   right: 10%;
   background: rgba(255, 90, 60, 0.14);
   animation-delay: 1.5s;
-}
-
-@keyframes breathe {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.12);
-  }
 }
 
 .top {
@@ -199,17 +190,8 @@ h1, h2, h3 {
 
 .mark {
   width: 280px;
-  animation: float 5s ease-in-out infinite;
+  animation: float var(--motion-duration-float) var(--motion-ease-in-out) infinite;
   filter: drop-shadow(0 24px 30px rgba(21, 22, 28, 0.12));
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-14px);
-  }
 }
 
 .desc-col {

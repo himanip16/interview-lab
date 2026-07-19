@@ -9,6 +9,35 @@ interface DeepDiveHeroProps {
   diagramSvg: React.ReactNode;      // <CassandraDiagram />
   prevSystem?: { name: string; slug: string };
   nextSystem?: { name: string; slug: string };
-  onReadMore?: () => void;
-  onDocuments?: () => void;
+  readMoreHref?: string;
+  docsUrl?: string;
+}
+
+export function DeepDiveHero({
+  systemName,
+  category,
+  eyebrow,
+  description,
+  tags,
+  credit,
+  creditOrg,
+  diagramSvg,
+  prevSystem,
+  nextSystem,
+  readMoreHref,
+  docsUrl
+}: DeepDiveHeroProps) {
+  return (
+    <div>
+      <h1>{systemName}</h1>
+      <p>{category}</p>
+      <div>{eyebrow}</div>
+      {description.map((p, i) => <p key={i}>{p}</p>)}
+      {tags.map(t => <span key={t}>{t}</span>)}
+      <p>{credit} {creditOrg}</p>
+      {diagramSvg}
+      {readMoreHref && <a href={readMoreHref}>Read More</a>}
+      {docsUrl && <a href={docsUrl} target="_blank">Docs</a>}
+    </div>
+  );
 }

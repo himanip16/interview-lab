@@ -38,8 +38,7 @@ export default function RootLayout({
       <body className="flex min-h-screen flex-col">
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
-          enableSystem
+          defaultTheme="light"
           disableTransitionOnChange
         >
           <AuthProvider>

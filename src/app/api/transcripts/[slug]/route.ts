@@ -3,11 +3,12 @@ import { prisma } from "@/shared/prisma/client";
 
 export async function GET(
     request: Request,
-    { params }: { params: { slug: string } }
+    { params }: { params: Promise<{ slug: string }> }
 ) {
+    const { slug } = await params;
     const transcript = await prisma.transcript.findUnique({
         where: {
-            slug: params.slug
+            slug
         }
     });
 

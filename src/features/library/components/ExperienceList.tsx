@@ -7,9 +7,9 @@ import Card from "@/components/ui/Card";
 import EmptyState from "./EmptyState";
 
 const DIFFICULTY_STYLES: Record<Difficulty, string> = {
-  EASY: "border-green-800 text-green-400",
-  MEDIUM: "border-amber-800 text-amber-400",
-  HARD: "border-red-800 text-red-400",
+  EASY: "border-success/30 text-success",
+  MEDIUM: "border-warning/30 text-warning",
+  HARD: "border-error/30 text-error",
 };
 
 const SOURCE_LABELS: Record<ExperienceSource, string> = {

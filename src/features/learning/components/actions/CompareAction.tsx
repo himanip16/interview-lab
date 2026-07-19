@@ -57,8 +57,8 @@ export function CompareAction({ action, onComplete }: CompareActionProps) {
           <div
             className={`p-4 rounded ${
               isCorrect
-                ? "bg-green-950 border border-green-800"
-                : "bg-red-950 border border-red-800"
+                ? "bg-success/10 border border-success/30 text-success-foreground"
+                : "bg-error/10 border border-error/30 text-error-foreground"
             }`}
           >
             <p className="font-semibold mb-2">

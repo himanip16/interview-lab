@@ -1,10 +1,6 @@
 /* src/features/bug-hunting/components/BugHunting.module.css */
 .aura {
-  animation: breathe 3.2s ease-in-out infinite;
-}
-@keyframes breathe {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.15); }
+  animation: breathe var(--motion-duration-breathe) var(--motion-ease-in-out) infinite;
 }
 
 .timeline::before {
