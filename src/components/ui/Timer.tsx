@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 
 interface TimerProps {
@@ -14,25 +14,46 @@ export const Timer: React.FC<TimerProps> = ({
 }) => {
   const [time, setTime] = useState(initialTime);
   const [isRunning, setIsRunning] = useState(false);
+  const startTimeRef = useRef<number | null>(null);
+  const initialTimeRef = useRef<number>(initialTime);
+  const onTimeUpRef = useRef(onTimeUp);
+
+  // Keep callback updated without triggering effect re-run
+  useEffect(() => {
+    onTimeUpRef.current = onTimeUp;
+  }, [onTimeUp]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
     
     if (isRunning && time > 0) {
+      // Record start time when timer starts
+      if (!startTimeRef.current) {
+        startTimeRef.current = Date.now();
+      }
+      
       interval = setInterval(() => {
-        setTime((prev) => {
-          if (prev <= 1) {
-            setIsRunning(false);
-            onTimeUp?.();
-            return 0;
-          }
-          return prev - 1;
-        });
+        if (startTimeRef.current === null) return;
+        
+        // Calculate remaining time based on system clock
+        const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
+        const remaining = Math.max(0, initialTimeRef.current - elapsed);
+        
+        setTime(remaining);
+
+        if (remaining <= 0) {
+          setIsRunning(false);
+          clearInterval(interval);
+          onTimeUpRef.current?.();
+        }
       }, 1000);
+    } else if (!isRunning) {
+      // Reset start time when paused
+      startTimeRef.current = null;
     }
 
     return () => clearInterval(interval);
-  }, [isRunning, time, onTimeUp]);
+  }, [isRunning, time]); // Removed onTimeUp from deps, using ref instead
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -44,6 +65,8 @@ export const Timer: React.FC<TimerProps> = ({
   const resetTimer = () => {
     setIsRunning(false);
     setTime(initialTime);
+    initialTimeRef.current = initialTime;
+    startTimeRef.current = null;
   };
 
   return (
