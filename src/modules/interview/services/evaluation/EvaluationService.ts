@@ -126,46 +126,48 @@ export class EvaluationService {
   ) {
     if (evidence.length === 0) return;
 
-    const allConceptSlugs = [
-      ...new Set(evidence.flatMap((e) => e.conceptSlugs)),
-    ];
+    await prisma.$transaction(async (tx) => {
+      const allConceptSlugs = [
+        ...new Set(evidence.flatMap((e) => e.conceptSlugs)),
+      ];
 
-    const concepts = await prisma.concept.findMany({
-      where: { slug: { in: allConceptSlugs } },
-      select: { id: true, slug: true },
-    });
-
-    const conceptIdBySlug = new Map(
-      concepts.map((c) => [c.slug, c.id])
-    );
-
-    for (const item of evidence) {
-      const created = await prisma.evidenceItem.create({
-        data: {
-          evaluationId,
-          messageId: item.messageId,
-          dimension: item.dimension,
-          timestampSeconds: item.timestampSeconds,
-          quote: item.quote,
-          comment: item.comment,
-          type: item.type.toUpperCase() as "STRENGTH" | "WEAKNESS",
-          normalizedScore: item.normalizedScore,
-        },
+      const concepts = await tx.concept.findMany({
+        where: { slug: { in: allConceptSlugs } },
+        select: { id: true, slug: true },
       });
 
-      const conceptLinks = item.conceptSlugs
-        .map((slug) => conceptIdBySlug.get(slug))
-        .filter((id): id is string => Boolean(id));
+      const conceptIdBySlug = new Map(
+        concepts.map((c) => [c.slug, c.id])
+      );
 
-      if (conceptLinks.length > 0) {
-        await prisma.evidenceConcept.createMany({
-          data: conceptLinks.map((conceptId) => ({
-            evidenceItemId: created.id,
-            conceptId,
-          })),
-          skipDuplicates: true,
+      for (const item of evidence) {
+        const created = await tx.evidenceItem.create({
+          data: {
+            evaluationId,
+            messageId: item.messageId,
+            dimension: item.dimension,
+            timestampSeconds: item.timestampSeconds,
+            quote: item.quote,
+            comment: item.comment,
+            type: item.type.toUpperCase() as "STRENGTH" | "WEAKNESS",
+            normalizedScore: item.normalizedScore,
+          },
         });
+
+        const conceptLinks = item.conceptSlugs
+          .map((slug) => conceptIdBySlug.get(slug))
+          .filter((id): id is string => Boolean(id));
+
+        if (conceptLinks.length > 0) {
+          await tx.evidenceConcept.createMany({
+            data: conceptLinks.map((conceptId) => ({
+              evidenceItemId: created.id,
+              conceptId,
+            })),
+            skipDuplicates: true,
+          });
+        }
       }
-    }
+    });
   }
 }

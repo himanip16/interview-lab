@@ -390,12 +390,47 @@ Return JSON only. No markdown, no commentary outside the JSON.
     quote: string,
     messageContent: string
   ): boolean {
-    const normalize = (text: string) =>
-      text.toLowerCase().replace(/\s+/g, " ").trim();
+    // Normalize both texts for comparison
+    const normalize = (text: string) => {
+      return text
+        .toLowerCase()
+        // Remove punctuation (but keep word boundaries)
+        .replace(/[.,!?;:'"()]/g, "")
+        // Normalize whitespace
+        .replace(/\s+/g, " ")
+        .trim();
+    };
 
-    return normalize(messageContent).includes(
-      normalize(quote)
-    );
+    const normalizedQuote = normalize(quote);
+    const normalizedMessage = normalize(messageContent);
+
+    // Direct inclusion check
+    if (normalizedMessage.includes(normalizedQuote)) {
+      return true;
+    }
+
+    // Handle common contractions and variations
+    const quoteWords = normalizedQuote.split(" ");
+    const messageWords = normalizedMessage.split(" ");
+
+    // Check if all quote words appear in the message in order (fuzzy matching)
+    let quoteIndex = 0;
+    for (const messageWord of messageWords) {
+      if (quoteIndex < quoteWords.length && messageWord === quoteWords[quoteIndex]) {
+        quoteIndex++;
+      }
+    }
+
+    // If we matched all words in order, consider it grounded
+    if (quoteIndex === quoteWords.length && quoteWords.length > 0) {
+      return true;
+    }
+
+    // Fallback: check if at least 80% of quote words appear in the message
+    const matchedWords = quoteWords.filter(word => messageWords.includes(word));
+    const matchRatio = matchedWords.length / Math.max(quoteWords.length, 1);
+
+    return matchRatio >= 0.8;
   }
 
   private capWords(text: string, maxWords: number): string {

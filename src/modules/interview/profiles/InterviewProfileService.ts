@@ -8,6 +8,12 @@ import {
 } from "./InterviewProfile";
 import { Goal } from "../constants";
 
+// Cache entry with timestamp for TTL
+interface CacheEntry {
+  profile: InterviewProfile;
+  timestamp: number;
+}
+
 /**
  * Resolves an InterviewProfile from the database instead of a hardcoded
  * switch statement. Adding a new interview type (DSA, Behavioral,
@@ -17,17 +23,23 @@ import { Goal } from "../constants";
  * Replaces: InterviewProfileResolver.ts, HLDInterviewProfile.ts, LLDInterviewProfile.ts
  */
 export class InterviewProfileService {
-  // Small in-memory cache: templates change rarely, and every interview
-  // message currently re-resolves the profile.
-  private readonly cache = new Map<string, InterviewProfile>();
+  // Small in-memory cache with TTL: templates change rarely, and every interview
+  // message currently re-resolves the profile. TTL of 5 minutes ensures stale data
+  // is refreshed while still providing performance benefits.
+  private readonly cache = new Map<string, CacheEntry>();
+  private readonly CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+  private readonly MAX_CACHE_SIZE = 100; // Prevent unbounded growth
 
   async resolveByTemplateId(
     templateId: string
   ): Promise<InterviewProfile> {
+    // Clean up expired entries periodically
+    this.cleanupExpiredEntries();
+
     const cached = this.cache.get(templateId);
 
-    if (cached) {
-      return cached;
+    if (cached && Date.now() - cached.timestamp < this.CACHE_TTL_MS) {
+      return cached.profile;
     }
 
     const template =
@@ -85,9 +97,29 @@ export class InterviewProfileService {
       ),
     };
 
-    this.cache.set(templateId, profile);
+    // Enforce cache size limit by removing oldest entries if needed
+    if (this.cache.size >= this.MAX_CACHE_SIZE) {
+      const oldestKey = this.cache.keys().next().value;
+      if (oldestKey) {
+        this.cache.delete(oldestKey);
+      }
+    }
+
+    this.cache.set(templateId, {
+      profile,
+      timestamp: Date.now(),
+    });
 
     return profile;
+  }
+
+  private cleanupExpiredEntries(): void {
+    const now = Date.now();
+    for (const [key, entry] of this.cache.entries()) {
+      if (now - entry.timestamp >= this.CACHE_TTL_MS) {
+        this.cache.delete(key);
+      }
+    }
   }
 
   async resolveBySlug(
