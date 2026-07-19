@@ -203,30 +203,36 @@ const parsed = await ValidatedJSONParser.parse(
 );
 
     const dimensionScores = parsed.dimensionScores.map(
-      (dimension) => ({
-        dimension: dimension.dimension,
-        score: dimension.score,
-        summary: dimension.summary,
-        evidence: dimension.evidence
-          // Drop any evidence pointing at a message that doesn't exist and
-          // any quote that isn't actually substantiated by that message's
-          // content — this is what stops "evidence-shaped hallucination".
-          .filter((item) => {
-            const message = transcriptById.get(
-              item.messageId
-            );
+      (dimension) => {
+        // First, filter evidence items that point to non-existent messages
+        const validMessageEvidence = dimension.evidence.filter((item) => {
+          const message = transcriptById.get(item.messageId);
+          return message !== undefined;
+        });
 
-            if (!message) return false;
+        // Then, filter evidence items with grounded quotes
+        const groundedEvidence = validMessageEvidence.filter((item) => {
+          const message = transcriptById.get(item.messageId)!;
+          return this.isQuoteGroundedInMessage(
+            item.quote,
+            message.content
+          );
+        });
 
-            return this.isQuoteGroundedInMessage(
-              item.quote,
-              message.content
-            );
-          })
-          .map((item) => {
-            const message = transcriptById.get(
-              item.messageId
-            )!;
+        // If we have at least one grounded evidence item, use it
+        // Otherwise, use the best available evidence (most grounded) to avoid false negatives
+        const evidenceToUse = groundedEvidence.length > 0
+          ? groundedEvidence
+          : validMessageEvidence.length > 0
+            ? this.selectBestEvidence(validMessageEvidence, transcriptById)
+            : [];
+
+        return {
+          dimension: dimension.dimension,
+          score: dimension.score,
+          summary: dimension.summary,
+          evidence: evidenceToUse.map((item) => {
+            const message = transcriptById.get(item.messageId)!;
 
             const timestampSeconds = message.elapsedSeconds ?? 0;
 
@@ -246,7 +252,8 @@ const parsed = await ValidatedJSONParser.parse(
               ),
             };
           }),
-      })
+        };
+      }
     );
 
     const overallScore = Math.round(
@@ -344,7 +351,7 @@ For each dimension, provide:
 - summary: one sentence justifying the score
 - evidence: 1-3 items, each with:
   - messageId: the EXACT [id=...] value of a transcript line that supports this score
-  - quote: a short quote (${MAX_QUOTE_WORDS} words or fewer) copied VERBATIM from that exact message's content
+  - quote: a short quote (${MAX_QUOTE_WORDS} words or fewer) copied VERBATIM from that exact message's content. DO NOT correct spelling, grammar, or punctuation. DO NOT add or remove words. If you cannot find an exact quote, return null for this evidence item.
   - comment: why this quote matters for this dimension
   - conceptSlugs: 0-3 slugs from the CONCEPT VOCABULARY that this specific quote demonstrates
   - type: "strength" if this quote demonstrates competence, "weakness" if it demonstrates a gap
@@ -386,17 +393,17 @@ Return JSON only. No markdown, no commentary outside the JSON.
 `.trim();
   }
 
-  private isQuoteGroundedInMessage(
-    quote: string,
-    messageContent: string
-  ): boolean {
-    // Normalize both texts for comparison
+  /**
+   * Calculate grounding score for a quote (0-1) for fallback selection
+   */
+  private calculateGroundingScore(quote: string, messageContent: string): number {
     const normalize = (text: string) => {
       return text
         .toLowerCase()
-        // Remove punctuation (but keep word boundaries)
-        .replace(/[.,!?;:'"()]/g, "")
-        // Normalize whitespace
+        .replace(/[.,!?;:'"()\-–—]/g, "")
+        .replace(/[…‥]/g, "")
+        .replace(/\b(um|uh|like|you know|basically|actually)\b/g, "")
+        .replace(/[\s\n\r\t]+/g, " ")
         .replace(/\s+/g, " ")
         .trim();
     };
@@ -404,33 +411,135 @@ Return JSON only. No markdown, no commentary outside the JSON.
     const normalizedQuote = normalize(quote);
     const normalizedMessage = normalize(messageContent);
 
-    // Direct inclusion check
+    if (normalizedMessage.includes(normalizedQuote)) {
+      return 1.0;
+    }
+
+    const quoteWords = normalizedQuote.split(" ").filter(w => w.length > 0);
+    const messageWords = normalizedMessage.split(" ").filter(w => w.length > 0);
+
+    if (quoteWords.length === 0) {
+      return 0;
+    }
+
+    let maxMatchCount = 0;
+    for (let i = 0; i <= messageWords.length - quoteWords.length; i++) {
+      let matchCount = 0;
+      for (let j = 0; j < quoteWords.length; j++) {
+        if (messageWords[i + j] === quoteWords[j]) {
+          matchCount++;
+        }
+      }
+      if (matchCount > maxMatchCount) {
+        maxMatchCount = matchCount;
+      }
+    }
+
+    return maxMatchCount / quoteWords.length;
+  }
+
+  /**
+   * Select the best evidence item when no perfectly grounded evidence is found
+   */
+  private selectBestEvidence(
+    evidenceItems: Array<any>,
+    transcriptById: Map<string, any>
+  ): Array<any> {
+    if (evidenceItems.length === 0) {
+      return [];
+    }
+
+    // Score each evidence item by grounding quality
+    const scoredItems = evidenceItems.map((item) => {
+      const message = transcriptById.get(item.messageId);
+      if (!message) {
+        return { item, score: 0 };
+      }
+      const score = this.calculateGroundingScore(item.quote, message.content);
+      return { item, score };
+    });
+
+    // Sort by score descending and take the best one
+    scoredItems.sort((a, b) => b.score - a.score);
+
+    // Only return if the best score is above a minimum threshold (50%)
+    const bestScore = scoredItems[0]?.score ?? 0;
+    if (bestScore >= 0.5) {
+      return [scoredItems[0].item];
+    }
+
+    return [];
+  }
+
+  private isQuoteGroundedInMessage(
+    quote: string,
+    messageContent: string
+  ): boolean {
+    // Aggressive normalization for comparison
+    const normalize = (text: string) => {
+      return text
+        .toLowerCase()
+        // Remove all punctuation
+        .replace(/[.,!?;:'"()\-–—]/g, "")
+        // Handle Unicode ellipsis and common variations
+        .replace(/[…‥]/g, "")
+        // Remove common filler words that LLMs might add/remove
+        .replace(/\b(um|uh|like|you know|basically|actually)\b/g, "")
+        // Normalize whitespace (including newlines and tabs)
+        .replace(/[\s\n\r\t]+/g, " ")
+        // Remove extra spaces
+        .replace(/\s+/g, " ")
+        .trim();
+    };
+
+    const normalizedQuote = normalize(quote);
+    const normalizedMessage = normalize(messageContent);
+
+    // Direct inclusion check after aggressive normalization
     if (normalizedMessage.includes(normalizedQuote)) {
       return true;
     }
 
-    // Handle common contractions and variations
-    const quoteWords = normalizedQuote.split(" ");
-    const messageWords = normalizedMessage.split(" ");
+    // Token-based fuzzy matching with 90-95% threshold
+    const quoteWords = normalizedQuote.split(" ").filter(w => w.length > 0);
+    const messageWords = normalizedMessage.split(" ").filter(w => w.length > 0);
 
-    // Check if all quote words appear in the message in order (fuzzy matching)
-    let quoteIndex = 0;
-    for (const messageWord of messageWords) {
-      if (quoteIndex < quoteWords.length && messageWord === quoteWords[quoteIndex]) {
-        quoteIndex++;
+    if (quoteWords.length === 0) {
+      return false;
+    }
+
+    // Calculate similarity using token overlap and sequence matching
+    let maxMatchCount = 0;
+    let bestMatchIndex = 0;
+
+    // Try to find the best matching subsequence in the message
+    for (let i = 0; i <= messageWords.length - quoteWords.length; i++) {
+      let matchCount = 0;
+      for (let j = 0; j < quoteWords.length; j++) {
+        if (messageWords[i + j] === quoteWords[j]) {
+          matchCount++;
+        }
+      }
+      if (matchCount > maxMatchCount) {
+        maxMatchCount = matchCount;
+        bestMatchIndex = i;
       }
     }
 
-    // If we matched all words in order, consider it grounded
-    if (quoteIndex === quoteWords.length && quoteWords.length > 0) {
-      return true;
-    }
+    // Calculate match ratio
+    const matchRatio = maxMatchCount / quoteWords.length;
 
-    // Fallback: check if at least 80% of quote words appear in the message
-    const matchedWords = quoteWords.filter(word => messageWords.includes(word));
-    const matchRatio = matchedWords.length / Math.max(quoteWords.length, 1);
+    // 90-95% threshold for fuzzy matching
+    const FUZZY_THRESHOLD = 0.90;
 
-    return matchRatio >= 0.8;
+    // Also check for high token overlap even if sequence doesn't match perfectly
+    const quoteWordSet = new Set(quoteWords);
+    const messageWordSet = new Set(messageWords);
+    const intersection = new Set([...quoteWordSet].filter(x => messageWordSet.has(x)));
+    const overlapRatio = intersection.size / quoteWordSet.size;
+
+    // Accept if either sequence match or overlap meets threshold
+    return matchRatio >= FUZZY_THRESHOLD || overlapRatio >= FUZZY_THRESHOLD;
   }
 
   private capWords(text: string, maxWords: number): string {

@@ -147,6 +147,40 @@ export class InterviewRepository {
     });
   }
 
+  /**
+   * Update summary with optimistic concurrency control.
+   * Returns true if update succeeded, false if version conflict occurred.
+   */
+  async updateSummaryWithVersion(
+    interviewId: string,
+    summary: string,
+    expectedVersion: number
+  ): Promise<{ success: boolean; newVersion?: number }> {
+    try {
+      const result = await prisma.interview.update({
+        where: {
+          id: interviewId,
+          summaryVersion: expectedVersion,
+        },
+        data: {
+          summary,
+          summaryVersion: { increment: 1 },
+        },
+        select: {
+          summaryVersion: true,
+        },
+      });
+
+      return { success: true, newVersion: result.summaryVersion };
+    } catch (error) {
+      // Prisma throws P2025 if record not found or version doesn't match
+      if (error instanceof Error && 'code' in error && error.code === 'P2025') {
+        return { success: false };
+      }
+      throw error;
+    }
+  }
+
   async updateMetadata(
     interviewId: string,
     metadata: Prisma.InputJsonValue

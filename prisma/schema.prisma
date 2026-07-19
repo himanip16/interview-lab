@@ -50,6 +50,7 @@ model User {
   practiceAttempts        PracticeAttempt[]
   practiceRecommendations PracticeRecommendation[]
   learningRecommendations LearningRecommendation[]
+  bugAttempts             BugAttempt[]
 }
 
 // ---------------------------------------------------------------------------
@@ -105,9 +106,8 @@ model BugHypothesisAttempt {
   submittedAt DateTime @default(now())
 
   attempt BugAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
-  user    User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([scenarioId, userId])
+  @@index([scenarioId])
   @@index([attemptId])
 }
 
@@ -243,6 +243,7 @@ model Interview {
   currentPhase   String
   phaseStartedAt DateTime?
   summary        String          @default("Interview has not started yet.")
+  summaryVersion Int            @default(0) // Optimistic concurrency control for summary updates
   promptVersion  String          @default("v1")
   startedAt      DateTime?
   completedAt    DateTime?

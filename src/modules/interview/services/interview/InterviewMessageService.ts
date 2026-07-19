@@ -168,6 +168,11 @@ export class InterviewMessageService {
         result.phaseAssessment ?? null,
     };
 
+    // Update phaseStartedAt atomically with phase transition to prevent timestamp mismatch
+    const newPhaseStartedAt = result.transition.shouldTransition
+      ? new Date()
+      : phaseStartedAt;
+
     await this.repository.persistTurn({
       interviewId: interview.id,
       userMessage: normalizedMessage,
@@ -178,32 +183,69 @@ export class InterviewMessageService {
       elapsedSeconds,
     });
 
-    // Update phaseStartedAt when phase transitions
+    // Update phaseStartedAt when phase transitions (atomic with phase update)
     if (result.transition.shouldTransition) {
       await this.repository.updateProgress(interview.id, {
         currentPhase: nextPhase,
-        phaseStartedAt: new Date(),
+        phaseStartedAt: newPhaseStartedAt,
       });
     }
 
     // Update summary incrementally with new messages (debounced to every 3 turns)
     // Also update on phase transitions or interview completion to capture important points
-    const shouldUpdateSummary = 
-      result.transition.shouldTransition || 
+    const shouldUpdateSummary =
+      result.transition.shouldTransition ||
       result.transition.completed ||
       (interview.transcript.length + 1) % 3 === 0; // Update every 3 turns
-    
+
     let updatedSummary = interview.summary;
     if (shouldUpdateSummary) {
       const recentMessages = [
         { role: "user", content: normalizedMessage },
         { role: "assistant", content: result.reply },
       ];
-      updatedSummary = await this.summaryService.updateSummary(
-        interview.summary,
-        recentMessages
-      );
-      await this.repository.updateSummary(interview.id, updatedSummary);
+
+      // Optimistic concurrency: retry up to 3 times on version conflicts
+      const MAX_RETRIES = 3;
+      let retryCount = 0;
+      let summaryUpdated = false;
+
+      while (retryCount < MAX_RETRIES && !summaryUpdated) {
+        // Get current interview state with version
+        const currentInterview = await this.repository.getById(interview.id);
+        if (!currentInterview) {
+          throw new Error("Interview not found during summary update");
+        }
+
+        const currentVersion = currentInterview.summaryVersion || 0;
+        const currentSummary = currentInterview.summary;
+
+        // Generate new summary based on current state
+        updatedSummary = await this.summaryService.updateSummary(
+          currentSummary,
+          recentMessages
+        );
+
+        // Try to update with version check
+        const updateResult = await this.repository.updateSummaryWithVersion(
+          interview.id,
+          updatedSummary,
+          currentVersion
+        );
+
+        if (updateResult.success) {
+          summaryUpdated = true;
+        } else {
+          retryCount++;
+          // If conflict, loop will retry with fresh data
+          console.warn(`Summary version conflict, retry ${retryCount}/${MAX_RETRIES}`);
+        }
+      }
+
+      if (!summaryUpdated) {
+        console.error(`Failed to update summary after ${MAX_RETRIES} retries due to version conflicts`);
+        // Continue with interview flow even if summary update fails
+      }
     }
 
     return {
