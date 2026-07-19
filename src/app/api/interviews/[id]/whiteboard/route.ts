@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { InterviewRepository } from "@/modules/interview/repositories/InterviewRepository";
+import { WhiteboardInterpreter } from "@/modules/interview/services/whiteboard/WhiteboardInterpreter";
 import logger from "@/shared/logger/logger";
 
 type Props = {
@@ -31,6 +32,7 @@ export async function PUT(request: Request, { params }: Props) {
     }
 
     const repository = new InterviewRepository();
+    const interpreter = new WhiteboardInterpreter();
     
     // Verify interview exists
     const interview = await repository.getById(id);
@@ -41,8 +43,12 @@ export async function PUT(request: Request, { params }: Props) {
       );
     }
 
-    // Update whiteboard state
+    // Generate textual description from whiteboard state
+    const whiteboardDescription = interpreter.interpret(whiteboardState);
+
+    // Update whiteboard state and description
     await repository.updateWhiteboardState(id, whiteboardState);
+    await repository.updateWhiteboardDescription(id, whiteboardDescription);
 
     return NextResponse.json(
       { success: true, whiteboardState },

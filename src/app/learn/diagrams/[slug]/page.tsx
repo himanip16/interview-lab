@@ -99,7 +99,8 @@ export async function generateStaticParams() {
 
 // ✅ Metadata for each page
 export async function generateMetadata({ params }: PageProps) {
-  const system = getDeepDiveSystem(params.slug);
+  const { slug } = await params;
+  const system = getDeepDiveSystem(slug);
   
   if (!system) {
     return {

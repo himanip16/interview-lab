@@ -221,6 +221,20 @@ export class InterviewRepository {
     });
   }
 
+  async updateWhiteboardDescription(
+    interviewId: string,
+    whiteboardDescription: string | null
+  ) {
+    return prisma.interview.update({
+      where: {
+        id: interviewId,
+      },
+      data: {
+        whiteboardDescription,
+      } as any,
+    });
+  }
+
   async saveEvaluation(
     interviewId: string,
     data: {
@@ -229,17 +243,18 @@ export class InterviewRepository {
       evidence: Prisma.InputJsonValue;
       feedback: string;
       metadata?: Prisma.InputJsonValue;
+      status?: string;
     }
   ) {
     return prisma.evaluation.upsert({
       where: {
         interviewId,
       },
-      update: data,
+      update: data as any,
       create: {
         interviewId,
         ...data,
-      },
+      } as any,
     });
   }
 

@@ -86,6 +86,7 @@ export class EvaluationService {
         dimensionScores: result.dimensionScores as unknown as Prisma.InputJsonValue,
         evidence: evidence as unknown as Prisma.InputJsonValue,
         feedback: result.feedback,
+        status: "COMPLETED" as any,
         metadata: {
           strengths: result.strengths,
           weaknesses: result.weaknesses,

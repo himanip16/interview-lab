@@ -10,7 +10,7 @@ import { InterviewEngine } from "../../engine/InterviewEngine";
 import { InterviewRepository } from "../../repositories/InterviewRepository";
 import { InterviewProfileService } from "../../profiles/InterviewProfileService";
 import { IncrementalSummaryService } from "../summary/IncrementalSummaryService";
-import { createEvaluationService } from "@/modules/container";
+import { EvaluationOrchestrator } from "../evaluation/EvaluationOrchestrator";
 
 
 
@@ -26,6 +26,9 @@ export class InterviewMessageService {
 
   private readonly summaryService =
     new IncrementalSummaryService();
+
+  private readonly evaluationOrchestrator =
+    new EvaluationOrchestrator();
 
   async processMessage(
     interviewId: string,
@@ -114,6 +117,7 @@ export class InterviewMessageService {
         phaseStartedAt,
         mode: interview.mode,
         persona: interview.candidatePersona as any,
+        whiteboardDescription: (interview as any).whiteboardDescription || undefined,
       });
 
     const previousPhase =
@@ -140,10 +144,9 @@ export class InterviewMessageService {
         completedAt: new Date(),
       });
 
-      // Evaluate in background without blocking response
-      const evaluationService = createEvaluationService();
-      evaluationService.evaluateInterview(interview.id).catch((error) => {
-        console.error(`Failed to evaluate interview ${interview.id}:`, error);
+      // Evaluate in background without blocking response using orchestrator
+      this.evaluationOrchestrator.requestEvaluation(interview.id, { background: true }).catch((error: Error) => {
+        console.error(`Failed to request evaluation for interview ${interview.id}:`, error);
         // Store error in interview metadata so the report page can display it
         this.repository.updateMetadata(interview.id, {
           evaluationError: error instanceof Error ? error.message : 'Unknown evaluation error',

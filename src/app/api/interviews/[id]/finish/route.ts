@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { InterviewRepository } from "@/modules/interview/repositories/InterviewRepository";
-import { createEvaluationService } from "@/modules/container";
+import { EvaluationOrchestrator } from "@/modules/interview/services/evaluation/EvaluationOrchestrator";
 import logger from "@/shared/logger/logger";
 import { InterviewStatus } from "@prisma/client";
 
@@ -28,10 +28,11 @@ export async function POST(
     const repository =
       new InterviewRepository();
 
+    const evaluationOrchestrator =
+      new EvaluationOrchestrator();
 
     const exists =
       await repository.exists(id);
-
 
     if (!exists) {
       return NextResponse.json(
@@ -44,33 +45,7 @@ export async function POST(
       );
     }
 
-
-    const evaluationService =
-      createEvaluationService();
-
-    let evaluation;
-    try {
-      evaluation = await evaluationService.evaluateInterview(id);
-    } catch (error) {
-      logger.error(
-        "AI evaluation failed, keeping interview in progress",
-        {
-          err: error,
-          interviewId: id,
-        }
-      );
-      return NextResponse.json(
-        {
-          error: "Evaluation failed. Please try again.",
-          retryable: true,
-        },
-        {
-          status: 503,
-        }
-      );
-    }
-
-    // Only mark as COMPLETED after successful evaluation
+    // Mark interview as COMPLETED first - this is the synchronous part
     await repository.updateProgress(
       id,
       {
@@ -79,14 +54,26 @@ export async function POST(
       }
     );
 
+    // Trigger evaluation in background - this won't block the response
+    evaluationOrchestrator.requestEvaluation(id, { background: true }).catch((error) => {
+      logger.error(
+        "Background evaluation failed after interview completion",
+        {
+          err: error,
+          interviewId: id,
+        }
+      );
+    });
 
+    // Return immediately with 202 Accepted
     return NextResponse.json(
       {
         success: true,
-        evaluationId: evaluation.id,
+        message: "Interview completed. Evaluation is running in background.",
+        status: "EVALUATION_IN_PROGRESS",
       },
       {
-        status: 200,
+        status: 202,
       }
     );
 

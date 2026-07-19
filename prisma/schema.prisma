@@ -262,6 +262,9 @@ model Interview {
   // NEW — metadata for storing error states and other runtime information
   metadata Json? // Arbitrary metadata, no versioning needed
 
+  // NEW — whiteboard description generated from whiteboardState for AI consumption
+  whiteboardDescription String? // Concise textual description of the architecture
+
   user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   template   InterviewTemplate @relation(fields: [templateId], references: [id])
   evaluation Evaluation?
@@ -439,6 +442,7 @@ model Evaluation {
 
   feedback  String
   metadata  Json? // Arbitrary metadata, no versioning needed
+  status    EvaluationStatus @default(PENDING)
   createdAt DateTime @default(now())
 
   interview     Interview      @relation(fields: [interviewId], references: [id], onDelete: Cascade)
@@ -733,6 +737,13 @@ enum MessageRole {
 enum EvidenceType {
   STRENGTH
   WEAKNESS
+}
+
+enum EvaluationStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
 }
 
 model PracticeActivity {
