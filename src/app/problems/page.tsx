@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { Panel } from "@/components/ui/Panel";
 import { Search } from "@/components/ui/Search";
@@ -12,12 +12,55 @@ import ProblemList from "@/features/problems/components/ProblemList";
 
 export default function ProblemsPage({ userId }: { userId: string | null }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { filters, setFilters } = useProblemFilters();
   const { problems, totalPages, loading, error, refetch } = useProblems(filters, userId);
   const [searchInput, setSearchInput] = useState(filters.search);
   const debounceRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const visible = filterBySearch(filterByStatus(problems, filters.status), filters.search);
+
+  // Auto-start interview if problem parameter is provided
+  useEffect(() => {
+    const problemSlug = searchParams.get("problem");
+    if (problemSlug && problems.length > 0) {
+      const problem = problems.find(p => p.slug === problemSlug);
+      if (problem) {
+        startInterview(problem.id);
+      }
+    }
+  }, [searchParams, problems]);
+
+  async function startInterview(problemId: string) {
+    try {
+      const res = await fetch("/api/interviews/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: filters.type === "all" ? "hld" : filters.type,
+          difficulty: filters.difficulty === "ALL" ? "MEDIUM" : filters.difficulty,
+          duration: 45,
+          company: "General",
+          problemId,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(`Failed to start interview: ${data.error}`);
+        return;
+      }
+
+      if (data.id) {
+        router.push(`/interview/live/${data.id}`);
+      } else {
+        console.error("No ID returned from API", data);
+      }
+    } catch (err) {
+      console.error("Network error starting interview:", err);
+    }
+  }
 
   useEffect(() => {
     if (debounceRef.current) {
@@ -49,36 +92,7 @@ export default function ProblemsPage({ userId }: { userId: string | null }) {
           loading={loading}
           error={error}
           onRetry={refetch}
-          onSelect={async (problemId) => {
-            try {
-              const res = await fetch("/api/interviews/start", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  type: filters.type === "all" ? "hld" : filters.type,
-                  difficulty: filters.difficulty === "ALL" ? "MEDIUM" : filters.difficulty,
-                  duration: 45,
-                  company: "General",
-                  problemId,
-                }),
-              });
-
-              const data = await res.json();
-
-              if (!res.ok) {
-                alert(`Failed to start interview: ${data.error}`);
-                return;
-              }
-
-              if (data.id) {
-                router.push(`/interview/live/${data.id}`);
-              } else {
-                console.error("No ID returned from API", data);
-              }
-            } catch (err) {
-              console.error("Network error starting interview:", err);
-            }
-          }}
+          onSelect={startInterview}
         />
       </Panel>
     </div>

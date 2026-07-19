@@ -5,6 +5,7 @@ import Link from "next/link";
 import Card from "@/components/ui/Card";
 import Heading from "@/components/ui/Heading";
 import Text from "@/components/ui/Text";
+import { Button } from "@/components/ui/Button";
 import { useRouter } from "next/navigation";
 
 interface Recommendation {
@@ -91,8 +92,42 @@ export default function SmartMentor() {
             <Text variant="muted">{error}</Text>
           </div>
         ) : recommendation ? (
-          // ...unchanged...
-          <></>
+          <div className="space-y-6">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <h3 className="text-2xl font-bold text-foreground">
+                  {recommendation.title}
+                </h3>
+                <div className="mt-2 flex items-center gap-3">
+                  <span className="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium">
+                    {getDifficultyLabel(recommendation.difficulty)}
+                  </span>
+                  <span className="text-sm text-muted-foreground">
+                    {getDuration(recommendation.difficulty)}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-muted-foreground">Why this interview?</p>
+              <ul className="space-y-1 text-sm text-foreground">
+                {recommendation.reasons.map((reason, i) => (
+                  <li key={i}>• {reason}</li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="flex items-center justify-end pt-4">
+              <Link
+                href={`/problems?problem=${recommendation.slug}`}
+              >
+                <Button size="lg">
+                  Practice with AI
+                </Button>
+              </Link>
+            </div>
+          </div>
         ) : (
           <div className="flex items-center justify-center py-12">
             <Text variant="muted">No recommendations available. Complete some interviews to get personalized suggestions!</Text>
