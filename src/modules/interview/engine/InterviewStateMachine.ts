@@ -272,7 +272,7 @@ export class InterviewStateMachine {
       (sum, goal) =>
         sum +
         this.clamp(
-          assessment.goalCoverage[goal] ?? 0
+          assessment.goalCoverage[goal.id] ?? 0
         ),
       0
     );

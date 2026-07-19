@@ -33,7 +33,7 @@ export class PromptBuilder {
     });
 
     const goals = phase.goals
-      .map((goal) => `- ${goal}`)
+      .map((goal) => `- ${goal.id}`)
       .join("\n");
 
     const dimensions =
@@ -45,7 +45,7 @@ export class PromptBuilder {
 
     const goalCoverageTemplate = phase.goals.length > 0
       ? phase.goals
-          .map((goal) => `      "${goal}": 0.0`)
+          .map((goal) => `      "${goal.id}": 0.0`)
           .join(",\n")
       : '      "phase_goal": 0.0';
 
@@ -133,12 +133,12 @@ Return JSON only.
     });
 
     const goals = phase.goals
-      .map((goal) => `- ${goal}`)
+      .map((goal) => `- ${goal.id}`)
       .join("\n");
 
     const goalCoverageTemplate = phase.goals.length > 0
       ? phase.goals
-          .map((goal) => `      "${goal}": 0.0`)
+          .map((goal) => `      "${goal.id}": 0.0`)
           .join(",\n")
       : '      "phase_goal": 0.0';
 

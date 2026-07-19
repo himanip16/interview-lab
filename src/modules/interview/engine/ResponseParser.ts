@@ -43,7 +43,7 @@ const AIResponseSchema = z.object({
       .number()
       .transform((value) =>
         value > 1
-          ? Math.min(value / 100, 1)
+          ? Math.min(value / 10, 1)
           : value
       )
       .pipe(

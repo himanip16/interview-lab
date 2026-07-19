@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Button } from "@/components/ui/Button";
 
 import type { Recommendation } from "@/modules/interview/services/recommendation/RecommendationService";
 
@@ -37,8 +38,14 @@ export default function NextRecommendedInterview({ recommendation }: Props) {
         ))}
       </ul>
 
-      <div className="mt-6 text-sm text-zinc-400">
-        Interview setup coming soon
+      <div className="mt-6">
+        <Link
+          href={`/interview/problems?problem=${recommendation.slug}`}
+        >
+          <Button size="sm">
+            Practice with AI
+          </Button>
+        </Link>
       </div>
     </div>
   );

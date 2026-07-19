@@ -22,11 +22,11 @@ export class PromptGuard {
   /begin\s+prompt/i,
   /end\s+prompt/i,
 
-  // Role labels
-  /^\s*assistant\s*:/im,
-  /^\s*developer\s*:/im,
-  /^\s*system\s*:/im,
-  /^\s*user\s*:/im,
+  // Role labels (more specific to avoid false positives on legitimate YAML)
+  /^\s*assistant\s*:\s*(ignore|forget|override|reveal|repeat|show|bypass)/im,
+  /^\s*developer\s*:\s*(ignore|forget|override|reveal|repeat|show|bypass)/im,
+  /^\s*system\s*:\s*(ignore|forget|override|reveal|repeat|show|bypass)/im,
+  /^\s*user\s*:\s*(ignore|forget|override|reveal|repeat|show|bypass)/im,
 
   // XML / HTML-style prompt wrappers
   /<\s*system\b[^>]*>/i,

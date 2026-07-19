@@ -10,6 +10,23 @@ const GAP = 18; // px
 
 const CARDS = [
   {
+    id: 3,
+    title: "Read a transcript",
+    meta: "Library · Full session",
+    description: "Study real interview conversations.",
+    from: "#262832",
+    to: "#121319",
+    href: "/library/transcript", // exact match — the sample transcript page
+    icon: (
+      <svg viewBox="0 0 110 110" fill="none">
+        <circle cx="55" cy="55" r="52" fill="#fff"/>
+        <path d="M34 39h42v8H34z" fill="#262832"/>
+        <path d="M34 55h32v7H34z" fill="#262832" opacity=".7"/>
+        <path d="M34 69h38v7H34z" fill="#262832" opacity=".45"/>
+      </svg>
+    ),
+  },
+  {
   id: 1,
   title: "Bug hunting",
   meta: "Practice · 15 min",
@@ -44,23 +61,7 @@ const CARDS = [
       </svg>
     ),
   },
-  {
-    id: 3,
-    title: "Read a transcript",
-    meta: "Library · Full session",
-    description: "Study real interview conversations.",
-    from: "#262832",
-    to: "#121319",
-    href: "/library/transcript", // exact match — the sample transcript page
-    icon: (
-      <svg viewBox="0 0 110 110" fill="none">
-        <circle cx="55" cy="55" r="52" fill="#fff"/>
-        <path d="M34 39h42v8H34z" fill="#262832"/>
-        <path d="M34 55h32v7H34z" fill="#262832" opacity=".7"/>
-        <path d="M34 69h38v7H34z" fill="#262832" opacity=".45"/>
-      </svg>
-    ),
-  },
+  
   {
     id: 4,
     title: "Learn whiteboarding",

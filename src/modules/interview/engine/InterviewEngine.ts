@@ -82,6 +82,10 @@ export class InterviewEngine {
       : undefined;
     const latestAnswer = latestMessage?.content;
 
+    const guardedAnswer = this.promptGuard.guard(
+      latestAnswer ?? ""
+    );
+
     const systemPrompt = input.mode === "REVERSE"
       ? await this.promptBuilder.buildReverseSystemPrompt(
           phase,
@@ -96,14 +100,9 @@ export class InterviewEngine {
           input.problem,
           input.runningSummary,
           latestQuestion,
-          latestAnswer,
+          guardedAnswer,
           input.whiteboardDescription
         );
-
-    const guardedInput =
-      this.promptGuard.guard(
-        latestAnswer ?? ""
-      );
 
     const messages: ChatMessage[] = [
       {
@@ -115,7 +114,7 @@ export class InterviewEngine {
 
       {
         role: "user",
-        content: guardedInput,
+        content: guardedAnswer,
       },
     ];
 
