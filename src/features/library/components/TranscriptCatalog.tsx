@@ -50,7 +50,7 @@ export default function TranscriptCatalog() {
       <Search
         placeholder="Search by title, company, topic..."
         className="w-full max-w-md"
-        onSearch={setSearchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
       />
 
       {/* Category Tabs */}

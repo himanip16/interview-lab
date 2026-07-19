@@ -150,7 +150,7 @@ export default function LearnPage() {
     <div className="min-h-screen bg-[var(--paper)] py-12 px-6">
       <Panel variant="default" className="max-w-[1500px] mx-auto" style={{ padding: '36px 40px 44px' }}>
         {/* Top Navigation */}
-        <LearnHeader onSearch={() => {}} />
+        <LearnHeader onSearchChange={() => {}} />
 
         {/* Carousel */}
         <div

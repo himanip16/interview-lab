@@ -5,7 +5,7 @@ import "./globals.css";
 
 import Navbar from "@/components/layout/Navbar";
 import AuthProvider from "@/components/providers/AuthProvider";
-import { ThemeProvider } from "@/contexts/ThemeContext";
+import { ThemeProvider } from "next-themes";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -32,33 +32,21 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${poppins.variable} ${inter.variable} h-full antialiased`}
       suppressHydrationWarning
+      className={`${poppins.variable} ${inter.variable} h-full antialiased`}
     >
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `
-            (function() {
-              function getTheme() {
-                const savedTheme = localStorage.getItem('theme');
-                if (savedTheme) {
-                  return savedTheme;
-                }
-                return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-              }
-              const theme = getTheme();
-              document.documentElement.setAttribute('data-theme', theme);
-            })();
-          `,
-        }}
-      />
       <body className="flex min-h-screen flex-col">
-        <AuthProvider>
-          <ThemeProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <AuthProvider>
             <Navbar />
             <main className="flex-1">{children}</main>
-          </ThemeProvider>
-        </AuthProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

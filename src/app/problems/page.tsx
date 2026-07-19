@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useState, useEffect, useRef } from "react";
 import { Panel } from "@/components/ui/Panel";
 import { Search } from "@/components/ui/Search";
 import { useProblems } from "@/features/problems/hooks/useProblems";
@@ -13,15 +14,32 @@ export default function ProblemsPage({ userId }: { userId: string | null }) {
   const router = useRouter();
   const { filters, setFilters } = useProblemFilters();
   const { problems, totalPages, loading, error, refetch } = useProblems(filters, userId);
+  const [searchInput, setSearchInput] = useState(filters.search);
+  const debounceRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const visible = filterBySearch(filterByStatus(problems, filters.status), filters.search);
+
+  useEffect(() => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    debounceRef.current = setTimeout(() => {
+      setFilters({ search: searchInput });
+    }, 300);
+
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, [searchInput, setFilters]);
 
   return (
     <div className="min-h-screen bg-[var(--paper)] py-10 px-6">
       <Panel variant="default" className="max-w-[960px] mx-auto p-[32px_36px_40px]">
         <div className="flex items-center justify-between mb-6">
           <h2 className="heading-m text-[var(--ink)]">Problem library</h2>
-          <Search placeholder="Search problems..." className="w-[220px]" onSearch={(search) => setFilters({ search })} />
+          <Search placeholder="Search problems..." className="w-[220px]" value={searchInput} onChange={(e) => setSearchInput(e.target.value)} />
         </div>
 
         <ProblemFilters filters={filters} onChange={setFilters} count={visible.length} />

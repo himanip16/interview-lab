@@ -140,7 +140,7 @@ export default function ActionCarouselPage() {
           <Search 
             placeholder="Search actions…" 
             className="flex-1 max-w-[340px]"
-            onSearch={() => {}}
+            onChange={() => {}}
           />
           <div className="body-s font-semibold text-[var(--ink-400)] cursor-pointer flex items-center gap-2 whitespace-nowrap">
             Menu

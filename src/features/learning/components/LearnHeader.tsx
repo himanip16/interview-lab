@@ -4,11 +4,11 @@ import { Search } from "@/components/ui/Search";
 import { BRANDING, getNavigationLinks } from "../config/branding";
 
 interface LearnHeaderProps {
-  onSearch?: (query: string) => void;
+  onSearchChange?: (query: string) => void;
   showSearch?: boolean;
 }
 
-export function LearnHeader({ onSearch, showSearch = true }: LearnHeaderProps) {
+export function LearnHeader({ onSearchChange, showSearch = true }: LearnHeaderProps) {
   const navLinks = getNavigationLinks();
 
   return (
@@ -21,7 +21,7 @@ export function LearnHeader({ onSearch, showSearch = true }: LearnHeaderProps) {
         <Search
           placeholder="Search actions…"
           className="flex-1 max-w-[340px]"
-          onSearch={onSearch || (() => {})}
+          onChange={(e) => onSearchChange?.(e.target.value)}
         />
       )}
       
