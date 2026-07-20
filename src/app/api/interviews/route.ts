@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { InterviewRepository } from "@/modules/interview/repositories/InterviewRepository";
-import { createInterview } from "@/modules/interview/services/interview/InterviewFactory";
+import { InterviewRepository } from "@/features/interview/repositories/InterviewRepository";
+import { createInterview } from "@/features/interview/services/interview/InterviewFactory";
 import { CreateInterviewInput } from "@/features/interview/types/CreateInterviewInput";
 import { ensureGuestUser } from "@/modules/auth/getCurrentUserId";
 import logger from "@/shared/logger/logger";

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
-import { InterviewService, StartInterviewSchema } from "@/modules/interview/services/InterviewService";
+import { InterviewService, StartInterviewSchema } from "@/features/interview/services/InterviewService";
 import logger from "@/shared/logger/logger";
 
 export async function POST(request: Request) {

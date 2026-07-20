@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import logger from "@/shared/logger/logger";
 
-import { InterviewMessageService } from "@/modules/interview/services/interview/InterviewMessageService";
+import { InterviewMessageService } from "@/features/interview/services/interview/InterviewMessageService";
 
 export async function POST(
   req: Request,{params,}: {

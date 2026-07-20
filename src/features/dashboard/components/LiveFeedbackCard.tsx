@@ -1,7 +1,7 @@
 // src/features/dashboard/components/LiveFeedbackCard.tsx
 import Card from "@/shared/ui/Card";
 import Text from "@/shared/ui/Text";
-import type { SkillGraph } from "@/modules/interview/services/mastery/SkillGraphService";
+import type { SkillGraph } from "@/features/interview/services/mastery/SkillGraphService";
 
 type Props = {
   hasData: boolean;

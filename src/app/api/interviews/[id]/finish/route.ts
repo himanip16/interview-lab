@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { InterviewRepository } from "@/modules/interview/repositories/InterviewRepository";
-import { EvaluationOrchestrator } from "@/modules/interview/services/evaluation/EvaluationOrchestrator";
+import { InterviewRepository } from "@/features/interview/repositories/InterviewRepository";
+import { EvaluationOrchestrator } from "@/features/interview/services/evaluation/EvaluationOrchestrator";
 import logger from "@/shared/logger/logger";
 import { InterviewStatus } from "@prisma/client";
 

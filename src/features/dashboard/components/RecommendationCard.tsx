@@ -3,7 +3,7 @@ import Link from "next/link";
 import Card from "@/shared/ui/Card";
 import Text from "@/shared/ui/Text";
 import { Button } from "@/shared/ui/Button";
-import type { Recommendation } from "@/modules/interview/services/recommendation/RecommendationService";
+import type { Recommendation } from "@/features/interview/services/recommendation/RecommendationService";
 import type { Difficulty } from "@prisma/client";
 
 const DIFFICULTY_STYLES: Record<Difficulty, string> = {

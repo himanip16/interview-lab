@@ -1,6 +1,6 @@
 
-import type { ProcessInterviewMessageResult } from "@/modules/interview/types";
-import type { InterviewState } from "@/modules/interview/types";
+import type { ProcessInterviewMessageResult } from "@/features/interview/types";
+import type { InterviewState } from "@/features/interview/types";
 export class InterviewApiClient {
   private readonly baseUrl = '/api/interviews';
 

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { InterviewRepository } from "@/modules/interview/repositories/InterviewRepository";
-import { WhiteboardInterpreter } from "@/modules/interview/services/whiteboard/WhiteboardInterpreter";
+import { InterviewRepository } from "@/features/interview/repositories/InterviewRepository";
+import { WhiteboardInterpreter } from "@/features/interview/services/whiteboard/WhiteboardInterpreter";
 import logger from "@/shared/logger/logger";
 
 type Props = {

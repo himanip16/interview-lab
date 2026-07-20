@@ -3,8 +3,8 @@ import { notFound } from "next/navigation";
 import { InterviewStatus } from "@prisma/client";
 
 import { prisma } from "@/shared/prisma/client";
-import { SkillGraphService } from "@/modules/interview/services/mastery/SkillGraphService";
-import { RecommendationService } from "@/modules/interview/services/recommendation/RecommendationService";
+import { SkillGraphService } from "@/features/interview/services/mastery/SkillGraphService";
+import { RecommendationService } from "@/features/interview/services/recommendation/RecommendationService";
 import DashboardView from "@/features/dashboard/components/DashboardView";
 
 type Props = {

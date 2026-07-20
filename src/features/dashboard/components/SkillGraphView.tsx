@@ -1,4 +1,4 @@
-import type { SkillGraph } from "@/modules/interview/services/mastery/SkillGraphService";
+import type { SkillGraph } from "@/features/interview/services/mastery/SkillGraphService";
 
 function scoreColor(score: number | null): string {
   if (score === null) return "bg-muted";

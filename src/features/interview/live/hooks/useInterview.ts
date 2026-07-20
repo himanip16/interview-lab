@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { interviewApiClient } from '@/shared/api/InterviewApiClient';
-import type { InterviewState } from "@/modules/interview/types";
+import type { InterviewState } from "@/features/interview/types";
 
 interface UseInterviewReturn {
   interview: InterviewState | null;
