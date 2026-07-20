@@ -38,6 +38,8 @@ export class InterviewStateMachine {
   private static readonly TIME_PRESSURE_START_RATIO = 0.5;
   private static readonly TIME_PRESSURE_THRESHOLD = 0.3;
   private static readonly MIN_PHASE_TIME_RATIO = 0.3;
+  private static readonly FLOATING_POINT_EPSILON = 0.001;
+  private static readonly HARD_COMPLETION_OVERRUN_RATIO = 0.1;
 
   constructor(
     private readonly profile: InterviewProfile
@@ -111,9 +113,9 @@ export class InterviewStateMachine {
     );
 
     const goalsCompleted =
-      coverage >= currentPhase.transitionThreshold &&
+      coverage >= (currentPhase.transitionThreshold - InterviewStateMachine.FLOATING_POINT_EPSILON) &&
       this.clamp(context.assessment.confidence) >=
-        currentPhase.transitionThreshold &&
+        (currentPhase.transitionThreshold - InterviewStateMachine.FLOATING_POINT_EPSILON) &&
       context.assessment.unresolvedTopics.length === 0;
 
     /*
@@ -121,8 +123,23 @@ export class InterviewStateMachine {
      *
      * A terminal phase does NOT complete merely because there is no
      * next phase. Completion requires its goals to be satisfied.
+     *
+     * Hard completion: If interview duration exceeded by 10%, force completion
+     * to prevent getting stuck in terminal phase indefinitely.
      */
     if (!nextPhase) {
+      // Check for hard completion due to time overrun
+      const hardCompletionThreshold = totalInterviewSeconds * (1 + InterviewStateMachine.HARD_COMPLETION_OVERRUN_RATIO);
+      if (elapsedInterviewSeconds >= hardCompletionThreshold) {
+        return {
+          shouldTransition: false,
+          completed: true,
+          currentPhase: currentPhase.id,
+          nextPhase: currentPhase.id,
+          reason: "interview_completed",
+        };
+      }
+
       if (goalsCompleted) {
         return {
           shouldTransition: false,
