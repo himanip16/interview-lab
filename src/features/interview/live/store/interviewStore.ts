@@ -6,11 +6,13 @@ interface InterviewStore {
   messages: TranscriptMessage[];
   currentPhase: string;
   summary: string | null;
+  isSending: boolean;
   setInterviewId: (id: string) => void;
   setMessages: (messages: TranscriptMessage[]) => void;
   addMessage: (message: TranscriptMessage) => void;
   setCurrentPhase: (phase: string) => void;
   setSummary: (summary: string | null) => void;
+  setIsSending: (sending: boolean) => void;
   reset: () => void;
 }
 
@@ -21,6 +23,7 @@ export function InterviewProvider({ children }: { children: ReactNode }) {
   const [messages, setMessages] = useState<TranscriptMessage[]>([]);
   const [currentPhase, setCurrentPhase] = useState('intro');
   const [summary, setSummary] = useState<string | null>(null);
+  const [isSending, setIsSending] = useState(false);
 
   const addMessage = (message: TranscriptMessage) => {
     setMessages((prev) => [...prev, message]);
@@ -31,6 +34,7 @@ export function InterviewProvider({ children }: { children: ReactNode }) {
     setMessages([]);
     setCurrentPhase('intro');
     setSummary(null);
+    setIsSending(false);
   };
 
   return (
@@ -40,11 +44,13 @@ export function InterviewProvider({ children }: { children: ReactNode }) {
         messages,
         currentPhase,
         summary,
+        isSending,
         setInterviewId,
         setMessages,
         addMessage,
         setCurrentPhase,
         setSummary,
+        setIsSending,
         reset,
       }}
     >
