@@ -13,13 +13,13 @@ import {
   JsonSchema,
 } from "@/shared/schemas/interviewSchemas";
 
-import problemsData from "./data/problems.json";
-import templatesData from "./data/templates.json";
+import problemsData from "./seed/problems.json";
+import templatesData from "./seed/templates.json";
 
 const prisma = new PrismaClient();
 
 // ---------------------------------------------------------------------------
-// Problems — data now lives in prisma/data/problems.json
+// Problems — data now lives in prisma/seed/problems.json
 // ---------------------------------------------------------------------------
 
 type ProblemSeed = {
@@ -38,7 +38,7 @@ type ProblemSeed = {
 const problems = problemsData as ProblemSeed[];
 
 // ---------------------------------------------------------------------------
-// Interview templates — data now lives in prisma/data/templates.json
+// Interview templates — data now lives in prisma/seed/templates.json
 // ---------------------------------------------------------------------------
 
 type PhaseSeed = {

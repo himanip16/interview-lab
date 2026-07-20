@@ -29,7 +29,7 @@ export default function TranscriptListPage() {
           </p>
         </div>
 
-        {/* This component automatically fetches from src/content/transcripts/index.ts */}
+        {/* This component automatically fetches from content/transcripts/index.ts */}
         <TranscriptCatalog />
       </div>
     </div>
