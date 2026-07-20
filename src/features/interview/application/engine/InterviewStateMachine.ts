@@ -1,8 +1,8 @@
 import {
   InterviewPhaseDefinition,
   InterviewProfile,
-} from "../profiles/InterviewProfile";
-import { PhaseId } from "../constants";
+} from "@/features/interview/data/profiles/InterviewProfile";
+import { PhaseId } from "@/features/interview/data/constants";
 
 export interface PhaseAssessment {
   goalCoverage: Record<string, number>;

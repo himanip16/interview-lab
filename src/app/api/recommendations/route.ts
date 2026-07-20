@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { RecommendationService } from "@/features/interview/recommendation/RecommendationService";
+import { RecommendationService } from "@/features/interview/application/services/recommendation/RecommendationService";
 import { getCurrentUserId } from "@/features/auth/getCurrentUserId";
 
 export async function GET(request: Request) {

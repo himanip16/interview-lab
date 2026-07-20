@@ -1,4 +1,4 @@
-import { DeepDiveArticle } from '../types';
+import { DeepDiveArticle } from '@/features/deep-dive/types';
 import { cassandraData } from './cassandra';
 import { redisData } from './redis';
 import { kafkaData } from './kafka';

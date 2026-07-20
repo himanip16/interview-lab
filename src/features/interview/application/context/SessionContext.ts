@@ -1,7 +1,7 @@
 import { Interview, MessageRole } from "@prisma/client";
 
-import { InterviewProfile } from "../profiles/InterviewProfile";
-import { InterviewAggregate } from "../domain/InterviewAggregate";
+import { InterviewProfile } from "@/features/interview/data/profiles/InterviewProfile";
+import { InterviewAggregate } from "@/features/interview/domain/InterviewAggregate";
 
 /**
  * SessionContext

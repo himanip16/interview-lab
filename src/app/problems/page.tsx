@@ -129,7 +129,8 @@ function ProblemsPageContent() {
       const data = await res.json();
 
       if (!res.ok) {
-        alert(`Failed to start interview: ${data.error}`);
+        
+        alert(`Failed to start interview: ${data.error, data.message, data.code}`);
         return;
       }
 

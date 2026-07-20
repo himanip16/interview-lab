@@ -1,4 +1,4 @@
-import { DeepDiveArticle } from '../types';
+import { DeepDiveArticle } from '@/features/deep-dive/types';
 
 export const postgresData: DeepDiveArticle = {
   slug: 'postgres',

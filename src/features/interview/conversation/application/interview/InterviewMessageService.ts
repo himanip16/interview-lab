@@ -8,11 +8,11 @@ import type { ChatMessage } from "@/shared/ai";
 import { ProcessInterviewMessageResult } from "@/types/interview";
 
 import { InterviewEngine } from "../../engine/InterviewEngine";
-import { InterviewRepository } from "../../repositories/InterviewRepository";
-import { InterviewProfileService } from "../../profiles/InterviewProfileService";
+import { InterviewRepository } from "@/features/interview/infrastructure/repositories/InterviewRepository";
+import { InterviewProfileService } from "@/features/interview/data/profiles/InterviewProfileService";
 import { EvaluationOrchestrator } from "../evaluation/EvaluationOrchestrator";
-import { SessionContext } from "../../context/SessionContext";
-import { InterviewAggregate } from "../../domain/InterviewAggregate";
+import { SessionContext } from "@/features/interview/application/context/SessionContext";
+import { InterviewAggregate } from "@/features/interview/domain/InterviewAggregate";
 import { eventBus } from "../../events/EventBus";
 import { SummaryEventHandler } from "../background/SummaryEventHandler";
 import { MasteryEventHandler } from "../background/MasteryEventHandler";

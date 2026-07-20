@@ -6,7 +6,7 @@ import {
 } from "@/shared/ai";
 
 import { PromptGuard } from "../guardrails/PromptGuard";
-import { InterviewProfile } from "../profiles/InterviewProfile";
+import { InterviewProfile } from "@/features/interview/data/profiles/InterviewProfile";
 import { CandidatePersona } from "../reverse/CandidatePersonas";
 
 import { InterviewStateMachine } from "./InterviewStateMachine";

@@ -5,8 +5,8 @@ import logger from "@/shared/logger/logger";
 
 import { EvidenceEvaluator } from "../../evaluators/EvidenceEvaluator";
 import { EvaluatableInterview } from "../../evaluators/types";
-import { PromptLoader } from "../../prompt/PromptLoader";
-import { InterviewRepository } from "../../repositories/InterviewRepository";
+import { PromptLoader } from "@/features/interview/prompts/prompt/PromptLoader";
+import { InterviewRepository } from "@/features/interview/infrastructure/repositories/InterviewRepository";
 import { MasteryService } from "../mastery/MasteryService";
 import { deriveStudyPlan } from "../studyplan/StudyResources";
 

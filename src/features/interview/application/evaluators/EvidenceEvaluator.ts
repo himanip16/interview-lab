@@ -4,7 +4,7 @@ import { AIService } from "@/shared/ai";
 import { StructuredOutputParser } from "@/shared/ai/parsers/StructuredOutputParser";
 import { prisma } from "@/shared/prisma/client";
 
-import { PromptLoader } from "../prompt/PromptLoader";
+import { PromptLoader } from "@/features/interview/prompts/prompt/PromptLoader";
 import {
   EvaluatableInterview,
   EvaluationResult,

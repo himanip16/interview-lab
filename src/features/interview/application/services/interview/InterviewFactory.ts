@@ -1,6 +1,6 @@
 import { InterviewStatus, InterviewMode } from "@prisma/client";
 import { CreateInterviewInput } from "@/features/interview/types/CreateInterviewInput";
-import { PhaseId } from "../../constants";
+import { PhaseId } from "@/features/interview/data/constants";
 
 export function createInterview(input: CreateInterviewInput) {
   return {

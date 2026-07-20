@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { SkillGraphService } from "@/features/interview/mastery/SkillGraphService";
+import { SkillGraphService } from "@/features/interview/application/services/mastery/SkillGraphService";
 
 type Props = {
   params: Promise<{ id: string }>;

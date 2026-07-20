@@ -1,7 +1,7 @@
-import { PromptLoader } from "@/features/interview/prompt/PromptLoader";
-import { PromptRenderer } from "@/features/interview/prompt/PromptRenderer";
+import { PromptLoader } from "@/features/interview/prompts/prompt/PromptLoader";
+import { PromptRenderer } from "@/features/interview/prompts/prompt/PromptRenderer";
 
-import { InterviewPhaseDefinition } from "../profiles/InterviewProfile";
+import { InterviewPhaseDefinition } from "@/features/interview/data/profiles/InterviewProfile";
 import { CandidatePersona } from "../reverse/CandidatePersonas";
 
 export class PromptBuilder {

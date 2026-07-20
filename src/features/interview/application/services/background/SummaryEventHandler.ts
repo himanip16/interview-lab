@@ -1,7 +1,7 @@
-import { DomainEvent, TurnCompletedEventData, PhaseTransitionEventData, InterviewCompletedEventData } from "../../domain/InterviewAggregate";
-import { InterviewRepository } from "../../repositories/InterviewRepository";
-import { SessionContext } from "../../context/SessionContext";
-import { InterviewProfileService } from "../../profiles/InterviewProfileService";
+import { DomainEvent, TurnCompletedEventData, PhaseTransitionEventData, InterviewCompletedEventData } from "@/features/interview/domain/InterviewAggregate";
+import { InterviewRepository } from "@/features/interview/infrastructure/repositories/InterviewRepository";
+import { SessionContext } from "@/features/interview/application/context/SessionContext";
+import { InterviewProfileService } from "@/features/interview/data/profiles/InterviewProfileService";
 import { AIService } from "@/shared/ai";
 
 /**

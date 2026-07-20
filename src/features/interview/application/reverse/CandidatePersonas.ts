@@ -1,3 +1,5 @@
+import { Difficulty } from "@prisma/client";
+
 export interface CandidatePersona {
   name: string;
   seniority: "junior" | "mid" | "senior";
@@ -26,7 +28,7 @@ export const CANDIDATE_PERSONAS: CandidatePersona[] = [
   },
 ];
 
-export function pickPersona(difficulty: "EASY" | "MEDIUM" | "HARD"): CandidatePersona {
+export function pickPersona(difficulty: "EASY" | "MEDIUM" | "HARD" | Difficulty): CandidatePersona {
   const pool =
     difficulty === "EASY" ? CANDIDATE_PERSONAS.filter((p) => p.seniority !== "senior") :
     difficulty === "HARD" ? CANDIDATE_PERSONAS.filter((p) => p.seniority !== "junior") :

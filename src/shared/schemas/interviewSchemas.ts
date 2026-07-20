@@ -1,12 +1,15 @@
 // src/shared/schemas/interviewSchemas.ts
 import { z } from "zod";
+import { Difficulty, InterviewMode } from "@prisma/client";
 
 export const StartInterviewSchema = z.object({
   type: z.string(),
-  difficulty: z.enum(["EASY", "MEDIUM", "HARD"]),
+  difficulty: z.nativeEnum(Difficulty),
   duration: z.number().int().positive(),
   company: z.string(),
-  problemId: z.string(),
+  problemId: z.string().uuid(),
+  mode: z.nativeEnum(InterviewMode).optional(),
+  topic: z.string().optional(),
 });
 
 export const GoalsSchema = z.array(z.string());

@@ -1,29 +1,11 @@
 import { Difficulty, InterviewMode } from "@prisma/client";
-import { z } from "zod";
 
 import { prisma } from "@/shared/prisma/client";
 import { createInterview } from "./interview/InterviewFactory";
 import { TranscriptService } from "./TranscriptService";
 import { pickPersona } from "../reverse/CandidatePersonas";
 import logger from "@/shared/logger/logger";
-
-const difficultyMap: Record<string, Difficulty> = {
-  EASY: Difficulty.EASY,
-  MEDIUM: Difficulty.MEDIUM,
-  HARD: Difficulty.HARD,
-};
-
-export const StartInterviewSchema = z.object({
-  type: z.string(),
-  difficulty: z.nativeEnum(Difficulty),
-  duration: z.number().positive(),
-  company: z.string(),
-  problemId: z.string().uuid(),
-  mode: z.nativeEnum(InterviewMode).optional(),
-  topic: z.string().optional(),
-});
-
-export type StartInterviewInput = z.infer<typeof StartInterviewSchema>;
+import { StartInterviewSchema, type StartInterviewInput } from "@/shared/schemas/interviewSchemas";
 
 export class InterviewService {
   async startInterview(input: StartInterviewInput) {
@@ -44,12 +26,6 @@ export class InterviewService {
       throw new Error("No valid interview templates found. Please run seed.");
     }
 
-    const interviewDifficulty = difficultyMap[difficulty];
-
-    if (!interviewDifficulty) {
-      throw new Error("Invalid difficulty.");
-    }
-
     const problem = await prisma.problem.findUnique({
       where: { id: problemId },
     });
@@ -60,12 +36,14 @@ export class InterviewService {
 
     const userId = await this.ensureGuestUser();
 
+    logger.info("Starting interview", { userId, problemId, difficulty });
+
     const interviewMode =
       mode === "REVERSE" ? InterviewMode.REVERSE : InterviewMode.CANDIDATE;
 
     const interviewData = createInterview({
       templateId: template.id,
-      difficulty: interviewDifficulty,
+      difficulty,
       duration,
       company,
       problemId: problem.id,
@@ -75,7 +53,7 @@ export class InterviewService {
 
     const persona =
       interviewMode === InterviewMode.REVERSE
-        ? pickPersona(interviewDifficulty)
+        ? pickPersona(difficulty)
         : null;
 
     // Check for existing active interview before transaction to prevent race condition
@@ -94,6 +72,8 @@ export class InterviewService {
     // Use transaction to ensure atomicity and handle race conditions
     const savedInterview = await prisma.$transaction(async (tx) => {
       try {
+        logger.info("Creating interview in transaction", { userId, templateId: template.id, problemId: problem.id });
+        
         const interview = await tx.interview.create({
           data: {
             difficulty: interviewData.difficulty,
@@ -195,6 +175,7 @@ export class InterviewService {
     const session = await auth();
 
     if (session?.user?.id) {
+      logger.info("Using authenticated user", { userId: session.user.id });
       return session.user.id;
     }
 
@@ -206,15 +187,29 @@ export class InterviewService {
         where: { id: existingGuestId },
       });
 
-      if (guest) return guest.id;
+      if (guest) {
+        logger.info("Using existing guest user", { userId: guest.id });
+        return guest.id;
+      }
+      
+      // Clear stale cookie if user doesn't exist
+      logger.warn("Clearing stale guest cookie", { guestId: existingGuestId });
+      cookieStore.delete(GUEST_COOKIE);
     }
 
-    const guest = await prisma.user.create({
-      data: {
-        email: `guest-${randomUUID()}@guest.local`,
-        isGuest: true,
-      },
-    });
+    let guest;
+    try {
+      guest = await prisma.user.create({
+        data: {
+          email: `guest-${randomUUID()}@guest.local`,
+          isGuest: true,
+        },
+      });
+      logger.info("Created new guest user", { userId: guest.id });
+    } catch (error) {
+      logger.error("Failed to create guest user", { error });
+      throw new Error("Failed to create guest user");
+    }
 
     cookieStore.set(GUEST_COOKIE, guest.id, {
       httpOnly: true,

@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/shared/ui/Button";
 
-import type { Recommendation } from "@/features/interview/recommendation/RecommendationService";
-
+import type { Recommendation } from "@/features/interview/application/services/recommendation/RecommendationService";
 type Props = {
   recommendation: Recommendation | null;
 };

@@ -4,8 +4,8 @@ import {
   Prisma,
 } from "@prisma/client";
 
-import { InterviewProfile } from "../profiles/InterviewProfile";
-import { PhaseId } from "../constants";
+import { InterviewProfile } from "@/features/interview/data/profiles/InterviewProfile";
+import { PhaseId } from "@/features/interview/data/constants";
 import { PhaseAssessment, TransitionResult } from "../engine/InterviewStateMachine";
 
 /**
