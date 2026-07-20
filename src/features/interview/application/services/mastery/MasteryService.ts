@@ -78,12 +78,16 @@ export class MasteryService {
         scores.reduce((sum, s) => sum + s, 0) / scores.length,
     }));
 
-    for (const signal of signals) {
-      await this.applySignal(
-        evaluation.interview.userId,
-        signal
-      );
-    }
+    // Use transaction to ensure atomic updates - all concept mastery updates succeed or fail together
+    await prisma.$transaction(async (tx) => {
+      for (const signal of signals) {
+        await this.applySignalWithTx(
+          tx,
+          evaluation.interview.userId,
+          signal
+        );
+      }
+    });
 
     logger.info(
       `Mastery recomputed for evaluation ${evaluationId}: ${signals.length} concepts touched`
@@ -94,7 +98,15 @@ export class MasteryService {
     userId: string,
     signal: ConceptSignal
   ): Promise<void> {
-    const existing = await prisma.conceptMastery.findUnique({
+    return this.applySignalWithTx(prisma, userId, signal);
+  }
+
+  private async applySignalWithTx(
+    tx: any,
+    userId: string,
+    signal: ConceptSignal
+  ): Promise<void> {
+    const existing = await tx.conceptMastery.findUnique({
       where: {
         userId_conceptId: {
           userId,
@@ -125,7 +137,7 @@ export class MasteryService {
     // that could still shift the estimate.
     const newConfidence = newSampleCount / (newSampleCount + 2);
 
-    await prisma.conceptMastery.upsert({
+    await tx.conceptMastery.upsert({
       where: {
         userId_conceptId: {
           userId,
