@@ -1,6 +1,6 @@
 // src/app/api/reviews/[id]/submit/route.ts
 import { NextResponse } from "next/server";
-import { getReviewService } from "@/modules/pr-review";
+import { getReviewService } from "@/features/pr-review";
 import { ReviewDecision } from "@prisma/client";
 
 export async function POST(

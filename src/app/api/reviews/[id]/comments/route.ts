@@ -1,7 +1,7 @@
 // src/app/api/reviews/[id]/comments/route.ts
 import { NextResponse } from "next/server";
-import { getReviewService } from "@/modules/pr-review";
-import { ReviewComment } from "@/modules/pr-review";
+import { getReviewService } from "@/features/pr-review";
+import { ReviewComment } from "@/features/pr-review";
 
 export async function POST(
   request: Request,
