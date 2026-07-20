@@ -1,8 +1,8 @@
 import {
   InterviewPhaseDefinition,
   InterviewProfile,
-  PhaseId,
 } from "../profiles/InterviewProfile";
+import { PhaseId } from "../constants";
 
 export interface PhaseAssessment {
   goalCoverage: Record<string, number>;
@@ -16,6 +16,7 @@ export interface TransitionContext {
   elapsedInterviewSeconds: number;
   elapsedPhaseSeconds: number;
   assessment: PhaseAssessment;
+  turnCount?: number;
 }
 
 export type TransitionReason =
@@ -102,6 +103,8 @@ export class InterviewStateMachine {
       totalInterviewSeconds *
       currentPhase.targetDurationRatio;
 
+    // LLM provides signals (goalCoverage, confidence, unresolvedTopics)
+    // State machine applies deterministic constraints
     const coverage = this.calculateGoalCoverage(
       currentPhase,
       context.assessment
@@ -139,6 +142,8 @@ export class InterviewStateMachine {
       };
     }
 
+    // Deterministic rule: Transition only if goals are met OR hard caps hit
+    // LLM is a sensor, not the decision maker
     if (goalsCompleted) {
       return this.transitionTo(
         currentPhase,
@@ -147,6 +152,7 @@ export class InterviewStateMachine {
       );
     }
 
+    // Hard cap: Phase time budget exceeded
     if (
       elapsedPhaseSeconds >= targetPhaseSeconds
     ) {
@@ -157,6 +163,7 @@ export class InterviewStateMachine {
       );
     }
 
+    // Hard cap: Interview time pressure (must complete remaining phases)
     if (
       this.isUnderTimePressure({
         currentIndex,
@@ -173,6 +180,7 @@ export class InterviewStateMachine {
       );
     }
 
+    // Stay in current phase - constraints not satisfied
     return {
       shouldTransition: false,
       completed: false,

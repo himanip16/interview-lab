@@ -66,7 +66,7 @@ export class InterviewEngine {
       );
 
     const phase = stateMachine.getPhase(
-      input.currentPhase
+      input.currentPhase as any
     );
 
     const recentHistory =
@@ -85,6 +85,13 @@ export class InterviewEngine {
         ? recentHistory[recentHistory.length - 2]?.content
         : undefined;
 
+    // Check for prompt injection and get silent steering instruction
+    const userMessage = latestMessage?.content || "";
+    const steeringInstruction = this.promptGuard.getSteeringInstruction(
+      userMessage,
+      input.currentPhase
+    );
+
     const systemPrompt = input.mode === "REVERSE"
       ? await this.promptBuilder.buildReverseSystemPrompt(
           phase,
@@ -102,10 +109,15 @@ export class InterviewEngine {
           input.whiteboardDescription
         );
 
+    // Prepend silent steering instruction if risk detected
+    const finalSystemPrompt = steeringInstruction
+      ? steeringInstruction + "\n\n" + systemPrompt
+      : systemPrompt;
+
     const messages: ChatMessage[] = [
       {
         role: "system",
-        content: systemPrompt,
+        content: finalSystemPrompt,
       },
 
       ...recentHistory.slice(0, -1),
@@ -195,7 +207,7 @@ All goal coverage values and confidence must be between 0 and 1.
 
     const transition =
       stateMachine.evaluateTransition({
-        currentPhase: input.currentPhase,
+        currentPhase: input.currentPhase as any,
 
         interviewDurationMinutes:
           input.interviewDurationMinutes,

@@ -22,6 +22,7 @@ export class InterviewRepository {
         id,
       },
       include: {
+        user: true,
         problem: true,
         template: true,
         transcript: {
@@ -32,6 +33,53 @@ export class InterviewRepository {
         evaluation: true,
       },
     });
+  }
+
+  /**
+   * Get interview with recent transcript only (for request path optimization)
+   * Fetches only the last N messages to reduce DB load
+   */
+  async getByIdWithRecentTranscript(id: string, limit: number = 10) {
+    const interview = await prisma.interview.findUnique({
+      where: {
+        id,
+      },
+      include: {
+        user: true,
+        problem: true,
+        template: true,
+        transcript: {
+          orderBy: {
+            createdAt: "asc",
+          },
+          take: limit,
+        },
+        evaluation: true,
+      },
+    });
+
+    // If we got fewer messages than the limit, we need to fetch from the end
+    if (interview && interview.transcript.length < limit) {
+      return interview;
+    }
+
+    // Otherwise, fetch the last N messages
+    if (interview) {
+      const totalCount = await prisma.message.count({
+        where: { interviewId: id },
+      });
+
+      const recentTranscript = await prisma.message.findMany({
+        where: { interviewId: id },
+        orderBy: { createdAt: "asc" },
+        skip: Math.max(0, totalCount - limit),
+        take: limit,
+      });
+
+      interview.transcript = recentTranscript;
+    }
+
+    return interview;
   }
 
   async exists(id: string): Promise<boolean> {
