@@ -120,6 +120,7 @@ export class InterviewRepository {
     status?: InterviewStatus;
     assistantMetadata?: Prisma.InputJsonValue;
     elapsedSeconds: number;
+    startedAt?: Date;
   }) {
     const {
       interviewId,
@@ -129,6 +130,7 @@ export class InterviewRepository {
       status = InterviewStatus.IN_PROGRESS,
       assistantMetadata,
       elapsedSeconds,
+      startedAt,
     } = params;
 
     return prisma.$transaction(async (tx) => {
@@ -160,6 +162,7 @@ export class InterviewRepository {
         data: {
           currentPhase,
           status,
+          ...(startedAt && { startedAt }),
         },
       });
     });

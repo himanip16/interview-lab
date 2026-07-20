@@ -201,6 +201,39 @@ export class InterviewAggregate {
   }
 
   /**
+   * Transition interview from SETUP to IN_PROGRESS
+   * Sets startedAt if not already set (idempotent transition)
+   */
+  transitionToInProgress(now: Date): void {
+    if (this._status !== InterviewStatus.SETUP) {
+      return; // Already in progress or completed, no-op
+    }
+
+    this._status = InterviewStatus.IN_PROGRESS;
+    
+    if (!this._startedAt) {
+      this._startedAt = now;
+    }
+  }
+
+  /**
+   * Enforces domain invariant: startedAt must be non-null for IN_PROGRESS and COMPLETED states
+   * @throws Error if startedAt is null in an invalid state
+   */
+  requireStartedAt(): Date {
+    if (
+      this._status !== InterviewStatus.SETUP &&
+      !this._startedAt
+    ) {
+      throw new Error(
+        `Interview ${this._id} has no startedAt in status ${this._status}. ` +
+        `Domain invariant violation: IN_PROGRESS and COMPLETED interviews must have startedAt.`
+      );
+    }
+    return this._startedAt!;
+  }
+
+  /**
    * Check if the interview should transition based on deterministic rules
    * This encapsulates the business rules for phase transitions
    */

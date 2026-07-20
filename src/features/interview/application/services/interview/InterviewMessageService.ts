@@ -92,6 +92,11 @@ export class InterviewMessageService {
       );
     }
 
+    // Transition to IN_PROGRESS if currently in SETUP
+    if (context.status === InterviewStatus.SETUP) {
+      context.interviewAggregate.transitionToInProgress(new Date());
+    }
+
     const currentPhaseDef = context.profile.phases.find(
       (p) => p.id === context.currentPhase
     );
@@ -107,7 +112,7 @@ export class InterviewMessageService {
       context.problem.title;
 
     const interviewStartedAt =
-      context.interviewAggregate.startedAt;
+      context.interviewAggregate.requireStartedAt();
 
     const elapsedSeconds = Math.max(
       Math.floor(
@@ -166,6 +171,7 @@ export class InterviewMessageService {
         transition: result.transition,
       } as unknown as Prisma.InputJsonValue,
       elapsedSeconds,
+      startedAt: context.interviewAggregate.startedAt,
     });
 
     // Update phaseStartedAt when phase transitions
