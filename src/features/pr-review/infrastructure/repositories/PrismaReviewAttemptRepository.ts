@@ -1,18 +1,5 @@
 // src/modules/pr-review/infrastructure/repositories/PrismaReviewAttemptRepository.ts
-import { PrismaClient } from "@prisma/client";
-
-const globalForPrisma =
-  globalThis as unknown as {
-    prisma: PrismaClient | undefined;
-  };
-
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient();
-
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
-}
+import { prisma } from "@/shared/prisma/client";
 import { ReviewAttempt } from "../../domain/entities/ReviewAttempt";
 import { ReviewComment } from "../../domain/entities/ReviewComment";
 import { ReviewReport } from "../../domain/entities/ReviewReport";

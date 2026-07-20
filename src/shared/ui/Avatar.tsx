@@ -10,6 +10,7 @@ interface AvatarProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
   ({ src, alt, size = 'md', fallback, className, ...props }, ref) => {
+    const [imageError, setImageError] = React.useState(false);
     const sizes = {
       sm: 'w-8 h-8 text-xs',
       md: 'w-10 h-10 text-sm',
@@ -17,7 +18,7 @@ export const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
       xl: 'w-16 h-16 text-lg',
     };
 
-    if (src) {
+    if (src && !imageError) {
       return (
         <div
           ref={ref}
@@ -28,6 +29,7 @@ export const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
             src={src}
             alt={alt}
             className="w-full h-full object-cover"
+            onError={() => setImageError(true)}
           />
         </div>
       );

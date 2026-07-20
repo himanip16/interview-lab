@@ -29,7 +29,9 @@ export default async function DashboardPage({ params }: Props) {
   for (const interview of completedInterviews) {
     if (!interview.evaluation) continue;
     const slug = interview.template.slug;
-    (scoresByTemplate[slug] ??= []).push(interview.evaluation.overallScore);
+    // Map various slug formats to standardized keys expected by CurrentStandingCard
+    const normalizedSlug = slug === 'system-design' ? 'hld' : slug;
+    (scoresByTemplate[normalizedSlug] ??= []).push(interview.evaluation.overallScore);
   }
 
   const categoryRatings = Object.fromEntries(

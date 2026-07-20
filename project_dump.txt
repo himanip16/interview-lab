@@ -339,15 +339,6 @@ src
 │   │   ├── components
 │   │   │   ├── LiveInterview.module.css
 │   │   │   └── NodeRenderer.tsx
-│   │   ├── conversation
-│   │   │   ├── hooks
-│   │   │   │   ├── useInterview.ts
-│   │   │   │   ├── useMessages.ts
-│   │   │   │   └── useTimer.ts
-│   │   │   ├── index.ts
-│   │   │   └── store
-│   │   │       ├── interviewStore.ts
-│   │   │       └── interviewStore.tsx
 │   │   ├── data
 │   │   │   ├── constants.ts
 │   │   │   └── profiles
@@ -389,8 +380,7 @@ src
 │   │   │   │   └── useTimer.ts
 │   │   │   ├── index.ts
 │   │   │   └── store
-│   │   │       ├── interviewStore.ts
-│   │   │       └── interviewStore.tsx
+│   │   │       └── interviewStore.ts
 │   │   ├── prompts
 │   │   │   └── prompt
 │   │   │       ├── PromptLoader.ts
@@ -588,18 +578,6 @@ src
 ├── lib
 │   ├── api.ts
 │   └── hooks
-├── modules
-│   ├── common
-│   │   └── errors
-│   │       └── ApplicationErrors.ts
-│   ├── container.ts
-│   ├── diagram
-│   │   └── domain
-│   │       └── __tests__
-│   │           └── Diagram.test.ts
-│   └── transcript
-│       └── domain
-│           └── TranscriptNode.ts
 ├── shared
 │   ├── ai
 │   │   ├── AIService.ts
@@ -659,7 +637,6 @@ src
 │   ├── ui
 │   │   ├── Animations.tsx
 │   │   ├── Avatar.tsx
-│   │   ├── Badge.tsx
 │   │   ├── Bubble.tsx
 │   │   ├── Button.tsx
 │   │   ├── Card.tsx
@@ -667,7 +644,6 @@ src
 │   │   ├── IconButton.tsx
 │   │   ├── Input.tsx
 │   │   ├── Panel.tsx
-│   │   ├── Pill.tsx
 │   │   ├── Search.tsx
 │   │   ├── Skeleton.tsx
 │   │   ├── Stepper.tsx
@@ -693,7 +669,7 @@ src
 └── styles
     └── bug-hunting.css
 
-238 directories, 454 files
+227 directories, 441 files
 
 FILE CONTENTS
 
@@ -10752,11 +10728,11 @@ import { DiagramNode } from './DiagramNode';
 import { DiagramEdges } from './DiagramEdges';
 
 const CATEGORY_COLORS: Record<string, string> = {
-  entry: '#FF5A3C',
-  logic: '#6A5AE0',
-  storage: '#00A87E',
-  network: '#15161C',
-  queue: '#E8940A',
+  entry: 'var(--category-practice)',
+  logic: 'var(--category-concept)',
+  storage: 'var(--category-learn-deep)',
+  network: 'var(--category-neutral)',
+  queue: 'var(--category-live)',
 } as const;
 
 interface WhiteboardProps {
@@ -10838,13 +10814,13 @@ export default function Whiteboard({
           {/* Legend */}
           <div className="absolute bottom-4 left-4 flex gap-4 text-[11.5px] font-semibold text-[#5A5B66]">
             <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#FF5A3C]" /> Entry
+              <span className="w-2 h-2 rounded-full bg-[var(--category-practice)]" /> Entry
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#6A5AE0]" /> Logic
+              <span className="w-2 h-2 rounded-full bg-[var(--category-concept)]" /> Logic
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#00A87E]" /> Storage
+              <span className="w-2 h-2 rounded-full bg-[var(--category-learn-deep)]" /> Storage
             </span>
           </div>
         </div>
@@ -18204,72 +18180,6 @@ export function useInterviewStore() {
   }
   return context;
 }
-================================================
-FILE: src/features/interview/live/store/interviewStore.tsx
-================================================
-import { createContext, useContext, useState, ReactNode } from 'react';
-import { TranscriptMessage } from '../../types/TranscriptMessage';
-
-interface InterviewStore {
-  interviewId: string | null;
-  messages: TranscriptMessage[];
-  currentPhase: string;
-  summary: string | null;
-  setInterviewId: (id: string) => void;
-  setMessages: (messages: TranscriptMessage[]) => void;
-  addMessage: (message: TranscriptMessage) => void;
-  setCurrentPhase: (phase: string) => void;
-  setSummary: (summary: string | null) => void;
-  reset: () => void;
-}
-
-const InterviewContext = createContext<InterviewStore | undefined>(undefined);
-
-export function InterviewProvider({ children }: { children: ReactNode }) {
-  const [interviewId, setInterviewId] = useState<string | null>(null);
-  const [messages, setMessages] = useState<TranscriptMessage[]>([]);
-  const [currentPhase, setCurrentPhase] = useState('intro');
-  const [summary, setSummary] = useState<string | null>(null);
-
-  const addMessage = (message: TranscriptMessage) => {
-    setMessages((prev) => [...prev, message]);
-  };
-
-  const reset = () => {
-    setInterviewId(null);
-    setMessages([]);
-    setCurrentPhase('intro');
-    setSummary(null);
-  };
-
-  return (
-    <InterviewContext.Provider
-      value={{
-        interviewId,
-        messages,
-        currentPhase,
-        summary,
-        setInterviewId,
-        setMessages,
-        addMessage,
-        setCurrentPhase,
-        setSummary,
-        reset,
-      }}
-    >
-      {children}
-    </InterviewContext.Provider>
-  );
-}
-
-export function useInterviewStore() {
-  const context = useContext(InterviewContext);
-  if (!context) {
-    throw new Error('useInterviewStore must be used within InterviewProvider');
-  }
-  return context;
-}
-
 ================================================
 FILE: src/features/interview/prompts/prompt/PromptRenderer.ts
 ================================================
@@ -25653,348 +25563,6 @@ export interface Evaluation {
   createdAt: Date;
 }
 ================================================
-FILE: src/features/interview/conversation/hooks/useInterview.ts
-================================================
-'use client';
-
-import { useEffect, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { interviewApiClient } from '@/shared/api/InterviewApiClient';
-import type { InterviewState } from '@/features/interview/types/InterviewState'
-
-interface UseInterviewReturn {
-  interview: InterviewState | null;
-  loading: boolean;
-  error: string | null;
-  refetch: () => Promise<void>;
-}
-
-/**
- * useInterview — Fetch interview state
- *
- * - Loads interview data on mount
- * - Does NOT poll — polling is wasteful for chat apps
- * - Data updates via explicit actions (sending messages, refetching)
- * - Backend owns all state transitions (phases, summaries, completion)
- *
- * Why no polling?
- * - User actions already trigger updates (POST /message)
- * - Interview state only changes when backend updates it
- * - Polling every second = wasted requests
- * - For real-time features later: use SSE or WebSocket
- */
-export function useInterview(interviewId: string): UseInterviewReturn {
-  const [interview, setInterview] = useState<InterviewState | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
-
-  const fetchInterview = useCallback(async () => {
-    // GUARD: Don't fetch if the ID is missing or literal "undefined"
-    if (!interviewId || interviewId === 'undefined') return;
-
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await interviewApiClient.getInterview(interviewId);
-      setInterview(data);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown error';
-      setError(message);
-
-      // Only redirect if we are SURE the interview doesn't exist in the DB
-      if (message.includes('not found')) {
-        router.push('/dashboard');
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [interviewId, router]);
-
-  // Fetch once on mount
-  useEffect(() => {
-    fetchInterview();
-  }, [fetchInterview]);
-
-  return {
-    interview,
-    loading,
-    error,
-    refetch: fetchInterview,
-  };
-}
-================================================
-FILE: src/features/interview/conversation/hooks/useMessages.ts
-================================================
-'use client';
-
-import { useCallback, useState } from 'react';
-import { interviewApiClient } from '@/shared/api/InterviewApiClient';
-
-interface UseMessagesReturn {
-  sendMessage: (text: string) => Promise<void>;
-  isSending: boolean;
-  error: string | null;
-}
-
-export function useMessages(
-  interviewId: string
-): UseMessagesReturn {
-  const [isSending, setIsSending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const sendMessage = useCallback(
-    async (text: string) => {
-      if (!text.trim()) {
-        throw new Error("Message cannot be empty");
-      }
-
-      setIsSending(true);
-      setError(null);
-
-      try {
-        await interviewApiClient.sendMessage(
-          interviewId,
-          text.trim()
-        );
-      } catch (err) {
-        const message =
-          err instanceof Error
-            ? err.message
-            : "Unknown error";
-
-        setError(message);
-        throw err;
-      } finally {
-        setIsSending(false);
-      }
-    },
-    [interviewId]
-  );
-
-  return {
-    sendMessage,
-    isSending,
-    error,
-  };
-}
-================================================
-FILE: src/features/interview/conversation/hooks/useTimer.ts
-================================================
-import { useState, useEffect, useCallback, useRef } from 'react';
-
-export interface UseTimerOptions {
-  startedAt?: Date | string | number | null;
-  durationMinutes: number;
-  isRunning?: boolean;
-  onFinish?: () => void;
-}
-
-export function useTimer({
-  startedAt,
-  durationMinutes,
-  isRunning = true,
-  onFinish,
-}: UseTimerOptions) {
-  const onFinishRef = useRef(onFinish);
-
-  // Keep onFinish callback reference updated without re-triggering interval reset
-  useEffect(() => {
-    onFinishRef.current = onFinish;
-  }, [onFinish]);
-
-  const calculateRemaining = useCallback(() => {
-    if (!startedAt || durationMinutes <= 0) return 0;
-
-    const startMs = new Date(startedAt).getTime();
-    if (isNaN(startMs)) return 0;
-
-    const durationMs = durationMinutes * 60 * 1000;
-    const endMs = startMs + durationMs;
-    const remaining = Math.max(0, Math.floor((endMs - Date.now()) / 1000));
-
-    return remaining;
-  }, [startedAt, durationMinutes]);
-
-  const [remainingSeconds, setRemainingSeconds] = useState<number>(calculateRemaining);
-
-  useEffect(() => {
-    // Sync immediately when parameters change
-    const remaining = calculateRemaining();
-    setRemainingSeconds(remaining);
-
-    if (!isRunning || !startedAt || remaining <= 0) return;
-
-    const timer = setInterval(() => {
-      const updated = calculateRemaining();
-      setRemainingSeconds(updated);
-
-      if (updated <= 0) {
-        clearInterval(timer);
-        onFinishRef.current?.();
-      }
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [startedAt, durationMinutes, isRunning, calculateRemaining]);
-
-  const minutes = Math.floor(remainingSeconds / 60);
-  const seconds = remainingSeconds % 60;
-  const formattedTime = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-
-  return {
-    remainingSeconds,
-    timeLeft: remainingSeconds, // Aliased for backwards compatibility
-    formattedTime,
-  };
-}
-================================================
-FILE: src/features/interview/conversation/index.ts
-================================================
-export { LiveInterview } from './components/LiveInterview';
-export { default as Chat } from './components/Chat';
-export { ChatInput } from './components/ChatInput';
-export { MessageList } from './components/MessageList';
-export { Message } from './components/Message';
-export { Sidebar } from './components/Sidebar';
-export { InterviewHeader } from './components/InterviewHeader';
-export { default as Timer } from './components/Timer';
-export { useInterview } from './hooks/useInterview';
-export { useMessages } from './hooks/useMessages';
-export { useTimer } from './hooks/useTimer';
-export { InterviewProvider, useInterviewStore } from './store/interviewStore';
-================================================
-FILE: src/features/interview/conversation/store/interviewStore.ts
-================================================
-import { createContext, useContext, useState, ReactNode } from 'react';
-import { TranscriptMessage } from '../../types/TranscriptMessage';
-
-interface InterviewStore {
-  interviewId: string | null;
-  messages: TranscriptMessage[];
-  currentPhase: string;
-  summary: string | null;
-  setInterviewId: (id: string) => void;
-  setMessages: (messages: TranscriptMessage[]) => void;
-  addMessage: (message: TranscriptMessage) => void;
-  setCurrentPhase: (phase: string) => void;
-  setSummary: (summary: string | null) => void;
-  reset: () => void;
-}
-
-const InterviewContext = createContext<InterviewStore | undefined>(undefined);
-
-export function InterviewProvider({ children }: { children: ReactNode }) {
-  const [interviewId, setInterviewId] = useState<string | null>(null);
-  const [messages, setMessages] = useState<TranscriptMessage[]>([]);
-  const [currentPhase, setCurrentPhase] = useState('intro');
-  const [summary, setSummary] = useState<string | null>(null);
-
-  const addMessage = (message: TranscriptMessage) => {
-    setMessages((prev) => [...prev, message]);
-  };
-
-  const reset = () => {
-    setInterviewId(null);
-    setMessages([]);
-    setCurrentPhase('intro');
-    setSummary(null);
-  };
-
-  return (
-    <InterviewContext.Provider
-      value={{
-        interviewId,
-        messages,
-        currentPhase,
-        summary,
-        setInterviewId,
-        setMessages,
-        addMessage,
-        setCurrentPhase,
-        setSummary,
-        reset,
-      }}
-    >
-      {children}
-    </InterviewContext.Provider>
-  );
-}
-
-export function useInterviewStore() {
-  const context = useContext(InterviewContext);
-  if (!context) {
-    throw new Error('useInterviewStore must be used within InterviewProvider');
-  }
-  return context;
-}
-================================================
-FILE: src/features/interview/conversation/store/interviewStore.tsx
-================================================
-import { createContext, useContext, useState, ReactNode } from 'react';
-import { TranscriptMessage } from '../../types/TranscriptMessage';
-
-interface InterviewStore {
-  interviewId: string | null;
-  messages: TranscriptMessage[];
-  currentPhase: string;
-  summary: string | null;
-  setInterviewId: (id: string) => void;
-  setMessages: (messages: TranscriptMessage[]) => void;
-  addMessage: (message: TranscriptMessage) => void;
-  setCurrentPhase: (phase: string) => void;
-  setSummary: (summary: string | null) => void;
-  reset: () => void;
-}
-
-const InterviewContext = createContext<InterviewStore | undefined>(undefined);
-
-export function InterviewProvider({ children }: { children: ReactNode }) {
-  const [interviewId, setInterviewId] = useState<string | null>(null);
-  const [messages, setMessages] = useState<TranscriptMessage[]>([]);
-  const [currentPhase, setCurrentPhase] = useState('intro');
-  const [summary, setSummary] = useState<string | null>(null);
-
-  const addMessage = (message: TranscriptMessage) => {
-    setMessages((prev) => [...prev, message]);
-  };
-
-  const reset = () => {
-    setInterviewId(null);
-    setMessages([]);
-    setCurrentPhase('intro');
-    setSummary(null);
-  };
-
-  return (
-    <InterviewContext.Provider
-      value={{
-        interviewId,
-        messages,
-        currentPhase,
-        summary,
-        setInterviewId,
-        setMessages,
-        addMessage,
-        setCurrentPhase,
-        setSummary,
-        reset,
-      }}
-    >
-      {children}
-    </InterviewContext.Provider>
-  );
-}
-
-export function useInterviewStore() {
-  const context = useContext(InterviewContext);
-  if (!context) {
-    throw new Error('useInterviewStore must be used within InterviewProvider');
-  }
-  return context;
-}
-
-================================================
 FILE: src/features/bug-hunting/types/Scenario.ts
 ================================================
 // src/features/bug-hunting/types/Scenario.ts
@@ -30525,50 +30093,6 @@ export const Panel = React.forwardRef<HTMLDivElement, PanelProps>(
 Panel.displayName = 'Panel';
 
 ================================================
-FILE: src/shared/ui/Pill.tsx
-================================================
-import React from 'react';
-import { cn } from '@/shared/utils/utils';
-
-interface PillProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: 'default' | 'active' | 'success' | 'warning' | 'error';
-  size?: 'sm' | 'md' | 'lg';
-  children: React.ReactNode;
-}
-
-export const Pill = React.forwardRef<HTMLDivElement, PillProps>(
-  ({ variant = 'default', size = 'md', className, children, ...props }, ref) => {
-    const baseStyles = 'inline-flex items-center font-medium transition-colors';
-    
-    const variants = {
-      default: 'bg-[var(--paper-200)] text-[var(--ink)]',
-      active: 'bg-[var(--brand)] text-white',
-      success: 'bg-[var(--success)] text-white',
-      warning: 'bg-[var(--warning)] text-white',
-      error: 'bg-[var(--error)] text-white',
-    };
-    
-    const sizes = {
-      sm: 'px-2 py-0.5 text-xs radius-pill',
-      md: 'px-3 py-1 text-sm radius-pill',
-      lg: 'px-4 py-1.5 text-base radius-pill',
-    };
-
-    return (
-      <div
-        ref={ref}
-        className={cn(baseStyles, variants[variant], sizes[size], className)}
-        {...props}
-      >
-        {children}
-      </div>
-    );
-  }
-);
-
-Pill.displayName = 'Pill';
-
-================================================
 FILE: src/shared/ui/Avatar.tsx
 ================================================
 import React from 'react';
@@ -30682,7 +30206,7 @@ export const Timer: React.FC<TimerProps> = ({
     }
 
     return () => clearInterval(interval);
-  }, [isRunning, time]); // Removed onTimeUp from deps, using ref instead
+  }, [isRunning]); // Removed 'time' from dependencies to prevent jitter
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -30720,49 +30244,6 @@ export const Timer: React.FC<TimerProps> = ({
     </div>
   );
 };
-
-================================================
-FILE: src/shared/ui/Badge.tsx
-================================================
-import React from 'react';
-import { cn } from '@/shared/utils/utils';
-
-interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
-  variant?: 'default' | 'primary' | 'success' | 'warning' | 'error';
-  size?: 'sm' | 'md';
-  children: React.ReactNode;
-}
-
-export const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
-  ({ variant = 'default', size = 'md', className, children, ...props }, ref) => {
-    const baseStyles = 'inline-flex items-center justify-center font-semibold transition-colors';
-    
-    const variants = {
-      default: 'bg-[var(--paper-300)] text-[var(--ink)]',
-      primary: 'bg-[var(--brand)] text-white',
-      success: 'bg-[var(--success)] text-white',
-      warning: 'bg-[var(--warning)] text-white',
-      error: 'bg-[var(--error)] text-white',
-    };
-    
-    const sizes = {
-      sm: 'px-1.5 py-0.5 text-xs radius-small',
-      md: 'px-2 py-0.5 text-sm radius-small',
-    };
-
-    return (
-      <span
-        ref={ref}
-        className={cn(baseStyles, variants[variant], sizes[size], className)}
-        {...props}
-      >
-        {children}
-      </span>
-    );
-  }
-);
-
-Badge.displayName = 'Badge';
 
 ================================================
 FILE: src/shared/ui/IconButton.tsx
@@ -33719,425 +33200,3 @@ export const api = {
 };
 
 export { ApiError };
-================================================
-FILE: src/modules/diagram/domain/__tests__/Diagram.test.ts
-================================================
-// src/modules/diagram/domain/__tests__/Diagram.test.ts
-
-import { describe, it, expect } from "vitest";
-import {
-  DiagramDocument,
-  Diagram,
-  NodeType,
-  createNodeId,
-  createEdgeId,
-  createFlowId,
-  DiagramValidationError,
-} from "../Diagram";
-
-describe("DiagramDocument", () => {
-  const validDiagram: Diagram = {
-    id: "test-diagram",
-    metadata: {
-      title: "Test Diagram",
-      description: "A test diagram for unit testing",
-    },
-    nodes: [
-      {
-        id: createNodeId("node-1"),
-        name: "Client",
-        type: NodeType.CLIENT,
-        details: {
-          roleAndDuty: "Client application",
-          extremeDeepDive: "Deep dive details",
-          failureScenarios: "Failure scenarios",
-          designTradeoffs: "Tradeoffs",
-        },
-      },
-      {
-        id: createNodeId("node-2"),
-        name: "Service",
-        type: NodeType.SERVICE,
-        details: {
-          roleAndDuty: "Backend service",
-          extremeDeepDive: "Deep dive details",
-          failureScenarios: "Failure scenarios",
-          designTradeoffs: "Tradeoffs",
-        },
-      },
-    ],
-    edges: [
-      {
-        id: createEdgeId("edge-1"),
-        from: createNodeId("node-1"),
-        to: createNodeId("node-2"),
-        label: "HTTP",
-      },
-    ],
-    flows: [
-      {
-        id: createFlowId("flow-1"),
-        name: "Request Flow",
-        steps: [
-          {
-            nodeId: createNodeId("node-1"),
-            description: "Client makes request",
-          },
-          {
-            nodeId: createNodeId("node-2"),
-            description: "Service processes request",
-          },
-        ],
-      },
-    ],
-  };
-
-  describe("create", () => {
-    it("should create a valid diagram document", () => {
-      const doc = DiagramDocument.create(validDiagram);
-      expect(doc.id).toBe("test-diagram");
-      expect(doc.nodes.length).toBe(2);
-      expect(doc.edges.length).toBe(1);
-      expect(doc.flows.length).toBe(1);
-    });
-
-    it("should throw on duplicate node IDs", () => {
-      const invalidDiagram: Diagram = {
-        ...validDiagram,
-        nodes: [
-          validDiagram.nodes[0],
-          { ...validDiagram.nodes[0] }, // Duplicate ID
-        ],
-      };
-      expect(() => DiagramDocument.create(invalidDiagram)).toThrow(
-        DiagramValidationError
-      );
-      expect(() => DiagramDocument.create(invalidDiagram)).toThrow(
-        "Duplicate node ID"
-      );
-    });
-
-    it("should throw on duplicate edge IDs", () => {
-      const invalidDiagram: Diagram = {
-        ...validDiagram,
-        edges: [
-          validDiagram.edges[0],
-          { ...validDiagram.edges[0] }, // Duplicate ID
-        ],
-      };
-      expect(() => DiagramDocument.create(invalidDiagram)).toThrow(
-        DiagramValidationError
-      );
-      expect(() => DiagramDocument.create(invalidDiagram)).toThrow(
-        "Duplicate edge ID"
-      );
-    });
-
-    it("should throw on duplicate flow IDs", () => {
-      const invalidDiagram: Diagram = {
-        ...validDiagram,
-        flows: [
-          validDiagram.flows[0],
-          { ...validDiagram.flows[0] }, // Duplicate ID
-        ],
-      };
-      expect(() => DiagramDocument.create(invalidDiagram)).toThrow(
-        DiagramValidationError
-      );
-      expect(() => DiagramDocument.create(invalidDiagram)).toThrow(
-        "Duplicate flow ID"
-      );
-    });
-
-    it("should throw on edge with non-existent source node", () => {
-      const invalidDiagram: Diagram = {
-        ...validDiagram,
-        edges: [
-          {
-            id: createEdgeId("edge-1"),
-            from: createNodeId("non-existent"),
-            to: createNodeId("node-2"),
-          },
-        ],
-      };
-      expect(() => DiagramDocument.create(invalidDiagram)).toThrow(
-        DiagramValidationError
-      );
-      expect(() => DiagramDocument.create(invalidDiagram)).toThrow(
-        "non-existent source node"
-      );
-    });
-
-    it("should throw on edge with non-existent target node", () => {
-      const invalidDiagram: Diagram = {
-        ...validDiagram,
-        edges: [
-          {
-            id: createEdgeId("edge-1"),
-            from: createNodeId("node-1"),
-            to: createNodeId("non-existent"),
-          },
-        ],
-      };
-      expect(() => DiagramDocument.create(invalidDiagram)).toThrow(
-        DiagramValidationError
-      );
-      expect(() => DiagramDocument.create(invalidDiagram)).toThrow(
-        "non-existent target node"
-      );
-    });
-
-    it("should throw on flow step with non-existent node", () => {
-      const invalidDiagram: Diagram = {
-        ...validDiagram,
-        flows: [
-          {
-            id: createFlowId("flow-1"),
-            name: "Invalid Flow",
-            steps: [
-              {
-                nodeId: createNodeId("non-existent"),
-              },
-            ],
-          },
-        ],
-      };
-      expect(() => DiagramDocument.create(invalidDiagram)).toThrow(
-        DiagramValidationError
-      );
-      expect(() => DiagramDocument.create(invalidDiagram)).toThrow(
-        "non-existent node"
-      );
-    });
-  });
-
-  describe("fromJSON", () => {
-    it("should create diagram from JSON", () => {
-      const json = JSON.stringify(validDiagram);
-      const parsed = JSON.parse(json);
-      const doc = DiagramDocument.fromJSON(parsed);
-      expect(doc.id).toBe("test-diagram");
-      expect(doc.nodes.length).toBe(2);
-    });
-
-    it("should validate JSON during deserialization", () => {
-      const invalidJson = {
-        ...validDiagram,
-        nodes: [
-          validDiagram.nodes[0],
-          { ...validDiagram.nodes[0] }, // Duplicate
-        ],
-      };
-      expect(() => DiagramDocument.fromJSON(invalidJson)).toThrow(
-        DiagramValidationError
-      );
-    });
-  });
-
-  describe("toJSON", () => {
-    it("should serialize to JSON", () => {
-      const doc = DiagramDocument.create(validDiagram);
-      const json = doc.toJSON();
-      expect(json.id).toBe("test-diagram");
-      expect(json.nodes).toHaveLength(2);
-      expect(json.edges).toHaveLength(1);
-      expect(json.flows).toHaveLength(1);
-    });
-
-    it("should return a copy, not the original data", () => {
-      const doc = DiagramDocument.create(validDiagram);
-      const json = doc.toJSON();
-      json.id = "modified";
-      expect(doc.id).toBe("test-diagram"); // Original unchanged
-    });
-  });
-
-  describe("query methods", () => {
-    it("should find node by ID", () => {
-      const doc = DiagramDocument.create(validDiagram);
-      const node = doc.getNodeById(createNodeId("node-1"));
-      expect(node).toBeDefined();
-      expect(node?.name).toBe("Client");
-    });
-
-    it("should return undefined for non-existent node", () => {
-      const doc = DiagramDocument.create(validDiagram);
-      const node = doc.getNodeById(createNodeId("non-existent"));
-      expect(node).toBeUndefined();
-    });
-
-    it("should find edge by ID", () => {
-      const doc = DiagramDocument.create(validDiagram);
-      const edge = doc.getEdgeById(createEdgeId("edge-1"));
-      expect(edge).toBeDefined();
-      expect(edge?.label).toBe("HTTP");
-    });
-
-    it("should find flow by ID", () => {
-      const doc = DiagramDocument.create(validDiagram);
-      const flow = doc.getFlowById(createFlowId("flow-1"));
-      expect(flow).toBeDefined();
-      expect(flow?.name).toBe("Request Flow");
-    });
-
-    it("should get edges from node", () => {
-      const doc = DiagramDocument.create(validDiagram);
-      const edges = doc.getEdgesFromNode(createNodeId("node-1"));
-      expect(edges).toHaveLength(1);
-      expect(edges[0].from).toBe(createNodeId("node-1"));
-    });
-
-    it("should get edges to node", () => {
-      const doc = DiagramDocument.create(validDiagram);
-      const edges = doc.getEdgesToNode(createNodeId("node-2"));
-      expect(edges).toHaveLength(1);
-      expect(edges[0].to).toBe(createNodeId("node-2"));
-    });
-
-    it("should return immutable node array", () => {
-      const doc = DiagramDocument.create(validDiagram);
-      const nodes = doc.nodes;
-      expect(() => {
-        (nodes as any).push({} as any);
-      }).not.toThrow();
-      expect(doc.nodes.length).toBe(2); // Original unchanged
-    });
-  });
-
-  describe("metadata", () => {
-    it("should return metadata", () => {
-      const doc = DiagramDocument.create(validDiagram);
-      const metadata = doc.metadata;
-      expect(metadata.title).toBe("Test Diagram");
-      expect(metadata.description).toBe("A test diagram for unit testing");
-    });
-
-    it("should return a copy of metadata", () => {
-      const doc = DiagramDocument.create(validDiagram);
-      const metadata = doc.metadata;
-      metadata.title = "Modified";
-      expect(doc.metadata.title).toBe("Test Diagram"); // Original unchanged
-    });
-  });
-
-  describe("edge cases", () => {
-    it("should handle empty diagram", () => {
-      const emptyDiagram: Diagram = {
-        id: "empty",
-        metadata: { title: "Empty" },
-        nodes: [],
-        edges: [],
-        flows: [],
-      };
-      const doc = DiagramDocument.create(emptyDiagram);
-      expect(doc.nodes).toHaveLength(0);
-      expect(doc.edges).toHaveLength(0);
-      expect(doc.flows).toHaveLength(0);
-    });
-
-    it("should handle diagram with optional viewport", () => {
-      const diagramWithViewport: Diagram = {
-        ...validDiagram,
-        metadata: {
-          ...validDiagram.metadata,
-          viewport: { x: 100, y: 200, zoom: 1.5 },
-        },
-      };
-      const doc = DiagramDocument.create(diagramWithViewport);
-      expect(doc.metadata.viewport).toEqual({ x: 100, y: 200, zoom: 1.5 });
-    });
-
-    it("should handle edge without label", () => {
-      const diagramWithoutLabel: Diagram = {
-        ...validDiagram,
-        edges: [
-          {
-            id: createEdgeId("edge-1"),
-            from: createNodeId("node-1"),
-            to: createNodeId("node-2"),
-          },
-        ],
-      };
-      const doc = DiagramDocument.create(diagramWithoutLabel);
-      expect(doc.edges[0].label).toBeUndefined();
-    });
-
-    it("should handle flow step without description", () => {
-      const diagramWithoutDesc: Diagram = {
-        ...validDiagram,
-        flows: [
-          {
-            id: createFlowId("flow-1"),
-            name: "Flow",
-            steps: [
-              {
-                nodeId: createNodeId("node-1"),
-              },
-            ],
-          },
-        ],
-      };
-      const doc = DiagramDocument.create(diagramWithoutDesc);
-      expect(doc.flows[0].steps[0].description).toBeUndefined();
-    });
-  });
-});
-
-================================================
-FILE: src/modules/transcript/domain/TranscriptNode.ts
-================================================
-export type NodeRole = 'interviewer' | 'candidate' | 'takeaway';
-
-export interface TranscriptPart {
-  text: string;
-  highlight?: 'strong' | 'missed';
-  explanation?: string;
-}
-
-export interface TranscriptNode {
-  id: string;
-  role: NodeRole;
-  content: TranscriptPart[];
-  order: number;
-}
-================================================
-FILE: src/modules/container.ts
-================================================
-import { AIService } from "./ai/services/AIService";
-import { PromptLoader } from "@/features/interview/prompts/prompt/PromptLoader";
-import logger  from "@/shared/logger/logger";
-import { EvaluationService } from "./interview/services/evaluation/EvaluationService";
-
-export function createEvaluationService() {
-  return new EvaluationService(
-    new AIService(),
-    new PromptLoader(),
-    logger
-  );
-}
-
-
-================================================
-FILE: src/modules/common/errors/ApplicationErrors.ts
-================================================
-// src/modules/common/errors/ApplicationErrors.ts
-
-export class ApplicationError extends Error {
-  constructor(
-    message: string,
-    public readonly cause?: unknown
-  ) {
-    super(message);
-    this.name = this.constructor.name;
-  }
-}
-
-export class AIProviderError extends ApplicationError {}
-
-export class PromptLoadError extends ApplicationError {}
-
-export class ValidationError extends ApplicationError {}
-
-export class InterviewStateError extends ApplicationError {}
-
-export class PersistenceError extends ApplicationError {}

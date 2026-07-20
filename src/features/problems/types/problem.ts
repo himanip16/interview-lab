@@ -10,7 +10,7 @@ export const ProblemSchema = z.object({
   slug: z.string(),
   title: z.string(),
   description: z.string().nullable(),
-  category: z.nativeEnum(ProblemCategory),
+  category: z.string(), // Changed from nativeEnum to string to handle arbitrary categories
   difficulty: z.nativeEnum(Difficulty),
   interviewType: z.string().nullable().optional(),
   cruxOfProblem: z.string().nullable(),

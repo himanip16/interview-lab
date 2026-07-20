@@ -29,9 +29,12 @@ interface PageProps {
 export default async function DeepDivePage({ params }: PageProps) {
   const { slug } = await params;
 
-  const system = getDeepDiveSystem(slug);
-  const prevSystem = getPrevSystem(slug);
-  const nextSystem = getNextSystem(slug);
+  // Normalize slug to lowercase for consistent lookup
+  const normalizedSlug = slug.toLowerCase();
+
+  const system = getDeepDiveSystem(normalizedSlug);
+  const prevSystem = getPrevSystem(normalizedSlug);
+  const nextSystem = getNextSystem(normalizedSlug);
 
   if (!system) {
     return (
@@ -55,7 +58,7 @@ export default async function DeepDivePage({ params }: PageProps) {
   }
 
   // ✅ Get diagram component (undefined is ok, component checks)
-  const DiagramComponent = DIAGRAM_COMPONENTS[slug];
+  const DiagramComponent = DIAGRAM_COMPONENTS[normalizedSlug];
 
   return (
     <DeepDiveHero

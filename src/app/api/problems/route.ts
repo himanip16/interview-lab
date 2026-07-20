@@ -58,46 +58,16 @@ export async function GET(request: Request) {
 
     let problems: any[], total: number;
 
-    // First attempt
     [problems, total] = await Promise.all([
       prisma.problem.findMany({
         where,
-        include: includeOptions, // USE THE INCLUDE HERE
+        include: includeOptions,
         orderBy,
         skip: (page - 1) * limit,
         take: limit,
       }),
       prisma.problem.count({ where }),
     ]);
-
-    // Fallback logic
-    if (problems.length === 0 && page === 1) {
-      if (where.companies) {
-        const { companies: _, ...fallbackWhere } = where;
-        [problems, total] = await Promise.all([
-          prisma.problem.findMany({
-            where: fallbackWhere,
-            include: includeOptions, // USE THE INCLUDE HERE
-            orderBy,
-            skip: (page - 1) * limit,
-            take: limit,
-          }),
-          prisma.problem.count({ where: fallbackWhere }),
-        ]);
-      } else if (where.category) {
-        const { category: _, ...fallbackWhere } = where;
-        [problems, total] = await Promise.all([
-          prisma.problem.findMany({
-            where: fallbackWhere,
-            include: includeOptions, // USE THE INCLUDE HERE
-            orderBy,
-            skip: (page - 1) * limit,
-            take: limit,
-          }),
-          prisma.problem.count({ where: fallbackWhere }),
-        ]);
-      }
-    }
 
     // 2. Fetch history if needed
     const historyMap = new Map<string, any>();

@@ -8,11 +8,11 @@ import { DiagramNode } from './DiagramNode';
 import { DiagramEdges } from './DiagramEdges';
 
 const CATEGORY_COLORS: Record<string, string> = {
-  entry: '#FF5A3C',
-  logic: '#6A5AE0',
-  storage: '#00A87E',
-  network: '#15161C',
-  queue: '#E8940A',
+  entry: 'var(--category-practice)',
+  logic: 'var(--category-concept)',
+  storage: 'var(--category-learn-deep)',
+  network: 'var(--category-neutral)',
+  queue: 'var(--category-live)',
 } as const;
 
 interface WhiteboardProps {
@@ -94,13 +94,13 @@ export default function Whiteboard({
           {/* Legend */}
           <div className="absolute bottom-4 left-4 flex gap-4 text-[11.5px] font-semibold text-[#5A5B66]">
             <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#FF5A3C]" /> Entry
+              <span className="w-2 h-2 rounded-full bg-[var(--category-practice)]" /> Entry
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#6A5AE0]" /> Logic
+              <span className="w-2 h-2 rounded-full bg-[var(--category-concept)]" /> Logic
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#00A87E]" /> Storage
+              <span className="w-2 h-2 rounded-full bg-[var(--category-learn-deep)]" /> Storage
             </span>
           </div>
         </div>

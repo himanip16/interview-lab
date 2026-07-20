@@ -29,7 +29,7 @@ export default function ExploreProblems({ exploreProblems }: Props) {
         </div>
 
         <Link
-          href="/#interviews"
+          href="/problems"
           className="font-mono text-xs text-muted-foreground hover:text-foreground"
         >
           Browse all →
