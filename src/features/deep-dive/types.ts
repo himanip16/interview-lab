@@ -21,6 +21,7 @@ export interface Section {
     component: string; // Component name to import
     caption: string;
     text?: string;
+    width?: 'full' | 'half' | 'third' | 'quarter' | 'fixed' | 'auto';
   };
   video?: {
     caption: string;

@@ -23,7 +23,8 @@ export const consistentHashingData: DeepDiveArticle = {
       ],
       illustration: {
         component: 'ModuloIllustration',
-        caption: 'Modulo hashing: adding a node reshuffles nearly everything'
+        caption: 'Modulo hashing: adding a node reshuffles nearly everything',
+        width: 'half'
       }
     },
     {
@@ -34,7 +35,8 @@ export const consistentHashingData: DeepDiveArticle = {
       ],
       illustration: {
         component: 'ConsistentHashingIllustration',
-        caption: 'Interactive consistent hashing ring'
+        caption: 'Interactive consistent hashing ring',
+        width: 'full'
       }
     },
     {
@@ -59,7 +61,7 @@ export const consistentHashingData: DeepDiveArticle = {
   const idx = binarySearchCeil(ring, h);
   // wrap around if key hashes past the last node
   return ring[idx % ring.length];
-}`,
+}`.replace(/≥/g, '&ge;'),
       callout: {
         label: 'Worth remembering',
         content: 'A real ring uses <b>virtual nodes</b> — each physical server gets hashed to dozens of points, not one. Otherwise one unlucky placement gives a server way more (or less) than its fair share of keys.'

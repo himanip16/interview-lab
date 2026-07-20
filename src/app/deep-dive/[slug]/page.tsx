@@ -96,7 +96,7 @@ export default async function DeepDiveArticlePage({ params }: { params: { slug: 
           ))}
         </div>
 
-        <p className="lede">{article.lede}</p>
+        <p className="lede" dangerouslySetInnerHTML={{ __html: article.lede }} />
 
         {article.sections.map(section => (
           <section key={section.number}>
@@ -110,6 +110,7 @@ export default async function DeepDiveArticlePage({ params }: { params: { slug: 
               <IllustrationBlock
                 illustration={componentMap[section.illustration.component] || null}
                 caption={section.illustration.caption}
+                width={section.illustration.width}
               >
                 {section.illustration.text && <p dangerouslySetInnerHTML={{ __html: section.illustration.text }} />}
               </IllustrationBlock>

@@ -5,7 +5,7 @@ interface CodeBlockProps {
 export function CodeBlock({ children }: CodeBlockProps) {
   return (
     <div className="code-block mono">
-      <pre>{children}</pre>
+      <pre dangerouslySetInnerHTML={{ __html: children }} />
     </div>
   );
 }

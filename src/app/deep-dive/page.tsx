@@ -15,15 +15,20 @@ interface Topic {
   mark: React.ReactNode;
 }
 
-const TOPICS: Topic[] = deepDiveData.map((item) => ({
-  slug: item.slug,
-  name: item.name,
-  description: Array.isArray(item.description) ? item.description.join(' ') : item.description,
-  tags: item.tags,
-  category: 'db', // Default category since it's not in the data structure
-  readTime: '10 min', // Default read time since it's not in the data structure
-  mark: null, // Will be replaced with illustrations
-}));
+const TOPICS: Topic[] = deepDiveData.map((item) => {
+  const descText = Array.isArray(item.description) 
+    ? item.description.join(' ')
+    : item.description;
+  return {
+    slug: item.slug,
+    name: item.name,
+    description: descText.replace(/<[^>]*>/g, ''), // Strip HTML tags for card display
+    tags: item.tags,
+    category: 'db', // Default category since it's not in the data structure
+    readTime: '10 min', // Default read time since it's not in the data structure
+    mark: null, // Will be replaced with illustrations
+  };
+});
 
 export default function DeepDiveIndexPage() {
   const [filter, setFilter] = useState('all');
@@ -95,6 +100,16 @@ export default function DeepDiveIndexPage() {
           <circle cx="34" cy="15.5" r="2.2" fill="#15161C"/>
           <circle cx="20" cy="27.5" r="2.2" fill="#15161C"/>
           <circle cx="40" cy="39.5" r="2.2" fill="#15161C"/>
+        </>
+      ),
+      'consistent-hashing': (
+        <>
+          <circle cx="28" cy="8" r="3.5" fill="#00D9A3"/>
+          <circle cx="44" cy="20" r="3.5" fill="#FF5A3C"/>
+          <circle cx="38" cy="42" r="3.5" fill="#00A87E"/>
+          <circle cx="16" cy="44" r="3.5" fill="#6A5AE0"/>
+          <circle cx="9" cy="18" r="3.5" fill="#00A87E"/>
+          <circle cx="28" cy="8" r="20" stroke="#15161C" strokeWidth="1.5" fill="none" opacity=".2" transform="translate(0,12)"/>
         </>
       ),
     };
