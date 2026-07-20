@@ -64,7 +64,7 @@ export class InterviewAggregate {
     this._transcript = data.transcript;
     this._metadata = data.metadata;
     this._whiteboardDescription = data.whiteboardDescription;
-    this._turnCount = Math.floor(data.transcript.length / 2); // Each turn = user + assistant message
+    this._turnCount = data.transcript.filter(msg => msg.role === MessageRole.user).length;
   }
 
   /**
