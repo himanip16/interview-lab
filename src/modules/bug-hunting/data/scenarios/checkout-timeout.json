@@ -1,7 +1,7 @@
 {
   "id": "checkout-timeout",
-  "title": "Checkout returns 500 intermittently",
   "description": "Customers report intermittent failures after the latest deployment.",
+  "timerSeconds": 1800,
   "createdAt": "2026-07-16T00:00:00Z",
   "metadata": {
     "difficulty": "Hard",

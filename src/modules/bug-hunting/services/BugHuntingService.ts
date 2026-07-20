@@ -5,6 +5,8 @@ import type { InvestigationArtifactSource } from "../domain/entities/Finding";
 import { BugScenario } from "../domain/entities/BugScenario";
 import { BugAttempt } from "../domain/entities/BugAttempt";
 import { AttemptStatus } from "../domain/value-objects/AttemptStatus";
+import { BugScenarioMapper } from "../application/mappers/BugScenarioMapper";
+import type { BugScenarioListDTO } from "../application/dtos/BugScenarioDTO";
 
 export class BugHuntingService {
   constructor(
@@ -16,8 +18,9 @@ export class BugHuntingService {
     return this.scenarios.findById(id);
   }
 
-  async listScenarios(): Promise<BugScenario[]> {
-    return this.scenarios.list();
+  async listScenarios(): Promise<BugScenarioListDTO[]> {
+    const scenarios = await this.scenarios.list();
+    return scenarios.map((s) => BugScenarioMapper.toListDTO(s));
   }
 
   /** Resumes an in-progress attempt if one exists, otherwise starts a new one. */
@@ -31,12 +34,13 @@ export class BugHuntingService {
     return this.attempts.create({ userId, scenarioId });
   }
 
-  async logHypothesis(attemptId: string, scenarioId: string, hypothesis: string): Promise<void> {
+  async logHypothesis(attemptId: string, scenarioId: string, hypothesis: string, userId: string): Promise<void> {
     if (!hypothesis.trim()) {
       throw new Error("Hypothesis cannot be empty");
     }
     const attempt = await this.attempts.findById(attemptId);
     if (!attempt) throw new Error("Attempt not found");
+    if (attempt.userId !== userId) throw new Error("Unauthorized: Attempt does not belong to user");
     if (!attempt.canRecordFinding()) throw new Error("Cannot log a hypothesis on a completed attempt");
 
     await this.attempts.logHypothesis({ attemptId, scenarioId, hypothesis });
@@ -48,20 +52,22 @@ export class BugHuntingService {
     }
   }
 
-  async recordFinding(attemptId: string, source: InvestigationArtifactSource, refId: string, note?: string) {
+  async recordFinding(attemptId: string, source: InvestigationArtifactSource, refId: string, note?: string, userId?: string) {
     const attempt = await this.attempts.findById(attemptId);
     if (!attempt) throw new Error("Attempt not found");
+    if (userId && attempt.userId !== userId) throw new Error("Unauthorized: Attempt does not belong to user");
     if (!attempt.canRecordFinding()) throw new Error("Cannot record findings on a completed attempt");
 
     return this.attempts.recordFinding({ attemptId, source, refId, note });
   }
 
-  async submitFix(attemptId: string, rootCause: string, proposedFix: string) {
+  async submitFix(attemptId: string, rootCause: string, proposedFix: string, userId: string) {
     if (!rootCause.trim() || !proposedFix.trim()) {
       throw new Error("rootCause and proposedFix are required");
     }
     const attempt = await this.attempts.findById(attemptId);
     if (!attempt) throw new Error("Attempt not found");
+    if (attempt.userId !== userId) throw new Error("Unauthorized: Attempt does not belong to user");
     if (!attempt.canSubmit()) throw new Error("This attempt has already been submitted");
 
     const submission = await this.attempts.submitFix({ attemptId, rootCause, proposedFix });

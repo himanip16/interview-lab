@@ -3,8 +3,7 @@ import { getBugHuntingService } from "@/modules/bug-hunting";
 
 export default async function BugHuntingListPage() {
   const service = getBugHuntingService();
-  const scenarios = await service.listScenarios();
-  const scenarioData = scenarios.map((s) => s.toJSON());
+  const scenarioData = await service.listScenarios();
 
   return (
     <div className="min-h-screen bg-[var(--paper)] py-12 px-6">

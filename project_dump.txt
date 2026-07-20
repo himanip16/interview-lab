@@ -1,136 +1,1227 @@
 PROJECT STRUCTURE
 =================
-src/app/bug-hunting
-├── [scenarioId]
-│   └── page.tsx
+src/app/pr-review
+├── PrReviewPage.module.css
 └── page.tsx
 
-2 directories, 2 files
+1 directory, 2 files
 
 FILE CONTENTS
 
 ================================================
-FILE: src/app/bug-hunting/[scenarioId]/page.tsx
+FILE: src/app/pr-review/PrReviewPage.module.css
 ================================================
-import { notFound } from "next/navigation";
-import { getBugHuntingService } from "@/modules/bug-hunting";
-
-import BugHuntingShell from "@/features/bug-hunting/components/BugHuntingShell";
-import DeploymentsPanel from "@/features/bug-hunting/components/Tabs/DeploymentsPanel";
-import DocsPanel from "@/features/bug-hunting/components/Tabs/DocsPanel";
-import LogsPanel from "@/features/bug-hunting/components/Tabs/LogsPanel";
-import Header from "@/features/bug-hunting/components/Header/Header";
-import ReportSidebar from "@/features/bug-hunting/components/Sidebar/ReportSidebar";
-
-type Props = {
-  params: Promise<{
-    scenarioId: string;
-  }>;
-};
-
-export default async function BugHuntingPage({ params }: Props) {
-  const { scenarioId } = await params;
-  const service = getBugHuntingService();
-  const scenario = await service.getScenario(scenarioId);
-
-  if (!scenario) {
-    notFound();
-  }
-
-  // Use the plain JSON representation for ALL components
-  const data = scenario.toJSON();
-
-  return (
-    <main className="bug-hunting-page">
-      <Header scenario={data} />
-
-      <div className="bh-body">
-        <ReportSidebar
-          scenario={data}
-          hypothesis=""
-          onHypothesisChange={() => {}}
-          onSubmitHypothesis={() => {}}
-        />
-
-        <BugHuntingShell
-          logsPanel={<LogsPanel scenario={data} />}
-          docsPanel={<DocsPanel docs={data.docs} active={false} />}
-          deploymentsPanel={
-            <DeploymentsPanel deployments={data.deployments} active={false} />
-          }
-          sqlFixture={data.sql}
-          codeFiles={data.code}
-          scenarioId={data.id}
-        />
-      </div>
-    </main>
-  );
+:root {
+  --paper: #FAF9F6;
+  --ink: #15161C;
+  --ink-soft: #5A5B66;
+  --mint: #00D9A3;
+  --mint-deep: #00A87E;
+  --coral: #FF5A3C;
+  --amber: #E8940A;
+  --violet: #6A5AE0;
 }
-================================================
-FILE: src/app/bug-hunting/page.tsx
-================================================
-import { Panel } from "@/components/ui/Panel";
-// Fixed paths
-import type { BugScenario } from "@/features/bug-hunting/types/Scenario";
-import checkoutTimeout from "@/features/bug-hunting/data/checkout-timeout.json";
 
-const SCENARIOS: BugScenario[] = [
-  // Ensure we are getting the plain object from the JSON import
-  (checkoutTimeout as any).default || checkoutTimeout,
+.app {
+  max-width: 900px;
+  margin: 0 auto 0;
+  background: #fff;
+  border-radius: 28px 28px 0 0;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(21, 22, 28, 0.06);
+  border: 1px solid rgba(21, 22, 28, 0.06);
+  border-bottom: none;
+}
+
+.head {
+  padding: 20px 30px;
+  border-bottom: 1px solid rgba(21, 22, 28, 0.06);
+}
+
+.crumb {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+
+.back {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid rgba(21, 22, 28, 0.1);
+  background: none;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.prTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.prTitle h1 {
+  font-family: 'Poppins', sans-serif;
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.prSub {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  margin-top: 7px;
+  flex-wrap: wrap;
+}
+
+.branch {
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--paper);
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+}
+
+.statusPill {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 11px;
+  border-radius: 999px;
+  background: rgba(0, 217, 163, 0.12);
+  color: var(--mint-deep);
+  text-transform: uppercase;
+}
+
+.timer {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+}
+
+.timerAura {
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0, 217, 163, 0.28), transparent 70%);
+  animation: breathe 3.2s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+}
+
+.timerRing {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid rgba(0, 217, 163, 0.4);
+}
+
+.timerText {
+  font-family: 'Poppins', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--mint);
+}
+
+/* Page Tabs */
+.pageTabs {
+  display: flex;
+  gap: 4px;
+  padding: 0 30px;
+  border-bottom: 1px solid rgba(21, 22, 28, 0.06);
+}
+
+.pageTab {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  padding: 14px 4px;
+  margin-right: 26px;
+  cursor: pointer;
+  border-bottom: 2.5px solid transparent;
+}
+
+.pageTabActive {
+  color: var(--ink);
+  border-bottom-color: var(--ink);
+}
+
+.pageTabBadge {
+  font-size: 10px;
+  background: var(--paper);
+  color: var(--ink-soft);
+  padding: 1px 7px;
+  border-radius: 999px;
+  margin-left: 6px;
+}
+
+.page {
+  display: none;
+  padding: 26px 30px 40px;
+  max-height: 560px;
+  overflow-y: auto;
+}
+
+.pageActive {
+  display: block;
+}
+
+.secLabel {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--mint-deep);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.summaryText {
+  font-size: 13.5px;
+  color: var(--ink-soft);
+  line-height: 1.7;
+}
+
+.intent {
+  margin-top: 14px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: var(--paper);
+  border-left: 3px solid var(--violet);
+}
+
+.intentLabel {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--violet);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+
+.intentText {
+  font-size: 13px;
+  color: var(--ink);
+  line-height: 1.6;
+}
+
+.statRow {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.stat {
+  flex: 1;
+  background: var(--paper);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+
+.statNumber {
+  font-family: 'Poppins', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.statKey {
+  font-size: 11px;
+  color: var(--ink-soft);
+  margin-top: 2px;
+}
+
+.statAdd .statNumber {
+  color: var(--mint-deep);
+}
+
+.statRm .statNumber {
+  color: var(--coral);
+}
+
+/* Evidence Page */
+.shotRow {
+  display: flex;
+  gap: 14px;
+  margin-top: 10px;
+}
+
+.shot {
+  flex: 1;
+}
+
+.shotLabel {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin-bottom: 8px;
+}
+
+.shotFrame {
+  border-radius: 14px;
+  border: 1px solid rgba(21, 22, 28, 0.08);
+  overflow: hidden;
+  background: var(--paper);
+}
+
+.linkRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(21, 22, 28, 0.07);
+  margin-bottom: 8px;
+}
+
+.linkMain {
+  flex: 1;
+  min-width: 0;
+}
+
+.linkTitle {
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.linkUrl {
+  font-size: 11px;
+  color: var(--ink-soft);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chip {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.chipOk {
+  background: rgba(0, 168, 126, 0.1);
+  color: var(--mint-deep);
+}
+
+.chipWarn {
+  background: rgba(232, 148, 10, 0.12);
+  color: var(--amber);
+}
+
+.chipBad {
+  background: rgba(255, 90, 60, 0.12);
+  color: var(--coral);
+}
+
+.chipRow {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* Code Page */
+.fileTabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  margin-bottom: 14px;
+}
+
+.fileTab {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 13px;
+  border-radius: 999px;
+  color: var(--ink-soft);
+  cursor: pointer;
+  white-space: nowrap;
+  border: 1px solid rgba(21, 22, 28, 0.1);
+}
+
+.fileTabActive {
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+}
+
+.filePane {
+  display: none;
+}
+
+.filePaneActive {
+  display: block;
+}
+
+.diff {
+  background: var(--ink);
+  border-radius: 14px;
+  overflow: hidden;
+  padding: 6px 0;
+}
+
+.diffLineWrap {
+  position: relative;
+}
+
+.diffLine {
+  display: flex;
+  font-size: 12px;
+  padding: 3px 16px;
+  align-items: center;
+  gap: 10px;
+  cursor: text;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.diffLineNumber {
+  width: 24px;
+  color: rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.diffAddComment {
+  margin-left: auto;
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  background: rgba(0, 217, 163, 0.25);
+  color: #00D9A3;
+  font-size: 12px;
+  font-weight: 700;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.diffLineWrap:hover .diffAddComment {
+  display: flex;
+}
+
+.diffLineAdd {
+  background: rgba(0, 217, 163, 0.14);
+  color: #B7F3E3;
+}
+
+.diffLineRm {
+  background: rgba(255, 90, 60, 0.14);
+  color: #FFC5B8;
+}
+
+.diffLineCtx {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.inlineComposer {
+  background: #fff;
+  margin: 2px 16px 8px 40px;
+  border-radius: 12px;
+  padding: 12px 14px;
+  border: 1px solid rgba(21, 22, 28, 0.08);
+}
+
+.inlineThread {
+  margin: 0 16px 6px 40px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #F1EFEA;
+}
+
+.threadHead {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11.5px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.threadText {
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+
+.mention {
+  color: var(--violet);
+  font-weight: 600;
+}
+
+.tinyTextarea {
+  width: 100%;
+  min-height: 56px;
+  border: 1px solid rgba(21, 22, 28, 0.1);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 12.5px;
+  font-family: 'Inter', sans-serif;
+  resize: none;
+  outline: none;
+}
+
+.tinyTextarea:focus {
+  border-color: var(--mint-deep);
+}
+
+.composerActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.tagWrap {
+  position: relative;
+}
+
+.tagBtn {
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--paper);
+  border: none;
+  padding: 6px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  color: var(--ink-soft);
+}
+
+.tagDropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid rgba(21, 22, 28, 0.08);
+  box-shadow: 0 12px 28px rgba(21, 22, 28, 0.1);
+  padding: 5px;
+  display: none;
+  z-index: 5;
+  min-width: 130px;
+}
+
+.tagDropdownOpen {
+  display: block;
+}
+
+.tagOpt {
+  font-size: 12px;
+  padding: 7px 10px;
+  border-radius: 7px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tagOpt:hover {
+  background: var(--paper);
+}
+
+.tagAvatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.postBtn {
+  font-size: 11.5px;
+  font-weight: 600;
+  background: var(--mint-deep);
+  color: #fff;
+  border: none;
+  padding: 7px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.selectHint {
+  font-size: 11.5px;
+  color: var(--ink-soft);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--paper);
+  padding: 8px 12px;
+  border-radius: 10px;
+}
+
+.floatBtn {
+  position: fixed;
+  background: var(--ink);
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 7px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  display: none;
+  z-index: 20;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+}
+
+.floatBtnVisible {
+  display: block;
+}
+
+.snippetQuote {
+  font-size: 11.5px;
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--paper);
+  padding: 8px 10px;
+  border-radius: 8px;
+  border-left: 2px solid var(--mint-deep);
+  margin-bottom: 8px;
+  color: var(--ink-soft);
+}
+
+/* Decision Bar */
+.decisionBar {
+  position: sticky;
+  bottom: 0;
+  max-width: 900px;
+  margin: 0 auto;
+  background: #fff;
+  border-top: 1px solid rgba(21, 22, 28, 0.08);
+  padding: 16px 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 0 0 28px 28px;
+  box-shadow: 0 -10px 30px rgba(21, 22, 28, 0.04);
+}
+
+.decisionStatus {
+  font-size: 12.5px;
+  color: var(--ink-soft);
+}
+
+.decisionStatusBold {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.decisionActions {
+  display: flex;
+  gap: 8px;
+}
+
+.decisionBtn {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 18px;
+  border-radius: 999px;
+  cursor: pointer;
+  border: 1.5px solid transparent;
+  transition: transform 0.2s ease;
+}
+
+.decisionBtn:hover {
+  transform: translateY(-2px);
+}
+
+.decisionBtnReject {
+  background: none;
+  border-color: var(--coral);
+  color: var(--coral);
+}
+
+.decisionBtnRejectSelected {
+  background: var(--coral);
+  color: #fff;
+}
+
+.decisionBtnWait {
+  background: none;
+  border-color: var(--amber);
+  color: var(--amber);
+}
+
+.decisionBtnWaitSelected {
+  background: var(--amber);
+  color: #fff;
+}
+
+.decisionBtnApprove {
+  background: none;
+  border-color: var(--mint-deep);
+  color: var(--mint-deep);
+}
+
+.decisionBtnApproveSelected {
+  background: var(--mint-deep);
+  color: #fff;
+}
+
+@media (max-width: 640px) {
+  .shotRow {
+    flex-direction: column;
+  }
+  
+  .prTop {
+    flex-direction: column;
+  }
+  
+  .decisionBar {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+}
+
+================================================
+FILE: src/app/pr-review/page.tsx
+================================================
+"use client";
+
+import { useState } from "react";
+import styles from "./PrReviewPage.module.css";
+
+interface Comment {
+  id: string;
+  author: string;
+  text: string;
+}
+
+interface DiffLine {
+  line: number;
+  type: "add" | "rm" | "ctx";
+  content: string;
+}
+
+interface FileDiff {
+  id: string;
+  name: string;
+  lines: DiffLine[];
+  comments: Comment[];
+}
+
+const PEOPLE = ["R. Okafor", "M. Patel", "J. Lin", "A. Kim"];
+
+const FILE_DIFFS: FileDiff[] = [
+  {
+    id: "summary",
+    name: "OrderSummary.tsx",
+    lines: [
+      { line: 41, type: "ctx", content: 'export function OrderSummary({ items, discounts, tax }: Props) {' },
+      { line: 42, type: "rm", content: '  return (<><ItemsBlock items={items} /><DiscountsBlock discounts={discounts} /><TaxBlock tax={tax} /></>);' },
+      { line: 42, type: "add", content: '  return (<SummaryCard items={items} discounts={discounts} tax={tax} collapsible />);' },
+      { line: 43, type: "ctx", content: "}" },
+    ],
+    comments: [
+      {
+        id: "c1",
+        author: "M. Patel",
+        text: 'Does @R. Okafor collapsible default to open or closed? That changes my earlier concern about the tax breakdown.',
+      },
+    ],
+  },
+  {
+    id: "price",
+    name: "PriceBreakdown.tsx",
+    lines: [
+      { line: 18, type: "rm", content: '  <div className="subtotal-row">Subtotal: {formatPrice(subtotal)}</div>' },
+      { line: 19, type: "ctx", content: '  <div className="total-row">Total: {formatPrice(total)}</div>' },
+    ],
+    comments: [],
+  },
+  {
+    id: "css",
+    name: "checkout.module.css",
+    lines: [
+      { line: 7, type: "rm", content: "  .summary-block { margin-bottom: 24px; padding: 16px; }" },
+      { line: 7, type: "add", content: "  .summary-card { margin-bottom: 12px; padding: 20px; border-radius: 16px; }" },
+    ],
+    comments: [],
+  },
 ];
 
-export default function BugHuntingListPage() {
+export default function PrReviewPage() {
+  const [activePage, setActivePage] = useState<"info" | "evidence" | "code">("info");
+  const [activeFile, setActiveFile] = useState("summary");
+  const [decision, setDecision] = useState<"reject" | "wait" | "approve" | null>(null);
+  const [composers, setComposers] = useState<Record<string, string>>({});
+  const [tagDropdownOpen, setTagDropdownOpen] = useState<Record<string, boolean>>({});
+  const [comments, setComments] = useState<Record<string, Comment[]>>({
+    "summary-line-42": FILE_DIFFS[0].comments,
+  });
+  const [floatBtnVisible, setFloatBtnVisible] = useState(false);
+  const [floatBtnPosition, setFloatBtnPosition] = useState({ top: 0, left: 0 });
+  const [pendingSelection, setPendingSelection] = useState<{ text: string; lineKey: string } | null>(null);
+
+  const handlePageChange = (page: "info" | "evidence" | "code") => {
+    setActivePage(page);
+  };
+
+  const handleFileChange = (fileId: string) => {
+    setActiveFile(fileId);
+  };
+
+  const handleDecision = (type: "reject" | "wait" | "approve") => {
+    setDecision(type);
+  };
+
+  const toggleComposer = (lineKey: string) => {
+    setComposers((prev) => ({
+      ...prev,
+      [lineKey]: prev[lineKey] ? "" : " ",
+    }));
+  };
+
+  const toggleTagDropdown = (composerId: string) => {
+    setTagDropdownOpen((prev) => ({
+      ...prev,
+      [composerId]: !prev[composerId],
+    }));
+  };
+
+  const insertMention = (composerId: string, name: string) => {
+    setComposers((prev) => {
+      const current = prev[composerId] || "";
+      const withSpace = current && !current.endsWith(" ") ? current + " " : current;
+      return {
+        ...prev,
+        [composerId]: withSpace + "@" + name + " ",
+      };
+    });
+    setTagDropdownOpen((prev) => ({
+      ...prev,
+      [composerId]: false,
+    }));
+  };
+
+  const postComment = (lineKey: string) => {
+    const text = composers[lineKey]?.trim();
+    if (!text) return;
+
+    const withMentions = text.replace(/@([A-Za-z. ]+?)(?=\s@|$)/g, '<span class="mention">@$1</span>');
+    const newComment: Comment = {
+      id: `c-${Date.now()}`,
+      author: "You",
+      text: withMentions,
+    };
+
+    setComments((prev) => ({
+      ...prev,
+      [lineKey]: [...(prev[lineKey] || []), newComment],
+    }));
+
+    setComposers((prev) => ({
+      ...prev,
+      [lineKey]: "",
+    }));
+  };
+
+  const handleTextSelection = () => {
+    const sel = window.getSelection();
+    const text = sel?.toString().trim();
+    if (text && text.length > 1 && sel?.anchorNode) {
+      const range = sel.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      const diffLine = sel.anchorNode.parentElement?.closest(".diff-line");
+      if (diffLine) {
+        const lineWrap = diffLine.closest(".diff-line-wrap");
+        if (lineWrap) {
+          const lineKey = lineWrap.getAttribute("data-line-key");
+          if (lineKey) {
+            setFloatBtnPosition({
+              top: window.scrollY + rect.top - 38,
+              left: window.scrollX + rect.left,
+            });
+            setFloatBtnVisible(true);
+            setPendingSelection({ text, lineKey });
+          }
+        }
+      }
+    } else {
+      setFloatBtnVisible(false);
+    }
+  };
+
+  const handleFloatBtnClick = () => {
+    if (pendingSelection) {
+      const { lineKey, text } = pendingSelection;
+      if (!composers[lineKey]) {
+        setComposers((prev) => ({
+          ...prev,
+          [lineKey]: text,
+        }));
+      }
+    }
+    setFloatBtnVisible(false);
+    window.getSelection()?.removeAllRanges();
+  };
+
+  const activeFileDiff = FILE_DIFFS.find((f) => f.id === activeFile);
+
   return (
-    <div className="min-h-screen bg-[var(--paper)] py-12 px-6">
-      <Panel variant="default" className="max-w-[1500px] mx-auto p-[36px_40px_44px]">
-        <div className="mb-12">
-          <h1 className="text-4xl font-bold text-[var(--ink)] mb-3">
-            Bug Hunting
-          </h1>
-          <p className="text-lg text-[var(--ink-400)]">
-            Find production bugs from real backend systems.
-          </p>
-        </div>
-
-        <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
-          {SCENARIOS.map((scenario) => (
-            <a
-              key={scenario.id}
-              href={`/bug-hunting/${scenario.id}`}
-              className="group block bg-white border border-gray-200 rounded-2xl p-6 hover:border-[var(--mint)] hover:shadow-lg transition-all duration-300"
-              style={{ minHeight: "240px" }}
-            >
-              <div className="flex flex-col h-full">
-                <h3 className="text-xl font-bold text-[var(--ink)] mb-2 group-hover:text-[var(--mint)] transition-colors">
-                  {scenario.title}
-                </h3>
-
-                <div className="flex flex-wrap gap-2 mb-4">
-                  <span className="px-2.5 py-1 text-xs font-medium bg-blue-50 text-blue-700 rounded-full">
-                    {scenario.service}
-                  </span>
-                  <span className="px-2.5 py-1 text-xs font-medium bg-orange-50 text-orange-700 rounded-full">
-                    {scenario.severity}
-                  </span>
-                  <span className="px-2.5 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
-                    {Math.floor(scenario.timerSeconds / 60)} min
-                  </span>
-                </div>
-
-                <p className="text-sm text-[var(--ink-400)] leading-relaxed mb-6 flex-1">
-                  {scenario.symptom}
-                </p>
-
-                <div className="flex items-center justify-end">
-                  <span className="text-sm font-semibold text-[var(--mint)] group-hover:translate-x-1 transition-transform">
-                    Start →
-                  </span>
-                </div>
+    <div style={{ background: "#FAF9F6", color: "#15161C", fontFamily: "'Inter', sans-serif", padding: "32px 20px 0" }}>
+      <div className={styles.app}>
+        <div className={styles.head}>
+          <div className={styles.crumb}>
+            <button className={styles.back}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+                <path d="M15 6l-6 6 6 6" />
+              </svg>
+            </button>
+            Review a PR &nbsp;/&nbsp; #482
+          </div>
+          <div className={styles.prTop}>
+            <div className={styles.prTitle}>
+              <h1>Redesign order summary card for mobile checkout</h1>
+              <div className={styles.prSub}>
+                <span className={styles.branch}>feature/order-summary-consolidate</span> &rarr;{" "}
+                <span className={styles.branch}>main</span>
+                <span className={styles.statusPill}>Open</span>
+                <span>
+                  opened by <b style={{ color: "#15161C" }}>R. Okafor</b>
+                </span>
               </div>
-            </a>
-          ))}
+            </div>
+            <div className={styles.timer}>
+              <div className={styles.timerAura}></div>
+              <div className={styles.timerRing}>
+                <div className={styles.timerText}>18:32</div>
+              </div>
+            </div>
+          </div>
         </div>
-      </Panel>
+
+        <div className={styles.pageTabs}>
+          <div
+            className={`${styles.pageTab} ${activePage === "info" ? styles.pageTabActive : ""}`}
+            onClick={() => handlePageChange("info")}
+          >
+            Info
+          </div>
+          <div
+            className={`${styles.pageTab} ${activePage === "evidence" ? styles.pageTabActive : ""}`}
+            onClick={() => handlePageChange("evidence")}
+          >
+            Evidence
+          </div>
+          <div
+            className={`${styles.pageTab} ${activePage === "code" ? styles.pageTabActive : ""}`}
+            onClick={() => handlePageChange("code")}
+          >
+            Code changes<span className={styles.pageTabBadge}>3 files</span>
+          </div>
+        </div>
+
+        {/* Info Page */}
+        <div className={`${styles.page} ${activePage === "info" ? styles.pageActive : ""}`}>
+          <div className={styles.secLabel}>Summary of changes</div>
+          <p className={styles.summaryText}>
+            Merges the three separate summary blocks (Items, Discounts, Tax) into a single collapsible card.
+            Removes the standalone subtotal line since it's now redundant with the card total. No backend changes.
+          </p>
+          <div className={styles.intent}>
+            <div className={styles.intentLabel}>Stated intention</div>
+            <p className={styles.intentText}>
+              "On mobile, the three separate blocks push the pay button below the fold. Consolidating into one
+              card should cut vertical scroll by roughly 30% without losing any of the pricing detail."
+            </p>
+          </div>
+          <div className={styles.statRow}>
+            <div className={styles.stat}>
+              <div className={styles.statNumber}>3</div>
+              <div className={styles.statKey}>Files changed</div>
+            </div>
+            <div className={`${styles.stat} ${styles.statAdd}`}>
+              <div className={styles.statNumber}>+18</div>
+              <div className={styles.statKey}>Additions</div>
+            </div>
+            <div className={`${styles.stat} ${styles.statRm}`}>
+              <div className={styles.statNumber}>-24</div>
+              <div className={styles.statKey}>Deletions</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Evidence Page */}
+        <div className={`${styles.page} ${activePage === "evidence" ? styles.pageActive : ""}`}>
+          <div className={styles.secLabel}>Before &amp; after</div>
+          <div className={styles.shotRow}>
+            <div className={styles.shot}>
+              <div className={styles.shotLabel}>Before</div>
+              <div className={styles.shotFrame}>
+                <svg viewBox="0 0 260 320" width="100%">
+                  <rect width="260" height="320" fill="#FAF9F6" />
+                  <rect x="14" y="14" width="232" height="64" rx="10" fill="#fff" stroke="#e6e3dc" />
+                  <rect x="26" y="26" width="90" height="8" rx="4" fill="#5A5B66" />
+                  <rect x="26" y="42" width="140" height="6" rx="3" fill="#c9c6be" />
+                  <rect x="14" y="90" width="232" height="52" rx="10" fill="#fff" stroke="#e6e3dc" />
+                  <rect x="26" y="102" width="70" height="8" rx="4" fill="#5A5B66" />
+                  <rect x="26" y="118" width="120" height="6" rx="3" fill="#c9c6be" />
+                  <rect x="14" y="154" width="232" height="52" rx="10" fill="#fff" stroke="#e6e3dc" />
+                  <rect x="26" y="166" width="60" height="8" rx="4" fill="#5A5B66" />
+                  <rect x="26" y="182" width="100" height="6" rx="3" fill="#c9c6be" />
+                  <rect x="200" y="290" width="46" height="20" rx="6" fill="#e6e3dc" />
+                </svg>
+              </div>
+            </div>
+            <div className={styles.shot}>
+              <div className={styles.shotLabel}>After</div>
+              <div className={styles.shotFrame}>
+                <svg viewBox="0 0 260 320" width="100%">
+                  <rect width="260" height="320" fill="#FAF9F6" />
+                  <rect x="14" y="14" width="232" height="150" rx="16" fill="#fff" stroke="#00A87E" strokeWidth="1.5" />
+                  <rect x="28" y="30" width="90" height="8" rx="4" fill="#15161C" />
+                  <rect x="28" y="48" width="140" height="6" rx="3" fill="#c9c6be" />
+                  <rect x="28" y="66" width="70" height="6" rx="3" fill="#c9c6be" />
+                  <rect x="28" y="84" width="100" height="6" rx="3" fill="#c9c6be" />
+                  <rect x="28" y="106" width="204" height="1" fill="#eee" />
+                  <rect x="28" y="120" width="60" height="9" rx="4" fill="#00A87E" />
+                  <rect x="180" y="120" width="52" height="9" rx="4" fill="#00A87E" />
+                  <rect x="200" y="290" width="46" height="20" rx="6" fill="#00D9A3" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div className={styles.secLabel} style={{ marginTop: "24px" }}>
+            Links in this PR
+          </div>
+          <div className={styles.linkRow}>
+            <div className={styles.linkMain}>
+              <div className={styles.linkTitle}>Figma &mdash; Consolidated summary card</div>
+              <div className={styles.linkUrl}>figma.com/file/8k2j.../order-summary-v2</div>
+            </div>
+            <div className={styles.chipRow}>
+              <span className={`${styles.chip} ${styles.chipOk}`}>Accessible</span>
+              <span className={`${styles.chip} ${styles.chipOk}`}>Public</span>
+            </div>
+          </div>
+          <div className={styles.linkRow}>
+            <div className={styles.linkMain}>
+              <div className={styles.linkTitle}>Staging preview</div>
+              <div className={styles.linkUrl}>pr-482.staging.internal.app</div>
+            </div>
+            <div className={styles.chipRow}>
+              <span className={`${styles.chip} ${styles.chipBad}`}>Expired</span>
+            </div>
+          </div>
+          <div className={styles.linkRow}>
+            <div className={styles.linkMain}>
+              <div className={styles.linkTitle}>Slack thread &mdash; design discussion</div>
+              <div className={styles.linkUrl}>yourteam.slack.com/archives/C0.../p17...</div>
+            </div>
+            <div className={styles.chipRow}>
+              <span className={`${styles.chip} ${styles.chipWarn}`}>Internal only</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Code Page */}
+        <div className={`${styles.page} ${activePage === "code" ? styles.pageActive : ""}`}>
+          <div className={styles.selectHint}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+              <path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z" />
+            </svg>
+            Hover a line for the quick comment button, or select any text to comment on just that part.
+          </div>
+
+          <div className={styles.fileTabs}>
+            {FILE_DIFFS.map((file) => (
+              <div
+                key={file.id}
+                className={`${styles.fileTab} ${activeFile === file.id ? styles.fileTabActive : ""}`}
+                onClick={() => handleFileChange(file.id)}
+              >
+                {file.name}
+              </div>
+            ))}
+          </div>
+
+          {activeFileDiff && (
+            <div className={`${styles.filePane} ${styles.filePaneActive}`}>
+              <div className={styles.diff}>
+                {activeFileDiff.lines.map((line, idx) => {
+                  const lineKey = `${activeFileDiff.id}-line-${line.line}-${idx}`;
+                  const lineComments = comments[lineKey] || [];
+                  const showComposer = composers[lineKey];
+
+                  return (
+                    <div key={lineKey} className={styles.diffLineWrap} data-line-key={lineKey}>
+                      <div
+                        className={`${styles.diffLine} ${
+                          line.type === "add"
+                            ? styles.diffLineAdd
+                            : line.type === "rm"
+                            ? styles.diffLineRm
+                            : styles.diffLineCtx
+                        }`}
+                        onMouseUp={handleTextSelection}
+                      >
+                        <span className={styles.diffLineNumber}>{line.line}</span>
+                        <span>{line.type === "rm" ? "-" : line.type === "add" ? "+" : " "}</span>
+                        <span>{line.content}</span>
+                        <div
+                          className={styles.diffAddComment}
+                          onClick={() => toggleComposer(lineKey)}
+                        >
+                          +
+                        </div>
+                      </div>
+
+                      {lineComments.map((comment) => (
+                        <div key={comment.id} className={styles.inlineThread}>
+                          <div className={styles.threadHead}>
+                            <span>{comment.author}</span>
+                          </div>
+                          <div
+                            className={styles.threadText}
+                            dangerouslySetInnerHTML={{ __html: comment.text }}
+                          />
+                        </div>
+                      ))}
+
+                      {showComposer && (
+                        <div className={styles.inlineComposer}>
+                          <textarea
+                            className={styles.tinyTextarea}
+                            placeholder="Leave a comment…"
+                            value={showComposer}
+                            onChange={(e) =>
+                              setComposers((prev) => ({
+                                ...prev,
+                                [lineKey]: e.target.value,
+                              }))
+                            }
+                          />
+                          <div className={styles.composerActions}>
+                            <div className={styles.tagWrap}>
+                              <button
+                                className={styles.tagBtn}
+                                onClick={() => toggleTagDropdown(lineKey)}
+                              >
+                                @ Tag someone
+                              </button>
+                              <div
+                                className={`${styles.tagDropdown} ${
+                                  tagDropdownOpen[lineKey] ? styles.tagDropdownOpen : ""
+                                }`}
+                              >
+                                {PEOPLE.map((person) => (
+                                  <div
+                                    key={person}
+                                    className={styles.tagOpt}
+                                    onClick={() => insertMention(lineKey, person)}
+                                  >
+                                    <span className={styles.tagAvatar}>
+                                      {person
+                                        .split(" ")
+                                        .map((w) => w[0])
+                                        .join("")}
+                                    </span>
+                                    {person}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                            <button
+                              className={styles.postBtn}
+                              onClick={() => postComment(lineKey)}
+                            >
+                              Post
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className={styles.decisionBar}>
+          <div className={styles.decisionStatus}>
+            {!decision ? (
+              "No decision yet — leave any comments first."
+            ) : (
+              <span className={styles.decisionStatusBold}>
+                {decision === "reject"
+                  ? "You rejected this PR."
+                  : decision === "wait"
+                  ? "You requested changes — waiting on the author."
+                  : "You approved this PR."}
+              </span>
+            )}
+          </div>
+          <div className={styles.decisionActions}>
+            <button
+              className={`${styles.decisionBtn} ${styles.decisionBtnReject} ${
+                decision === "reject" ? styles.decisionBtnRejectSelected : ""
+              }`}
+              onClick={() => handleDecision("reject")}
+            >
+              Reject PR
+            </button>
+            <button
+              className={`${styles.decisionBtn} ${styles.decisionBtnWait} ${
+                decision === "wait" ? styles.decisionBtnWaitSelected : ""
+              }`}
+              onClick={() => handleDecision("wait")}
+            >
+              Request changes
+            </button>
+            <button
+              className={`${styles.decisionBtn} ${styles.decisionBtnApprove} ${
+                decision === "approve" ? styles.decisionBtnApproveSelected : ""
+              }`}
+              onClick={() => handleDecision("approve")}
+            >
+              Approve
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <button
+        className={`${styles.floatBtn} ${floatBtnVisible ? styles.floatBtnVisible : ""}`}
+        style={{
+          top: floatBtnPosition.top,
+          left: floatBtnPosition.left,
+        }}
+        onClick={handleFloatBtnClick}
+      >
+        Comment on selection
+      </button>
     </div>
   );
 }

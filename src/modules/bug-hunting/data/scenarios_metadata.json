@@ -1,0 +1,11 @@
+[
+  {
+    "id": "checkout-timeout",
+    "title": "Checkout Timeout",
+    "description": "Investigate a timeout issue in the checkout flow",
+    "symptom": "Checkout requests timing out intermittently during peak hours",
+    "service": "OrderService",
+    "severity": "P0",
+    "timerSeconds": 1800
+  }
+]

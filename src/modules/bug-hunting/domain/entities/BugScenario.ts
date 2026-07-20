@@ -60,15 +60,7 @@ interface BugScenarioProps {
   code: CodeFile[];
   docs: DocSection[];
   deployments: Deployment[];
-  // Flattened fields for feature layer compatibility
-  title: string;
   description: string;
-  symptom: string;
-  service: string;
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  endpoint: string;
-  errorRate: string;
-  firstSeen: string;
   timerSeconds: number;
   createdAt: string;
   metadata: any;
@@ -118,14 +110,7 @@ const BugScenarioSchema = z.object({
     message: z.string(),
     time: z.string(),
   })),
-  title: z.string(),
   description: z.string(),
-  symptom: z.string(),
-  service: z.string(),
-  severity: z.enum(["low", "medium", "high", "critical"]),
-  endpoint: z.string(),
-  errorRate: z.string(),
-  firstSeen: z.string(),
   timerSeconds: z.number(),
   createdAt: z.string(),
   metadata: z.any(),
@@ -142,6 +127,35 @@ export class BugScenario {
 
   get id() {
     return this.props.id;
+  }
+
+  // Getters to provide flattened API for UI compatibility without duplicating data
+  get title() {
+    return this.props.report.title;
+  }
+
+  get symptom() {
+    return this.props.report.symptom;
+  }
+
+  get service() {
+    return this.props.report.metadata.service;
+  }
+
+  get severity() {
+    return this.props.report.severity;
+  }
+
+  get endpoint() {
+    return this.props.report.metadata.endpoint;
+  }
+
+  get errorRate() {
+    return this.props.report.metadata.errorRate;
+  }
+
+  get firstSeen() {
+    return this.props.report.metadata.firstSeen;
   }
 
   toJSON(): BugScenarioProps {
