@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { ValidatedJSONParser } from "@/modules/ai/utils/ValidatedJSONParser";
+import { StructuredOutputParser } from "@/shared/ai/parsers/StructuredOutputParser";
 
 /**
  * Normalizes confidence values from different LLM output scales.
@@ -172,7 +172,7 @@ export class ResponseParser {
     response: string,
     retry?: () => Promise<string>
   ): Promise<ParsedResponse> {
-    return ValidatedJSONParser.parse(
+    return StructuredOutputParser.parse(
       response,
       AIResponseSchema,
       retry

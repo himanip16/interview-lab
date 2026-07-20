@@ -1,13 +1,8 @@
 import { env } from "@/shared/config/env";
 import OpenAI from "openai";
+import type { ChatMessage, GenerateOptions, AIProvider } from "../types";
 
-export interface GenerateOptions {
-  model: string;
-  temperature?: number;
-  format?: object;
-}
-
-export class OpenAIProvider {
+export class OpenAIProvider implements AIProvider {
   private readonly client: OpenAI;
 
   constructor(apiKey: string) {
@@ -18,7 +13,7 @@ export class OpenAIProvider {
   }
 
   async generateResponse(
-    messages: Array<{ role: string; content: string }>,
+    messages: ChatMessage[],
     options: GenerateOptions
   ): Promise<string> {
     const response = await this.client.chat.completions.create({

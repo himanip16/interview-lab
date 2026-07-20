@@ -1,6 +1,6 @@
 import { env } from "@/shared/config/env";
-
-import { OllamaProvider, ChatMessage } from "./OllamaProvider";
+import type { ChatMessage, AIProvider } from "../types";
+import { OllamaProvider } from "./OllamaProvider";
 import { OpenAIProvider } from "./OpenAIProvider";
 
 export type { ChatMessage };
@@ -13,7 +13,7 @@ export interface FallbackGenerateOptions {
 }
 
 export class FallbackAIProvider {
-  private readonly provider: OllamaProvider | OpenAIProvider;
+  private readonly provider: AIProvider;
 
   constructor() {
     if (env.AI_PROVIDER === "openai") {

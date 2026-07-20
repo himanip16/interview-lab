@@ -1,6 +1,6 @@
 import { ZodSchema } from "zod";
 
-export class ValidatedJSONParser {
+export class StructuredOutputParser {
   static async parse<T>(
     response: string,
     schema: ZodSchema<T>,

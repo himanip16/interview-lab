@@ -1,7 +1,7 @@
 import { MessageRole } from "@prisma/client";
 
 import { ConversationHistoryBuilder } from "./ConversationHistoryBuilder";
-import { ChatMessage } from "@/modules/ai/services/AIService";
+import type { ChatMessage } from "@/shared/ai";
 import { expect, describe, it } from "vitest";
 
 describe("ConversationHistoryBuilder", () => {

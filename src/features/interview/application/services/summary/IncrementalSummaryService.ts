@@ -1,6 +1,6 @@
 // src/modules/interview/services/IncrementalSummaryService.ts
 
-import { AIService } from "@/modules/ai/services/AIService";
+import { AIService } from "@/shared/ai";
 
 export interface TranscriptMessage {
   role: string;

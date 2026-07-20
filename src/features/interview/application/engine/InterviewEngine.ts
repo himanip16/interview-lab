@@ -3,7 +3,7 @@
 import {
   AIService,
   ChatMessage,
-} from "@/modules/ai/services/AIService";
+} from "@/shared/ai";
 
 import { PromptGuard } from "../guardrails/PromptGuard";
 import { InterviewProfile } from "../profiles/InterviewProfile";

@@ -2,7 +2,7 @@ import { DomainEvent, TurnCompletedEventData, PhaseTransitionEventData, Intervie
 import { InterviewRepository } from "../../repositories/InterviewRepository";
 import { SessionContext } from "../../context/SessionContext";
 import { InterviewProfileService } from "../../profiles/InterviewProfileService";
-import { AIService } from "@/modules/ai/services/AIService";
+import { AIService } from "@/shared/ai";
 
 /**
  * SummaryEventHandler

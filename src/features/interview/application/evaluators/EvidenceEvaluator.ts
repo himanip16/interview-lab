@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-import { AIService } from "@/modules/ai/services/AIService";
-import { ValidatedJSONParser } from "@/modules/ai/utils/ValidatedJSONParser";
+import { AIService } from "@/shared/ai";
+import { StructuredOutputParser } from "@/shared/ai/parsers/StructuredOutputParser";
 import { prisma } from "@/shared/prisma/client";
 
 import { PromptLoader } from "../prompt/PromptLoader";
@@ -182,7 +182,7 @@ export class EvidenceEvaluator {
   }
 );
 
-const parsed = await ValidatedJSONParser.parse(
+const parsed = await StructuredOutputParser.parse(
   raw,
   EvaluationResponseSchema,
   () =>

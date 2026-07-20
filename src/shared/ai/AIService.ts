@@ -2,9 +2,9 @@ import { ZodSchema } from "zod";
 
 import { env } from "@/shared/config/env";
 
-import { FallbackAIProvider } from "../providers/FallbackAIProvider";
-import { ChatMessage } from "../providers/OllamaProvider";
-import { ValidatedJSONParser } from "../utils/ValidatedJSONParser";
+import { FallbackAIProvider } from "./providers/FallbackAIProvider";
+import { StructuredOutputParser } from "./parsers/StructuredOutputParser";
+import type { ChatMessage } from "./types";
 
 export type { ChatMessage };
 
@@ -84,7 +84,7 @@ export class AIService {
   ): Promise<T> {
     const response = await this.chat(messages, options);
 
-    return ValidatedJSONParser.parse(response, schema, async () => {
+    return StructuredOutputParser.parse(response, schema, async () => {
       return this.chat(
         [
           {

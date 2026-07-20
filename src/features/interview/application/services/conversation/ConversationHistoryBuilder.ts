@@ -1,6 +1,6 @@
 import { MessageRole } from "@prisma/client";
 
-import { ChatMessage } from "@/modules/ai/services/AIService";
+import type { ChatMessage } from "@/shared/ai";
 
 export class ConversationHistoryBuilder {
   build(

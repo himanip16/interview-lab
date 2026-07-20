@@ -1,9 +1,5 @@
 import { env } from "@/shared/config/env";
-
-export type ChatMessage = {
-  role: "system" | "user" | "assistant";
-  content: string;
-};
+import type { ChatMessage, GenerateOptions, AIProvider } from "../types";
 
 type OllamaResponse = {
   message?: {
@@ -13,18 +9,12 @@ type OllamaResponse = {
   error?: string;
 };
 
-export interface OllamaGenerateOptions {
-  model: string;
-  temperature?: number;
-  format?: object; // raw JSON Schema — the caller's concern, not the provider's
-}
-
-export class OllamaProvider {
+export class OllamaProvider implements AIProvider {
   constructor(private readonly baseUrl: string) {}
 
   async generateResponse(
     messages: ChatMessage[],
-    options: OllamaGenerateOptions
+    options: GenerateOptions
   ): Promise<string> {
     console.log(`🤖 Requesting ${options.model}...`);
 
