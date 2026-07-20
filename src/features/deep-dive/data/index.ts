@@ -4,13 +4,15 @@ import { redisData } from './redis';
 import { kafkaData } from './kafka';
 import { postgresData } from './postgres';
 import { dynamodbData } from './dynamodb';
+import { mongodbData } from './mongodb';
 
 export const deepDiveData: DeepDiveArticle[] = [
   cassandraData,
   redisData,
   kafkaData,
   postgresData,
-  dynamodbData
+  dynamodbData,
+  mongodbData
 ];
 
 export function getDeepDiveBySlug(slug: string): DeepDiveArticle | undefined {

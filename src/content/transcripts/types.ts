@@ -7,6 +7,7 @@ export const TRANSCRIPT_CATEGORIES = [
   "lld",
   "dsa",
   "behavioural",
+  "ai",
 ] as const;
 
 export type TranscriptCategory = typeof TRANSCRIPT_CATEGORIES[number];

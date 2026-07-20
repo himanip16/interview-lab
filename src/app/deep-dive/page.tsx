@@ -78,6 +78,15 @@ export default function DeepDiveIndexPage() {
           <path d="M28 10L14 26M28 10L42 26M14 26L8 44M14 26L20 44M42 26L36 44M42 26L48 44" stroke="#15161C" strokeWidth="1" opacity=".3"/>
         </>
       ),
+      mongodb: (
+  <>
+    <rect x="14" y="10" width="28" height="36" rx="4" fill="#F6F6F4" stroke="#15161C" strokeWidth="1.5"/>
+    <line x1="20" y1="20" x2="34" y2="20" stroke="#15161C" strokeWidth="1.5" opacity=".5"/>
+    <line x1="20" y1="27" x2="30" y2="27" stroke="#15161C" strokeWidth="1.5" opacity=".5"/>
+    <line x1="20" y1="34" x2="36" y2="34" stroke="#15161C" strokeWidth="1.5" opacity=".5"/>
+    <circle cx="30" cy="27" r="4" fill="#00D9A3"/>
+  </>
+),
       kafka: (
         <>
           <rect x="8" y="12" width="40" height="7" rx="2" fill="#E8940A"/>

@@ -14,13 +14,15 @@ import { PostgresIllustration } from '@/features/deep-dive/illustrations/Postgre
 import { DynamoDBIllustration } from '@/features/deep-dive/illustrations/DynamoDB';
 import { getDeepDiveBySlug, getPreviousAndNext } from '@/features/deep-dive/data';
 import '@/features/deep-dive/styles/deep-dive.css';
+import { MongoDBIllustration } from '@/features/deep-dive/illustrations/MongoDB';
 
 const illustrationMap: Record<string, React.ReactNode> = {
   cassandra: <CassandraIllustration />,
   redis: <RedisIllustration />,
   kafka: <KafkaIllustration />,
   postgres: <PostgresIllustration />,
-  dynamodb: <DynamoDBIllustration />
+  dynamodb: <DynamoDBIllustration />,
+  mongodb: <MongoDBIllustration />
 };
 
 export default async function DeepDiveArticlePage({ params }: { params: { slug: string } }) {
