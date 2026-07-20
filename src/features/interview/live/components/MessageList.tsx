@@ -25,7 +25,10 @@ export function MessageList({ messages }: MessageListProps) {
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const timer = setTimeout(() => {
+      endRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 100); // Small delay to allow layout calculation
+    return () => clearTimeout(timer);
   }, [messages]);
 
   return (
