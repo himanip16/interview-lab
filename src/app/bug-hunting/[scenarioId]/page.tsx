@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getBugHuntingService } from "@/modules/bug-hunting";
+import { getBugHuntingService } from "@/features/bug-hunting";
 
 import BugHuntingShell from "@/features/bug-hunting/components/BugHuntingShell";
 import DeploymentsPanel from "@/features/bug-hunting/components/Tabs/DeploymentsPanel";

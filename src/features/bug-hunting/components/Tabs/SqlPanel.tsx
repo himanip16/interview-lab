@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import type { SqlFixture } from "@/modules/bug-hunting/domain/entities/BugScenario";
+import type { SqlFixture } from "@/features/bug-hunting/domain/entities/BugScenario";
 
 export default function SqlPanel({ scenarioId, fixture }: { scenarioId: string; fixture: SqlFixture }) {
   const [query, setQuery] = useState(fixture.initialQuery);

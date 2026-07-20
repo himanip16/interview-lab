@@ -5,7 +5,7 @@ import { useState, type ReactNode } from "react";
 import { BUG_TABS, TAB_LIST, type TabId } from "../constants/tabs";
 import CodePanel from "./Tabs/CodePanel";
 import SqlPanel from "./Tabs/SqlPanel";
-import type { CodeFile, SqlFixture } from "@/modules/bug-hunting/domain/entities/BugScenario";
+import type { CodeFile, SqlFixture } from "@/features/bug-hunting/domain/entities/BugScenario";
 
 type Props = {
   logsPanel: ReactNode;

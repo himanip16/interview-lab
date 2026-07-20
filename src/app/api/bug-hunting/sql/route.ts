@@ -1,6 +1,6 @@
 // src/app/api/bug-hunting/sql/route.ts
 import { NextResponse } from "next/server";
-import { getBugHuntingService } from "@/modules/bug-hunting";
+import { getBugHuntingService } from "@/features/bug-hunting";
 
 export async function POST(request: Request) {
   try {

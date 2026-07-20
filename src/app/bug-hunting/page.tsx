@@ -1,5 +1,5 @@
 import { Panel } from "@/shared/ui/Panel";
-import { getBugHuntingService } from "@/modules/bug-hunting";
+import { getBugHuntingService } from "@/features/bug-hunting";
 
 export default async function BugHuntingListPage() {
   const service = getBugHuntingService();
