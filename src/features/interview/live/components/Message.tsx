@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import ReactMarkdown from 'react-markdown';
 
 interface MessageProps {
   role: 'assistant' | 'user';
@@ -12,7 +13,7 @@ interface MessageProps {
  *
  * Props:
  * - role: 'assistant' (interviewer) or 'user' (candidate)
- * - content: The message text
+ * - content: The message text (supports markdown)
  *
  * Styling:
  * - User: black bubble, right-aligned
@@ -39,7 +40,9 @@ export function Message({ role, content }: MessageProps) {
         {!isUser && (
           <p className="text-xs font-semibold text-gray-600 mb-1">Interviewer</p>
         )}
-        <p className="text-sm leading-relaxed">{content}</p>
+        <div className="text-sm leading-relaxed prose prose-sm max-w-none">
+          <ReactMarkdown>{content}</ReactMarkdown>
+        </div>
       </div>
     </div>
   );
