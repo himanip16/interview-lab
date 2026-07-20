@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { InterviewService } from "@/features/interview/application/services/InterviewService";
+import { InterviewService } from "@/features/interview";
 import logger from "@/shared/logger/logger";
 
 type Props = {

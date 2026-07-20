@@ -1,13 +1,13 @@
-// src/modules/bug-hunting/index.ts
+// Public API for bug-hunting feature
+
+import { BugHuntingService } from "./services/BugHuntingService";
 import { JsonBugScenarioRepository } from "./infrastructure/repositories/JsonBugScenarioRepository";
 import { PrismaBugAttemptRepository } from "./infrastructure/repositories/PrismaBugAttemptRepository";
-import { BugHuntingService } from "./services/BugHuntingService";
 
-let _service: BugHuntingService | null = null;
+// Application Services
+export { BugHuntingService } from "./services/BugHuntingService";
 
+// Service Factory
 export function getBugHuntingService(): BugHuntingService {
-  if (!_service) {
-    _service = new BugHuntingService(new JsonBugScenarioRepository(), new PrismaBugAttemptRepository());
-  }
-  return _service;
+  return new BugHuntingService(new JsonBugScenarioRepository(), new PrismaBugAttemptRepository());
 }

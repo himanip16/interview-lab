@@ -6,8 +6,8 @@ import CurrentStandingCard from "./CurrentStandingCard";
 import LiveFeedbackCard from "./LiveFeedbackCard";
 import RecommendationCard from "./RecommendationCard";
 import ExploreProblems, { type ExploreProblem } from "./ExploreProblems";
-import { SkillGraphService } from "@/features/interview/services/mastery/SkillGraphService";
-import { RecommendationService } from "@/features/interview/services/recommendation/RecommendationService";
+import { SkillGraphService } from "@/features/interview/mastery/SkillGraphService";
+import { RecommendationService } from "@/features/interview/recommendation/RecommendationService";
 
 // Helper components to fetch their own data
 async function SkillGraphWidget({ userId }: { userId: string }) {

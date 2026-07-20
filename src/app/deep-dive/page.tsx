@@ -1,3 +1,3 @@
-import { DeepDiveIndexPage } from "@/features/deep-dive/pages/DeepDiveIndexPage";
+import { DeepDiveIndexPage } from "@/features/deep-dive";
 
 export default DeepDiveIndexPage;

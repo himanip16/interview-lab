@@ -1,3 +1,3 @@
-import { LibraryPage } from "@/features/library/pages/LibraryPage";
+import { LibraryPage } from "@/features/library";
 
 export default LibraryPage;

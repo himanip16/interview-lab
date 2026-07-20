@@ -1,22 +1,24 @@
-// src/modules/pr-review/index.ts
+// Public API for pr-review feature
+
 import { ReviewService } from "./services/ReviewService";
-import { PrismaReviewAttemptRepository } from "./infrastructure/repositories/PrismaReviewAttemptRepository";
 import { ScenarioLoader } from "./services/ScenarioLoader";
+import { PrismaReviewAttemptRepository } from "./infrastructure/repositories/PrismaReviewAttemptRepository";
 
-const scenarioLoader = new ScenarioLoader();
-const repository = new PrismaReviewAttemptRepository();
+// Application Services
+export { ReviewService } from "./services/ReviewService";
+export { ScenarioLoader } from "./services/ScenarioLoader";
 
-let reviewServiceInstance: ReviewService;
-
-export function getReviewService(): ReviewService {
-  if (!reviewServiceInstance) {
-    reviewServiceInstance = new ReviewService(repository, scenarioLoader);
-  }
-  return reviewServiceInstance;
-}
-
+// Domain Entities
 export * from "./domain/entities/ReviewAttempt";
 export * from "./domain/entities/ReviewComment";
 export * from "./domain/entities/ReviewReport";
-export * from "./repositories/ReviewAttemptRepository";
-export * from "./services/ScenarioLoader";
+
+// Infrastructure
+export * from "./infrastructure/repositories/repositories/ReviewAttemptRepository";
+
+// Service Factory
+export function getReviewService() {
+  const scenarioLoader = new ScenarioLoader();
+  const repository = new PrismaReviewAttemptRepository();
+  return new ReviewService(repository, scenarioLoader);
+}

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { InterviewService } from "@/features/interview/application/services/InterviewService";
+import { InterviewService } from "@/features/interview";
 import { CreateInterviewInput } from "@/features/interview/types/CreateInterviewInput";
 import logger from "@/shared/logger/logger";
 
