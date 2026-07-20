@@ -211,7 +211,7 @@ model InterviewPhaseTemplate {
   transitionThreshold  Float
   instructions         String
 
-  // NEW — per-phase gate, not per-template. HLD's "requirements" phase should
+  // NEW — per-phase gate, not per-template. HLD's "Requirements" phase should
   // NOT show whiteboard even though the template supports it.
   showWhiteboard Boolean @default(false)
 

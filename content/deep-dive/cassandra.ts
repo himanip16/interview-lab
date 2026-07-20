@@ -58,7 +58,7 @@ export const cassandraData: DeepDiveArticle = {
     ],
     weaknesses: [
       'Complex queries across many columns you didn\'t model for',
-      'Strong consistency requirements (financial transactions)',
+      'Strong consistency Requirements (financial transactions)',
       'Small datasets where a single Postgres instance is simpler'
     ]
   },

@@ -17,7 +17,7 @@ export const CANDIDATE_PERSONAS: CandidatePersona[] = [
   {
     name: "Daniel",
     seniority: "senior",
-    background: "7 years, strong on architecture, tends to over-engineer and skip requirements gathering",
+    background: "7 years, strong on architecture, tends to over-engineer and skip Requirements gathering",
     weaknesses: ["scope discipline", "asking clarifying questions before designing"],
   },
   {

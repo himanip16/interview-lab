@@ -17,7 +17,7 @@ interface PhaseProgressProps {
  *
  * Common phases:
  * - intro
- * - requirements
+ * - Requirements
  * - high-level-design
  * - deep-dive
  * - scalability

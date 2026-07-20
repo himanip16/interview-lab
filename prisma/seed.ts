@@ -5,12 +5,10 @@ import {
   ProblemCategory,
   LearningActionType,
 } from "@prisma/client";
-import { EvaluationDimension, PhaseId, Goal } from "../src/modules/interview/constants";
 import {
   GoalsSchema,
   EvaluationDimensionsSchema,
   ConversationSchema,
-  JsonSchema,
 } from "@/shared/schemas/interviewSchemas";
 
 import problemsData from "./seed/problems.json";
@@ -93,18 +91,18 @@ const RUBRICS: Record<EvaluationDimension, string> = {
   ),
   [EvaluationDimension.RequirementClarity]: rubric(
     [
-      "Distinguishes functional vs non-functional requirements",
+      "Distinguishes functional vs non-functional Requirements",
       "Asks about scale, latency, and consistency expectations",
       "Confirms scope before designing",
     ],
-    "starts designing before requirements are clarified"
+    "starts designing before Requirements are clarified"
   ),
   [EvaluationDimension.ScopeManagement]: rubric(
     [
       "Keeps requirement gathering time-boxed and focused",
       "Avoids over-scoping into unrelated features",
     ],
-    "spends excessive time on requirements or scope-creeps the problem"
+    "spends excessive time on Requirements or scope-creeps the problem"
   ),
   [EvaluationDimension.Architecture]: rubric(
     [
@@ -131,7 +129,7 @@ const RUBRICS: Record<EvaluationDimension, string> = {
   [EvaluationDimension.Tradeoffs]: rubric(
     [
       "Explicitly names tradeoffs (e.g. consistency vs availability, latency vs cost)",
-      "Justifies a choice given the stated requirements",
+      "Justifies a choice given the stated Requirements",
     ],
     "presents a design as if it has no downsides"
   ),
@@ -226,17 +224,17 @@ const RUBRICS: Record<EvaluationDimension, string> = {
   ),
   [EvaluationDimension.RapportBuilding]: rubric(
     [
-      "Opens with a clear, welcoming introduction",
+      "Opens with a clear, welcoming Introduction",
       "Sets expectations for the session",
     ],
     "jumps into technical questions with no framing"
   ),
   [EvaluationDimension.RequirementElicitation]: rubric(
     [
-      "Asks open-ended questions to surface functional/non-functional requirements",
+      "Asks open-ended questions to surface functional/non-functional Requirements",
       "Doesn't spoon-feed the answer",
     ],
-    "tells the candidate the requirements instead of drawing them out"
+    "tells the candidate the Requirements instead of drawing them out"
   ),
   [EvaluationDimension.ProbingDepth]: rubric(
     [

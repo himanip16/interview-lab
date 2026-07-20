@@ -36,7 +36,7 @@ export const redisData: DeepDiveArticle = {
       title: 'Persistence tradeoffs',
       content: [
         'Redis can persist to disk via RDB snapshots or AOF logs, but this adds latency. Many deployments use Redis as a pure cache, accepting that data loss is possible.',
-        'The choice between RDB (fast, point-in-time) and AOF (durable, append-only) depends on your durability requirements.'
+        'The choice between RDB (fast, point-in-time) and AOF (durable, append-only) depends on your durability Requirements.'
       ]
     },
     {

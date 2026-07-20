@@ -233,7 +233,7 @@ const transcript: TranscriptData = {
         {
           type: "text",
           value:
-            " as schemas and requirements kept evolving. Every operator with wider access is another independent copy of business logic that can silently diverge. I wanted to eliminate that class of risk entirely, not just make it slightly less painful to work around.",
+            " as schemas and Requirements kept evolving. Every operator with wider access is another independent copy of business logic that can silently diverge. I wanted to eliminate that class of risk entirely, not just make it slightly less painful to work around.",
         },
       ],
     },

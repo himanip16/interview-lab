@@ -11,7 +11,7 @@
       "id": "1",
       "role": "interviewer",
       "content": [
-        { "type": "text", "value": "Let's design a payment system. What are the key requirements you'd consider?" }
+        { "type": "text", "value": "Let's design a payment system. What are the key Requirements you'd consider?" }
       ],
       "elapsedSeconds": 0
     },

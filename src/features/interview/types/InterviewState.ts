@@ -1,22 +1,21 @@
-import { InterviewStatus } from "@prisma/client";
-import { TranscriptMessage } from "./TranscriptMessage";
+import type { TranscriptMessage } from './TranscriptMessage';
+
+export interface InterviewProblem {
+  id: string;
+  title: string;
+  description: string | null;
+  difficulty: string;
+  company: string | null;
+}
 
 export interface InterviewState {
   id: string;
-
-  type: string;
-  difficulty: string;
-  duration: number;
-  company: string;
-
-  status: InterviewStatus;
-
+  status: string;
   currentPhase: string;
-
-  summary: string;
-
-  createdAt: Date;
-  updatedAt: Date;
-
+  duration: number;
+  createdAt: string;
   transcript: TranscriptMessage[];
+  summary: string | null;
+
+  problem: InterviewProblem;
 }

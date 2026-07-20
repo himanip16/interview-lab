@@ -2,7 +2,7 @@ export const features = [
   {
     title: "Structured Interview Flow",
     description:
-      "Every interview follows clear phases like requirements gathering, architecture, deep dive and evaluation.",
+      "Every interview follows clear phases like Requirements gathering, architecture, deep dive and evaluation.",
   },
   {
     title: "AI Senior Interviewer",

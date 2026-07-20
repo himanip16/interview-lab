@@ -509,7 +509,7 @@ const transcript: TranscriptData = {
           status: "strong",
           value: "",
           explanation:
-            "Shows judgment about when caching is worth the complexity — recognizes that event-driven invalidation is the 'correct' answer but also identifies that a simpler short-TTL approach might be the practical choice depending on query volume and latency requirements.",
+            "Shows judgment about when caching is worth the complexity — recognizes that event-driven invalidation is the 'correct' answer but also identifies that a simpler short-TTL approach might be the practical choice depending on query volume and latency Requirements.",
         },
       ],
     },

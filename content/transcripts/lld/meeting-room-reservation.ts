@@ -50,7 +50,7 @@ const transcript: TranscriptData = {
             "Before you start coding, what questions do you need answered?",
         },
         {
-          id: "eval-requirements-discipline",
+          id: "eval-Requirements-discipline",
           type: "annotation",
           value:
             "Evaluating: Do they ask clarifying questions, or just start? This separates someone thinking about the problem from someone pattern-matching a solution.",

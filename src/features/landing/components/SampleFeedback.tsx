@@ -6,7 +6,7 @@ import { Button } from "@/shared/ui/Button";
 const sampleTranscript = [
   {
     role: "assistant" as const,
-    content: "Let's design a URL shortening service like bit.ly. What are the key requirements?",
+    content: "Let's design a URL shortening service like bit.ly. What are the key Requirements?",
     timestamp: "0:00",
   },
   {
@@ -29,7 +29,7 @@ const sampleTranscript = [
 const sampleEvaluation = {
   overallScore: 78,
   strengths: [
-    "Clear identification of core requirements",
+    "Clear identification of core Requirements",
     "Good understanding of availability concerns",
     "Reasonable approach to URL generation",
   ],

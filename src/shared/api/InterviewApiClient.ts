@@ -1,6 +1,5 @@
 
-import type { ProcessInterviewMessageResult } from "@/features/interview/types";
-import type { InterviewState } from "@/features/interview/types";
+import type { InterviewState } from '@/features/interview/types/InterviewState'
 export class InterviewApiClient {
   private readonly baseUrl = '/api/interviews';
 
@@ -31,26 +30,40 @@ export class InterviewApiClient {
    * 
    * Request body DOES NOT include phase — backend owns that decision
    */
-  async sendMessage(interviewId: string, message: string): Promise<ProcessInterviewMessageResult> {
-    if (!message.trim()) {
-      throw new Error('Message cannot be empty');
-    }
-
-    const response = await fetch(`${this.baseUrl}/${interviewId}/message`, {
+async sendMessage(
+  interviewId: string,
+  message: string
+): Promise<void> {
+  const response = await fetch(
+    `${this.baseUrl}/${interviewId}/message`,
+    {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: message.trim() }),
-    });
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message,
+      }),
+    }
+  );
 
-    if (!response.ok) {
+  if (!response.ok) {
+    let errorMessage = `Request failed: ${response.status}`;
+
+    try {
       const data = await response.json();
-      throw new Error(
-        data.error || `Failed to send message: ${response.statusText}`
-      );
+
+      errorMessage =
+        data.error ||
+        data.message ||
+        errorMessage;
+    } catch {
+      // response was not JSON
     }
 
-    return response.json();
+    throw new Error(errorMessage);
   }
+}
 
   /**
    * Finish the interview early

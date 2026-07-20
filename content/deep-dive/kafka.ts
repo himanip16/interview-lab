@@ -53,7 +53,7 @@ export const kafkaData: DeepDiveArticle = {
     ],
     weaknesses: [
       'Higher latency than in-memory systems',
-      'Complex operational requirements',
+      'Complex operational Requirements',
       'Overkill for simple queue use cases'
     ]
   },

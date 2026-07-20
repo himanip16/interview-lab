@@ -25,7 +25,7 @@ export default function TranscriptListPage() {
         <div className="mb-10">
           <h1 className="heading-l font-bold text-[var(--ink)]">Browse Transcripts</h1>
           <p className="body-m text-[var(--ink-400)] mt-2">
-            Study real interview sessions from top companies. Learn how experienced engineers gather requirements, communicate trade-offs, and design scalable systems.
+            Study real interview sessions from top companies. Learn how experienced engineers gather Requirements, communicate trade-offs, and design scalable systems.
           </p>
         </div>
 

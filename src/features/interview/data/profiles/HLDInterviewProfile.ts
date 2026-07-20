@@ -37,7 +37,7 @@ export const HLDInterviewProfile: InterviewProfile = {
       prompt: {
         objective: "Introduce the problem and get the candidate to clarify their understanding",
         rules: [
-          "Do not reveal requirements",
+          "Do not reveal Requirements",
           "Ask the candidate to begin by clarifying the problem",
         ],
         exitCriteria: [
@@ -83,12 +83,12 @@ export const HLDInterviewProfile: InterviewProfile = {
         rules: [
           "Answer requirement questions when directly asked",
           "Do not volunteer every requirement",
-          "Probe missing functional requirements, non-functional requirements, scale, and constraints",
+          "Probe missing functional Requirements, non-functional Requirements, scale, and constraints",
           "Do not discuss architecture yet",
         ],
         exitCriteria: [
-          "Functional requirements identified",
-          "Non-functional requirements identified",
+          "Functional Requirements identified",
+          "Non-functional Requirements identified",
           "Scale and constraints clarified",
         ],
       },

@@ -12,9 +12,8 @@ import { Sidebar } from './Sidebar';
 import { useInterview } from '../hooks/useInterview';
 import { useMessages } from '../hooks/useMessages';
 import { useTimer } from '../hooks/useTimer';
-import { logger } from '@/lib/logger'; // Replace with your logger path
+import { logger } from '@/lib/logger';
 
-// 1. Accurate type representing the API response with relations included
 export type InterviewWithRelations = Prisma.InterviewGetPayload<{
   include: {
     problem: true;
@@ -28,13 +27,13 @@ interface LiveInterviewProps {
 
 export function LiveInterview({ interviewId }: LiveInterviewProps) {
   const { interview, loading, error, refetch } = useInterview(interviewId);
+
   const {
     sendMessage,
     isSending,
     error: messageError,
   } = useMessages(interviewId);
 
-  // 2 & 8. Hook owns calculation logic directly — no wrapper component or empty callback needed
   const { remainingSeconds } = useTimer({
     startedAt: interview?.createdAt ?? null,
     durationMinutes: interview?.duration ?? 0,
@@ -43,18 +42,19 @@ export function LiveInterview({ interviewId }: LiveInterviewProps) {
 
   const handleSendMessage = useCallback(
     async (text: string) => {
-      // 5. Send guard
       if (isSending || !text.trim()) return;
 
       try {
         await sendMessage(text);
-        
-        // 6. Refresh interview state because the backend owns transcript updates,
-        // phase transitions, and summary generation.
+
+        // Backend owns transcript updates and interview state changes
         await refetch();
       } catch (err) {
-        // 3. Logger instead of console.error
-        logger.error('Failed to send interview message', { err, interviewId });
+        logger.error(
+          'Failed to send interview message',
+          err,
+          { interviewId }
+        );
       }
     },
     [isSending, sendMessage, refetch, interviewId]
@@ -62,7 +62,9 @@ export function LiveInterview({ interviewId }: LiveInterviewProps) {
 
   const problemForSidebar = {
     ...interview?.problem,
-    description: (interview?.problem as { description?: string | null } | undefined)?.description ?? null,
+    description:
+      (interview?.problem as { description?: string | null } | undefined)
+        ?.description ?? null,
   };
 
   if (loading) {
@@ -76,7 +78,9 @@ export function LiveInterview({ interviewId }: LiveInterviewProps) {
   if (error || !interview) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <p className="text-red-600">{error || 'Failed to load interview'}</p>
+        <p className="text-red-600">
+          {error || 'Failed to load interview'}
+        </p>
       </div>
     );
   }
@@ -97,6 +101,7 @@ export function LiveInterview({ interviewId }: LiveInterviewProps) {
       <div className="flex flex-1 overflow-hidden">
         <div className="flex-1 flex flex-col">
           <MessageList messages={interview.transcript} />
+
           <ChatInput
             onSendMessage={handleSendMessage}
             isSending={isSending}

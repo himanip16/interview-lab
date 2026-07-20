@@ -53,9 +53,16 @@ export function LiveInterview({ interviewId }: LiveInterviewProps) {
         // phase transitions, and summary generation.
         await refetch();
       } catch (err) {
-        // 3. Logger instead of console.error
-        logger.error('Failed to send interview message', { err, interviewId });
-      }
+  console.log("RAW ERROR:", err);
+  console.log("TYPE:", typeof err);
+  console.log("IS ERROR:", err instanceof Error);
+
+  logger.error(
+    'Failed to send interview message',
+    err,
+    { interviewId }
+  );
+}
     },
     [isSending, sendMessage, refetch, interviewId]
   );

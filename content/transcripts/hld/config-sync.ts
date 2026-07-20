@@ -131,7 +131,7 @@ const transcript: TranscriptData = {
         {
           type: "text",
           value:
-            "Got it — so availability under a traffic spike, and confidentiality of sensitive fields, are both first-class requirements, not afterthoughts. Let me sketch something simple first.",
+            "Got it — so availability under a traffic spike, and confidentiality of sensitive fields, are both first-class Requirements, not afterthoughts. Let me sketch something simple first.",
         },
       ],
     },

@@ -99,7 +99,7 @@ export default function CardDetailPage() {
 
             <p className="body-s text-[var(--ink-400)] leading-relaxed mt-4 max-w-[400px]">
               A real-time mock interview that adapts its follow-ups to what you actually say.
-              Talk through requirements, sketch on the whiteboard, and get pushed on tradeoffs —
+              Talk through Requirements, sketch on the whiteboard, and get pushed on tradeoffs —
               then walk away with a phase-by-phase breakdown of how it went.
             </p>
 

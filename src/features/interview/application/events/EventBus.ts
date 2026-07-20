@@ -44,7 +44,7 @@ export type EventHandler = (event: DomainEvent) => Promise<void> | void;
  * - Cons: Events lost if process crashes, suitable only for non-critical work
  * 
  * When to upgrade to BullMQ:
- * - When you have paying users and SLA requirements
+ * - When you have paying users and SLA Requirements
  * - When event loss becomes unacceptable
  * - When you need distributed processing
  * 

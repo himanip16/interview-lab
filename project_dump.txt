@@ -436,7 +436,7 @@ src
 │   │   │       │   ├── JSONSchemaBuilder.ts
 │   │   │       │   ├── PhasePromptBuilder.ts
 │   │   │       │   └── PromptBuilder.ts
-│   │   │       ├── requirements.ts
+│   │   │       ├── Requirements.ts
 │   │   │       └── templates
 │   │   │           ├── clarification.md
 │   │   │           ├── evaluation.md
@@ -1127,7 +1127,7 @@ export default function CardDetailPage() {
 
             <p className="body-s text-[var(--ink-400)] leading-relaxed mt-4 max-w-[400px]">
               A real-time mock interview that adapts its follow-ups to what you actually say.
-              Talk through requirements, sketch on the whiteboard, and get pushed on tradeoffs —
+              Talk through Requirements, sketch on the whiteboard, and get pushed on tradeoffs —
               then walk away with a phase-by-phase breakdown of how it went.
             </p>
 
@@ -2071,7 +2071,7 @@ export default function TranscriptListPage() {
         <div className="mb-10">
           <h1 className="heading-l font-bold text-[var(--ink)]">Browse Transcripts</h1>
           <p className="body-m text-[var(--ink-400)] mt-2">
-            Study real interview sessions from top companies. Learn how experienced engineers gather requirements, communicate trade-offs, and design scalable systems.
+            Study real interview sessions from top companies. Learn how experienced engineers gather Requirements, communicate trade-offs, and design scalable systems.
           </p>
         </div>
 
@@ -6994,7 +6994,7 @@ import { Button } from "@/shared/ui/Button";
 const sampleTranscript = [
   {
     role: "assistant" as const,
-    content: "Let's design a URL shortening service like bit.ly. What are the key requirements?",
+    content: "Let's design a URL shortening service like bit.ly. What are the key Requirements?",
     timestamp: "0:00",
   },
   {
@@ -7017,7 +7017,7 @@ const sampleTranscript = [
 const sampleEvaluation = {
   overallScore: 78,
   strengths: [
-    "Clear identification of core requirements",
+    "Clear identification of core Requirements",
     "Good understanding of availability concerns",
     "Reasonable approach to URL generation",
   ],
@@ -17793,7 +17793,7 @@ interface PhaseProgressProps {
  *
  * Common phases:
  * - intro
- * - requirements
+ * - Requirements
  * - high-level-design
  * - deep-dive
  * - scalability
@@ -18804,9 +18804,9 @@ export class BasePromptBuilder {
   }
 }
 ================================================
-FILE: src/features/interview/prompts/prompt/requirements.ts
+FILE: src/features/interview/prompts/prompt/Requirements.ts
 ================================================
-export const REQUIREMENTS_PROMPT = `
+export const Requirements_PROMPT = `
 
 You are a senior Google interviewer.
 
@@ -18815,11 +18815,11 @@ Requirements Gathering
 
 Rules:
 
-- Ask candidate to clarify requirements.
+- Ask candidate to clarify Requirements.
 - Answer questions about scale.
 - Do not propose architecture.
 - If candidate starts designing,
-ask them to clarify requirements first.
+ask them to clarify Requirements first.
 
 `;
 
@@ -20807,7 +20807,7 @@ export const CANDIDATE_PERSONAS: CandidatePersona[] = [
   {
     name: "Daniel",
     seniority: "senior",
-    background: "7 years, strong on architecture, tends to over-engineer and skip requirements gathering",
+    background: "7 years, strong on architecture, tends to over-engineer and skip Requirements gathering",
     weaknesses: ["scope discipline", "asking clarifying questions before designing"],
   },
   {
@@ -21498,7 +21498,7 @@ export type EventHandler = (event: DomainEvent) => Promise<void> | void;
  * - Cons: Events lost if process crashes, suitable only for non-critical work
  * 
  * When to upgrade to BullMQ:
- * - When you have paying users and SLA requirements
+ * - When you have paying users and SLA Requirements
  * - When event loss becomes unacceptable
  * - When you need distributed processing
  * 
@@ -25481,9 +25481,9 @@ export type EvaluationDimension = (typeof EvaluationDimension)[keyof typeof Eval
 // ---------------------------------------------------------------------------
 
 export const PhaseId = {
-  Introduction: "introduction",
-  Requirements: "requirements",
-  HighLevelDesign: "high_level_design",
+  Introduction: "Introduction",
+  Requirements: "Requirements",
+  HighLevelDesign: "HighLevelDesign",
   DeepDive: "deep_dive",
   Scalability: "scalability",
   Closing: "closing",
@@ -25522,8 +25522,8 @@ export const Goal = {
   CandidateUnderstandsProblem: "candidate_understands_problem",
   
   // HLD goals
-  FunctionalRequirements: "functional_requirements",
-  NonFunctionalRequirements: "non_functional_requirements",
+  FunctionalRequirements: "functional_Requirements",
+  NonFunctionalRequirements: "non_functional_Requirements",
   Scale: "scale",
   Constraints: "constraints",
   CoreComponents: "core_components",
@@ -25615,7 +25615,7 @@ export const Goal = {
   
   // Task Breakdown goals
   CandidateUnderstandsTask: "candidate_understands_task",
-  Task_FunctionalRequirements: "functional_requirements",
+  Task_FunctionalRequirements: "functional_Requirements",
   Task_Constraints: "constraints",
   SuccessCriteria: "success_criteria",
   Dependencies: "dependencies",
@@ -25847,7 +25847,7 @@ export const HLDInterviewProfile: InterviewProfile = {
       prompt: {
         objective: "Introduce the problem and get the candidate to clarify their understanding",
         rules: [
-          "Do not reveal requirements",
+          "Do not reveal Requirements",
           "Ask the candidate to begin by clarifying the problem",
         ],
         exitCriteria: [
@@ -25893,12 +25893,12 @@ export const HLDInterviewProfile: InterviewProfile = {
         rules: [
           "Answer requirement questions when directly asked",
           "Do not volunteer every requirement",
-          "Probe missing functional requirements, non-functional requirements, scale, and constraints",
+          "Probe missing functional Requirements, non-functional Requirements, scale, and constraints",
           "Do not discuss architecture yet",
         ],
         exitCriteria: [
-          "Functional requirements identified",
-          "Non-functional requirements identified",
+          "Functional Requirements identified",
+          "Non-functional Requirements identified",
           "Scale and constraints clarified",
         ],
       },
@@ -27224,7 +27224,7 @@ interface PhaseProgressProps {
  *
  * Common phases:
  * - intro
- * - requirements
+ * - Requirements
  * - high-level-design
  * - deep-dive
  * - scalability

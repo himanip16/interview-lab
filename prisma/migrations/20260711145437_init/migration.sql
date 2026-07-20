@@ -28,7 +28,7 @@ CREATE TABLE "Interview" (
     "duration" INTEGER NOT NULL,
     "company" TEXT NOT NULL,
     "status" "InterviewStatus" NOT NULL,
-    "currentPhase" TEXT NOT NULL DEFAULT 'introduction',
+    "currentPhase" TEXT NOT NULL DEFAULT 'Introduction',
     "summary" TEXT NOT NULL DEFAULT 'Interview has not started yet.',
     "promptVersion" TEXT NOT NULL DEFAULT 'v1',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,

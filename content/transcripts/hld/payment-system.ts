@@ -34,7 +34,7 @@ const transcript: TranscriptData = {
         {
           type: "text",
           value:
-            "Before jumping into architecture I'd like to clarify a few requirements.",
+            "Before jumping into architecture I'd like to clarify a few Requirements.",
         },
       ],
     },
@@ -85,7 +85,7 @@ const transcript: TranscriptData = {
         {
           type: "text",
           value:
-            "Great. Functional requirements would be creating payments, querying payment status and supporting retries safely.",
+            "Great. Functional Requirements would be creating payments, querying payment status and supporting retries safely.",
         },
       ],
     },
@@ -111,7 +111,7 @@ const transcript: TranscriptData = {
         {
           type: "text",
           value:
-            "For non-functional requirements I'm optimizing for availability, durability and exactly-once user experience even if internally components retry.",
+            "For non-functional Requirements I'm optimizing for availability, durability and exactly-once user experience even if internally components retry.",
         },
       ],
     },

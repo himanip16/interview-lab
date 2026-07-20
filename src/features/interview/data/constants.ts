@@ -45,24 +45,30 @@ export const PhaseId = {
   DeepDive: "deep_dive",
   Scalability: "scalability",
   Closing: "closing",
+
   DomainModeling: "domain_modeling",
   ClassDesign: "class_design",
   Extensibility: "extensibility",
+
   Clarification: "clarification",
   Approach: "approach",
   Implementation: "implementation",
   Testing: "testing",
+
   ContextUnderstanding: "context_understanding",
   CodeReview: "code_review",
   DesignReview: "design_review",
   FeedbackDelivery: "feedback_delivery",
+
   KnowledgeAssessment: "knowledge_assessment",
   ArchitectureExploration: "architecture_exploration",
   ImplementationDetails: "implementation_details",
   ScalabilityReliability: "scalability_reliability",
+
   StructureReview: "structure_review",
   ContentReview: "content_review",
   ImprovementSuggestions: "improvement_suggestions",
+
   RequirementAnalysis: "requirement_analysis",
   DependencyAnalysis: "dependency_analysis",
   TaskDecomposition: "task_decomposition",
@@ -80,8 +86,8 @@ export const Goal = {
   CandidateUnderstandsProblem: "candidate_understands_problem",
   
   // HLD goals
-  FunctionalRequirements: "functional_requirements",
-  NonFunctionalRequirements: "non_functional_requirements",
+  FunctionalRequirements: "functional_Requirements",
+  NonFunctionalRequirements: "non_functional_Requirements",
   Scale: "scale",
   Constraints: "constraints",
   CoreComponents: "core_components",
@@ -173,7 +179,7 @@ export const Goal = {
   
   // Task Breakdown goals
   CandidateUnderstandsTask: "candidate_understands_task",
-  Task_FunctionalRequirements: "functional_requirements",
+  Task_FunctionalRequirements: "functional_Requirements",
   Task_Constraints: "constraints",
   SuccessCriteria: "success_criteria",
   Dependencies: "dependencies",
