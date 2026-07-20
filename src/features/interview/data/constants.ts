@@ -86,8 +86,8 @@ export const Goal = {
   CandidateUnderstandsProblem: "candidate_understands_problem",
   
   // HLD goals
-  FunctionalRequirements: "functional_Requirements",
-  NonFunctionalRequirements: "non_functional_Requirements",
+  FunctionalRequirements: "functional_requirements",
+NonFunctionalRequirements: "non_functional_requirements",
   Scale: "scale",
   Constraints: "constraints",
   CoreComponents: "core_components",
@@ -179,7 +179,7 @@ export const Goal = {
   
   // Task Breakdown goals
   CandidateUnderstandsTask: "candidate_understands_task",
-  Task_FunctionalRequirements: "functional_Requirements",
+  Task_FunctionalRequirements: "functional_requirements",
   Task_Constraints: "constraints",
   SuccessCriteria: "success_criteria",
   Dependencies: "dependencies",

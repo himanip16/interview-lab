@@ -53,7 +53,7 @@ export const Timer: React.FC<TimerProps> = ({
     }
 
     return () => clearInterval(interval);
-  }, [isRunning, time]); // Removed onTimeUp from deps, using ref instead
+  }, [isRunning]); // Removed 'time' from dependencies to prevent jitter
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);

@@ -141,6 +141,9 @@ src
 │   │   └── page.tsx
 │   └── register
 │       └── page.tsx
+├── content
+│   ├── deep-dive.ts
+│   └── transcripts.ts
 ├── features
 │   ├── auth
 │   │   ├── auth.ts
@@ -175,6 +178,10 @@ src
 │   │   │       └── Tabs.tsx
 │   │   ├── constants
 │   │   │   └── tabs.ts
+│   │   ├── data
+│   │   │   ├── scenarios
+│   │   │   │   └── checkout-timeout.json
+│   │   │   └── scenarios_metadata.json
 │   │   ├── domain
 │   │   │   ├── entities
 │   │   │   │   ├── BugAttempt.ts
@@ -331,37 +338,8 @@ src
 │   │   │           └── WhiteboardInterpreter.ts
 │   │   ├── components
 │   │   │   ├── LiveInterview.module.css
-│   │   │   ├── LiveInterviewClient.tsx
 │   │   │   └── NodeRenderer.tsx
 │   │   ├── conversation
-│   │   │   ├── application
-│   │   │   │   ├── conversation
-│   │   │   │   │   ├── ConversationHistoryBuilder.test.ts
-│   │   │   │   │   └── ConversationHistoryBuilder.ts
-│   │   │   │   ├── engine
-│   │   │   │   │   ├── InterviewEngine.ts
-│   │   │   │   │   ├── InterviewStateMachine.ts
-│   │   │   │   │   ├── PromptBuilder.ts
-│   │   │   │   │   ├── ResponseParser.ts
-│   │   │   │   │   └── StateUpdater.ts
-│   │   │   │   └── interview
-│   │   │   │       ├── InterviewFactory.ts
-│   │   │   │       └── InterviewMessageService.ts
-│   │   │   ├── components
-│   │   │   │   ├── Chat.tsx
-│   │   │   │   ├── ChatInput.tsx
-│   │   │   │   ├── InterviewHeader.tsx
-│   │   │   │   ├── LiveInterview.tsx
-│   │   │   │   ├── Message.tsx
-│   │   │   │   ├── MessageList.tsx
-│   │   │   │   ├── PhaseProgress.tsx
-│   │   │   │   ├── PhaseSelector.tsx
-│   │   │   │   ├── Sidebar.tsx
-│   │   │   │   ├── Timer.tsx
-│   │   │   │   └── sidebar
-│   │   │   │       ├── DesignSummary.tsx
-│   │   │   │       └── ProblemCard.tsx
-│   │   │   ├── domain
 │   │   │   ├── hooks
 │   │   │   │   ├── useInterview.ts
 │   │   │   │   ├── useMessages.ts
@@ -383,17 +361,6 @@ src
 │   │   │   ├── InterviewAggregate.ts
 │   │   │   └── Message.ts
 │   │   ├── evaluation
-│   │   │   ├── application
-│   │   │   │   ├── evaluation
-│   │   │   │   │   ├── EvaluationOrchestrator.ts
-│   │   │   │   │   └── EvaluationService.ts
-│   │   │   │   └── evaluators
-│   │   │   │       ├── ArchitectureEvaluator.ts
-│   │   │   │       ├── CommunicationEvaluator.ts
-│   │   │   │       ├── EvidenceEvaluator.ts
-│   │   │   │       ├── RequirementEvaluator.ts
-│   │   │   │       ├── TechnicalEvaluator.ts
-│   │   │   │       └── types.ts
 │   │   │   └── domain
 │   │   ├── hooks
 │   │   ├── index.ts
@@ -425,7 +392,6 @@ src
 │   │   │       ├── interviewStore.ts
 │   │   │       └── interviewStore.tsx
 │   │   ├── prompts
-│   │   │   ├── application
 │   │   │   └── prompt
 │   │   │       ├── PromptLoader.ts
 │   │   │       ├── PromptRenderer.ts
@@ -436,7 +402,7 @@ src
 │   │   │       │   ├── JSONSchemaBuilder.ts
 │   │   │       │   ├── PhasePromptBuilder.ts
 │   │   │       │   └── PromptBuilder.ts
-│   │   │       ├── Requirements.ts
+│   │   │       ├── requirements.ts
 │   │   │       └── templates
 │   │   │           ├── clarification.md
 │   │   │           ├── evaluation.md
@@ -455,10 +421,6 @@ src
 │   │   │   │   └── WhatHappenedCard.tsx
 │   │   │   └── hooks
 │   │   ├── reporting
-│   │   │   ├── application
-│   │   │   │   └── summary
-│   │   │   │       ├── IncrementalSummaryService.ts
-│   │   │   │       └── SummaryService.ts
 │   │   │   ├── components
 │   │   │   │   ├── ConversationCard.tsx
 │   │   │   │   ├── EvidenceTimeline.tsx
@@ -625,8 +587,7 @@ src
 │   └── whiteboard.html
 ├── lib
 │   ├── api.ts
-│   ├── hooks
-│   └── logger.ts
+│   └── hooks
 ├── modules
 │   ├── common
 │   │   └── errors
@@ -634,12 +595,9 @@ src
 │   ├── container.ts
 │   ├── diagram
 │   │   └── domain
-│   │       ├── Diagram.ts
 │   │       └── __tests__
 │   │           └── Diagram.test.ts
 │   └── transcript
-│       ├── application
-│       │   └── TranscriptService.ts
 │       └── domain
 │           └── TranscriptNode.ts
 ├── shared
@@ -732,79 +690,13 @@ src
 │   │       └── index.ts
 │   └── utils
 │       └── utils.ts
-├── styles
-│   └── bug-hunting.css
-└── types
-    └── interview.ts
+└── styles
+    └── bug-hunting.css
 
-250 directories, 486 files
+238 directories, 454 files
 
 FILE CONTENTS
 
-================================================
-FILE: src/types/interview.ts
-================================================
-/**
- * Types aligned with your Prisma schema
- * DO NOT invent new types — reuse existing @prisma/client exports
- */
-
-export type { Interview, Message, Problem, InterviewStatus, MessageRole } from '@prisma/client';
-
-/**
- * ProcessInterviewMessageResult - what your service layer returns
- * Matches InterviewMessageService.processMessage()
- */
-export interface ProcessInterviewMessageResult {
-  reply: string;
-  phase: string;
-  previousPhase: string;
-  transitioned: boolean;
-  confidence: number;
-  completed: boolean;
-  summary: string;
-}
-
-/**
- * UI-specific derived type - never mutate, let backend provide source of truth
- * This is what the GET /api/interviews/[id] endpoint returns
- */
-export interface InterviewUIState {
-  id: string;
-  status: 'SETUP' | 'IN_PROGRESS' | 'COMPLETED';
-  template: {
-    id: string;
-    name: string;
-    slug: string;
-  };
-  difficulty: string;
-  duration: number;
-  company: string;
-  problem: {
-    id: string;
-    title: string;
-    description: string | null;
-  };
-  currentPhase: string;
-  summary: string;
-  transcript: Array<{
-    id: string;
-    role: 'assistant' | 'user';
-    content: string;
-    metadata?: Record<string, any>;
-    createdAt: string;
-    elapsedSeconds: number;
-    phase: string | null;
-  }>;
-  evaluation?: {
-    id: string;
-    scores?: Record<string, number>;
-  } | null;
-  createdAt: string;
-  updatedAt: string;
-  startedAt?: string;
-  completedAt?: string;
-}
 ================================================
 FILE: src/app/learn/whiteboard/page.tsx
 ================================================
@@ -822,10 +714,9 @@ export default function WhiteboardIndexPage() {
 FILE: src/app/learn/whiteboard/[slug]/page.tsx
 ================================================
 import WhiteboardWorkspace from "@/features/learning/components/WhiteboardWorkspace";
-import { use } from "react";
 
-export default function WhiteboardPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = use(params);
+export default async function WhiteboardPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
   
   return (
     <div className="min-h-screen bg-[var(--paper)] py-10 px-6">
@@ -938,9 +829,9 @@ const DIAGRAM_COMPONENTS: Record<string, React.ComponentType> = {
 };
 
 interface PageProps {
-  params: {
+  params: Promise<{
     slug: string;  // ✅ Must match folder name [slug]
-  };
+  }>;
 }
 
 export default async function DeepDivePage({ params }: PageProps) {
@@ -1574,7 +1465,7 @@ const iconMap: Record<string, React.ReactNode> = {
   )
 };
 
-export default async function DeepDiveArticlePage({ params }: { params: { slug: string } }) {
+export default async function DeepDiveArticlePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const article = getDeepDiveBySlug(slug);
   const { previous, next } = getPreviousAndNext(slug);
@@ -1608,19 +1499,19 @@ export default async function DeepDiveArticlePage({ params }: { params: { slug: 
 
         <h1 className="title">{article.title}</h1>
         <div className="tags">
-          {article.tags.map(tag => (
+          {article.tags.map((tag: string) => (
             <Tag key={tag}>{tag}</Tag>
           ))}
         </div>
 
         <p className="lede" dangerouslySetInnerHTML={{ __html: article.lede }} />
 
-        {article.sections.map(section => (
+        {article.sections.map((section: any) => (
           <section key={section.number}>
             <div className="h2row">
               <SectionHeading number={section.number}>{section.title}</SectionHeading>
             </div>
-            {section.content.map((paragraph, index) => (
+            {section.content.map((paragraph: string, index: number) => (
               <p key={index} dangerouslySetInnerHTML={{ __html: paragraph }} />
             ))}
             {section.illustration && (
@@ -1643,7 +1534,7 @@ export default async function DeepDiveArticlePage({ params }: { params: { slug: 
             )}
             {section.resources && (
               <div className="resources">
-                {section.resources.map((resource, index) => (
+                {section.resources.map((resource: any, index: number) => (
                   <ResourceRow
                     key={index}
                     icon={iconMap[resource.icon] || null}
@@ -1672,7 +1563,7 @@ export default async function DeepDiveArticlePage({ params }: { params: { slug: 
         <div className="related">
           <div className="lbl">Continue the thread</div>
           <div className="rel-row">
-            {article.related.map(related => (
+            {article.related.map((related: any) => (
               <Link key={related.slug} href={`/deep-dive/${related.slug}`}>
                 <RelatedTechnologyCard
                   name={related.name}
@@ -1692,7 +1583,7 @@ FILE: src/app/problems/page.tsx
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import styles from "@/features/problems/components/ProblemsPage.module.css";
 
 interface Problem {
@@ -1710,7 +1601,7 @@ interface Problem {
   tags?: string[];
 }
 
-export default function ProblemsPage() {
+function ProblemsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [problems, setProblems] = useState<Problem[]>([]);
@@ -1820,7 +1711,8 @@ export default function ProblemsPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        alert(`Failed to start interview: ${data.error}`);
+        
+        alert(`Failed to start interview: ${data.error, data.message, data.code}`);
         return;
       }
 
@@ -2041,6 +1933,14 @@ export default function ProblemsPage() {
     </div>
   );
 }
+
+export default function ProblemsPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading problems...</div>}>
+      <ProblemsPageContent />
+    </Suspense>
+  );
+}
 ================================================
 FILE: src/app/library/transcript/page.tsx
 ================================================
@@ -2196,13 +2096,9 @@ export default async function DashboardRedirect() {
 ================================================
 FILE: src/app/dashboard/[userId]/page.tsx
 ================================================
-// src/app/dashboard/[userId]/page.tsx
 import { notFound } from "next/navigation";
 import { InterviewStatus } from "@prisma/client";
-
 import { prisma } from "@/shared/prisma/client";
-import { SkillGraphService } from "@/features/interview/mastery/SkillGraphService";
-import { RecommendationService } from "@/features/interview/recommendation/RecommendationService";
 import DashboardView from "@/features/dashboard/components/DashboardView";
 
 type Props = {
@@ -2213,18 +2109,13 @@ export default async function DashboardPage({ params }: Props) {
   const { userId } = await params;
 
   const user = await prisma.user.findUnique({ where: { id: userId } });
-
   if (!user) return notFound();
 
-  // Fetch base data
   const [completedInterviews, exploreProblems] = await Promise.all([
     prisma.interview.findMany({
       where: { userId, status: InterviewStatus.COMPLETED },
       include: { template: true, evaluation: true },
-      orderBy: [
-        { completedAt: { sort: "desc", nulls: "last" } },
-        { updatedAt: "desc" },
-      ],
+      orderBy: { updatedAt: "desc" },
     }),
     prisma.problem.findMany({
       orderBy: { interviewCount: "desc" },
@@ -2242,34 +2133,22 @@ export default async function DashboardPage({ params }: Props) {
   const categoryRatings = Object.fromEntries(
     Object.entries(scoresByTemplate).map(([slug, scores]) => [
       slug,
-      Math.round(
-        (scores.reduce((sum, score) => sum + score, 0) / scores.length) / 20
-      ),
+      Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) / 20)
     ])
   );
-
-  const hasData = completedInterviews.length > 0;
-  const overallReadiness = hasData
-    ? Math.round(
-        completedInterviews.reduce(
-          (sum, interview) => sum + (interview.evaluation?.overallScore ?? 0),
-          0
-        ) / completedInterviews.length
-      )
-    : null;
 
   return (
     <DashboardView
       userId={userId}
-      hasData={hasData}
-      overallReadiness={overallReadiness}
+      hasData={completedInterviews.length > 0}
+      overallReadiness={null} // Calculate if needed
       categoryRatings={categoryRatings}
-      exploreProblems={exploreProblems.map((problem) => ({
-        id: problem.id,
-        title: problem.title,
-        slug: problem.slug,
-        difficulty: problem.difficulty,
-        description: problem.description,
+      exploreProblems={exploreProblems.map(p => ({
+        id: p.id,
+        title: p.title,
+        slug: p.slug,
+        difficulty: p.difficulty,
+        description: p.description
       }))}
     />
   );
@@ -2544,7 +2423,7 @@ FILE: src/app/api/interview-templates/route.ts
 ================================================
 import { NextResponse } from "next/server";
 
-import { InterviewProfileService } from "@/features/interview/profiles/InterviewProfileService";
+import { InterviewProfileService } from "@/features/interview/data/profiles/InterviewProfileService";
 
 export async function GET(request: Request) {
   try {
@@ -2860,7 +2739,7 @@ export async function GET(request: Request) {
       }
     };
 
-    let problems, total;
+    let problems: any[], total: number;
 
     // First attempt
     [problems, total] = await Promise.all([
@@ -3016,7 +2895,7 @@ FILE: src/app/api/recommendations/route.ts
 ================================================
 import { NextResponse } from "next/server";
 
-import { RecommendationService } from "@/features/interview/recommendation/RecommendationService";
+import { RecommendationService } from "@/features/interview/application/services/recommendation/RecommendationService";
 import { getCurrentUserId } from "@/features/auth/getCurrentUserId";
 
 export async function GET(request: Request) {
@@ -3055,7 +2934,7 @@ FILE: src/app/api/users/[id]/recommendations/route.ts
 ================================================
 import { NextResponse } from "next/server";
 
-import { RecommendationService } from "@/features/interview/recommendation/RecommendationService";
+import { RecommendationService } from "@/features/interview/application/services/recommendation/RecommendationService";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -3096,7 +2975,7 @@ FILE: src/app/api/users/[id]/skill-graph/route.ts
 ================================================
 import { NextResponse } from "next/server";
 
-import { SkillGraphService } from "@/features/interview/mastery/SkillGraphService";
+import { SkillGraphService } from "@/features/interview/application/services/mastery/SkillGraphService";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -3266,11 +3145,14 @@ export async function POST(request: Request) {
 ================================================
 FILE: src/app/api/interviews/start/route.ts
 ================================================
+// src/app/api/interviews/start/route.ts
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
-
-import { InterviewService, StartInterviewSchema } from "@/features/interview/InterviewService";
 import logger from "@/shared/logger/logger";
+
+// CLEAN IMPORTS:
+import { InterviewService } from "@/features/interview";
+import { StartInterviewSchema } from "@/shared/schemas/interviewSchemas";
 
 export async function POST(request: Request) {
   try {
@@ -3283,41 +3165,28 @@ export async function POST(request: Request) {
     const interviewId = await interviewService.startInterview(validatedInput);
 
     return NextResponse.json({ id: interviewId }, { status: 201 });
-  } 
+  } catch (error) {
+    if (error instanceof ZodError) {
+      logger.error("Validation Error", { issues: error.issues });
+      return NextResponse.json(
+        { error: "Invalid request body", issues: error.issues },
+        { status: 400 }
+      );
+    }
 
-catch (error) {
-  if (error instanceof ZodError) {
-    logger.error(error.issues);
-
+    logger.error("Failed to start interview", { error });
     return NextResponse.json(
-      {
-        error: "Invalid request body",
-        issues: error.issues,
-      },
-      {
-        status: 400,
-      }
+      { error: "Internal server error" },
+      { status: 500 }
     );
   }
-
-  logger.error(error);
-
-  return NextResponse.json(
-    {
-      error: "Internal server error",
-    },
-    {
-      status: 500,
-    }
-  );
-}
 }
 ================================================
 FILE: src/app/api/interviews/status/route.ts
 ================================================
 import { NextResponse } from "next/server";
 
-import { InterviewRepository } from "@/features/interview/repositories/InterviewRepository";
+import { InterviewRepository } from "@/features/interview/infrastructure/repositories/InterviewRepository";
 
 export async function GET(request: Request) {
   try {
@@ -3355,30 +3224,18 @@ export async function GET(request: Request) {
 FILE: src/app/api/interviews/route.ts
 ================================================
 import { NextResponse } from "next/server";
-import { InterviewService } from "@/features/interview";
-import { CreateInterviewInput } from "@/features/interview/types/CreateInterviewInput";
+import { InterviewService, StartInterviewSchema } from "@/features/interview";
 import logger from "@/shared/logger/logger";
 
 export async function POST(request: Request) {
   try {
-    const body: CreateInterviewInput = await request.json();
+    const body = await request.json();
 
-    if (!body.templateId || !body.difficulty || !body.duration || !body.company || !body.problemId) {
-      return NextResponse.json(
-        {
-          error: "Missing required fields: templateId, difficulty, duration, company, problemId",
-        },
-        {
-          status: 400,
-        }
-      );
-    }
+    // Validate input with Zod schema
+    const validatedInput = StartInterviewSchema.parse(body);
 
     const service = new InterviewService();
-    const interviewId = await service.startInterview({
-      ...body,
-      type: body.templateId,
-    });
+    const interviewId = await service.startInterview(validatedInput);
 
     return NextResponse.json({ id: interviewId }, { status: 201 });
 
@@ -3415,8 +3272,8 @@ FILE: src/app/api/interviews/[id]/whiteboard/route.ts
 ================================================
 import { NextResponse } from "next/server";
 
-import { InterviewRepository } from "@/features/interview/repositories/InterviewRepository";
-import { WhiteboardInterpreter } from "@/features/interview/whiteboard/WhiteboardInterpreter";
+import { InterviewRepository } from "@/features/interview/infrastructure/repositories/InterviewRepository";
+import { WhiteboardInterpreter } from "@/features/interview/application/services/whiteboard/WhiteboardInterpreter";
 import logger from "@/shared/logger/logger";
 
 type Props = {
@@ -3775,16 +3632,17 @@ import { ReviewComment } from "@/features/pr-review";
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const { fileId, side, line, anchorText, content } = await request.json();
     if (!fileId || !side || line === undefined || !content) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
     const comment = await getReviewService().addComment({
-      attemptId: params.id,
+      attemptId: id,
       fileId,
       side,
       line,
@@ -3800,10 +3658,11 @@ export async function POST(
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const comments = await getReviewService().getComments(params.id);
+    const { id } = await params;
+    const comments = await getReviewService().getComments(id);
     return NextResponse.json(comments.map((c: ReviewComment) => c.toProps()));
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Failed" }, { status: 500 });
@@ -3816,20 +3675,21 @@ FILE: src/app/api/reviews/[id]/submit/route.ts
 // src/app/api/reviews/[id]/submit/route.ts
 import { NextResponse } from "next/server";
 import { getReviewService } from "@/features/pr-review";
-import { ReviewDecision } from "@prisma/client";
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const { decision } = await request.json();
-    if (!decision || !Object.values(ReviewDecision).includes(decision)) {
+    const validDecisions = ["APPROVE", "REQUEST_CHANGES", "REJECT"];
+    if (!decision || !validDecisions.includes(decision)) {
       return NextResponse.json({ error: "Invalid decision" }, { status: 400 });
     }
 
     const attempt = await getReviewService().submitReview({
-      attemptId: params.id,
+      attemptId: id,
       decision,
     });
 
@@ -3848,10 +3708,11 @@ import { getReviewService } from "@/features/pr-review";
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const attempt = await getReviewService().getAttempt(params.id);
+    const { id } = await params;
+    const attempt = await getReviewService().getAttempt(id);
     if (!attempt) {
       return NextResponse.json({ error: "Attempt not found" }, { status:   404 });
     }
@@ -3872,10 +3733,11 @@ import { getReviewService } from "@/features/pr-review";
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const report = await getReviewService().completeEvaluation(params.id);
+    const { id } = await params;
+    const report = await getReviewService().completeEvaluation(id);
     return NextResponse.json(report.toProps());
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Failed" }, { status: 500 });
@@ -4597,11 +4459,12 @@ import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 
-export default function LoginPage({
+export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: { error?: string };
+  searchParams: Promise<{ error?: string }>;
 }) {
+  const resolvedSearchParams = await searchParams;
   async function loginAction(formData: FormData) {
     "use server";
 
@@ -4612,6 +4475,12 @@ export default function LoginPage({
         redirectTo: "/",
       });
     } catch (error) {
+      // Re-throw redirect errors to allow Next.js redirect to work
+      if (error && typeof error === 'object' && 'digest' in error && 
+          typeof error.digest === 'string' && error.digest.startsWith('NEXT_REDIRECT')) {
+        throw error;
+      }
+      
       if (error instanceof AuthError) {
         // Bad credentials, including "no such user" — authorize() returns
         // null for both cases, so we can't distinguish here. Send them to
@@ -4626,7 +4495,7 @@ export default function LoginPage({
     <main className="mx-auto max-w-md px-6 py-20">
       <h1 className="text-3xl font-bold text-foreground">Log In</h1>
 
-      {searchParams?.error === "invalid" && (
+      {resolvedSearchParams?.error === "invalid" && (
         <p className="mt-4 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
           Incorrect email or password. If you don't have an account yet,{" "}
           <Link href="/register" className="underline">register here</Link>.
@@ -5510,9 +5379,9 @@ export default function PrReviewPage() {
     if (text && text.length > 1 && sel?.anchorNode) {
       const range = sel.getRangeAt(0);
       const rect = range.getBoundingClientRect();
-      const diffLine = sel.anchorNode.parentElement?.closest(".diff-line");
+      const diffLine = sel.anchorNode.parentElement?.closest('[data-type="diff-line"]');
       if (diffLine) {
-        const lineWrap = diffLine.closest(".diff-line-wrap");
+        const lineWrap = diffLine.closest('[data-type="diff-line-wrap"]');
         if (lineWrap) {
           const lineKey = lineWrap.getAttribute("data-line-key");
           if (lineKey) {
@@ -5734,7 +5603,7 @@ export default function PrReviewPage() {
                   const showComposer = composers[lineKey];
 
                   return (
-                    <div key={lineKey} className={styles.diffLineWrap} data-line-key={lineKey}>
+                    <div key={lineKey} className={styles.diffLineWrap} data-line-key={lineKey} data-type="diff-line-wrap">
                       <div
                         className={`${styles.diffLine} ${
                           line.type === "add"
@@ -5744,6 +5613,7 @@ export default function PrReviewPage() {
                             : styles.diffLineCtx
                         }`}
                         onMouseUp={handleTextSelection}
+                        data-type="diff-line"
                       >
                         <span className={styles.diffLineNumber}>{line.line}</span>
                         <span>{line.type === "rm" ? "-" : line.type === "add" ? "+" : " "}</span>
@@ -15712,8 +15582,7 @@ FILE: src/features/dashboard/components/NextRecommendedInterview.tsx
 import Link from "next/link";
 import { Button } from "@/shared/ui/Button";
 
-import type { Recommendation } from "@/features/interview/recommendation/RecommendationService";
-
+import type { Recommendation } from "@/features/interview/application/services/recommendation/RecommendationService";
 type Props = {
   recommendation: Recommendation | null;
 };
@@ -15843,18 +15712,17 @@ export default function LiveFeedbackCard({ hasData, skillGraph }: Props) {
 ================================================
 FILE: src/features/dashboard/components/RecommendationCard.tsx
 ================================================
-// src/features/dashboard/components/RecommendationCard.tsx
 import Link from "next/link";
 import Card from "@/shared/ui/Card";
-import Text from "@/shared/ui/Text";
 import { Button } from "@/shared/ui/Button";
-import type { Recommendation } from "@/features/interview/recommendation/RecommendationService";
+import { Sparkles, ArrowRight } from "lucide-react"; // Optional: Adding icons
+import type { Recommendation } from "@/features/interview/application/services/recommendation/RecommendationService"
 import type { Difficulty } from "@prisma/client";
 
 const DIFFICULTY_STYLES: Record<Difficulty, string> = {
-  EASY: "border-green-600 text-green-500",
-  MEDIUM: "border-amber-600 text-amber-500",
-  HARD: "border-red-600 text-red-500",
+  EASY: "border-green-600/30 text-green-500 bg-green-500/10",
+  MEDIUM: "border-amber-600/30 text-amber-500 bg-amber-500/10",
+  HARD: "border-red-600/30 text-red-500 bg-red-500/10",
 };
 
 type Props = {
@@ -15862,62 +15730,75 @@ type Props = {
 };
 
 export default function RecommendationCard({ recommendation }: Props) {
+  // --- Empty State ---
   if (!recommendation) {
     return (
-      <Card className="p-6">
-        <Text variant="muted">
-          Complete a few interviews to unlock personalized
-          recommendations.
-        </Text>
+      <Card className="flex h-full flex-col items-center justify-center p-8 text-center border-dashed bg-muted/10">
+        <div className="rounded-full bg-muted p-3 mb-4">
+          <Sparkles className="w-6 h-6 text-zinc-500" />
+        </div>
+        <h3 className="text-sm font-semibold text-zinc-200">Personalized Insights</h3>
+        <p className="mt-2 text-xs text-zinc-400 max-w-[200px] leading-relaxed">
+          Complete a few interviews to unlock AI-driven recommendations.
+        </p>
       </Card>
     );
   }
 
+  // --- Active State ---
   return (
-    <div className="overflow-hidden rounded-xl border border-primary/40 bg-card">
-      <div className="flex items-center justify-between bg-primary/10 p-4">
-        <div>
-          <span className="block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-            Recommended Practice Session
-          </span>
-          <span className="text-base font-semibold text-foreground">
-            {recommendation.title}
+    <Card className="overflow-hidden border-zinc-800 bg-zinc-950/50">
+      {/* Header */}
+      <div className="border-b border-zinc-800 bg-zinc-900/50 px-6 py-4">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+              AI Recommendation
+            </span>
+          </div>
+          <span
+            className={`rounded-full border px-2 py-0.5 font-mono text-[10px] font-bold uppercase ${
+              DIFFICULTY_STYLES[recommendation.difficulty]
+            }`}
+          >
+            {recommendation.difficulty}
           </span>
         </div>
-
-        <span
-          className={`rounded border px-2 py-0.5 font-mono text-xs ${DIFFICULTY_STYLES[recommendation.difficulty]}`}
-        >
-          {recommendation.difficulty}
-        </span>
+        <h2 className="text-xl font-bold tracking-tight text-zinc-100">
+          {recommendation.title}
+        </h2>
       </div>
 
-      <div className="space-y-4 p-6">
-        <div className="space-y-1">
-          <span className="block font-mono text-xs uppercase tracking-widest text-muted-foreground">
-            Mentor Assessment
+      {/* Content */}
+      <div className="space-y-5 p-6">
+        <div className="space-y-3">
+          <span className="block font-mono text-[10px] uppercase tracking-widest text-zinc-500">
+            Assessment logic
           </span>
-          <ul className="space-y-1 text-sm text-foreground">
+          <ul className="space-y-2.5">
             {recommendation.reasons.map((reason, i) => (
-              <li key={i}>• {reason}</li>
+              <li key={i} className="flex items-start gap-3 text-sm text-zinc-400 leading-snug">
+                <div className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-zinc-600" />
+                {reason}
+              </li>
             ))}
           </ul>
         </div>
 
-        <div className="flex items-center justify-end pt-2">
-          <Link
-            href={`/problems?problem=${recommendation.slug}`}
-          >
-            <Button size="sm">
+        {/* Action */}
+        <div className="flex items-center justify-end pt-2 border-t border-zinc-800/50">
+          <Button size="sm" className="gap-2">
+            <Link href={`/problems?problem=${recommendation.slug}`}>
               Practice with AI
-            </Button>
-          </Link>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </Button>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
-
 ================================================
 FILE: src/features/dashboard/components/DashboardView.tsx
 ================================================
@@ -15928,9 +15809,9 @@ import { Suspense } from "react";
 import CurrentStandingCard from "./CurrentStandingCard";
 import LiveFeedbackCard from "./LiveFeedbackCard";
 import RecommendationCard from "./RecommendationCard";
-import ExploreProblems, { type ExploreProblem } from "./ExploreProblems";
-import { SkillGraphService } from "@/features/interview/mastery/SkillGraphService";
-import { RecommendationService } from "@/features/interview/recommendation/RecommendationService";
+import ExploreProblems, { type ExploreProblem } from "./ExploreProblems";// Corrected paths
+import { SkillGraphService } from "@/features/interview/application/services/mastery/SkillGraphService";
+import { RecommendationService } from "@/features/interview/application/services/recommendation/RecommendationService";
 
 // Helper components to fetch their own data
 async function SkillGraphWidget({ userId }: { userId: string }) {
@@ -16613,154 +16494,6 @@ export default function EvidenceTimeline({ evidence }: Props) {
   );
 }
 ================================================
-FILE: src/features/interview/reporting/application/summary/SummaryService.ts
-================================================
-import { AIService } from "@/shared/ai";
-
-type TranscriptMessage = {
-  role: string;
-  content: string;
-};
-
-export class SummaryService {
-  private readonly aiService: AIService;
-
-  constructor() {
-    this.aiService = new AIService();
-  }
-
-  async generateSummary(
-    messages: TranscriptMessage[]
-  ): Promise<string> {
-    if (messages.length === 0) {
-      return "Interview has not started yet.";
-    }
-
-    const transcript = messages
-      .map(
-        (message) =>
-          `${message.role.toUpperCase()}: ${message.content}`
-      )
-      .join("\n\n");
-
-    const prompt = `
-You are an expert engineering interviewer.
-
-Analyze the interview transcript and generate a concise running summary.
-
-Return plain text only.
-
-Include:
-
-1. Current interview phase.
-2. Candidate's approach so far.
-3. Major components discussed.
-4. Important decisions made.
-5. Missing areas.
-6. Current strengths.
-7. Current weaknesses.
-
-Keep the summary under 250 words.
-
-Transcript:
-
-${transcript}
-`;
-
-    try {
-      const summary = await this.aiService.chat(
-  [
-    {
-      role: "system",
-      content: "You are an expert technical interviewer.",
-    },
-    {
-      role: "user",
-      content: prompt,
-    },
-  ],
-  { task: "summary" } // no format — this task wants plain text, and now
-                        // actually gets it instead of a forced JSON shape
-);
-
-      return summary.trim();
-    } catch (error) {
-      console.error(
-        "Summary generation failed:",
-        error
-      );
-
-      return "Summary generation unavailable.";
-    }
-  }
-}
-================================================
-FILE: src/features/interview/reporting/application/summary/IncrementalSummaryService.ts
-================================================
-// src/modules/interview/services/IncrementalSummaryService.ts
-
-import { AIService } from "@/shared/ai";
-
-export interface TranscriptMessage {
-  role: string;
-  content: string;
-}
-
-export class IncrementalSummaryService {
-  private readonly ai = new AIService();
-
-  async updateSummary(
-    previousSummary: string,
-    recentMessages: TranscriptMessage[]
-  ): Promise<string> {
-    if (recentMessages.length === 0) {
-      return previousSummary;
-    }
-
-    const transcript = recentMessages
-      .map(
-        (m) => `${m.role.toUpperCase()}: ${m.content}`
-      )
-      .join("\n\n");
-
-    const prompt = `
-You are maintaining a running interview summary.
-
-Existing Summary:
-
-${previousSummary}
-
-New Conversation:
-
-${transcript}
-
-Update the summary by incorporating only the new information.
-
-Requirements:
-
-- Keep under 250 words.
-- Preserve important architectural decisions.
-- Preserve candidate strengths and weaknesses.
-- Remove redundant details.
-- Return plain text only.
-`;
-
-    return this.ai.chat(
-  [
-    {
-      role: "system",
-      content: "You are an expert technical interviewer.",
-    },
-    {
-      role: "user",
-      content: prompt,
-    },
-  ],
-  { task: "summary" }
-);
-  }
-}
-================================================
 FILE: src/features/interview/types/CreateInterviewInput.ts
 ================================================
 import { Difficulty, InterviewMode } from "@prisma/client";
@@ -16780,6 +16513,7 @@ FILE: src/features/interview/types/TranscriptMessage.ts
 import { TranscriptRole } from "@/shared/config/common-constants";
 
 export interface TranscriptMessage {
+  id: string;
   role: TranscriptRole;
   content: string;
 }
@@ -16803,27 +16537,26 @@ export interface DialogueNode {
 ================================================
 FILE: src/features/interview/types/InterviewState.ts
 ================================================
-import { InterviewStatus } from "@prisma/client";
-import { TranscriptMessage } from "./TranscriptMessage";
+import type { TranscriptMessage } from './TranscriptMessage';
+
+export interface InterviewProblem {
+  id: string;
+  title: string;
+  description: string | null;
+  difficulty: string;
+  company: string | null;
+}
 
 export interface InterviewState {
   id: string;
-
-  type: string;
-  difficulty: string;
-  duration: number;
-  company: string;
-
-  status: InterviewStatus;
-
+  status: string;
   currentPhase: string;
-
-  summary: string;
-
-  createdAt: Date;
-  updatedAt: Date;
-
+  duration: number;
+  createdAt: string;
   transcript: TranscriptMessage[];
+  summary: string | null;
+
+  problem: InterviewProblem;
 }
 ================================================
 FILE: src/features/interview/types/message.ts
@@ -16950,53 +16683,6 @@ export interface TranscriptNode {
   role: NodeRole;
   content: TranscriptPart[];
   order: number;
-}
-================================================
-FILE: src/features/interview/components/LiveInterviewClient.tsx
-================================================
-'use client';
-
-import { useState } from 'react';
-import { DialogueNode } from '../types/dialogue';
-import { NodeRenderer } from './NodeRenderer';
-
-export default function LiveInterviewClient({ initialTranscript }: { initialTranscript: DialogueNode[] }) {
-  const [visibleCount, setVisibleCount] = useState(1);
-
-  const showNext = () => {
-    if (visibleCount < initialTranscript.length) {
-      setVisibleCount(prev => prev + 1);
-    }
-  };
-
-  return (
-    <div className="max-w-2xl mx-auto px-4">
-      {/* Legend */}
-      <div className="flex gap-6 mb-12 text-xs font-medium text-gray-500 border-b pb-4">
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-500" /> Strong moment
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-rose-500" /> Missed something
-        </div>
-      </div>
-
-      <div className="space-y-10">
-        {initialTranscript.slice(0, visibleCount).map((node, idx) => (
-          <NodeRenderer key={node.id} node={node} isLast={idx === visibleCount - 1} />
-        ))}
-      </div>
-
-      {visibleCount < initialTranscript.length && (
-        <button 
-          onClick={showNext}
-          className="mt-12 w-full py-4 border-2 border-dashed border-gray-200 rounded-xl text-gray-400 hover:border-emerald-400 hover:text-emerald-500 transition-all font-medium"
-        >
-          Tap to continue conversation...
-        </button>
-      )}
-    </div>
-  );
 }
 ================================================
 FILE: src/features/interview/components/NodeRenderer.tsx
@@ -17574,9 +17260,9 @@ import { Sidebar } from './Sidebar';
 import { useInterview } from '../hooks/useInterview';
 import { useMessages } from '../hooks/useMessages';
 import { useTimer } from '../hooks/useTimer';
-import { logger } from '@/lib/logger'; // Replace with your logger path
+import logger from '@/shared/logger/logger';
 
-// 1. Accurate type representing the API response with relations included
+// Type representing the API response with relations included
 export type InterviewWithRelations = Prisma.InterviewGetPayload<{
   include: {
     problem: true;
@@ -17596,7 +17282,6 @@ export function LiveInterview({ interviewId }: LiveInterviewProps) {
     error: messageError,
   } = useMessages(interviewId);
 
-  // 2 & 8. Hook owns calculation logic directly — no wrapper component or empty callback needed
   const { remainingSeconds } = useTimer({
     startedAt: interview?.createdAt ?? null,
     durationMinutes: interview?.duration ?? 0,
@@ -17605,27 +17290,28 @@ export function LiveInterview({ interviewId }: LiveInterviewProps) {
 
   const handleSendMessage = useCallback(
     async (text: string) => {
-      // 5. Send guard
       if (isSending || !text.trim()) return;
 
       try {
         await sendMessage(text);
-        
-        // 6. Refresh interview state because the backend owns transcript updates,
-        // phase transitions, and summary generation.
+        // Refresh interview state to get the AI's response and potential phase changes
         await refetch();
-      } catch (err) {
-        // 3. Logger instead of console.error
-        logger.error('Failed to send interview message', { err, interviewId });
+      } catch (err: any) {
+        // Improved error extraction
+        const errorMessage = err.response?.data?.error || err.message || 'Unknown error';
+        
+        console.error("DETAILED ERROR:", {
+          message: errorMessage,
+          stack: err.stack,
+          status: err.response?.status,
+          raw: err
+        });
+
+        logger.error('Failed to send interview message', err, { interviewId });
       }
     },
     [isSending, sendMessage, refetch, interviewId]
   );
-
-  const problemForSidebar = {
-    ...interview?.problem,
-    description: (interview?.problem as { description?: string | null } | undefined)?.description ?? null,
-  };
 
   if (loading) {
     return (
@@ -17668,12 +17354,16 @@ export function LiveInterview({ interviewId }: LiveInterviewProps) {
         </div>
 
         <Sidebar
-          problem={interview.problem}
-          currentPhase={interview.currentPhase}
-          summary={interview.summary}
-          difficulty={interview.difficulty}
-          company={interview.company}
-        />
+  problem={interview.problem}
+  currentPhase={interview.currentPhase}
+  // 1. Fixes the 'string | null' error by providing '' if null
+  summary={interview.summary ?? ''} 
+  
+  // 2. Fixes missing property errors by accessing the problem sub-object
+  // and providing fallback values if they are optional in your schema
+  difficulty={(interview.problem as any).difficulty ?? 'Intermediate'} 
+  company={(interview.problem as any).company ?? 'General'}
+/>
       </div>
     </div>
   );
@@ -18247,8 +17937,7 @@ FILE: src/features/interview/live/hooks/useInterview.ts
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { interviewApiClient } from '@/shared/api/InterviewApiClient';
-import type { InterviewState } from "@/features/interview/types";
-
+import type { InterviewState } from '@/features/interview/types/InterviewState';
 interface UseInterviewReturn {
   interview: InterviewState | null;
   loading: boolean;
@@ -18632,14 +18321,16 @@ conservatively and note in the summary that a dedicated rubric is missing.
 `.trim();
 
 export class PromptLoader {
+  
   private readonly templatesDirectory = path.join(
-    process.cwd(),
-    "src",
-    "modules",
-    "interview",
-    "prompt",
-    "templates"
-  );
+  process.cwd(),
+  "src",
+  "features",
+  "interview",
+  "prompts",
+  "prompt",
+  "templates"
+);
 
   private readonly cache = new Map<string, string>();
 
@@ -18804,7 +18495,7 @@ export class BasePromptBuilder {
   }
 }
 ================================================
-FILE: src/features/interview/prompts/prompt/Requirements.ts
+FILE: src/features/interview/prompts/prompt/requirements.ts
 ================================================
 export const Requirements_PROMPT = `
 
@@ -18960,948 +18651,6 @@ export async function startInterview(
   const validatedData = StartInterviewResponseSchema.parse(data);
 
   return { id: validatedData.id };
-}
-
-================================================
-FILE: src/features/interview/evaluation/application/evaluators/ArchitectureEvaluator.ts
-================================================
-
-================================================
-FILE: src/features/interview/evaluation/application/evaluators/EvidenceEvaluator.ts
-================================================
-import { z } from "zod";
-
-import { AIService } from "@/shared/ai";
-import { StructuredOutputParser } from "@/shared/ai/parsers/StructuredOutputParser";
-import { prisma } from "@/shared/prisma/client";
-
-import { PromptLoader } from "../prompt/PromptLoader";
-import {
-  EvaluatableInterview,
-  EvaluationResult,
-} from "./types";
-
-const EvidenceItemSchema = z.object({
-  messageId: z.string(),
-  quote: z.string().min(1),
-  comment: z.string().min(1),
-  conceptSlugs: z.array(z.string()).default([]),
-  type: z.enum(["STRENGTH", "WEAKNESS"]),
-});
-
-const DimensionScoreSchema = z.object({
-  dimension: z.string(),
-  score: z.number().min(0).max(10),
-  summary: z.string(),
-  evidence: z.array(EvidenceItemSchema).max(4).default([]),
-});
-
-const EvaluationResponseSchema = z.object({
-  dimensionScores: z.array(DimensionScoreSchema).min(1),
-  strengths: z.array(z.string()).default([]),
-  weaknesses: z.array(z.string()).default([]),
-  missedConcepts: z.array(z.string()).default([]),
-  riskAssessment: z.array(z.string()).default([]),
-  hireRecommendation: z.enum(["STRONG_HIRE", "HIRE", "NO_HIRE", "STRONG_NO_HIRE"]),
-  feedback: z.string(),
-});
-
-const MAX_QUOTE_WORDS = 20;
-
-// Ollama structured-output schema, matching EvaluationResponseSchema below.
-export const EVALUATION_JSON_SCHEMA = {
-  type: "object",
-  properties: {
-    dimensionScores: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: {
-          dimension: { type: "string" },
-          score: { type: "number" },
-          summary: { type: "string" },
-          evidence: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                messageId: { type: "string" },
-                quote: { type: "string" },
-                comment: { type: "string" },
-                conceptSlugs: {
-                  type: "array",
-                  items: { type: "string" },
-                },
-                type: { type: "string", enum: ["STRENGTH", "WEAKNESS"] },
-              },
-              required: ["messageId", "quote", "comment", "type"],
-            },
-          },
-        },
-        required: ["dimension", "score", "summary"],
-      },
-    },
-    strengths: { type: "array", items: { type: "string" } },
-    weaknesses: { type: "array", items: { type: "string" } },
-    missedConcepts: { type: "array", items: { type: "string" } },
-    riskAssessment: { type: "array", items: { type: "string" } },
-    hireRecommendation: {
-      type: "string",
-      enum: ["STRONG_HIRE", "HIRE", "NO_HIRE", "STRONG_NO_HIRE"],
-    },
-    feedback: { type: "string" },
-  },
-  required: ["dimensionScores", "hireRecommendation", "feedback"],
-} as const;
-
-export class EvidenceEvaluator {
-  constructor(
-    private readonly ai = new AIService(),
-    private readonly promptLoader = new PromptLoader()
-  ) {}
-
-  /**
-   * Sanity-check the model's hire recommendation against the numeric overall score.
-   * If they disagree by more than one tier, trust the score over the free-text recommendation.
-   */
-  private reconcileHireRecommendation(
-    modelRecommendation: string,
-    overallScore: number
-  ): "STRONG_HIRE" | "HIRE" | "NO_HIRE" | "STRONG_NO_HIRE" {
-    const scoreImplied =
-      overallScore >= 80 ? "STRONG_HIRE" :
-      overallScore >= 60 ? "HIRE" :
-      overallScore >= 35 ? "NO_HIRE" :
-      "STRONG_NO_HIRE";
-
-    const tiers = ["STRONG_NO_HIRE", "NO_HIRE", "HIRE", "STRONG_HIRE"] as const;
-    const modelIdx = tiers.indexOf(modelRecommendation as any);
-    const scoreIdx = tiers.indexOf(scoreImplied);
-
-    // If model and score disagree by more than one tier, trust the score
-    if (Math.abs(modelIdx - scoreIdx) > 1) {
-      return scoreImplied;
-    }
-
-    return modelRecommendation as "STRONG_HIRE" | "HIRE" | "NO_HIRE" | "STRONG_NO_HIRE";
-  }
-
-  async evaluate(
-    interview: EvaluatableInterview
-  ): Promise<EvaluationResult> {
-    const startedAt =
-      interview.startedAt ?? interview.createdAt;
-
-    const dimensions = this.collectDimensions(interview, interview.mode);
-
-    const rubricSection = await this.buildRubricSection(
-      interview.template.id,
-      dimensions
-    );
-
-    // Closed vocabulary for concept tagging — same grounding pattern as
-    // quotes below: anything the model returns outside this set is dropped,
-    // never trusted or auto-created.
-    const conceptVocabulary = await prisma.concept.findMany({
-      select: { slug: true, name: true, category: true },
-    });
-
-    const knownConceptSlugs = new Set(
-      conceptVocabulary.map((c) => c.slug)
-    );
-
-    const conceptSection = conceptVocabulary
-      .map((c) => `- ${c.slug} (${c.category}): ${c.name}`)
-      .join("\n");
-
-    const transcriptById = new Map(
-      interview.transcript.map((message) => [
-        message.id,
-        message,
-      ])
-    );
-
-    const transcriptSection = interview.transcript
-      .map((message) => {
-        const elapsed = message.elapsedSeconds ?? 0;
-
-        return `[id=${message.id}] [t=${elapsed}s] ${message.role.toUpperCase()}: ${message.content}`;
-      })
-      .join("\n\n");
-
-    const prompt = this.buildPrompt(
-      interview.template.name,
-      dimensions,
-      rubricSection,
-      conceptSection,
-      transcriptSection,
-      interview.mode
-    );
-
-    const raw = await this.ai.chat(
-  [
-    {
-      role: "system",
-      content:
-        "You are a rigorous, evidence-driven technical interview evaluator.",
-    },
-    { role: "user", content: prompt },
-  ],
-  {
-    task: "evaluation",
-    format: EVALUATION_JSON_SCHEMA,
-  }
-);
-
-const parsed = await StructuredOutputParser.parse(
-  raw,
-  EvaluationResponseSchema,
-  () =>
-    this.ai.chat(
-      [
-        {
-          role: "system",
-          content:
-            "Repair the response into valid JSON matching the requested schema. Return ONLY JSON.",
-        },
-        { role: "user", content: raw },
-      ],
-      {
-        task: "repair",
-        format: EVALUATION_JSON_SCHEMA,
-      }
-    )
-);
-
-    const dimensionScores = parsed.dimensionScores.map(
-      (dimension) => {
-        // First, filter evidence items that point to non-existent messages
-        const validMessageEvidence = dimension.evidence.filter((item) => {
-          const message = transcriptById.get(item.messageId);
-          return message !== undefined;
-        });
-
-        // Then, filter evidence items with grounded quotes
-        const groundedEvidence = validMessageEvidence.filter((item) => {
-          const message = transcriptById.get(item.messageId)!;
-          return this.isQuoteGroundedInMessage(
-            item.quote,
-            message.content
-          );
-        });
-
-        // If we have at least one grounded evidence item, use it
-        // Otherwise, use the best available evidence (most grounded) to avoid false negatives
-        const evidenceToUse = groundedEvidence.length > 0
-          ? groundedEvidence
-          : validMessageEvidence.length > 0
-            ? this.selectBestEvidence(validMessageEvidence, transcriptById)
-            : [];
-
-        return {
-          dimension: dimension.dimension,
-          score: dimension.score,
-          summary: dimension.summary,
-          evidence: evidenceToUse.map((item) => {
-            const message = transcriptById.get(item.messageId)!;
-
-            const timestampSeconds = message.elapsedSeconds ?? 0;
-
-            return {
-              messageId: item.messageId,
-              timestampSeconds,
-              quote: this.capWords(
-                item.quote,
-                MAX_QUOTE_WORDS
-              ),
-              comment: item.comment,
-              type: item.type,
-              // Ground concepts against the known vocabulary — never trust
-              // a slug the model invented.
-              conceptSlugs: item.conceptSlugs.filter((slug) =>
-                knownConceptSlugs.has(slug)
-              ),
-            };
-          }),
-        };
-      }
-    );
-
-    const overallScore = Math.round(
-      (dimensionScores.reduce(
-        (sum, d) => sum + d.score,
-        0
-      ) /
-        Math.max(dimensionScores.length, 1)) *
-        10
-    );
-
-    const reconciledRecommendation = this.reconcileHireRecommendation(
-      parsed.hireRecommendation,
-      overallScore
-    );
-
-    return {
-      overallScore,
-      dimensionScores,
-      strengths: parsed.strengths,
-      weaknesses: parsed.weaknesses,
-      missedConcepts: parsed.missedConcepts,
-      riskAssessment: parsed.riskAssessment,
-      hireRecommendation: reconciledRecommendation,
-      feedback: parsed.feedback,
-    };
-  }
-
-  private collectDimensions(
-    interview: EvaluatableInterview,
-    mode: "CANDIDATE" | "REVERSE"
-  ): string[] {
-    const set = new Set<string>();
-
-    for (const phase of interview.template.phases) {
-      const dims = (mode === "REVERSE" ? phase.reverseEvaluationDimensions : phase.evaluationDimensions) as string[];
-
-      for (const dim of dims ?? []) {
-        set.add(dim);
-      }
-    }
-
-    return [...set];
-  }
-
-  private async buildRubricSection(
-    templateId: string,
-    dimensions: string[]
-  ): Promise<string> {
-    const entries = await Promise.all(
-      dimensions.map(async (dimension) => {
-        const content =
-          await this.promptLoader.loadRubricForDimension(
-            templateId,
-            dimension
-          );
-
-        return `### ${dimension}\n${content}`;
-      })
-    );
-
-    return entries.join("\n\n");
-  }
-
-  private buildPrompt(
-    templateName: string,
-    dimensions: string[],
-    rubricSection: string,
-    conceptSection: string,
-    transcriptSection: string,
-    mode: "CANDIDATE" | "REVERSE"
-  ): string {
-    const target = mode === "REVERSE" ? "INTERVIEWER's (the human's)" : "candidate's";
-
-    return `
-You are evaluating ${target} performance in a "${templateName}" technical interview.
-
-Score the ${mode === "REVERSE" ? "interviewer" : "candidate"} on EXACTLY these dimensions, no others:
-${dimensions.map((d) => `- ${d}`).join("\n")}
-
-RUBRICS (use these to decide scores):
-
-${rubricSection}
-
-CONCEPT VOCABULARY (use ONLY these slugs when tagging evidence with concepts; if none apply, return an empty array):
-
-${conceptSection}
-
-TRANSCRIPT (each line is tagged with a message id and elapsed seconds since interview start):
-
-${transcriptSection}
-
-For each dimension, provide:
-- score: 0-10
-- summary: one sentence justifying the score
-- evidence: 1-3 items, each with:
-  - messageId: the EXACT [id=...] value of a transcript line that supports this score
-  - quote: a short quote (${MAX_QUOTE_WORDS} words or fewer) copied VERBATIM from that exact message's content. DO NOT correct spelling, grammar, or punctuation. DO NOT add or remove words. If you cannot find an exact quote, return null for this evidence item.
-  - comment: why this quote matters for this dimension
-  - conceptSlugs: 0-3 slugs from the CONCEPT VOCABULARY that this specific quote demonstrates
-  - type: "STRENGTH" if this quote demonstrates competence, "WEAKNESS" if it demonstrates a gap
-
-Additionally return:
-- missedConcepts: important concepts for this problem that the ${mode === "REVERSE" ? "interviewer" : "candidate"} never addressed (free text, 0-5 items)
-- riskAssessment: concrete concerns an interviewer should flag before making a hire decision (0-4 items, empty array if none)
-- hireRecommendation: one of STRONG_HIRE, HIRE, NO_HIRE, STRONG_NO_HIRE — based on overall dimension scores and severity of weaknesses
-
-Rules:
-- Only cite messages with role USER (the human). Never cite AI lines as evidence.
-- Every quote must be copied exactly from the cited message. Do not paraphrase and call it a quote.
-- Only use conceptSlugs from the CONCEPT VOCABULARY above. Never invent a slug.
-- If a dimension has weak or no supporting evidence in the transcript, say so in the summary and score it low — do not invent evidence.
-- For hireRecommendation: be grounded in the numeric scores. STRONG_HIRE requires consistently high scores (8+), NO_HIRE requires consistently low scores (3-), and consider the severity of weaknesses.
-
-Return ONLY valid JSON with this exact shape:
-
-{
-  "dimensionScores": [
-    {
-      "dimension": "string",
-      "score": 0,
-      "summary": "string",
-      "evidence": [
-        { "messageId": "string", "quote": "string", "comment": "string", "conceptSlugs": ["string"], "type": "strength" }
-      ]
-    }
-  ],
-  "strengths": ["string"],
-  "weaknesses": ["string"],
-  "missedConcepts": ["string"],
-  "riskAssessment": ["string"],
-  "hireRecommendation": "STRONG_HIRE",
-  "feedback": "2-4 sentence overall narrative feedback"
-}
-
-Return JSON only. No markdown, no commentary outside the JSON.
-`.trim();
-  }
-
-  /**
-   * Calculate grounding score for a quote (0-1) for fallback selection
-   */
-  private calculateGroundingScore(quote: string, messageContent: string): number {
-    const normalize = (text: string) => {
-      return text
-        .toLowerCase()
-        .replace(/[.,!?;:'"()\-–—]/g, "")
-        .replace(/[…‥]/g, "")
-        .replace(/\b(um|uh|like|you know|basically|actually)\b/g, "")
-        .replace(/[\s\n\r\t]+/g, " ")
-        .replace(/\s+/g, " ")
-        .trim();
-    };
-
-    const normalizedQuote = normalize(quote);
-    const normalizedMessage = normalize(messageContent);
-
-    if (normalizedMessage.includes(normalizedQuote)) {
-      return 1.0;
-    }
-
-    const quoteWords = normalizedQuote.split(" ").filter(w => w.length > 0);
-    const messageWords = normalizedMessage.split(" ").filter(w => w.length > 0);
-
-    if (quoteWords.length === 0) {
-      return 0;
-    }
-
-    let maxMatchCount = 0;
-    for (let i = 0; i <= messageWords.length - quoteWords.length; i++) {
-      let matchCount = 0;
-      for (let j = 0; j < quoteWords.length; j++) {
-        if (messageWords[i + j] === quoteWords[j]) {
-          matchCount++;
-        }
-      }
-      if (matchCount > maxMatchCount) {
-        maxMatchCount = matchCount;
-      }
-    }
-
-    return maxMatchCount / quoteWords.length;
-  }
-
-  /**
-   * Select the best evidence item when no perfectly grounded evidence is found
-   */
-  private selectBestEvidence(
-    evidenceItems: Array<any>,
-    transcriptById: Map<string, any>
-  ): Array<any> {
-    if (evidenceItems.length === 0) {
-      return [];
-    }
-
-    // Score each evidence item by grounding quality
-    const scoredItems = evidenceItems.map((item) => {
-      const message = transcriptById.get(item.messageId);
-      if (!message) {
-        return { item, score: 0 };
-      }
-      const score = this.calculateGroundingScore(item.quote, message.content);
-      return { item, score };
-    });
-
-    // Sort by score descending and take the best one
-    scoredItems.sort((a, b) => b.score - a.score);
-
-    // Only return if the best score is above a minimum threshold (50%)
-    const bestScore = scoredItems[0]?.score ?? 0;
-    if (bestScore >= 0.5) {
-      return [scoredItems[0].item];
-    }
-
-    return [];
-  }
-
-  private isQuoteGroundedInMessage(
-    quote: string,
-    messageContent: string
-  ): boolean {
-    // Aggressive normalization for comparison
-    const normalize = (text: string) => {
-      return text
-        .toLowerCase()
-        // Remove all punctuation
-        .replace(/[.,!?;:'"()\-–—]/g, "")
-        // Handle Unicode ellipsis and common variations
-        .replace(/[…‥]/g, "")
-        // Remove common filler words that LLMs might add/remove
-        .replace(/\b(um|uh|like|you know|basically|actually)\b/g, "")
-        // Normalize whitespace (including newlines and tabs)
-        .replace(/[\s\n\r\t]+/g, " ")
-        // Remove extra spaces
-        .replace(/\s+/g, " ")
-        .trim();
-    };
-
-    const normalizedQuote = normalize(quote);
-    const normalizedMessage = normalize(messageContent);
-
-    // Direct inclusion check after aggressive normalization
-    if (normalizedMessage.includes(normalizedQuote)) {
-      return true;
-    }
-
-    // Token-based fuzzy matching with 90-95% threshold
-    const quoteWords = normalizedQuote.split(" ").filter(w => w.length > 0);
-    const messageWords = normalizedMessage.split(" ").filter(w => w.length > 0);
-
-    if (quoteWords.length === 0) {
-      return false;
-    }
-
-    // Calculate similarity using token overlap and sequence matching
-    let maxMatchCount = 0;
-    let bestMatchIndex = 0;
-
-    // Try to find the best matching subsequence in the message
-    for (let i = 0; i <= messageWords.length - quoteWords.length; i++) {
-      let matchCount = 0;
-      for (let j = 0; j < quoteWords.length; j++) {
-        if (messageWords[i + j] === quoteWords[j]) {
-          matchCount++;
-        }
-      }
-      if (matchCount > maxMatchCount) {
-        maxMatchCount = matchCount;
-        bestMatchIndex = i;
-      }
-    }
-
-    // Calculate match ratio
-    const matchRatio = maxMatchCount / quoteWords.length;
-
-    // 90-95% threshold for fuzzy matching
-    const FUZZY_THRESHOLD = 0.90;
-
-    // Also check for high token overlap even if sequence doesn't match perfectly
-    const quoteWordSet = new Set(quoteWords);
-    const messageWordSet = new Set(messageWords);
-    const intersection = new Set([...quoteWordSet].filter(x => messageWordSet.has(x)));
-    const overlapRatio = intersection.size / quoteWordSet.size;
-
-    // Accept if either sequence match or overlap meets threshold
-    return matchRatio >= FUZZY_THRESHOLD || overlapRatio >= FUZZY_THRESHOLD;
-  }
-
-  private capWords(text: string, maxWords: number): string {
-    const words = text.trim().split(/\s+/);
-
-    if (words.length <= maxWords) {
-      return text.trim();
-    }
-
-    return words.slice(0, maxWords).join(" ");
-  }
-}
-================================================
-FILE: src/features/interview/evaluation/application/evaluators/TechnicalEvaluator.ts
-================================================
-
-================================================
-FILE: src/features/interview/evaluation/application/evaluators/CommunicationEvaluator.ts
-================================================
-
-================================================
-FILE: src/features/interview/evaluation/application/evaluators/types.ts
-================================================
-export interface EvidenceItem {
-  messageId: string;
-  timestampSeconds: number;
-  quote: string;
-  comment: string;
-  type: "strength" | "weakness";
-  conceptSlugs: string[];
-}
-
-export interface DimensionScore {
-  dimension: string;
-  score: number; // 0-10
-  summary: string;
-  evidence: EvidenceItem[];
-}
-
-export interface EvaluationResult {
-  overallScore: number; // 0-100
-  dimensionScores: DimensionScore[];
-  strengths: string[];
-  weaknesses: string[];
-  missedConcepts: string[];
-  riskAssessment: string[];
-  hireRecommendation: "STRONG_HIRE" | "HIRE" | "NO_HIRE" | "STRONG_NO_HIRE";
-  feedback: string;
-}
-
-/** Minimal shape EvidenceEvaluator needs — matches the Prisma include used in EvaluationService. */
-export interface EvaluatableInterview {
-  id: string;
-  startedAt: Date | null;
-  createdAt: Date;
-  mode: "CANDIDATE" | "REVERSE";
-  transcript: Array<{
-    id: string;
-    role: string;
-    content: string;
-    createdAt: Date;
-    elapsedSeconds?: number;
-  }>;
-  template: {
-    id: string;
-    slug: string;
-    name: string;
-    phases: Array<{ evaluationDimensions: unknown; reverseEvaluationDimensions?: unknown }>;
-  };
-}
-================================================
-FILE: src/features/interview/evaluation/application/evaluators/RequirementEvaluator.ts
-================================================
-
-================================================
-FILE: src/features/interview/evaluation/application/evaluation/EvaluationService.ts
-================================================
-import { Prisma } from "@prisma/client";
-import { prisma } from "@/shared/prisma/client";
-import { AIService } from "@/shared/ai";
-import logger from "@/shared/logger/logger";
-
-import { EvidenceEvaluator } from "../../evaluators/EvidenceEvaluator";
-import { EvaluatableInterview } from "../../evaluators/types";
-import { PromptLoader } from "../../prompt/PromptLoader";
-import { InterviewRepository } from "../../repositories/InterviewRepository";
-import { MasteryService } from "../mastery/MasteryService";
-import { deriveStudyPlan } from "../studyplan/StudyResources";
-
-export class EvaluationService {
-  private readonly evaluator: EvidenceEvaluator;
-  private readonly mastery: MasteryService;
-
-  constructor(
-    private readonly ai: AIService,
-    private readonly promptLoader: PromptLoader,
-    private readonly log: typeof logger = logger
-  ) {
-    this.evaluator = new EvidenceEvaluator(
-      this.ai,
-      this.promptLoader
-    );
-    this.mastery = new MasteryService();
-  }
-
-  async evaluateInterview(interviewId: string) {
-    const interview = await prisma.interview.findUnique({
-      where: { id: interviewId },
-      include: {
-        transcript: {
-          orderBy: { createdAt: "asc" },
-        },
-        template: {
-          include: { phases: true },
-        },
-      },
-    });
-
-    if (!interview) {
-      throw new Error(
-        `Interview ${interviewId} not found`
-      );
-    }
-
-    const evaluatable: EvaluatableInterview = {
-      id: interview.id,
-      startedAt: interview.startedAt,
-      createdAt: interview.createdAt,
-      mode: interview.mode,
-      transcript: interview.transcript,
-      template: interview.template,
-    };
-
-    const result = await this.evaluator.evaluate(
-      evaluatable
-    );
-
-    const evidence = result.dimensionScores.flatMap(
-      (dimension) =>
-        dimension.evidence.map((item) => ({
-          dimension: dimension.dimension,
-          normalizedScore: dimension.score / 10, // 0-1 normalized score for per-interview concept mastery
-          ...item,
-        }))
-    );
-
-    // Collect all concept slugs from evidence and missed concepts for study plan
-    const allConceptSlugs = [
-      ...new Set([
-        ...evidence.flatMap((e) => e.conceptSlugs),
-        ...result.missedConcepts,
-      ]),
-    ];
-
-    const studyPlan = deriveStudyPlan(allConceptSlugs);
-
-    const repository = new InterviewRepository();
-
-    const evaluation = await repository.saveEvaluation(
-      interviewId,
-      {
-        overallScore: result.overallScore,
-        dimensionScores: result.dimensionScores as unknown as Prisma.InputJsonValue,
-        evidence: evidence as unknown as Prisma.InputJsonValue,
-        feedback: result.feedback,
-        status: "COMPLETED" as any,
-        metadata: {
-          strengths: result.strengths,
-          weaknesses: result.weaknesses,
-          missedConcepts: result.missedConcepts,
-          riskAssessment: result.riskAssessment,
-          hireRecommendation: result.hireRecommendation,
-          studyPlan,
-        },
-      }
-    );
-
-    // Write the normalized evidence/concept rows the Skill Intelligence
-    // Layer reads from. This is separate from the Json blob above — that
-    // stays as a read-optimized cache for the report page.
-    await this.persistEvidenceItems(evaluation.id, evidence);
-
-    await this.mastery.recomputeForEvaluation(evaluation.id);
-
-    this.log.info(
-      `Evaluation completed for interview ${interviewId} (overall: ${result.overallScore}, ${evidence.length} evidence items)`
-    );
-
-    return evaluation;
-  }
-
-  private async persistEvidenceItems(
-    evaluationId: string,
-    evidence: Array<{
-      dimension: string;
-      messageId: string;
-      timestampSeconds: number;
-      quote: string;
-      comment: string;
-      type: "strength" | "weakness";
-      normalizedScore: number;
-      conceptSlugs: string[];
-    }>
-  ) {
-    if (evidence.length === 0) return;
-
-    await prisma.$transaction(async (tx) => {
-      const allConceptSlugs = [
-        ...new Set(evidence.flatMap((e) => e.conceptSlugs)),
-      ];
-
-      const concepts = await tx.concept.findMany({
-        where: { slug: { in: allConceptSlugs } },
-        select: { id: true, slug: true },
-      });
-
-      const conceptIdBySlug = new Map(
-        concepts.map((c) => [c.slug, c.id])
-      );
-
-      for (const item of evidence) {
-        const created = await tx.evidenceItem.create({
-          data: {
-            evaluationId,
-            messageId: item.messageId,
-            dimension: item.dimension,
-            timestampSeconds: item.timestampSeconds,
-            quote: item.quote,
-            comment: item.comment,
-            type: item.type as "STRENGTH" | "WEAKNESS",
-            normalizedScore: item.normalizedScore,
-          },
-        });
-
-        const conceptLinks = item.conceptSlugs
-          .map((slug) => conceptIdBySlug.get(slug))
-          .filter((id): id is string => Boolean(id));
-
-        if (conceptLinks.length > 0) {
-          await tx.evidenceConcept.createMany({
-            data: conceptLinks.map((conceptId) => ({
-              evidenceItemId: created.id,
-              conceptId,
-            })),
-            skipDuplicates: true,
-          });
-        }
-      }
-    });
-  }
-}
-================================================
-FILE: src/features/interview/evaluation/application/evaluation/EvaluationOrchestrator.ts
-================================================
-import { Prisma } from "@prisma/client";
-import { prisma } from "@/shared/prisma/client";
-import logger from "@/shared/logger/logger";
-import { AIService } from "@/shared/ai";
-import { EvaluationService } from "./EvaluationService";
-import { PromptLoader } from "../../../prompts/prompt/PromptLoader";
-
-// Type alias for the enum - will be resolved after IDE refresh
-type EvaluationStatus = "PENDING" | "RUNNING" | "COMPLETED" | "FAILED";
-
-/**
- * EvaluationOrchestrator ensures idempotent evaluation by using atomic state transitions.
- * 
- * State machine: PENDING → RUNNING → COMPLETED/FAILED
- * 
- * Only the request that successfully transitions PENDING → RUNNING is allowed to perform
- * the evaluation. Any concurrent request sees RUNNING or COMPLETED and exits immediately.
- * 
- * This prevents duplicate LLM calls, duplicate evidence, and inconsistent results.
- */
-export class EvaluationOrchestrator {
-  /**
-   * Request evaluation for an interview. Idempotent - safe to call multiple times.
-   * 
-   * @param interviewId - The interview to evaluate
-   * @param options - Optional configuration
-   * @returns The evaluation if it was created/completed by this call, null if already running/completed
-   */
-  async requestEvaluation(
-    interviewId: string,
-    options: { background?: boolean } = {}
-  ): Promise<{ evaluationId: string | null; status: EvaluationStatus }> {
-    // Attempt atomic transition: PENDING → RUNNING
-    const evaluation = await prisma.evaluation.findUnique({
-      where: { interviewId },
-    });
-
-    if (!evaluation) {
-      // No evaluation exists yet, create it in PENDING state
-      await prisma.evaluation.create({
-        data: {
-          interviewId,
-          status: "PENDING",
-          overallScore: 0,
-          dimensionScores: [] as Prisma.InputJsonValue,
-          evidence: [] as Prisma.InputJsonValue,
-          feedback: "",
-        } as any,
-      });
-    } else if ((evaluation.status as any) === "RUNNING") {
-      // Already running - another request is handling it
-      logger.info(`Evaluation already running for interview ${interviewId}, skipping`);
-      return { evaluationId: evaluation.id, status: "RUNNING" };
-    } else if ((evaluation.status as any) === "COMPLETED") {
-      // Already completed - no need to evaluate again
-      logger.info(`Evaluation already completed for interview ${interviewId}, skipping`);
-      return { evaluationId: evaluation.id, status: "COMPLETED" };
-    } else if ((evaluation.status as any) === "FAILED") {
-      // Previous evaluation failed - allow retry by transitioning PENDING → RUNNING
-      logger.info(`Retrying failed evaluation for interview ${interviewId}`);
-    }
-
-    // Attempt atomic transition to RUNNING
-    const updated = await prisma.evaluation.updateMany({
-      where: {
-        interviewId,
-        status: { in: ["PENDING", "FAILED"] } as any,
-      },
-      data: {
-        status: "RUNNING",
-      } as any,
-    });
-
-    // If no rows were updated, another request won the race
-    if (updated.count === 0) {
-      const current = await prisma.evaluation.findUnique({
-        where: { interviewId },
-      });
-      if (!current) {
-        throw new Error(`Evaluation for interview ${interviewId} disappeared`);
-      }
-      logger.info(`Lost race to start evaluation for interview ${interviewId}, status: ${(current as any).status}`);
-      return { evaluationId: current.id, status: (current as any).status as EvaluationStatus };
-    }
-
-    // We won the race - perform the evaluation
-    const evaluationService = new EvaluationService(
-      new AIService(),
-      new PromptLoader(),
-      logger
-    );
-
-    if (options.background) {
-      // Run in background without blocking
-      this.runEvaluationInBackground(interviewId, evaluationService);
-      const current = await prisma.evaluation.findUnique({
-        where: { interviewId },
-      });
-      return { evaluationId: current?.id || null, status: "RUNNING" };
-    } else {
-      // Run synchronously
-      try {
-        const result = await evaluationService.evaluateInterview(interviewId);
-        return { evaluationId: result.id, status: "COMPLETED" };
-      } catch (error) {
-        // Mark as FAILED so retries are possible
-        await prisma.evaluation.update({
-          where: { interviewId },
-          data: { status: "FAILED" } as any,
-        });
-        throw error;
-      }
-    }
-  }
-
-  private async runEvaluationInBackground(
-    interviewId: string,
-    evaluationService: EvaluationService
-  ): Promise<void> {
-    evaluationService
-      .evaluateInterview(interviewId)
-      .then(() => {
-        logger.info(`Background evaluation completed for interview ${interviewId}`);
-      })
-      .catch((error: Error) => {
-        logger.error(`Background evaluation failed for interview ${interviewId}`, { error });
-        // Mark as FAILED so retries are possible
-        prisma.evaluation
-          .update({
-            where: { interviewId },
-            data: { status: "FAILED" } as any,
-          })
-          .catch((updateError: Error) => {
-            logger.error(`Failed to mark evaluation as FAILED for interview ${interviewId}`, { error: updateError });
-          });
-      });
-  }
 }
 
 ================================================
@@ -20205,25 +18954,37 @@ export default function EvidenceTimeline({ evidence }: Props) {
 ================================================
 FILE: src/features/interview/index.ts
 ================================================
-// Public API for interview feature
+// src/features/interview/index.ts
 
-// Application Services
-export { InterviewService } from "./application/services/InterviewService";
-export { InterviewMessageService } from "./application/services/interview/InterviewMessageService";
-export { TranscriptService } from "./application/services/TranscriptService";
+// Export the Service and the Schema from the application layer
+export { 
+  InterviewService 
+} from "./application/services/InterviewService";
 
-// Types
-export type { StartInterviewInput } from "./application/services/InterviewService";
-export { StartInterviewSchema } from "./application/services/InterviewService";
-export * from "./types/CreateInterviewInput";
+export { 
+  StartInterviewSchema, 
+  type StartInterviewInput 
+} from "@/shared/schemas/interviewSchemas";
 
+// Export the Message Service (used in message/route.ts)
+export { 
+  InterviewMessageService 
+} from "./application/services/interview/InterviewMessageService";
+
+// Export Mastery/Recommendation services for the Dashboard
+export { 
+  SkillGraphService 
+} from "./application/services/mastery/SkillGraphService";
+export { 
+  RecommendationService 
+} from "./application/services/recommendation/RecommendationService";
 ================================================
 FILE: src/features/interview/application/context/SessionContext.ts
 ================================================
 import { Interview, MessageRole } from "@prisma/client";
 
-import { InterviewProfile } from "../profiles/InterviewProfile";
-import { InterviewAggregate } from "../domain/InterviewAggregate";
+import { InterviewProfile } from "@/features/interview/data/profiles/InterviewProfile";
+import { InterviewAggregate } from "@/features/interview/domain/InterviewAggregate";
 
 /**
  * SessionContext
@@ -20790,6 +19551,8 @@ DO:
 ================================================
 FILE: src/features/interview/application/reverse/CandidatePersonas.ts
 ================================================
+import { Difficulty } from "@prisma/client";
+
 export interface CandidatePersona {
   name: string;
   seniority: "junior" | "mid" | "senior";
@@ -20818,7 +19581,7 @@ export const CANDIDATE_PERSONAS: CandidatePersona[] = [
   },
 ];
 
-export function pickPersona(difficulty: "EASY" | "MEDIUM" | "HARD"): CandidatePersona {
+export function pickPersona(difficulty: "EASY" | "MEDIUM" | "HARD" | Difficulty): CandidatePersona {
   const pool =
     difficulty === "EASY" ? CANDIDATE_PERSONAS.filter((p) => p.seniority !== "senior") :
     difficulty === "HARD" ? CANDIDATE_PERSONAS.filter((p) => p.seniority !== "junior") :
@@ -20839,7 +19602,7 @@ import { AIService } from "@/shared/ai";
 import { StructuredOutputParser } from "@/shared/ai/parsers/StructuredOutputParser";
 import { prisma } from "@/shared/prisma/client";
 
-import { PromptLoader } from "../prompt/PromptLoader";
+import { PromptLoader } from "@/features/interview/prompts/prompt/PromptLoader";
 import {
   EvaluatableInterview,
   EvaluationResult,
@@ -21745,7 +20508,7 @@ import {
 } from "@/shared/ai";
 
 import { PromptGuard } from "../guardrails/PromptGuard";
-import { InterviewProfile } from "../profiles/InterviewProfile";
+import { InterviewProfile } from "@/features/interview/data/profiles/InterviewProfile";
 import { CandidatePersona } from "../reverse/CandidatePersonas";
 
 import { InterviewStateMachine } from "./InterviewStateMachine";
@@ -21976,10 +20739,10 @@ All goal coverage values and confidence must be between 0 and 1.
 ================================================
 FILE: src/features/interview/application/engine/PromptBuilder.ts
 ================================================
-import { PromptLoader } from "@/features/interview/prompt/PromptLoader";
-import { PromptRenderer } from "@/features/interview/prompt/PromptRenderer";
+import { PromptLoader } from "@/features/interview/prompts/prompt/PromptLoader";
+import { PromptRenderer } from "@/features/interview/prompts/prompt/PromptRenderer";
 
-import { InterviewPhaseDefinition } from "../profiles/InterviewProfile";
+import { InterviewPhaseDefinition } from "@/features/interview/data/profiles/InterviewProfile";
 import { CandidatePersona } from "../reverse/CandidatePersonas";
 
 export class PromptBuilder {
@@ -22177,8 +20940,8 @@ FILE: src/features/interview/application/engine/InterviewStateMachine.ts
 import {
   InterviewPhaseDefinition,
   InterviewProfile,
-} from "../profiles/InterviewProfile";
-import { PhaseId } from "../constants";
+} from "@/features/interview/data/profiles/InterviewProfile";
+import { PhaseId } from "@/features/interview/data/constants";
 
 export interface PhaseAssessment {
   goalCoverage: Record<string, number>;
@@ -22479,10 +21242,10 @@ FILE: src/features/interview/application/engine/StateUpdater.ts
 ================================================
 FILE: src/features/interview/application/services/background/SummaryEventHandler.ts
 ================================================
-import { DomainEvent, TurnCompletedEventData, PhaseTransitionEventData, InterviewCompletedEventData } from "../../domain/InterviewAggregate";
-import { InterviewRepository } from "../../repositories/InterviewRepository";
-import { SessionContext } from "../../context/SessionContext";
-import { InterviewProfileService } from "../../profiles/InterviewProfileService";
+import { DomainEvent, TurnCompletedEventData, PhaseTransitionEventData, InterviewCompletedEventData } from "@/features/interview/domain/InterviewAggregate";
+import { InterviewRepository } from "@/features/interview/infrastructure/repositories/InterviewRepository";
+import { SessionContext } from "@/features/interview/application/context/SessionContext";
+import { InterviewProfileService } from "@/features/interview/data/profiles/InterviewProfileService";
 import { AIService } from "@/shared/ai";
 
 /**
@@ -22635,10 +21398,10 @@ Requirements:
 ================================================
 FILE: src/features/interview/application/services/background/MasteryEventHandler.ts
 ================================================
-import { DomainEvent, TurnCompletedEventData } from "../../domain/InterviewAggregate";
-import { InterviewRepository } from "../../repositories/InterviewRepository";
-import { SessionContext } from "../../context/SessionContext";
-import { InterviewProfileService } from "../../profiles/InterviewProfileService";
+import { DomainEvent, TurnCompletedEventData } from "@/features/interview/domain/InterviewAggregate";
+import { InterviewRepository } from "@/features/interview/infrastructure/repositories/InterviewRepository";
+import { SessionContext } from "@/features/interview/application/context/SessionContext";
+import { InterviewProfileService } from "@/features/interview/data/profiles/InterviewProfileService";
 import { prisma } from "@/shared/prisma/client";
 
 /**
@@ -22773,10 +21536,10 @@ export class MasteryEventHandler {
 ================================================
 FILE: src/features/interview/application/services/background/RecommendationEventHandler.ts
 ================================================
-import { DomainEvent, TurnCompletedEventData, InterviewCompletedEventData } from "../../domain/InterviewAggregate";
-import { InterviewRepository } from "../../repositories/InterviewRepository";
-import { SessionContext } from "../../context/SessionContext";
-import { InterviewProfileService } from "../../profiles/InterviewProfileService";
+import { DomainEvent, TurnCompletedEventData, InterviewCompletedEventData } from "@/features/interview/domain/InterviewAggregate";
+import { InterviewRepository } from "@/features/interview/infrastructure/repositories/InterviewRepository";
+import { SessionContext } from "@/features/interview/application/context/SessionContext";
+import { InterviewProfileService } from "@/features/interview/data/profiles/InterviewProfileService";
 import { prisma } from "@/shared/prisma/client";
 
 /**
@@ -23993,31 +22756,13 @@ FILE: src/features/interview/application/services/ProblemPickerService.ts
 FILE: src/features/interview/application/services/InterviewService.ts
 ================================================
 import { Difficulty, InterviewMode } from "@prisma/client";
-import { z } from "zod";
 
 import { prisma } from "@/shared/prisma/client";
 import { createInterview } from "./interview/InterviewFactory";
 import { TranscriptService } from "./TranscriptService";
 import { pickPersona } from "../reverse/CandidatePersonas";
 import logger from "@/shared/logger/logger";
-
-const difficultyMap: Record<string, Difficulty> = {
-  EASY: Difficulty.EASY,
-  MEDIUM: Difficulty.MEDIUM,
-  HARD: Difficulty.HARD,
-};
-
-export const StartInterviewSchema = z.object({
-  type: z.string(),
-  difficulty: z.nativeEnum(Difficulty),
-  duration: z.number().positive(),
-  company: z.string(),
-  problemId: z.string().uuid(),
-  mode: z.nativeEnum(InterviewMode).optional(),
-  topic: z.string().optional(),
-});
-
-export type StartInterviewInput = z.infer<typeof StartInterviewSchema>;
+import { StartInterviewSchema, type StartInterviewInput } from "@/shared/schemas/interviewSchemas";
 
 export class InterviewService {
   async startInterview(input: StartInterviewInput) {
@@ -24038,12 +22783,6 @@ export class InterviewService {
       throw new Error("No valid interview templates found. Please run seed.");
     }
 
-    const interviewDifficulty = difficultyMap[difficulty];
-
-    if (!interviewDifficulty) {
-      throw new Error("Invalid difficulty.");
-    }
-
     const problem = await prisma.problem.findUnique({
       where: { id: problemId },
     });
@@ -24054,12 +22793,14 @@ export class InterviewService {
 
     const userId = await this.ensureGuestUser();
 
+    logger.info("Starting interview", { userId, problemId, difficulty });
+
     const interviewMode =
       mode === "REVERSE" ? InterviewMode.REVERSE : InterviewMode.CANDIDATE;
 
     const interviewData = createInterview({
       templateId: template.id,
-      difficulty: interviewDifficulty,
+      difficulty,
       duration,
       company,
       problemId: problem.id,
@@ -24069,7 +22810,7 @@ export class InterviewService {
 
     const persona =
       interviewMode === InterviewMode.REVERSE
-        ? pickPersona(interviewDifficulty)
+        ? pickPersona(difficulty)
         : null;
 
     // Check for existing active interview before transaction to prevent race condition
@@ -24088,6 +22829,8 @@ export class InterviewService {
     // Use transaction to ensure atomicity and handle race conditions
     const savedInterview = await prisma.$transaction(async (tx) => {
       try {
+        logger.info("Creating interview in transaction", { userId, templateId: template.id, problemId: problem.id });
+        
         const interview = await tx.interview.create({
           data: {
             difficulty: interviewData.difficulty,
@@ -24189,6 +22932,7 @@ export class InterviewService {
     const session = await auth();
 
     if (session?.user?.id) {
+      logger.info("Using authenticated user", { userId: session.user.id });
       return session.user.id;
     }
 
@@ -24200,15 +22944,29 @@ export class InterviewService {
         where: { id: existingGuestId },
       });
 
-      if (guest) return guest.id;
+      if (guest) {
+        logger.info("Using existing guest user", { userId: guest.id });
+        return guest.id;
+      }
+      
+      // Clear stale cookie if user doesn't exist
+      logger.warn("Clearing stale guest cookie", { guestId: existingGuestId });
+      cookieStore.delete(GUEST_COOKIE);
     }
 
-    const guest = await prisma.user.create({
-      data: {
-        email: `guest-${randomUUID()}@guest.local`,
-        isGuest: true,
-      },
-    });
+    let guest;
+    try {
+      guest = await prisma.user.create({
+        data: {
+          email: `guest-${randomUUID()}@guest.local`,
+          isGuest: true,
+        },
+      });
+      logger.info("Created new guest user", { userId: guest.id });
+    } catch (error) {
+      logger.error("Failed to create guest user", { error });
+      throw new Error("Failed to create guest user");
+    }
 
     cookieStore.set(GUEST_COOKIE, guest.id, {
       httpOnly: true,
@@ -24226,7 +22984,7 @@ FILE: src/features/interview/application/services/interview/InterviewFactory.ts
 ================================================
 import { InterviewStatus, InterviewMode } from "@prisma/client";
 import { CreateInterviewInput } from "@/features/interview/types/CreateInterviewInput";
-import { PhaseId } from "../../constants";
+import { PhaseId } from "@/features/interview/data/constants";
 
 export function createInterview(input: CreateInterviewInput) {
   return {
@@ -24248,14 +23006,14 @@ import {
 } from "@prisma/client";
 
 import type { ChatMessage } from "@/shared/ai";
-import { ProcessInterviewMessageResult } from "@/types/interview";
+import { ProcessInterviewMessageResult } from "@/features/interview/types/legacy-types";
 
 import { InterviewEngine } from "../../engine/InterviewEngine";
-import { InterviewRepository } from "../../repositories/InterviewRepository";
-import { InterviewProfileService } from "../../profiles/InterviewProfileService";
+import { InterviewRepository } from "@/features/interview/infrastructure/repositories/InterviewRepository";
+import { InterviewProfileService } from "@/features/interview/data/profiles/InterviewProfileService";
 import { EvaluationOrchestrator } from "../evaluation/EvaluationOrchestrator";
-import { SessionContext } from "../../context/SessionContext";
-import { InterviewAggregate } from "../../domain/InterviewAggregate";
+import { SessionContext } from "@/features/interview/application/context/SessionContext";
+import { InterviewAggregate } from "@/features/interview/domain/InterviewAggregate";
 import { eventBus } from "../../events/EventBus";
 import { SummaryEventHandler } from "../background/SummaryEventHandler";
 import { MasteryEventHandler } from "../background/MasteryEventHandler";
@@ -24497,8 +23255,8 @@ import logger from "@/shared/logger/logger";
 
 import { EvidenceEvaluator } from "../../evaluators/EvidenceEvaluator";
 import { EvaluatableInterview } from "../../evaluators/types";
-import { PromptLoader } from "../../prompt/PromptLoader";
-import { InterviewRepository } from "../../repositories/InterviewRepository";
+import { PromptLoader } from "@/features/interview/prompts/prompt/PromptLoader";
+import { InterviewRepository } from "@/features/interview/infrastructure/repositories/InterviewRepository";
 import { MasteryService } from "../mastery/MasteryService";
 import { deriveStudyPlan } from "../studyplan/StudyResources";
 
@@ -25481,30 +24239,36 @@ export type EvaluationDimension = (typeof EvaluationDimension)[keyof typeof Eval
 // ---------------------------------------------------------------------------
 
 export const PhaseId = {
-  Introduction: "Introduction",
-  Requirements: "Requirements",
-  HighLevelDesign: "HighLevelDesign",
+  Introduction: "introduction",
+  Requirements: "requirements",
+  HighLevelDesign: "high_level_design",
   DeepDive: "deep_dive",
   Scalability: "scalability",
   Closing: "closing",
+
   DomainModeling: "domain_modeling",
   ClassDesign: "class_design",
   Extensibility: "extensibility",
+
   Clarification: "clarification",
   Approach: "approach",
   Implementation: "implementation",
   Testing: "testing",
+
   ContextUnderstanding: "context_understanding",
   CodeReview: "code_review",
   DesignReview: "design_review",
   FeedbackDelivery: "feedback_delivery",
+
   KnowledgeAssessment: "knowledge_assessment",
   ArchitectureExploration: "architecture_exploration",
   ImplementationDetails: "implementation_details",
   ScalabilityReliability: "scalability_reliability",
+
   StructureReview: "structure_review",
   ContentReview: "content_review",
   ImprovementSuggestions: "improvement_suggestions",
+
   RequirementAnalysis: "requirement_analysis",
   DependencyAnalysis: "dependency_analysis",
   TaskDecomposition: "task_decomposition",
@@ -25522,8 +24286,8 @@ export const Goal = {
   CandidateUnderstandsProblem: "candidate_understands_problem",
   
   // HLD goals
-  FunctionalRequirements: "functional_Requirements",
-  NonFunctionalRequirements: "non_functional_Requirements",
+  FunctionalRequirements: "functional_requirements",
+NonFunctionalRequirements: "non_functional_requirements",
   Scale: "scale",
   Constraints: "constraints",
   CoreComponents: "core_components",
@@ -25615,7 +24379,7 @@ export const Goal = {
   
   // Task Breakdown goals
   CandidateUnderstandsTask: "candidate_understands_task",
-  Task_FunctionalRequirements: "functional_Requirements",
+  Task_FunctionalRequirements: "functional_requirements",
   Task_Constraints: "constraints",
   SuccessCriteria: "success_criteria",
   Dependencies: "dependencies",
@@ -26413,8 +25177,8 @@ import {
   Prisma,
 } from "@prisma/client";
 
-import { InterviewProfile } from "../profiles/InterviewProfile";
-import { PhaseId } from "../constants";
+import { InterviewProfile } from "@/features/interview/data/profiles/InterviewProfile";
+import { PhaseId } from "@/features/interview/data/constants";
 import { PhaseAssessment, TransitionResult } from "../engine/InterviewStateMachine";
 
 /**
@@ -26889,788 +25653,6 @@ export interface Evaluation {
   createdAt: Date;
 }
 ================================================
-FILE: src/features/interview/conversation/components/sidebar/DesignSummary.tsx
-================================================
-'use client';
-
-import React from 'react';
-
-interface DesignSummaryProps {
-  summary: string;
-}
-
-/**
- * DesignSummary - Shows the running interview summary
- *
- * This is the `interview.summary` field from your database.
- * 
- * Updated by:
- * - IncrementalSummaryService (every 3 turns)
- * - On phase transitions
- * - On interview completion
- * - Backend owns all summary generation
- *
- * Frontend just displays it.
- * Never computes or modifies the summary.
- *
- * Format:
- * - Usually a multi-line text block
- * - Could be bullet points or prose
- * - Updated by the LLM
- */
-export function DesignSummary({ summary }: DesignSummaryProps) {
-  return (
-    <div className="space-y-3">
-      <p className="text-xs font-semibold text-teal-600 uppercase tracking-wider">
-        Design Summary
-      </p>
-
-      {summary && summary !== 'Interview has not started yet.' ? (
-        <div className="text-sm text-gray-700 space-y-2 whitespace-pre-wrap">
-          {summary}
-        </div>
-      ) : (
-        <p className="text-sm text-gray-400 italic">
-          Summary will appear as the interview progresses.
-        </p>
-      )}
-    </div>
-  );
-}
-================================================
-FILE: src/features/interview/conversation/components/sidebar/ProblemCard.tsx
-================================================
-'use client';
-
-import React from 'react';
-
-interface ProblemCardProps {
-  title: string;
-  description: string | null;
-  difficulty: string;
-  company: string;
-}
-
-/**
- * ProblemCard - Shows the problem being solved
- *
- * Displays:
- * - Problem title
- * - Brief description (if available)
- * - Difficulty level
- * - Target company
- *
- * This is read-only context about the problem.
- * Problem definition is immutable during the interview.
- */
-export function ProblemCard({
-  title,
-  description,
-  difficulty,
-  company,
-}: ProblemCardProps) {
-  return (
-    <div className="space-y-3">
-      <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
-
-      {description && (
-        <p className="text-sm text-gray-600 line-clamp-3">{description}</p>
-      )}
-
-      <div className="flex gap-2 text-xs">
-        <span className="inline-block px-2 py-1 rounded bg-gray-100 text-gray-700">
-          {difficulty}
-        </span>
-        <span className="inline-block px-2 py-1 rounded bg-gray-100 text-gray-700">
-          {company}
-        </span>
-      </div>
-    </div>
-  );
-}
-================================================
-FILE: src/features/interview/conversation/components/LiveInterview.tsx
-================================================
-'use client';
-
-import { useCallback } from 'react';
-import { Prisma } from '@prisma/client';
-
-import { InterviewHeader } from './InterviewHeader';
-import { PhaseProgress } from './PhaseProgress';
-import { MessageList } from './MessageList';
-import { ChatInput } from './ChatInput';
-import { Sidebar } from './Sidebar';
-
-import { useInterview } from '../hooks/useInterview';
-import { useMessages } from '../hooks/useMessages';
-import { useTimer } from '../hooks/useTimer';
-import { logger } from '@/lib/logger'; // Replace with your logger path
-
-// 1. Accurate type representing the API response with relations included
-export type InterviewWithRelations = Prisma.InterviewGetPayload<{
-  include: {
-    problem: true;
-    transcript: true;
-  };
-}>;
-
-interface LiveInterviewProps {
-  interviewId: string;
-}
-
-export function LiveInterview({ interviewId }: LiveInterviewProps) {
-  const { interview, loading, error, refetch } = useInterview(interviewId);
-  const {
-    sendMessage,
-    isSending,
-    error: messageError,
-  } = useMessages(interviewId);
-
-  // 2 & 8. Hook owns calculation logic directly — no wrapper component or empty callback needed
-  const { remainingSeconds } = useTimer({
-    startedAt: interview?.createdAt ?? null,
-    durationMinutes: interview?.duration ?? 0,
-    isRunning: interview?.status === 'IN_PROGRESS',
-  });
-
-  const handleSendMessage = useCallback(
-    async (text: string) => {
-      // 5. Send guard
-      if (isSending || !text.trim()) return;
-
-      try {
-        await sendMessage(text);
-        
-        // 6. Refresh interview state because the backend owns transcript updates,
-        // phase transitions, and summary generation.
-        await refetch();
-      } catch (err) {
-        // 3. Logger instead of console.error
-        logger.error('Failed to send interview message', { err, interviewId });
-      }
-    },
-    [isSending, sendMessage, refetch, interviewId]
-  );
-
-  const problemForSidebar = {
-    ...interview?.problem,
-    description: (interview?.problem as { description?: string | null } | undefined)?.description ?? null,
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <p className="text-gray-600">Loading interview...</p>
-      </div>
-    );
-  }
-
-  if (error || !interview) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <p className="text-red-600">{error || 'Failed to load interview'}</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex flex-col h-screen bg-white">
-      <InterviewHeader
-        title={interview.problem.title}
-        isLive={interview.status === 'IN_PROGRESS'}
-        remainingSeconds={remainingSeconds}
-      />
-
-      <PhaseProgress
-        currentPhase={interview.currentPhase}
-        isCompleted={interview.status === 'COMPLETED'}
-      />
-
-      <div className="flex flex-1 overflow-hidden">
-        <div className="flex-1 flex flex-col">
-          <MessageList messages={interview.transcript} />
-          <ChatInput
-            onSendMessage={handleSendMessage}
-            isSending={isSending}
-            error={messageError}
-            isInterviewCompleted={interview.status === 'COMPLETED'}
-          />
-        </div>
-
-        <Sidebar
-          problem={interview.problem}
-          currentPhase={interview.currentPhase}
-          summary={interview.summary}
-          difficulty={interview.difficulty}
-          company={interview.company}
-        />
-      </div>
-    </div>
-  );
-}
-================================================
-FILE: src/features/interview/conversation/components/MessageList.tsx
-================================================
-'use client';
-
-import React, { useEffect, useRef } from 'react';
-import { Message } from './Message';
-import type { TranscriptMessage } from '../../types/TranscriptMessage';
-
-interface MessageListProps {
-  messages: TranscriptMessage[];
-}
-
-/**
- * MessageList - Renders conversation history
- *
- * Features:
- * - Auto-scrolls to latest message
- * - Handles empty state
- * - Message ordering (oldest first)
- *
- * Note: Messages come from the interview's transcript,
- * which is the source of truth on the backend.
- */
-export function MessageList({ messages }: MessageListProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const endRef = useRef<HTMLDivElement>(null);
-
-  // Auto-scroll to bottom when new messages arrive
-  useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  return (
-    <div
-      ref={containerRef}
-      className="flex-1 overflow-y-auto px-6 py-6 space-y-4 bg-white"
-    >
-      {messages.length === 0 ? (
-        <div className="flex items-center justify-center h-full">
-          <p className="text-gray-400">No messages yet</p>
-        </div>
-      ) : (
-        <>
-          {messages.map((msg) => (
-            <Message
-              key={msg.id}
-              role={msg.role}
-              content={msg.content}
-            />
-          ))}
-          <div ref={endRef} />
-        </>
-      )}
-    </div>
-  );
-}
-================================================
-FILE: src/features/interview/conversation/components/Timer.tsx
-================================================
-// components/interview/live/Timer.tsx
-'use client';
-
-import { useRouter } from 'next/navigation';
-import { useTimer } from '../hooks/useTimer';
-
-interface TimerProps {
-  durationInMinutes: number;
-  interviewId: string;
-  onFinish?: () => void;
-}
-
-export default function Timer({ durationInMinutes, interviewId, onFinish }: TimerProps) {
-  const router = useRouter();
-
-  const handleFinish = async () => {
-    const response = await fetch(`/api/interviews/${interviewId}/finish`, {
-      method: 'POST',
-    });
-    if (response.ok) {
-      router.push(`/interview/report/${interviewId}`);
-    }
-    onFinish?.();
-  };
-
-  const { formattedTime, timeLeft } = useTimer(durationInMinutes, handleFinish);
-
-  return (
-    <div className={`p-2 rounded-lg font-mono text-xl ${timeLeft < 300 ? 'text-red-500 animate-pulse' : 'text-slate-700'}`}>
-      {formattedTime}
-    </div>
-  );
-}
-================================================
-FILE: src/features/interview/conversation/components/PhaseProgress.tsx
-================================================
-'use client';
-
-import React from 'react';
-
-interface PhaseProgressProps {
-  currentPhase: string;
-  isCompleted: boolean;
-}
-
-/**
- * PhaseProgress
- *
- * Shows which phase the interview is in
- * 
- * Phases are defined in the template and managed by the backend.
- * This component just displays the current phase name.
- *
- * Common phases:
- * - intro
- * - Requirements
- * - high-level-design
- * - deep-dive
- * - scalability
- * - closing
- *
- * Phase order and transitions are owned by InterviewEngine
- */
-export function PhaseProgress({
-  currentPhase,
-  isCompleted,
-}: PhaseProgressProps) {
-  // Format phase name (e.g., "high-level-design" → "High-level design")
-  const formatPhaseName = (phase: string) => {
-    return phase
-      .split('-')
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
-  };
-
-  return (
-    <div className="px-6 py-4 border-b border-gray-200">
-      <div className="flex items-center gap-3">
-        <div className="text-xs font-semibold text-teal-600 uppercase tracking-wider">
-          Current Phase
-        </div>
-        <div className="inline-block px-3 py-1 rounded-full bg-gray-900 text-white text-sm font-medium">
-          {isCompleted ? 'Completed' : formatPhaseName(currentPhase)}
-        </div>
-      </div>
-    </div>
-  );
-}
-================================================
-FILE: src/features/interview/conversation/components/Sidebar.tsx
-================================================
-'use client';
-
-import React from 'react';
-import { ProblemCard } from './sidebar/ProblemCard';
-import { DesignSummary } from './sidebar/DesignSummary';
-
-interface SidebarProps {
-  problem: {
-    id: string;
-    title: string;
-    description: string | null;
-  };
-  currentPhase: string;
-  summary: string;
-  difficulty: string;
-  company: string;
-}
-
-/**
- * Sidebar - Right panel
- *
- * Composes smaller components:
- * - ProblemCard (problem title, description, metadata)
- * - DesignSummary (summary text from backend)
- *
- * Future components to add:
- * - InterviewTips (phase-specific guidance)
- * - EvaluationPreview (live scoring if available)
- * - ResourceLinks (documentation links for this phase)
- *
- * All data flows down from backend.
- * Backend owns phase transitions, summaries, evaluations.
- */
-export function Sidebar({
-  problem,
-  currentPhase,
-  summary,
-  difficulty,
-  company,
-}: SidebarProps) {
-  return (
-    <div className="w-80 border-l border-gray-200 bg-white p-6 overflow-y-auto">
-      <ProblemCard
-        title={problem.title}
-        description={problem.description}
-        difficulty={difficulty}
-        company={company}
-      />
-
-      <div className="my-8" />
-
-      <DesignSummary summary={summary} />
-    </div>
-  );
-}
-================================================
-FILE: src/features/interview/conversation/components/Message.tsx
-================================================
-'use client';
-
-import React from 'react';
-
-interface MessageProps {
-  role: 'assistant' | 'user';
-  content: string;
-}
-
-/**
- * Message - Renders a single message bubble
- *
- * Props:
- * - role: 'assistant' (interviewer) or 'user' (candidate)
- * - content: The message text
- *
- * Styling:
- * - User: black bubble, right-aligned
- * - Assistant: gray bubble, left-aligned
- */
-export function Message({ role, content }: MessageProps) {
-  const isUser = role === 'user';
-
-  return (
-    <div className={`flex gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
-      {!isUser && (
-        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
-          <span className="text-xs font-semibold text-gray-700">I</span>
-        </div>
-      )}
-
-      <div
-        className={`max-w-md px-4 py-3 rounded-2xl ${
-          isUser
-            ? 'bg-black text-white rounded-tr-none'
-            : 'bg-gray-200 text-gray-900 rounded-tl-none'
-        }`}
-      >
-        {!isUser && (
-          <p className="text-xs font-semibold text-gray-600 mb-1">Interviewer</p>
-        )}
-        <p className="text-sm leading-relaxed">{content}</p>
-      </div>
-    </div>
-  );
-}
-================================================
-FILE: src/features/interview/conversation/components/Chat.tsx
-================================================
-// components/interview/live/Chat.tsx
-'use client';
-import { useRef, useEffect } from 'react';
-import MessageList from './MessageList';
-import ChatInput from './ChatInput';
-import { TranscriptMessage } from '../../types/TranscriptMessage';
-
-interface ChatProps {
-  messages: TranscriptMessage[];
-  onSendMessage: (msg: string) => void;
-  isLoading: boolean;
-}
-
-export default function Chat({ messages, onSendMessage, isLoading }: ChatProps) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages, isLoading]);
-
-  return (
-    <div className="flex flex-col h-full bg-background">
-      <div
-        ref={scrollRef}
-        className="flex-1 overflow-y-auto p-6 space-y-4"
-        aria-live="polite"
-        aria-atomic="false"
-      >
-        <MessageList messages={messages} />
-        {isLoading && (
-          <div className="flex gap-3 animate-pulse">
-            <div className="w-8 h-8 bg-muted rounded-full" />
-            <div className="flex-1 space-y-2">
-              <div className="h-4 bg-muted rounded w-1/4" />
-              <div className="h-10 bg-muted rounded w-3/4" />
-            </div>
-          </div>
-        )}
-      </div>
-      <div className="p-6 border-t border-border bg-card">
-        <ChatInput onSendMessage={onSendMessage} disabled={isLoading} />
-      </div>
-    </div>
-  );
-}
-================================================
-FILE: src/features/interview/conversation/components/InterviewHeader.tsx
-================================================
-'use client';
-
-import React, { useEffect, useState } from 'react';
-import { ChevronLeft } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-
-interface InterviewHeaderProps {
-  title: string;
-  isLive: boolean;
-  remainingSeconds: number;
-}
-
-/**
- * InterviewHeader
- *
- * Shows:
- * - Back button
- * - Interview title
- * - "Live" indicator (if IN_PROGRESS)
- * - Timer with countdown
- *
- * Timer updates every second from remainingSeconds prop
- */
-export function InterviewHeader({
-  title,
-  isLive,
-  remainingSeconds,
-}: InterviewHeaderProps) {
-  const router = useRouter();
-  const [displaySeconds, setDisplaySeconds] = useState(remainingSeconds);
-
-  // Update display seconds every second
-  useEffect(() => {
-    setDisplaySeconds(remainingSeconds);
-
-    if (remainingSeconds <= 0) {
-      return;
-    }
-
-    const interval = setInterval(() => {
-      setDisplaySeconds((prev) => Math.max(0, prev - 1));
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [remainingSeconds]);
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  return (
-    <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-      {/* Left: Back + Title */}
-      <div className="flex items-center gap-4">
-        <button
-          onClick={() => router.back()}
-          className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-          aria-label="Go back"
-        >
-          <ChevronLeft className="w-5 h-5 text-gray-600" />
-        </button>
-        <div>
-          <p className="text-sm text-gray-600">Live interview</p>
-          <h1 className="text-lg font-semibold text-gray-900">{title}</h1>
-        </div>
-      </div>
-
-      {/* Right: Live + Timer */}
-      <div className="flex items-center gap-4">
-        {isLive && (
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-            <span className="text-sm font-medium text-red-500">Live</span>
-          </div>
-        )}
-
-        <div className="flex flex-col items-center justify-center w-16 h-16 rounded-full bg-gray-900 text-white">
-          <span className="text-sm font-mono font-semibold">
-            {formatTime(displaySeconds)}
-          </span>
-          <span className="text-xs text-gray-400">LEFT</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-================================================
-FILE: src/features/interview/conversation/components/ChatInput.tsx
-================================================
-'use client';
-
-import React, { useState } from 'react';
-import { Mic, ArrowRight } from 'lucide-react';
-
-interface ChatInputProps {
-  onSendMessage: (text: string) => void;
-  isSending?: boolean;
-  error?: string | null;
-  isInterviewCompleted?: boolean;
-}
-
-/**
- * ChatInput - Message composition area
- *
- * Features:
- * - Text input field
- * - Mic button (placeholder for voice recording)
- * - Send button
- * - Error display
- * - Disabled state when sending or interview complete
- *
- * Note: Does not call API directly.
- * Delegates to parent via onSendMessage callback.
- */
-export function ChatInput({
-  onSendMessage,
-  isSending = false,
-  error,
-  isInterviewCompleted = false,
-}: ChatInputProps) {
-  const [input, setInput] = useState('');
-
-  const handleSend = () => {
-    if (input.trim()) {
-      onSendMessage(input);
-      setInput('');
-    }
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey && !isSending) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
-
-  const isDisabled = isSending || isInterviewCompleted;
-
-  return (
-    <div className="px-6 py-4 border-t border-gray-200 bg-white">
-      {error && (
-        <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-700">
-          {error}
-        </div>
-      )}
-
-      <div className="flex items-center gap-3">
-        {/* Mic button */}
-        <button
-          disabled={isDisabled}
-          className="p-2 rounded-full hover:bg-gray-100 text-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          aria-label="Record message"
-        >
-          <Mic className="w-5 h-5" />
-        </button>
-
-        {/* Input field */}
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyPress={handleKeyPress}
-          disabled={isDisabled}
-          placeholder={isInterviewCompleted ? 'Interview completed' : 'Explain your design...'}
-          className="flex-1 px-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:border-gray-400 text-sm bg-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
-        />
-
-        {/* Send button */}
-        <button
-          onClick={handleSend}
-          disabled={isDisabled || !input.trim()}
-          className={`p-3 rounded-full transition-colors ${
-            isDisabled || !input.trim()
-              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              : 'bg-green-600 text-white hover:bg-green-700'
-          }`}
-          aria-label="Send message"
-        >
-          <ArrowRight className="w-5 h-5" />
-        </button>
-      </div>
-    </div>
-  );
-}
-================================================
-FILE: src/features/interview/conversation/components/PhaseSelector.tsx
-================================================
-'use client';
-
-import React from 'react';
-
-interface Phase {
-  id: string;
-  name: string;
-  status: 'completed' | 'current' | 'upcoming';
-}
-
-interface PhaseSelectorProps {
-  phases: Phase[];
-  currentPhase: string;
-  onPhaseChange?: (phaseId: string) => void;
-}
-
-export const PhaseSelector: React.FC<PhaseSelectorProps> = ({
-  phases,
-  currentPhase,
-}) => {
-  return (
-    <div className="flex items-center gap-6 px-6 py-4 border-b border-gray-200 bg-white overflow-x-auto">
-      {phases.map((phase) => {
-        const isCompleted = phase.status === 'completed';
-        const isCurrent = phase.id === currentPhase;
-
-        return (
-          <button
-            key={phase.id}
-            className="flex items-center gap-2 whitespace-nowrap transition-all"
-            disabled={!isCompleted && !isCurrent}
-          >
-            {/* Indicator circle */}
-            <div className="flex items-center justify-center w-5 h-5 rounded-full border-2">
-              {isCompleted ? (
-                // Completed: filled green circle
-                <div className="w-5 h-5 rounded-full bg-green-600 border-green-600" />
-              ) : isCurrent ? (
-                // Current: filled black circle
-                <div className="w-5 h-5 rounded-full bg-black border-black" />
-              ) : (
-                // Upcoming: empty circle
-                <div className="w-5 h-5 rounded-full border-2 border-gray-300" />
-              )}
-            </div>
-
-            {/* Phase name */}
-            <span
-              className={`text-sm font-medium ${
-                isCurrent
-                  ? 'text-gray-900'
-                  : isCompleted
-                  ? 'text-gray-600'
-                  : 'text-gray-400'
-              }`}
-            >
-              {phase.name}
-            </span>
-          </button>
-        );
-      })}
-    </div>
-  );
-};
-================================================
 FILE: src/features/interview/conversation/hooks/useInterview.ts
 ================================================
 'use client';
@@ -27678,7 +25660,7 @@ FILE: src/features/interview/conversation/hooks/useInterview.ts
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { interviewApiClient } from '@/shared/api/InterviewApiClient';
-import type { InterviewState } from "@/features/interview/types";
+import type { InterviewState } from '@/features/interview/types/InterviewState'
 
 interface UseInterviewReturn {
   interview: InterviewState | null;
@@ -27881,1293 +25863,6 @@ export { useInterview } from './hooks/useInterview';
 export { useMessages } from './hooks/useMessages';
 export { useTimer } from './hooks/useTimer';
 export { InterviewProvider, useInterviewStore } from './store/interviewStore';
-================================================
-FILE: src/features/interview/conversation/application/interview/InterviewFactory.ts
-================================================
-import { InterviewStatus, InterviewMode } from "@prisma/client";
-import { CreateInterviewInput } from "@/features/interview/types/CreateInterviewInput";
-import { PhaseId } from "../../constants";
-
-export function createInterview(input: CreateInterviewInput) {
-  return {
-    ...input,
-    status: InterviewStatus.SETUP,
-    currentPhase: PhaseId.Introduction,
-    summary: "Interview has not started yet.",
-    promptVersion: "v1",
-    mode: input.mode ?? InterviewMode.CANDIDATE,
-  };
-}
-================================================
-FILE: src/features/interview/conversation/application/interview/InterviewMessageService.ts
-================================================
-import {
-  InterviewStatus,
-  MessageRole,
-  Prisma,
-} from "@prisma/client";
-
-import type { ChatMessage } from "@/shared/ai";
-import { ProcessInterviewMessageResult } from "@/types/interview";
-
-import { InterviewEngine } from "../../engine/InterviewEngine";
-import { InterviewRepository } from "../../repositories/InterviewRepository";
-import { InterviewProfileService } from "../../profiles/InterviewProfileService";
-import { EvaluationOrchestrator } from "../evaluation/EvaluationOrchestrator";
-import { SessionContext } from "../../context/SessionContext";
-import { InterviewAggregate } from "../../domain/InterviewAggregate";
-import { eventBus } from "../../events/EventBus";
-import { SummaryEventHandler } from "../background/SummaryEventHandler";
-import { MasteryEventHandler } from "../background/MasteryEventHandler";
-import { RecommendationEventHandler } from "../background/RecommendationEventHandler";
-
-
-
-export class InterviewMessageService {
-  private readonly repository =
-    new InterviewRepository();
-
-  private readonly engine =
-    new InterviewEngine();
-
-  private readonly profileService =
-    new InterviewProfileService();
-
-  private readonly evaluationOrchestrator =
-    new EvaluationOrchestrator();
-
-  private readonly summaryEventHandler =
-    new SummaryEventHandler();
-
-  private readonly masteryEventHandler =
-    new MasteryEventHandler();
-
-  private readonly recommendationEventHandler =
-    new RecommendationEventHandler();
-
-  constructor() {
-    // Wire up event handlers to event bus
-    this.setupEventHandlers();
-  }
-
-  private setupEventHandlers(): void {
-    eventBus.subscribe("TURN_COMPLETED", async (event) => {
-      await this.summaryEventHandler.handleTurnCompleted(event);
-      await this.masteryEventHandler.handleTurnCompleted(event);
-    });
-
-    eventBus.subscribe("PHASE_TRANSITION", async (event) => {
-      await this.summaryEventHandler.handlePhaseTransition(event);
-    });
-
-    eventBus.subscribe("INTERVIEW_COMPLETED", async (event) => {
-      await this.summaryEventHandler.handleInterviewCompleted(event);
-      await this.recommendationEventHandler.handleInterviewCompleted(event);
-    });
-  }
-
-  async processMessage(
-    interviewId: string,
-    userMessage: string
-  ): Promise<ProcessInterviewMessageResult> {
-    const normalizedMessage =
-      userMessage.trim();
-
-    if (!normalizedMessage) {
-      throw new Error(
-        "Interview message cannot be empty."
-      );
-    }
-
-    // Use SessionContext for optimized data fetching (recent transcript only)
-    const context = await SessionContext.forRequest({
-      interviewId,
-      repository: this.repository,
-      profileService: this.profileService,
-    });
-
-    if (
-      context.status ===
-      InterviewStatus.COMPLETED
-    ) {
-      throw new Error(
-        "Interview has already been completed."
-      );
-    }
-
-    const currentPhaseDef = context.profile.phases.find(
-      (p) => p.id === context.currentPhase
-    );
-
-    const history =
-      this.buildConversationHistory(
-        context.recentTranscript,
-        normalizedMessage
-      );
-
-    const problemDescription =
-      context.problem.description ??
-      context.problem.title;
-
-    const interviewStartedAt =
-      context.interviewAggregate.startedAt;
-
-    const elapsedSeconds = Math.max(
-      Math.floor(
-        (Date.now() - interviewStartedAt.getTime()) / 1000
-      ),
-      0
-    );
-
-    const phaseStartedAt =
-      context.interviewAggregate.phaseStartedAt;
-
-    const result =
-      await this.engine.processUserMessage({
-        profile: context.profile,
-        currentPhase:
-          context.currentPhase,
-        history,
-        runningSummary:
-          context.summary,
-        problem: problemDescription,
-        candidateName: context.interviewAggregate.mode === "REVERSE" && context.interviewAggregate.candidatePersona
-          ? (context.interviewAggregate.candidatePersona as any).name || "Candidate"
-          : "Candidate",
-        interviewDurationMinutes:
-          context.interviewAggregate.duration,
-        interviewStartedAt,
-        phaseStartedAt,
-        mode: context.interviewAggregate.mode,
-        persona: context.interviewAggregate.candidatePersona as any,
-        whiteboardDescription: context.interviewAggregate.whiteboardDescription || undefined,
-      });
-
-    // Apply turn to aggregate (encapsulates business logic)
-    const turnResult = context.interviewAggregate.applyTurn({
-      userMessage: normalizedMessage,
-      aiResponse: result.reply,
-      phaseAssessment: result.phaseAssessment ?? {
-        goalCoverage: {},
-        confidence: 0.5,
-        unresolvedTopics: [],
-      },
-      transition: result.transition,
-      profile: context.profile,
-    });
-
-    // Persist atomically
-    const payload = context.interviewAggregate.toPersistence();
-    await this.repository.persistTurn({
-      interviewId: context.interviewId,
-      userMessage: normalizedMessage,
-      assistantMessage: result.reply,
-      currentPhase: payload.currentPhase,
-      status: payload.status,
-      assistantMetadata: {
-        phaseAssessment: result.phaseAssessment,
-        transition: result.transition,
-      } as unknown as Prisma.InputJsonValue,
-      elapsedSeconds,
-    });
-
-    // Update phaseStartedAt when phase transitions
-    if (result.transition.shouldTransition) {
-      await this.repository.updateProgress(context.interviewId, {
-        currentPhase: payload.currentPhase,
-        phaseStartedAt: payload.phaseStartedAt,
-      });
-    }
-
-    // Update completedAt if interview finished
-    if (result.transition.completed) {
-      await this.repository.updateProgress(context.interviewId, {
-        completedAt: payload.completedAt || undefined,
-      });
-
-      // Evaluate in background without blocking response
-      this.evaluationOrchestrator.requestEvaluation(context.interviewId, { background: true }).catch((error: Error) => {
-        console.error(`Failed to request evaluation for interview ${context.interviewId}:`, error);
-        this.repository.updateMetadata(context.interviewId, {
-          evaluationError: error instanceof Error ? error.message : 'Unknown evaluation error',
-          evaluationFailedAt: new Date().toISOString(),
-        }).catch((updateError: Error) => {
-          console.error(`Failed to store evaluation error for interview ${context.interviewId}:`, updateError);
-        });
-      });
-    }
-
-    // Publish domain events (async, non-blocking)
-    const domainEvents = context.interviewAggregate.pullDomainEvents();
-    for (const event of domainEvents) {
-      await eventBus.publish(event);
-    }
-
-    return {
-      reply: turnResult.reply,
-      phase: turnResult.phase,
-      previousPhase: turnResult.previousPhase,
-      transitioned:
-        turnResult.transitioned,
-      confidence: turnResult.confidence,
-      completed:
-        turnResult.completed,
-      summary: turnResult.summary,
-    };
-  }
-
-  private buildConversationHistory(
-    transcript: Array<{
-      role: MessageRole;
-      content: string;
-    }>,
-    userMessage: string
-  ): ChatMessage[] {
-    const history: ChatMessage[] =
-      transcript
-        .filter(
-          (message) =>
-            message.role === MessageRole.user ||
-            message.role ===
-              MessageRole.assistant
-        )
-        .map((message) => ({
-          role:
-            message.role === MessageRole.user
-              ? "user"
-              : "assistant",
-          content: message.content,
-        }));
-
-    history.push({
-      role: "user",
-      content: userMessage,
-    });
-
-    return history;
-  }
-}
-================================================
-FILE: src/features/interview/conversation/application/engine/ResponseParser.ts
-================================================
-import { z } from "zod";
-
-import { StructuredOutputParser } from "@/shared/ai/parsers/StructuredOutputParser";
-
-/**
- * Normalizes confidence values from different LLM output scales.
- * 
- * LLMs may output confidence on different scales despite prompt instructions:
- * - Unit scale (0-1): 0.8 → 0.8 (no change)
- * - 1-10 scale: 5 → 0.5, 8 → 0.8 (divide by 10)
- * - Percentage scale (0-100): 75 → 0.75 (divide by 100)
- * 
- * Scale detection is based on explicit ranges to avoid ambiguity:
- * - 0-1: already normalized
- * - 1-10: treated as 1-10 rating scale
- * - 10-100: treated as percentage
- * - >100 or <0: invalid, rejected
- * 
- * Logs warnings when normalization is required to detect prompt drift.
- */
-function normalizeConfidence(value: number): number {
-  // Reject invalid values - let Zod validation fail so repair/retry can handle it
-  if (!Number.isFinite(value)) {
-    throw new Error(`Invalid confidence: ${value} is not a finite number`);
-  }
-  
-  // Reject obviously invalid ranges - don't silently clamp
-  if (value < 0 || value > 100) {
-    throw new Error(`Invalid confidence: ${value} is outside valid range [0, 100]`);
-  }
-  
-  // Unit scale (0-1): already normalized, no transformation needed
-  if (value <= 1) {
-    return value;
-  }
-  
-  // 1-10 scale: divide by 10 (e.g., 5 → 0.5, 8 → 0.8)
-  // Note: 10 is treated as 1.0 (perfect confidence), not 10%
-  if (value > 1 && value <= 10) {
-    console.warn(`[LLM Drift] confidence value ${value} appears to be on 1-10 scale, normalizing to ${value / 10}. Prompt may need adjustment.`);
-    return value / 10;
-  }
-  
-  // Percentage scale (10-100): divide by 100 (e.g., 75 → 0.75)
-  if (value > 10 && value <= 100) {
-    console.warn(`[LLM Drift] confidence value ${value} appears to be on percentage scale, normalizing to ${value / 100}. Prompt may need adjustment.`);
-    return value / 100;
-  }
-  
-  // This should never be reached due to the >100 check above
-  throw new Error(`Invalid confidence: ${value} could not be normalized`);
-}
-
-/**
- * Normalizes goal coverage values from different LLM output scales.
- * Same logic as normalizeConfidence but with goal-specific logging.
- */
-function normalizeGoalCoverage(value: number): number {
-  // Reject invalid values - let Zod validation fail so repair/retry can handle it
-  if (!Number.isFinite(value)) {
-    throw new Error(`Invalid goal coverage: ${value} is not a finite number`);
-  }
-  
-  // Reject obviously invalid ranges - don't silently clamp
-  if (value < 0 || value > 100) {
-    throw new Error(`Invalid goal coverage: ${value} is outside valid range [0, 100]`);
-  }
-  
-  // Unit scale (0-1): already normalized, no transformation needed
-  if (value <= 1) {
-    return value;
-  }
-  
-  // 1-10 scale: divide by 10
-  if (value > 1 && value <= 10) {
-    console.warn(`[LLM Drift] goal coverage value ${value} appears to be on 1-10 scale, normalizing to ${value / 10}. Prompt may need adjustment.`);
-    return value / 10;
-  }
-  
-  // Percentage scale (10-100): divide by 100
-  if (value > 10 && value <= 100) {
-    console.warn(`[LLM Drift] goal coverage value ${value} appears to be on percentage scale, normalizing to ${value / 100}. Prompt may need adjustment.`);
-    return value / 100;
-  }
-  
-  throw new Error(`Invalid goal coverage: ${value} could not be normalized`);
-}
-
-// Ollama structured-output schema, kept next to the Zod schema it must match
-// exactly — this used to live inside OllamaProvider.ts as a stale constant
-// (transition/nextPhase/confidence) that no longer matched what's parsed
-// below (reply/phaseAssessment). goalCoverage keys are dynamic per phase, so
-// it's constrained via additionalProperties rather than fixed keys.
-export const INTERVIEWER_JSON_SCHEMA = {
-  type: "object",
-  properties: {
-    reply: { type: "string" },
-    phaseAssessment: {
-      type: "object",
-      properties: {
-        goalCoverage: {
-          type: "object",
-          additionalProperties: { type: "number" },
-        },
-        confidence: { type: "number" },
-        unresolvedTopics: {
-          type: "array",
-          items: { type: "string" },
-        },
-      },
-      required: ["goalCoverage", "confidence", "unresolvedTopics"],
-    },
-  },
-  required: ["reply", "phaseAssessment"],
-} as const;
-
-const AIResponseSchema = z.object({
-  reply: z.string().min(1),
-
-  phaseAssessment: z.object({
-    goalCoverage: z.record(
-      z.string(),
-      z.number().transform(normalizeGoalCoverage)
-    ).optional().default({}),
-
-    confidence: z
-      .number()
-      .transform(normalizeConfidence)
-      .optional()
-      .default(0.5),
-
-    unresolvedTopics: z.array(
-      z.string()
-    ).optional().default([]),
-  }).optional(),
-
-  transition: z.boolean().optional(),
-  nextPhase: z.string().optional(),
-  confidence: z.number().optional(),
-}).transform((data) => {
-  // If phaseAssessment exists but top-level confidence/transition also exist, merge them
-  if (data.phaseAssessment) {
-    return {
-      reply: data.reply,
-      phaseAssessment: {
-        goalCoverage: data.phaseAssessment.goalCoverage ?? {},
-        confidence: data.confidence ?? data.phaseAssessment.confidence ?? 0.5,
-        unresolvedTopics: data.phaseAssessment.unresolvedTopics ?? [],
-      },
-    };
-  }
-
-  // If phaseAssessment doesn't exist but top-level values do, create phaseAssessment
-  if (data.confidence !== undefined || data.transition !== undefined) {
-    return {
-      reply: data.reply,
-      phaseAssessment: {
-        goalCoverage: {},
-        confidence: data.confidence ?? 0.5,
-        unresolvedTopics: [],
-      },
-    };
-  }
-
-  return data;
-});
-
-export type ParsedResponse = z.infer<typeof AIResponseSchema>;
-
-export class ResponseParser {
-  async parse(
-    response: string,
-    retry?: () => Promise<string>
-  ): Promise<ParsedResponse> {
-    return StructuredOutputParser.parse(
-      response,
-      AIResponseSchema,
-      retry
-    );
-  }
-}
-================================================
-FILE: src/features/interview/conversation/application/engine/InterviewEngine.ts
-================================================
-"use strict";
-
-import {
-  AIService,
-  ChatMessage,
-} from "@/shared/ai";
-
-import { PromptGuard } from "../guardrails/PromptGuard";
-import { InterviewProfile } from "../profiles/InterviewProfile";
-import { CandidatePersona } from "../reverse/CandidatePersonas";
-
-import { InterviewStateMachine } from "./InterviewStateMachine";
-import { PromptBuilder } from "./PromptBuilder";
-import { ResponseParser } from "./ResponseParser";
-import { INTERVIEWER_JSON_SCHEMA } from "./ResponseParser";
-
-export interface InterviewEngineInput {
-  profile: InterviewProfile;
-
-  currentPhase: string;
-
-  history: ChatMessage[];
-
-  runningSummary: string;
-
-  problem: string;
-
-  candidateName: string;
-
-  interviewDurationMinutes: number;
-
-  interviewStartedAt: Date;
-
-  phaseStartedAt: Date;
-
-  whiteboardDescription?: string;
-
-  mode: "CANDIDATE" | "REVERSE";
-
-  persona?: CandidatePersona;
-}
-
-export class InterviewEngine {
-  constructor(
-    private readonly aiService =
-      new AIService(),
-
-    private readonly promptBuilder =
-      new PromptBuilder(),
-
-    private readonly responseParser =
-      new ResponseParser(),
-
-    private readonly promptGuard =
-      new PromptGuard()
-  ) {}
-
-  private static readonly HISTORY_WINDOW = 20;
-
-  async processUserMessage(
-    input: InterviewEngineInput
-  ) {
-    const stateMachine =
-      new InterviewStateMachine(
-        input.profile
-      );
-
-    const phase = stateMachine.getPhase(
-      input.currentPhase as any
-    );
-
-    const recentHistory =
-      input.history.slice(
-        -InterviewEngine.HISTORY_WINDOW
-      );
-
-    const latestMessage =
-      recentHistory.at(-1);
-
-    // In Reverse Mode, the latest message is the user's current question
-    // In Candidate Mode, we need the previous question for context
-    const latestQuestion = input.mode === "REVERSE"
-      ? latestMessage?.content
-      : recentHistory.length >= 2
-        ? recentHistory[recentHistory.length - 2]?.content
-        : undefined;
-
-    // Check for prompt injection and get silent steering instruction
-    const userMessage = latestMessage?.content || "";
-    const steeringInstruction = this.promptGuard.getSteeringInstruction(
-      userMessage,
-      input.currentPhase
-    );
-
-    const systemPrompt = input.mode === "REVERSE"
-      ? await this.promptBuilder.buildReverseSystemPrompt(
-          phase,
-          input.persona!,
-          input.problem,
-          input.runningSummary,
-          latestQuestion
-        )
-      : await this.promptBuilder.buildSystemPrompt(
-          phase,
-          input.candidateName,
-          input.problem,
-          input.runningSummary,
-          latestQuestion,
-          input.whiteboardDescription
-        );
-
-    // Prepend silent steering instruction if risk detected
-    const finalSystemPrompt = steeringInstruction
-      ? steeringInstruction + "\n\n" + systemPrompt
-      : systemPrompt;
-
-    const messages: ChatMessage[] = [
-      {
-        role: "system",
-        content: finalSystemPrompt,
-      },
-
-      ...recentHistory.slice(0, -1),
-
-      {
-        role: "user",
-        content: latestMessage?.content ?? "",
-      },
-    ];
-
-    
-
-const aiResponse =
-  await this.aiService.chat(messages, {
-    task: "interviewer",
-    format: INTERVIEWER_JSON_SCHEMA,
-  });
-
-const parsed =
-  await this.responseParser.parse(
-    aiResponse,
-    () =>
-      this.aiService.chat(
-        [
-          {
-            role: "system",
-            content: `
-Repair the response into valid JSON.
-
-Return ONLY JSON.
-
-Required shape:
-
-{
-  "reply": "string",
-  "phaseAssessment": {
-    "goalCoverage": {
-      "goal_name": 0.0
-    },
-    "confidence": 0.0,
-    "unresolvedTopics": []
-  }
-}
-
-Do not return transition.
-
-Do not return nextPhase.
-
-All goal coverage values and confidence must be between 0 and 1.
-`.trim(),
-          },
-          {
-            role: "user",
-            content: aiResponse,
-          },
-        ],
-        {
-          task: "repair",
-          format: INTERVIEWER_JSON_SCHEMA,
-        }
-      )
-  );
-
-    const now = Date.now();
-
-    const elapsedInterviewSeconds =
-      Math.max(
-        Math.floor(
-          (
-            now -
-            input.interviewStartedAt.getTime()
-          ) / 1000
-        ),
-        0
-      );
-
-    const elapsedPhaseSeconds =
-      Math.max(
-        Math.floor(
-          (
-            now -
-            input.phaseStartedAt.getTime()
-          ) / 1000
-        ),
-        0
-      );
-
-    const transition =
-      stateMachine.evaluateTransition({
-        currentPhase: input.currentPhase as any,
-
-        interviewDurationMinutes:
-          input.interviewDurationMinutes,
-
-        elapsedInterviewSeconds,
-
-        elapsedPhaseSeconds,
-
-        assessment:
-          parsed.phaseAssessment ?? {
-            goalCoverage: {},
-            confidence: 0.5,
-            unresolvedTopics: [],
-          },
-      });
-
-    return {
-      reply: parsed.reply,
-
-      phaseAssessment:
-        parsed.phaseAssessment,
-
-      transition,
-    };
-  }
-}
-================================================
-FILE: src/features/interview/conversation/application/engine/PromptBuilder.ts
-================================================
-import { PromptLoader } from "@/features/interview/prompt/PromptLoader";
-import { PromptRenderer } from "@/features/interview/prompt/PromptRenderer";
-
-import { InterviewPhaseDefinition } from "../profiles/InterviewProfile";
-import { CandidatePersona } from "../reverse/CandidatePersonas";
-
-export class PromptBuilder {
-  constructor(
-    private readonly promptLoader =
-      new PromptLoader(),
-    private readonly promptRenderer =
-      new PromptRenderer()
-  ) {}
-
-  async buildSystemPrompt(
-    phase: InterviewPhaseDefinition,
-    candidateName: string,
-    problem: string,
-    runningSummary = "",
-    latestQuestion?: string,
-    whiteboardDescription?: string
-  ): Promise<string> {
-    const basePrompt =
-      await this.promptLoader.load(
-        "judge.md"
-      );
-
-    const renderedBasePrompt = this.promptRenderer.render(basePrompt, {
-      candidate: candidateName,
-      question: latestQuestion || "Starting the interview",
-    });
-
-    const goals = phase.goals
-      .map((goal) => `- ${goal.id}`)
-      .join("\n");
-
-    const dimensions =
-      phase.evaluationDimensions
-        .map(
-          (dimension) => `- ${dimension}`
-        )
-        .join("\n");
-
-    const goalCoverageTemplate = phase.goals.length > 0
-      ? phase.goals
-          .map((goal) => `      "${goal.id}": 0.0`)
-          .join(",\n")
-      : '      "phase_goal": 0.0';
-
-    return `
-${renderedBasePrompt}
-
-Interview Problem:
-${problem}
-
-Current Phase:
-${phase.id}
-
-Running Summary:
-${runningSummary}
-
-${whiteboardDescription ? `CANDIDATE'S WHITEBOARD:\n${whiteboardDescription}\n` : ""}
-
-PHASE INSTRUCTIONS:
-
-${phase.prompt.objective}
-
-PHASE GOALS:
-
-${goals || "- No explicit goals"}
-
-EVALUATION DIMENSIONS:
-
-${dimensions || "- None"}
-
-You must evaluate only the CURRENT PHASE.
-
-Do not decide whether the interview should transition.
-
-Do not return transition or nextPhase.
-
-Return ONLY valid JSON using exactly this structure:
-
-{
-  "reply": "Your next interviewer response",
-  "phaseAssessment": {
-    "goalCoverage": {
-${goalCoverageTemplate}
-    },
-    "confidence": 0.0,
-    "unresolvedTopics": []
-  }
-}
-
-For goalCoverage:
-
-- Include every phase goal listed above.
-- Values must be between 0 and 1.
-- 0 means not discussed.
-- 0.5 means partially demonstrated.
-- 1 means clearly demonstrated.
-
-confidence must be between 0 and 1.
-
-unresolvedTopics must contain only important topics blocking completion of the current phase.
-
-Ask one focused interview question at a time.
-
-Do not solve the problem for the candidate.
-
-Do not use markdown.
-
-Return JSON only.
-`.trim();
-  }
-
-  async buildReverseSystemPrompt(
-    phase: InterviewPhaseDefinition,
-    persona: CandidatePersona,
-    problem: string,
-    runningSummary = "",
-    latestQuestion?: string
-  ): Promise<string> {
-    const base = await this.promptLoader.load("reverse-candidate.md");
-
-    const rendered = this.promptRenderer.render(base, {
-      candidateName: persona.name,
-      background: persona.background,
-      seniority: persona.seniority,
-      weaknesses: persona.weaknesses.join(", "),
-    });
-
-    const goals = phase.goals
-      .map((goal) => `- ${goal.id}`)
-      .join("\n");
-
-    const goalCoverageTemplate = phase.goals.length > 0
-      ? phase.goals
-          .map((goal) => `      "${goal.id}": 0.0`)
-          .join(",\n")
-      : '      "phase_goal": 0.0';
-
-    return `
-${rendered}
-
-Interview Problem (for your context, don't dump this all at once):
-${problem}
-
-Conversation so far (summary):
-${runningSummary}
-
-Latest question from the interviewer:
-${latestQuestion ?? "The interview is just starting — wait for their first question."}
-
-Current Phase:
-${phase.id}
-
-PHASE INSTRUCTIONS:
-
-${phase.prompt.objective}
-
-PHASE GOALS:
-
-${goals || "- No explicit goals"}
-
-You must evaluate only the CURRENT PHASE.
-
-For goalCoverage:
-- Include every phase goal listed above.
-- Values must be between 0 and 1.
-- 0 means not discussed.
-- 0.5 means partially demonstrated.
-- 1 means clearly demonstrated.
-
-confidence must be between 0 and 1.
-
-unresolvedTopics must contain only important topics blocking completion of the current phase.
-
-Return ONLY valid JSON using exactly this structure:
-
-{
-  "reply": "Your in-character reply to the interviewer",
-  "phaseAssessment": {
-    "goalCoverage": {
-${goalCoverageTemplate}
-    },
-    "confidence": 0.0,
-    "unresolvedTopics": []
-  }
-}
-
-Return JSON only. No markdown, no meta commentary.
-`.trim();
-  }
-}
-================================================
-FILE: src/features/interview/conversation/application/engine/InterviewStateMachine.ts
-================================================
-import {
-  InterviewPhaseDefinition,
-  InterviewProfile,
-} from "../profiles/InterviewProfile";
-import { PhaseId } from "../constants";
-
-export interface PhaseAssessment {
-  goalCoverage: Record<string, number>;
-  confidence: number;
-  unresolvedTopics: string[];
-}
-
-export interface TransitionContext {
-  currentPhase: PhaseId;
-  interviewDurationMinutes: number;
-  elapsedInterviewSeconds: number;
-  elapsedPhaseSeconds: number;
-  assessment: PhaseAssessment;
-  turnCount?: number;
-}
-
-export type TransitionReason =
-  | "goals_completed"
-  | "phase_time_budget_exceeded"
-  | "interview_time_pressure"
-  | "interview_completed"
-  | "stay";
-
-export interface TransitionResult {
-  shouldTransition: boolean;
-  completed: boolean;
-  currentPhase: PhaseId;
-  nextPhase: PhaseId;
-  reason: TransitionReason;
-}
-
-export class InterviewStateMachine {
-  private static readonly TIME_PRESSURE_START_RATIO = 0.5;
-  private static readonly TIME_PRESSURE_THRESHOLD = 0.3;
-  private static readonly MIN_PHASE_TIME_RATIO = 0.3;
-
-  constructor(
-    private readonly profile: InterviewProfile
-  ) {
-    if (profile.phases.length === 0) {
-      throw new Error(
-        `Interview profile "${profile.type}" has no phases`
-      );
-    }
-  }
-
-  getPhase(
-    phaseId: PhaseId
-  ): InterviewPhaseDefinition {
-    const phase = this.profile.phases.find(
-      (candidate) => candidate.id === phaseId
-    );
-
-    if (!phase) {
-      throw new Error(
-        `Unknown phase "${phaseId}" for interview type "${this.profile.type}"`
-      );
-    }
-
-    return phase;
-  }
-
-  getInitialPhase(): PhaseId {
-    return this.profile.phases[0].id;
-  }
-
-  evaluateTransition(
-    context: TransitionContext
-  ): TransitionResult {
-    const currentPhase = this.getPhase(
-      context.currentPhase
-    );
-
-    const currentIndex =
-      this.profile.phases.findIndex(
-        (phase) => phase.id === currentPhase.id
-      );
-
-    const nextPhase =
-      this.profile.phases[currentIndex + 1];
-
-    const totalInterviewSeconds = Math.max(
-      context.interviewDurationMinutes * 60,
-      1
-    );
-
-    const elapsedInterviewSeconds = Math.max(
-      context.elapsedInterviewSeconds,
-      0
-    );
-
-    const elapsedPhaseSeconds = Math.max(
-      context.elapsedPhaseSeconds,
-      0
-    );
-
-    const targetPhaseSeconds =
-      totalInterviewSeconds *
-      currentPhase.targetDurationRatio;
-
-    // LLM provides signals (goalCoverage, confidence, unresolvedTopics)
-    // State machine applies deterministic constraints
-    const coverage = this.calculateGoalCoverage(
-      currentPhase,
-      context.assessment
-    );
-
-    const goalsCompleted =
-      coverage >= currentPhase.transitionThreshold &&
-      this.clamp(context.assessment.confidence) >=
-        currentPhase.transitionThreshold &&
-      context.assessment.unresolvedTopics.length === 0;
-
-    /*
-     * Terminal phase owns interview completion.
-     *
-     * A terminal phase does NOT complete merely because there is no
-     * next phase. Completion requires its goals to be satisfied.
-     */
-    if (!nextPhase) {
-      if (goalsCompleted) {
-        return {
-          shouldTransition: false,
-          completed: true,
-          currentPhase: currentPhase.id,
-          nextPhase: currentPhase.id,
-          reason: "interview_completed",
-        };
-      }
-
-      return {
-        shouldTransition: false,
-        completed: false,
-        currentPhase: currentPhase.id,
-        nextPhase: currentPhase.id,
-        reason: "stay",
-      };
-    }
-
-    // Deterministic rule: Transition only if goals are met OR hard caps hit
-    // LLM is a sensor, not the decision maker
-    if (goalsCompleted) {
-      return this.transitionTo(
-        currentPhase,
-        nextPhase,
-        "goals_completed"
-      );
-    }
-
-    // Hard cap: Phase time budget exceeded
-    if (
-      elapsedPhaseSeconds >= targetPhaseSeconds
-    ) {
-      return this.transitionTo(
-        currentPhase,
-        nextPhase,
-        "phase_time_budget_exceeded"
-      );
-    }
-
-    // Hard cap: Interview time pressure (must complete remaining phases)
-    if (
-      this.isUnderTimePressure({
-        currentIndex,
-        totalInterviewSeconds,
-        elapsedInterviewSeconds,
-        elapsedPhaseSeconds,
-        targetPhaseSeconds,
-      })
-    ) {
-      return this.transitionTo(
-        currentPhase,
-        nextPhase,
-        "interview_time_pressure"
-      );
-    }
-
-    // Stay in current phase - constraints not satisfied
-    return {
-      shouldTransition: false,
-      completed: false,
-      currentPhase: currentPhase.id,
-      nextPhase: currentPhase.id,
-      reason: "stay",
-    };
-  }
-
-  private transitionTo(
-    currentPhase: InterviewPhaseDefinition,
-    nextPhase: InterviewPhaseDefinition,
-    reason: Exclude<
-      TransitionReason,
-      "stay" | "interview_completed"
-    >
-  ): TransitionResult {
-    return {
-      shouldTransition: true,
-      completed: false,
-      currentPhase: currentPhase.id,
-      nextPhase: nextPhase.id,
-      reason,
-    };
-  }
-
-  private isUnderTimePressure(params: {
-    currentIndex: number;
-    totalInterviewSeconds: number;
-    elapsedInterviewSeconds: number;
-    elapsedPhaseSeconds: number;
-    targetPhaseSeconds: number;
-  }): boolean {
-    const {
-      currentIndex,
-      totalInterviewSeconds,
-      elapsedInterviewSeconds,
-      elapsedPhaseSeconds,
-      targetPhaseSeconds,
-    } = params;
-
-    const elapsedRatio =
-      elapsedInterviewSeconds /
-      totalInterviewSeconds;
-
-    if (
-      elapsedRatio <
-      InterviewStateMachine.TIME_PRESSURE_START_RATIO
-    ) {
-      return false;
-    }
-
-    if (
-      elapsedPhaseSeconds <
-      targetPhaseSeconds *
-        InterviewStateMachine.MIN_PHASE_TIME_RATIO
-    ) {
-      return false;
-    }
-
-    const remainingPhaseRatio =
-      this.profile.phases
-        .slice(currentIndex + 1)
-        .reduce(
-          (sum, phase) =>
-            sum + phase.targetDurationRatio,
-          0
-        );
-
-    const expectedRemainingSeconds =
-      totalInterviewSeconds *
-      remainingPhaseRatio;
-
-    const actualRemainingSeconds = Math.max(
-      totalInterviewSeconds -
-        elapsedInterviewSeconds,
-      0
-    );
-
-    return (
-      actualRemainingSeconds <
-      expectedRemainingSeconds *
-        (1 -
-          InterviewStateMachine.TIME_PRESSURE_THRESHOLD)
-    );
-  }
-
-  private calculateGoalCoverage(
-    phase: InterviewPhaseDefinition,
-    assessment: PhaseAssessment
-  ): number {
-    if (phase.goals.length === 0) {
-      return 1;
-    }
-
-    const total = phase.goals.reduce(
-      (sum, goal) =>
-        sum +
-        this.clamp(
-          assessment.goalCoverage[goal.id] ?? 0
-        ),
-      0
-    );
-
-    return total / Math.max(phase.goals.length, 1);
-  }
-
-  private clamp(value: number): number {
-    if (!Number.isFinite(value)) {
-      return 0;
-    }
-
-    return Math.min(Math.max(value, 0), 1);
-  }
-}
-================================================
-FILE: src/features/interview/conversation/application/engine/StateUpdater.ts
-================================================
-
-================================================
-FILE: src/features/interview/conversation/application/conversation/ConversationHistoryBuilder.test.ts
-================================================
-import { MessageRole } from "@prisma/client";
-
-import { ConversationHistoryBuilder } from "./ConversationHistoryBuilder";
-import type { ChatMessage } from "@/shared/ai";
-import { expect, describe, it } from "vitest";
-
-describe("ConversationHistoryBuilder", () => {
-  const builder = new ConversationHistoryBuilder();
-
-  it("includes only user and assistant messages", () => {
-    const history = builder.build(
-      [
-        {
-          role: MessageRole.user,
-          content: "Hello",
-        },
-        {
-          role: MessageRole.assistant,
-          content: "Hi",
-        },
-        {
-          role: MessageRole.system,
-          content: "Ignored",
-        },
-      ],
-      "Next question"
-    );
-
-    expect(history).toEqual([
-      {
-        role: "user",
-        content: "Hello",
-      },
-      {
-        role: "assistant",
-        content: "Hi",
-      },
-      {
-        role: "user",
-        content: "Next question",
-      },
-    ]);
-  });
-
-  it("appends the latest user message", () => {
-    const history = builder.build([], "New message");
-
-    expect(history).toEqual([
-      {
-        role: "user",
-        content: "New message",
-      },
-    ]);
-  });
-});
-================================================
-FILE: src/features/interview/conversation/application/conversation/ConversationHistoryBuilder.ts
-================================================
-import { MessageRole } from "@prisma/client";
-
-import type { ChatMessage } from "@/shared/ai";
-
-export class ConversationHistoryBuilder {
-  build(
-    transcript: Array<{
-      role: MessageRole;
-      content: string;
-    }>,
-    userMessage: string
-  ): ChatMessage[] {
-    const history: ChatMessage[] = transcript
-      .filter(
-        (message) =>
-          message.role === MessageRole.user ||
-          message.role === MessageRole.assistant
-      )
-      .map((message) => ({
-        role:
-          message.role === MessageRole.user
-            ? "user"
-            : "assistant",
-        content: message.content,
-      }));
-
-    history.push({
-      role: "user",
-      content: userMessage,
-    });
-
-    return history;
-  }
-}
 ================================================
 FILE: src/features/interview/conversation/store/interviewStore.ts
 ================================================
@@ -30575,6 +27270,49 @@ export class PrismaBugAttemptRepository implements BugAttemptRepository {
 FILE: src/features/bug-hunting/infrastructure/index.ts
 ================================================
 export * from "./repositories/JsonBugScenarioRepository";
+================================================
+FILE: src/features/bug-hunting/data/scenarios_metadata.json
+================================================
+[
+  {
+    "id": "checkout-timeout",
+    "slug": "checkout-timeout",
+    "title": "The Case of the Hanging Checkout",
+    "description": "Investigate why the payment gateway is timing out for mobile users.",
+    "difficulty": "MEDIUM",
+    "category": "Infrastructure",
+    "estimatedMinutes": 15
+  }
+]
+================================================
+FILE: src/features/bug-hunting/data/scenarios/checkout-timeout.json
+================================================
+{
+  "id": "checkout-timeout",
+  "title": "The Case of the Hanging Checkout",
+  "description": "Users are reporting that the checkout process hangs indefinitely after clicking 'Pay'.",
+  "difficulty": "MEDIUM",
+  "category": "Backend",
+  "docs": [
+    { "title": "Checkout Flow", "content": "1. Validate Cart\n2. Call Payment Gateway\n3. Update Inventory" }
+  ],
+  "deployments": [
+    { "service": "api-gateway", "status": "HEALTHY", "version": "v2.1.0" },
+    { "service": "payment-service", "status": "DEGRADED", "version": "v1.0.4" }
+  ],
+  "sql": "CREATE TABLE payments (id SERIAL, status TEXT, amount INT);",
+  "code": [
+    {
+      "name": "payment_service.py",
+      "language": "python",
+      "content": "def process():\n  # Potential bottleneck here\n  response = gateway.call()\n  return response"
+    }
+  ],
+  "logs": [
+    "2024-07-20 18:00:01 INFO: Received checkout request",
+    "2024-07-20 18:00:05 ERROR: Gateway timeout after 5000ms"
+  ]
+}
 ================================================
 FILE: src/features/bug-hunting/pages/BugHuntingListPage.tsx
 ================================================
@@ -32560,6 +29298,90 @@ Return a JSON object with this exact structure:
       recommendations,
     };
   }
+}
+
+================================================
+FILE: src/content/deep-dive.ts
+================================================
+import { DeepDiveArticle } from '@/features/deep-dive/types';
+
+// This is a placeholder implementation. In a real application, you would:
+// 1. Load deep-dive content from markdown files or a CMS
+// 2. Parse and transform the content into the DeepDiveArticle format
+// 3. Cache the results for performance
+
+const deepDiveArticles: Record<string, DeepDiveArticle> = {};
+
+export function getDeepDiveBySlug(slug: string): DeepDiveArticle | undefined {
+  return deepDiveArticles[slug];
+}
+
+export function getPreviousAndNext(slug: string): { previous?: DeepDiveArticle; next?: DeepDiveArticle } {
+  const slugs = Object.keys(deepDiveArticles);
+  const index = slugs.indexOf(slug);
+  
+  if (index === -1) {
+    return { previous: undefined, next: undefined };
+  }
+  
+  return {
+    previous: index > 0 ? deepDiveArticles[slugs[index - 1]] : undefined,
+    next: index < slugs.length - 1 ? deepDiveArticles[slugs[index + 1]] : undefined,
+  };
+}
+
+export function getAllDeepDives(): DeepDiveArticle[] {
+  return Object.values(deepDiveArticles);
+}
+
+================================================
+FILE: src/content/transcripts.ts
+================================================
+import { prisma } from "@/shared/prisma/client";
+
+export interface TranscriptSummary {
+  slug: string;
+  title: string;
+  description: string;
+}
+
+export interface TranscriptData {
+  summary: TranscriptSummary;
+  transcript: any; // The actual transcript data from Prisma
+}
+
+export async function getTranscript(slug: string): Promise<TranscriptData | null> {
+  const transcript = await prisma.transcript.findUnique({
+    where: { slug }
+  });
+
+  if (!transcript) {
+    return null;
+  }
+
+  return {
+    summary: {
+      slug: transcript.slug,
+      title: transcript.title,
+      description: transcript.summary || '',
+    },
+    transcript: transcript.transcript,
+  };
+}
+
+export async function getAllTranscripts(): Promise<TranscriptData[]> {
+  const transcripts = await prisma.transcript.findMany({
+    orderBy: { createdAt: 'desc' }
+  });
+
+  return transcripts.map(transcript => ({
+    summary: {
+      slug: transcript.slug,
+      title: transcript.title,
+      description: transcript.summary || '',
+    },
+    transcript: transcript.transcript,
+  }));
 }
 
 ================================================
@@ -35974,8 +32796,20 @@ export { CARD_PALETTE };
 ================================================
 FILE: src/shared/schemas/interviewSchemas.ts
 ================================================
+// src/shared/schemas/interviewSchemas.ts
 import { z } from "zod";
+import { Difficulty, InterviewMode } from "@prisma/client";
 
+export const StartInterviewSchema = z.object({
+  type: z.string(),
+  difficulty: z.nativeEnum(Difficulty),
+  duration: z.number().int().positive(),
+  company: z.string(),
+  problemId: z.string().uuid(),
+  mode: z.nativeEnum(InterviewMode).optional(),
+  topic: z.string().optional(),
+});
+export const JsonSchema = z.record(z.string(), z.unknown());
 export const GoalsSchema = z.array(z.string());
 
 export const EvaluationDimensionsSchema = z.array(z.string());
@@ -35987,12 +32821,7 @@ export const ConversationSchema = z.array(
   })
 );
 
-export const JsonSchema = z.unknown();
-
-export type Goal = z.infer<typeof GoalsSchema>[number];
-
-export type EvaluationDimension =
-  z.infer<typeof EvaluationDimensionsSchema>[number];
+export type StartInterviewInput = z.infer<typeof StartInterviewSchema>;
 ================================================
 FILE: src/shared/ai/parsers/StructuredOutputParser.ts
 ================================================
@@ -36428,8 +33257,7 @@ export function useClickOutside<T extends HTMLElement>(
 FILE: src/shared/api/InterviewApiClient.ts
 ================================================
 
-import type { ProcessInterviewMessageResult } from "@/features/interview/types";
-import type { InterviewState } from "@/features/interview/types";
+import type { InterviewState } from '@/features/interview/types/InterviewState'
 export class InterviewApiClient {
   private readonly baseUrl = '/api/interviews';
 
@@ -36460,26 +33288,40 @@ export class InterviewApiClient {
    * 
    * Request body DOES NOT include phase — backend owns that decision
    */
-  async sendMessage(interviewId: string, message: string): Promise<ProcessInterviewMessageResult> {
-    if (!message.trim()) {
-      throw new Error('Message cannot be empty');
-    }
-
-    const response = await fetch(`${this.baseUrl}/${interviewId}/message`, {
+async sendMessage(
+  interviewId: string,
+  message: string
+): Promise<void> {
+  const response = await fetch(
+    `${this.baseUrl}/${interviewId}/message`,
+    {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: message.trim() }),
-    });
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message,
+      }),
+    }
+  );
 
-    if (!response.ok) {
+  if (!response.ok) {
+    let errorMessage = `Request failed: ${response.status}`;
+
+    try {
       const data = await response.json();
-      throw new Error(
-        data.error || `Failed to send message: ${response.statusText}`
-      );
+
+      errorMessage =
+        data.error ||
+        data.message ||
+        errorMessage;
+    } catch {
+      // response was not JSON
     }
 
-    return response.json();
+    throw new Error(errorMessage);
   }
+}
 
   /**
    * Finish the interview early
@@ -36878,56 +33720,6 @@ export const api = {
 
 export { ApiError };
 ================================================
-FILE: src/lib/logger.ts
-================================================
-type LogLevel = "info" | "warn" | "error" | "debug";
-
-interface LogContext {
-  [key: string]: unknown;
-}
-
-class Logger {
-  private isDevelopment = process.env.NODE_ENV === "development";
-
-  private formatMessage(level: LogLevel, message: string, context?: LogContext): string {
-    const timestamp = new Date().toISOString();
-    const contextStr = context ? ` ${JSON.stringify(context)}` : "";
-    return `[${timestamp}] [${level.toUpperCase()}] ${message}${contextStr}`;
-  }
-
-  info(message: string, context?: LogContext): void {
-    if (this.isDevelopment) {
-      console.info(this.formatMessage("info", message, context));
-    }
-    // TODO: Integrate with production logging service (Sentry, Datadog, LogRocket)
-  }
-
-  warn(message: string, context?: LogContext): void {
-    if (this.isDevelopment) {
-      console.warn(this.formatMessage("warn", message, context));
-    }
-    // TODO: Integrate with production logging service
-  }
-
-  error(message: string, error?: Error | unknown, context?: LogContext): void {
-    if (this.isDevelopment) {
-      console.error(this.formatMessage("error", message, context), error);
-    }
-    // TODO: Integrate with production logging service
-    // Example: Sentry.captureException(error, { extra: context });
-  }
-
-  debug(message: string, context?: LogContext): void {
-    if (this.isDevelopment) {
-      console.debug(this.formatMessage("debug", message, context));
-    }
-    // Debug logs typically not sent to production
-  }
-}
-
-export const logger = new Logger();
-
-================================================
 FILE: src/modules/diagram/domain/__tests__/Diagram.test.ts
 ================================================
 // src/modules/diagram/domain/__tests__/Diagram.test.ts
@@ -37292,265 +34084,6 @@ describe("DiagramDocument", () => {
 });
 
 ================================================
-FILE: src/modules/diagram/domain/Diagram.ts
-================================================
-// src/modules/diagram/domain/Diagram.ts
-
-/**
- * Canonical domain model for architecture diagrams.
- * This model is independent of React and rendering concerns.
- */
-
-export type NodeId = string & { readonly __brand: unique symbol };
-export type EdgeId = string & { readonly __brand: unique symbol };
-export type FlowId = string & { readonly __brand: unique symbol };
-
-/**
- * Node types supported in the diagram system
- */
-export enum NodeType {
-  CLIENT = "client",
-  SERVICE = "service",
-  STORAGE = "storage",
-  GATEWAY = "gateway",
-  QUEUE = "queue",
-  CACHE = "cache",
-  LOAD_BALANCER = "load_balancer",
-  DATABASE = "database",
-}
-
-/**
- * Detailed information about a node component
- */
-export interface NodeDetails {
-  roleAndDuty: string;
-  extremeDeepDive: string;
-  failureScenarios: string;
-  designTradeoffs: string;
-}
-
-/**
- * Represents a single node in the diagram
- */
-export interface Node {
-  id: NodeId;
-  name: string;
-  type: NodeType;
-  details: NodeDetails;
-}
-
-/**
- * Represents a connection between two nodes
- */
-export interface Edge {
-  id: EdgeId;
-  from: NodeId;
-  to: NodeId;
-  label?: string;
-}
-
-/**
- * Represents a step in a data flow
- */
-export interface FlowStep {
-  nodeId: NodeId;
-  description?: string;
-}
-
-/**
- * Represents a complete data flow through the system
- */
-export interface Flow {
-  id: FlowId;
-  name: string;
-  steps: FlowStep[];
-}
-
-/**
- * Viewport/metadata for the diagram
- */
-export interface DiagramMetadata {
-  title: string;
-  description?: string;
-  viewport?: {
-    x: number;
-    y: number;
-    zoom: number;
-  };
-}
-
-/**
- * Complete diagram document - the canonical model
- */
-export interface Diagram {
-  id: string;
-  metadata: DiagramMetadata;
-  nodes: Node[];
-  edges: Edge[];
-  flows: Flow[];
-}
-
-/**
- * Validation errors that can occur when constructing a diagram
- */
-export class DiagramValidationError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "DiagramValidationError";
-  }
-}
-
-/**
- * Immutable Diagram class with validation
- */
-export class DiagramDocument {
-  private constructor(private readonly data: Diagram) {}
-
-  static create(data: Diagram): DiagramDocument {
-    this.validate(data);
-    return new DiagramDocument(data);
-  }
-
-  static fromJSON(json: unknown): DiagramDocument {
-    const data = json as Diagram;
-    this.validate(data);
-    return new DiagramDocument(data);
-  }
-
-  toJSON(): Diagram {
-    return { ...this.data };
-  }
-
-  get id(): string {
-    return this.data.id;
-  }
-
-  get metadata(): DiagramMetadata {
-    return { ...this.data.metadata };
-  }
-
-  get nodes(): readonly Node[] {
-    return this.data.nodes;
-  }
-
-  get edges(): readonly Edge[] {
-    return this.data.edges;
-  }
-
-  get flows(): readonly Flow[] {
-    return this.data.flows;
-  }
-
-  getNodeById(id: NodeId): Node | undefined {
-    return this.data.nodes.find((node) => node.id === id);
-  }
-
-  getEdgeById(id: EdgeId): Edge | undefined {
-    return this.data.edges.find((edge) => edge.id === id);
-  }
-
-  getFlowById(id: FlowId): Flow | undefined {
-    return this.data.flows.find((flow) => flow.id === id);
-  }
-
-  getEdgesFromNode(nodeId: NodeId): Edge[] {
-    return this.data.edges.filter((edge) => edge.from === nodeId);
-  }
-
-  getEdgesToNode(nodeId: NodeId): Edge[] {
-    return this.data.edges.filter((edge) => edge.to === nodeId);
-  }
-
-  private static validate(data: Diagram): void {
-    // Validate duplicate node IDs
-    const nodeIds = new Set<string>();
-    for (const node of data.nodes) {
-      if (nodeIds.has(node.id)) {
-        throw new DiagramValidationError(`Duplicate node ID: ${node.id}`);
-      }
-      nodeIds.add(node.id);
-    }
-
-    // Validate duplicate edge IDs
-    const edgeIds = new Set<string>();
-    for (const edge of data.edges) {
-      if (edgeIds.has(edge.id)) {
-        throw new DiagramValidationError(`Duplicate edge ID: ${edge.id}`);
-      }
-      edgeIds.add(edge.id);
-    }
-
-    // Validate duplicate flow IDs
-    const flowIds = new Set<string>();
-    for (const flow of data.flows) {
-      if (flowIds.has(flow.id)) {
-        throw new DiagramValidationError(`Duplicate flow ID: ${flow.id}`);
-      }
-      flowIds.add(flow.id);
-    }
-
-    // Validate edge references
-    for (const edge of data.edges) {
-      if (!nodeIds.has(edge.from)) {
-        throw new DiagramValidationError(
-          `Edge ${edge.id} references non-existent source node: ${edge.from}`
-        );
-      }
-      if (!nodeIds.has(edge.to)) {
-        throw new DiagramValidationError(
-          `Edge ${edge.id} references non-existent target node: ${edge.to}`
-        );
-      }
-    }
-
-    // Validate flow step references
-    for (const flow of data.flows) {
-      for (const step of flow.steps) {
-        if (!nodeIds.has(step.nodeId)) {
-          throw new DiagramValidationError(
-            `Flow ${flow.id} step references non-existent node: ${step.nodeId}`
-          );
-        }
-      }
-    }
-  }
-}
-
-/**
- * Utility functions for creating typed IDs
- */
-export function createNodeId(id: string): NodeId {
-  return id as NodeId;
-}
-
-export function createEdgeId(id: string): EdgeId {
-  return id as EdgeId;
-}
-
-export function createFlowId(id: string): FlowId {
-  return id as FlowId;
-}
-
-================================================
-FILE: src/modules/transcript/application/TranscriptService.ts
-================================================
-import { prisma } from "@/shared/prisma/client";
-import { TranscriptNode } from "../domain/TranscriptNode";
-
-export class TranscriptService {
-  static async getBySessionId(sessionId: string): Promise<TranscriptNode[]> {
-    const session = await prisma.interview.findUnique({
-      where: { id: sessionId },
-      select: { transcript: true }
-    });
-
-    if (!session) throw new Error("Session not found");
-
-    // Map Prisma JSON to Domain Entity
-    return (session.transcript as any[]).sort((a, b) => a.order - b.order);
-  }
-}
-================================================
 FILE: src/modules/transcript/domain/TranscriptNode.ts
 ================================================
 export type NodeRole = 'interviewer' | 'candidate' | 'takeaway';
@@ -37571,7 +34104,7 @@ export interface TranscriptNode {
 FILE: src/modules/container.ts
 ================================================
 import { AIService } from "./ai/services/AIService";
-import { PromptLoader } from "@/features/interview/prompt/PromptLoader";
+import { PromptLoader } from "@/features/interview/prompts/prompt/PromptLoader";
 import logger  from "@/shared/logger/logger";
 import { EvaluationService } from "./interview/services/evaluation/EvaluationService";
 

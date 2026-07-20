@@ -12,9 +12,9 @@ import { Sidebar } from './Sidebar';
 import { useInterview } from '../hooks/useInterview';
 import { useMessages } from '../hooks/useMessages';
 import { useTimer } from '../hooks/useTimer';
-import { logger } from '@/lib/logger'; // Replace with your logger path
+import logger from '@/shared/logger/logger';
 
-// 1. Accurate type representing the API response with relations included
+// Type representing the API response with relations included
 export type InterviewWithRelations = Prisma.InterviewGetPayload<{
   include: {
     problem: true;
@@ -34,7 +34,6 @@ export function LiveInterview({ interviewId }: LiveInterviewProps) {
     error: messageError,
   } = useMessages(interviewId);
 
-  // 2 & 8. Hook owns calculation logic directly — no wrapper component or empty callback needed
   const { remainingSeconds } = useTimer({
     startedAt: interview?.createdAt ?? null,
     durationMinutes: interview?.duration ?? 0,
@@ -43,34 +42,28 @@ export function LiveInterview({ interviewId }: LiveInterviewProps) {
 
   const handleSendMessage = useCallback(
     async (text: string) => {
-      // 5. Send guard
       if (isSending || !text.trim()) return;
 
       try {
         await sendMessage(text);
-        
-        // 6. Refresh interview state because the backend owns transcript updates,
-        // phase transitions, and summary generation.
+        // Refresh interview state to get the AI's response and potential phase changes
         await refetch();
-      } catch (err) {
-  console.log("RAW ERROR:", err);
-  console.log("TYPE:", typeof err);
-  console.log("IS ERROR:", err instanceof Error);
+      } catch (err: any) {
+        // Improved error extraction
+        const errorMessage = err.response?.data?.error || err.message || 'Unknown error';
+        
+        console.error("DETAILED ERROR:", {
+          message: errorMessage,
+          stack: err.stack,
+          status: err.response?.status,
+          raw: err
+        });
 
-  logger.error(
-    'Failed to send interview message',
-    err,
-    { interviewId }
-  );
-}
+        logger.error('Failed to send interview message', err, { interviewId });
+      }
     },
     [isSending, sendMessage, refetch, interviewId]
   );
-
-  const problemForSidebar = {
-    ...interview?.problem,
-    description: (interview?.problem as { description?: string | null } | undefined)?.description ?? null,
-  };
 
   if (loading) {
     return (
@@ -113,12 +106,16 @@ export function LiveInterview({ interviewId }: LiveInterviewProps) {
         </div>
 
         <Sidebar
-          problem={interview.problem}
-          currentPhase={interview.currentPhase}
-          summary={interview.summary}
-          difficulty={interview.difficulty}
-          company={interview.company}
-        />
+  problem={interview.problem}
+  currentPhase={interview.currentPhase}
+  // 1. Fixes the 'string | null' error by providing '' if null
+  summary={interview.summary ?? ''} 
+  
+  // 2. Fixes missing property errors by accessing the problem sub-object
+  // and providing fallback values if they are optional in your schema
+  difficulty={(interview.problem as any).difficulty ?? 'Intermediate'} 
+  company={(interview.problem as any).company ?? 'General'}
+/>
       </div>
     </div>
   );

@@ -11,7 +11,7 @@ export const StartInterviewSchema = z.object({
   mode: z.nativeEnum(InterviewMode).optional(),
   topic: z.string().optional(),
 });
-
+export const JsonSchema = z.record(z.string(), z.unknown());
 export const GoalsSchema = z.array(z.string());
 
 export const EvaluationDimensionsSchema = z.array(z.string());

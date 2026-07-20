@@ -5,7 +5,7 @@ import {
 } from "@prisma/client";
 
 import type { ChatMessage } from "@/shared/ai";
-import { ProcessInterviewMessageResult } from "@/types/interview";
+import { ProcessInterviewMessageResult } from "@/features/interview/types/legacy-types";
 
 import { InterviewEngine } from "../../engine/InterviewEngine";
 import { InterviewRepository } from "@/features/interview/infrastructure/repositories/InterviewRepository";

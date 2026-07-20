@@ -5,14 +5,11 @@ import {
   ProblemCategory,
   LearningActionType,
 } from "@prisma/client";
-import {
-  GoalsSchema,
-  EvaluationDimensionsSchema,
-  ConversationSchema,
-} from "@/shared/schemas/interviewSchemas";
 
+import { GoalsSchema, EvaluationDimensionsSchema, ConversationSchema, JsonSchema } from "@/shared/schemas/interviewSchemas";
 import problemsData from "./seed/problems.json";
 import templatesData from "./seed/templates.json";
+import { EvaluationDimension } from "@/features/interview/data/constants";
 
 const prisma = new PrismaClient();
 
@@ -715,10 +712,11 @@ export async function seedLearningScenarios() {
         type: actionSeed.type,
         title: actionSeed.title,
         instructions: actionSeed.instructions,
-        content: JsonSchema.parse(actionSeed.content),
+        content: JsonSchema.parse(actionSeed.content) as Prisma.InputJsonValue,
       };
 
       if (existing) {
+      
         await prisma.learningAction.update({ where: { id: existing.id }, data });
       } else {
         await prisma.learningAction.create({ data });

@@ -11,14 +11,16 @@ conservatively and note in the summary that a dedicated rubric is missing.
 `.trim();
 
 export class PromptLoader {
+  
   private readonly templatesDirectory = path.join(
-    process.cwd(),
-    "src",
-    "modules",
-    "interview",
-    "prompt",
-    "templates"
-  );
+  process.cwd(),
+  "src",
+  "features",
+  "interview",
+  "prompts",
+  "prompt",
+  "templates"
+);
 
   private readonly cache = new Map<string, string>();
 
