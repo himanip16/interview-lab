@@ -7,6 +7,7 @@ const transcript: TranscriptData = {
   metadata: {
     title: "Cutting Poles to Collect Minimum Wood",
     difficulty: Difficulty.MEDIUM,
+    company: "Amazon",
     duration: 35,
     template: "DSA",
     category: "DSA",

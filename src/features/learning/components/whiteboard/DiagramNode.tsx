@@ -12,19 +12,22 @@ const CATEGORY_STYLES: Record<string, string> = {
 export const DiagramNode = ({ 
   node, 
   isSelected, 
-  onClick 
+  onClick,
+  x,
+  y 
 }: { 
   node: NodeType; 
   isSelected: boolean; 
-  onClick: () => void 
+  onClick: () => void;
+  x: number;
+  y: number;
 }) => {
   return (
     <div
       onClick={onClick}
       style={{
-        // Calculate position based on grid
-        left: `${(node.gridPos.x / 12) * 100}%`,
-        top: `${(node.gridPos.y / 8) * 100}%`,
+        left: `${x}%`,
+        top: `${y}%`,
       }}
       className={cn(
         "absolute w-40 -translate-x-1/2 -translate-y-1/2 p-4 rounded-xl text-white cursor-pointer transition-all z-20 border shadow-sm",

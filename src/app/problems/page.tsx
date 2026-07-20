@@ -142,7 +142,7 @@ export default function ProblemsPage() {
   };
 
   return (
-    <div style={{ background: "var(--landing-bg)", padding: "40px 24px", minHeight: "100vh" }}>
+    <div style={{ background: "var(--landing-bg)", minHeight: "100vh" }}>
       <div className={styles.panel}>
         <div className={styles.top}>
           <h2>Problem library</h2>

@@ -86,6 +86,8 @@ export default function Whiteboard({
               node={node.data}
               isSelected={selectedId === node.data.id}
               onClick={() => setSelectedId(node.data.id)}
+              x={node.x}
+              y={node.y}
             />
           ))}
 

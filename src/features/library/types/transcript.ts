@@ -44,6 +44,7 @@ export type TranscriptMetadata = {
   duration: number;
   template: string;
   category: string;
+  company?: string;
 };
 
 export type TranscriptData = {

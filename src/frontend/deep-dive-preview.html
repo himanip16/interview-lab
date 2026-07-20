@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<title>Consistent hashing — deep dive</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FAF9F6; --surface:#FFFFFF; --text:#15161C; --text-soft:#5A5B66;
+    --border:rgba(21,22,28,0.08); --border-soft:rgba(21,22,28,0.06);
+    --mint:#00D9A3; --mint-deep:#00A87E; --coral:#FF5A3C; --violet:#6A5AE0; --amber:#E8940A;
+    --code-bg:#15161C; --code-text:#E8E6E1;
+  }
+  [data-theme="dark"]{
+    --bg:#121218; --surface:#1B1C23; --text:#F3F2EE; --text-soft:#9A9BA6;
+    --border:rgba(255,255,255,0.09); --border-soft:rgba(255,255,255,0.06);
+    --code-bg:#0C0D11; --code-text:#E8E6E1;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{ background:#EAE7DF; font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; padding:28px; }
+  html[data-theme="dark"] body{ background:#08090B; }
+  h1,h2,h3{ font-family:'Poppins',sans-serif; letter-spacing:-0.02em; }
+  .mono{ font-family:'JetBrains Mono',monospace; }
+
+  /* ---------- TOP CONTROL BAR ---------- */
+  .controlbar{ max-width:1400px; margin:0 auto 20px; display:flex; align-items:center; justify-content:space-between; }
+  .controlbar h2{ font-size:15px; font-weight:600; color:#3a3a3a; }
+  [data-theme="dark"] .controlbar h2{ color:#ddd; }
+  .switch{ position:relative; width:52px; height:28px; border-radius:999px; background:var(--surface); border:1px solid var(--border); cursor:pointer; }
+  .switch .thumb{ position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:var(--text); transition:left .3s cubic-bezier(.34,1.56,.64,1), background .35s ease; }
+  [data-theme="dark"] .switch .thumb{ left:27px; background:var(--mint); }
+
+  /* ---------- DEVICE FRAMES ---------- */
+  .frames{ max-width:1400px; margin:0 auto; display:flex; gap:24px; align-items:flex-start; }
+  .frame-label{ font-size:12px; font-weight:600; color:#8a8a8a; margin-bottom:8px; text-align:center; }
+  .desktop-shell{ flex:1; min-width:0; }
+  .desktop-chrome{ background:#3a3a3a; border-radius:12px 12px 0 0; padding:9px 14px; display:flex; gap:6px; }
+  .desktop-chrome span{ width:9px; height:9px; border-radius:50%; background:#666; }
+  .desktop-viewport{ container-type:inline-size; container-name:device; background:var(--bg); border-radius:0 0 12px 12px; height:900px; overflow-y:auto; }
+
+  .mobile-shell{ flex:0 0 340px; }
+  .mobile-bezel{ background:#2a2a2a; border-radius:34px; padding:14px; }
+  .mobile-notch{ width:70px; height:16px; background:#2a2a2a; border-radius:0 0 12px 12px; margin:0 auto; position:relative; z-index:2; }
+  .mobile-viewport{ container-type:inline-size; container-name:device; background:var(--bg); height:820px; overflow-y:auto; border-radius:20px; }
+
+  /* ---------- ARTICLE ---------- */
+  .article{ color:var(--text); padding:26px 30px 60px; }
+  @container device (max-width: 420px){ .article{ padding:18px 16px 50px; } }
+
+  .crumb{ display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--text-soft); font-weight:500; margin-bottom:20px; }
+  .back{ width:28px; height:28px; border-radius:50%; border:1px solid var(--border); background:none; color:var(--text); display:flex; align-items:center; justify-content:center; }
+
+  .mark-sm{ width:52px; height:52px; margin-bottom:14px; }
+  .title{ font-size:28px; font-weight:800; }
+  @container device (max-width: 420px){ .title{ font-size:22px; } }
+  .tags{ display:flex; gap:6px; margin:12px 0 22px; flex-wrap:wrap; }
+  .tag{ font-size:10.5px; font-weight:600; padding:4px 11px; border-radius:999px; background:var(--border-soft); color:var(--text-soft); }
+  .lede{ font-size:15px; line-height:1.7; color:var(--text); }
+
+  section{ margin-top:34px; }
+  .h2row{ display:flex; align-items:center; gap:9px; }
+  h2{ font-size:18px; font-weight:600; }
+  .num{ width:24px; height:24px; border-radius:50%; background:var(--text); color:var(--bg); font-size:10.5px; font-family:'Inter',sans-serif; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  section p{ font-size:13.5px; line-height:1.75; color:var(--text-soft); margin-top:11px; }
+  section p b{ color:var(--text); font-weight:600; }
+
+  /* illustration block */
+  .illust-row{ display:flex; gap:16px; margin-top:16px; align-items:center; }
+  @container device (max-width: 420px){ .illust-row{ flex-direction:column; } }
+  .illust-box{ flex:0 0 200px; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px; text-align:center; }
+  .illust-cap{ font-size:10.5px; color:var(--text-soft); margin-top:8px; }
+  .illust-text{ flex:1; font-size:13px; color:var(--text-soft); line-height:1.7; }
+
+  /* interactive diagram */
+  .diagram-card{ margin-top:16px; background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:22px; }
+  .ring-stage{ display:flex; justify-content:center; }
+  .ring-controls{ display:flex; gap:8px; justify-content:center; margin-top:16px; flex-wrap:wrap; }
+  .rbtn{ font-size:11.5px; font-weight:600; padding:8px 14px; border-radius:999px; border:1px solid var(--border); background:none; color:var(--text); cursor:pointer; }
+  .rbtn.primary{ background:var(--mint-deep); color:#fff; border-color:transparent; }
+  .rbtn.danger{ background:none; border-color:var(--coral); color:var(--coral); }
+  .ring-log{ text-align:center; font-size:12px; color:var(--text-soft); margin-top:12px; min-height:16px; }
+  .ring-log b{ color:var(--text); }
+
+  /* video block */
+  .video-block{ margin-top:16px; background:var(--code-bg); border-radius:16px; aspect-ratio:16/9; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:10px; cursor:pointer; position:relative; }
+  .video-play{ width:52px; height:52px; border-radius:50%; background:rgba(255,255,255,0.14); display:flex; align-items:center; justify-content:center; color:#fff; }
+  .video-cap{ font-size:11.5px; color:rgba(255,255,255,0.6); }
+  .video-dur{ position:absolute; bottom:12px; right:14px; font-size:10.5px; color:rgba(255,255,255,0.5); }
+
+  /* code block */
+  .code-block{ margin-top:14px; background:var(--code-bg); border-radius:14px; padding:16px 18px; overflow-x:auto; }
+  .code-block pre{ font-size:12px; color:var(--code-text); line-height:1.7; }
+  .kw{ color:#FF8A6E; } .str{ color:#00D9A3; } .cm{ color:#7A7B85; font-style:italic; } .ty{ color:#7A9BFF; }
+
+  /* callout */
+  .callout{ margin-top:16px; padding:16px 18px; border-radius:14px; background:var(--border-soft); border-left:3px solid var(--mint-deep); }
+  .callout .lbl{ font-size:10px; font-weight:700; letter-spacing:.06em; color:var(--mint-deep); text-transform:uppercase; margin-bottom:5px; }
+  .callout p{ color:var(--text); font-size:12.5px; margin-top:0; }
+
+  /* resources */
+  .res-row{ display:flex; align-items:center; gap:12px; padding:13px 15px; border-radius:14px; border:1px solid var(--border); margin-top:9px; }
+  .res-ic{ width:34px; height:34px; border-radius:10px; background:var(--border-soft); display:flex; align-items:center; justify-content:center; color:var(--text); flex-shrink:0; }
+  .res-info{ flex:1; min-width:0; }
+  .res-title{ font-size:12.5px; font-weight:600; }
+  .res-sub{ font-size:11px; color:var(--text-soft); }
+  .chip-row{ display:flex; gap:5px; flex-shrink:0; }
+  .chip{ font-size:9.5px; font-weight:700; padding:3px 8px; border-radius:999px; white-space:nowrap; }
+  .chip.ok{ background:rgba(0,168,126,0.12); color:var(--mint-deep); }
+  @container device (max-width: 420px){ .chip-row{ display:none; } }
+</style>
+</head>
+<body>
+
+<div class="controlbar">
+  <h2>Consistent hashing &mdash; deep dive preview</h2>
+  <div class="switch" id="switch"><div class="thumb"></div></div>
+</div>
+
+<div class="frames">
+  <div class="desktop-shell">
+    <div class="frame-label">Web</div>
+    <div class="desktop-chrome"><span></span><span></span><span></span></div>
+    <div class="desktop-viewport"><div class="article" data-ring="1"></div></div>
+  </div>
+  <div class="mobile-shell">
+    <div class="frame-label">Mobile</div>
+    <div class="mobile-bezel">
+      <div class="mobile-notch"></div>
+      <div class="mobile-viewport"><div class="article" data-ring="2"></div></div>
+    </div>
+  </div>
+</div>
+
+<template id="articleTemplate">
+  <div class="crumb"><button class="back">&larr;</button>Deep dives &nbsp;/&nbsp; Consistent hashing</div>
+  <svg class="mark-sm" viewBox="0 0 56 56" fill="none">
+    <circle cx="28" cy="8" r="20" stroke="var(--text)" stroke-width="1.5" fill="none" opacity=".2" transform="translate(0,12)"/>
+    <circle cx="28" cy="8" r="3.5" fill="#00D9A3"/><circle cx="44" cy="20" r="3.5" fill="#FF5A3C"/><circle cx="38" cy="42" r="3.5" fill="#00A87E"/><circle cx="16" cy="44" r="3.5" fill="#6A5AE0"/><circle cx="9" cy="18" r="3.5" fill="#00A87E"/>
+  </svg>
+  <h1 class="title">Consistent hashing, and why adding one server shouldn't break everything</h1>
+  <div class="tags"><span class="tag">Distributed</span><span class="tag">Load balancing</span><span class="tag">8 min read</span></div>
+  <p class="lede">Naive hashing (<code class="mono">hash(key) % N</code>) means adding one server reshuffles almost every key. Consistent hashing fixes this with one idea: put servers and keys on the same ring.</p>
+
+  <section>
+    <div class="h2row"><span class="num">1</span><h2>The problem with modulo</h2></div>
+    <div class="illust-row">
+      <div class="illust-box">
+        <svg viewBox="0 0 160 100" width="100%">
+          <rect width="160" height="100" fill="none"/>
+          <text x="10" y="16" font-size="8" fill="var(--text-soft)" font-family="Inter">3 servers</text>
+          <circle cx="20" cy="40" r="5" fill="#00D9A3"/><circle cx="80" cy="40" r="5" fill="#00A87E"/><circle cx="140" cy="40" r="5" fill="#6A5AE0"/>
+          <text x="10" y="66" font-size="8" fill="var(--coral)" font-family="Inter">+1 server &rarr; ~75% of keys move</text>
+          <circle cx="20" cy="86" r="5" fill="#00D9A3"/><circle cx="65" cy="86" r="5" fill="#00A87E"/><circle cx="110" cy="86" r="5" fill="#6A5AE0"/><circle cx="150" cy="86" r="5" fill="#FF5A3C"/>
+        </svg>
+        <div class="illust-cap">Modulo hashing: adding a node reshuffles nearly everything</div>
+      </div>
+      <p class="illust-text">With <code class="mono">% N</code>, the server for a key depends on the total count <b>N</b>. Change N by one and almost every key's assigned server changes &mdash; which means a mass cache miss or a mass data migration, right when you're trying to scale up.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="h2row"><span class="num">2</span><h2>The ring, live</h2></div>
+    <p>Both servers and keys get hashed onto the same circular space. A key belongs to the first server found going clockwise. Try it:</p>
+    <div class="diagram-card">
+      <div class="ring-stage"><svg class="ringsvg" width="220" height="220" viewBox="0 0 220 220"></svg></div>
+      <div class="ring-controls">
+        <button class="rbtn primary" data-act="send">Send a request</button>
+        <button class="rbtn danger" data-act="kill">Node B fails</button>
+        <button class="rbtn" data-act="reset">Reset</button>
+      </div>
+      <div class="ring-log">Click "Send a request" to see it land on the ring.</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="h2row"><span class="num">3</span><h2>Watch it happen</h2></div>
+    <p>A 45-second walkthrough of the same ring, including what happens when a node joins mid-traffic.</p>
+    <div class="video-block">
+      <div class="video-play"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></div>
+      <div class="video-cap">Consistent hashing, visualized</div>
+      <div class="video-dur">0:45</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="h2row"><span class="num">4</span><h2>How lookup actually works</h2></div>
+    <p>Servers' hash positions are kept in a sorted array. Finding a key's server is a binary search for the first position &ge; the key's hash &mdash; wrapping to the start if none is found.</p>
+    <div class="code-block mono"><pre><span class="kw">function</span> <span class="ty">getNode</span>(key) {
+  <span class="kw">const</span> h = hash(key);
+  <span class="kw">const</span> idx = <span class="ty">binarySearchCeil</span>(ring, h);
+  <span class="cm">// wrap around if key hashes past the last node</span>
+  <span class="kw">return</span> ring[idx % ring.length];
+}</pre></div>
+    <div class="callout">
+      <div class="lbl">Worth remembering</div>
+      <p>A real ring uses <b>virtual nodes</b> &mdash; each physical server gets hashed to dozens of points, not one. Otherwise one unlucky placement gives a server way more (or less) than its fair share of keys.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="h2row"><span class="num">5</span><h2>Go deeper</h2></div>
+    <div class="res-row">
+      <div class="res-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20M4 4.5A2.5 2.5 0 016.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15z"/></svg></div>
+      <div class="res-info"><div class="res-title">Official docs &mdash; Dynamo paper (Amazon)</div><div class="res-sub">The original write-up this pattern comes from</div></div>
+      <div class="chip-row"><span class="chip ok">Accessible</span><span class="chip ok">Public</span></div>
+    </div>
+    <div class="res-row">
+      <div class="res-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg></div>
+      <div class="res-info"><div class="res-title">Community discussion thread</div><div class="res-sub">Real debugging stories from people who hit this in production</div></div>
+      <div class="chip-row"><span class="chip ok">Accessible</span><span class="chip ok">Public</span></div>
+    </div>
+    <div class="res-row">
+      <div class="res-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 9l-4 3 4 3M16 9l4 3-4 3M13 5l-3 14"/></svg></div>
+      <div class="res-info"><div class="res-title">Q&amp;A thread &mdash; "virtual nodes, how many?"</div><div class="res-sub">A well-answered question on picking vnode counts</div></div>
+      <div class="chip-row"><span class="chip ok">Accessible</span><span class="chip ok">Public</span></div>
+    </div>
+  </section>
+</template>
+
+<script>
+/* ---------- populate both frames from the template ---------- */
+document.querySelectorAll('[data-ring]').forEach(el => {
+  el.innerHTML = document.getElementById('articleTemplate').innerHTML;
+});
+
+/* ---------- theme switch ---------- */
+document.getElementById('switch').onclick = () => {
+  const html = document.documentElement;
+  html.setAttribute('data-theme', html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+};
+
+/* ---------- hash ring diagram, initialized per-instance ---------- */
+function initRing(root){
+  const svg = root.querySelector('.ringsvg');
+  const log = root.querySelector('.ring-log');
+  const cx=110, cy=110, r=80;
+  let nodes = [
+    { id:'A', angle:20,  color:'#00D9A3', alive:true },
+    { id:'B', angle:110, color:'#FF5A3C', alive:true },
+    { id:'C', angle:200, color:'#6A5AE0', alive:true },
+    { id:'D', angle:300, color:'#00A87E', alive:true },
+  ];
+  function pt(angle, radius){ const a=(angle-90)*Math.PI/180; return {x:cx+radius*Math.cos(a), y:cy+radius*Math.sin(a)}; }
+  function nextClockwise(angle){
+    const alive = nodes.filter(n=>n.alive).sort((a,b)=>a.angle-b.angle);
+    for(const n of alive){ if(n.angle >= angle) return n; }
+    return alive[0];
+  }
+  function draw(){
+    svg.innerHTML = '';
+    const ring = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    ring.setAttribute('cx',cx); ring.setAttribute('cy',cy); ring.setAttribute('r',r);
+    ring.setAttribute('fill','none'); ring.setAttribute('stroke','var(--border)'); ring.setAttribute('stroke-width','1.5');
+    svg.appendChild(ring);
+    nodes.forEach(n => {
+      const p = pt(n.angle, r);
+      const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+      c.setAttribute('cx',p.x); c.setAttribute('cy',p.y); c.setAttribute('r', n.alive ? 9 : 9);
+      c.setAttribute('fill', n.alive ? n.color : 'none');
+      c.setAttribute('stroke', n.alive ? 'none' : '#FF5A3C');
+      c.setAttribute('stroke-width','2');
+      svg.appendChild(c);
+      if(!n.alive){
+        const x1=document.createElementNS('http://www.w3.org/2000/svg','line');
+        x1.setAttribute('x1',p.x-5); x1.setAttribute('y1',p.y-5); x1.setAttribute('x2',p.x+5); x1.setAttribute('y2',p.y+5);
+        x1.setAttribute('stroke','#FF5A3C'); x1.setAttribute('stroke-width','2');
+        svg.appendChild(x1);
+      }
+      const lp = pt(n.angle, r+18);
+      const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+      t.setAttribute('x',lp.x); t.setAttribute('y',lp.y); t.setAttribute('text-anchor','middle');
+      t.setAttribute('font-size','11'); t.setAttribute('font-weight','700'); t.setAttribute('fill', n.alive ? 'var(--text)' : 'var(--text-soft)');
+      t.textContent = n.id;
+      svg.appendChild(t);
+    });
+  }
+  function sendRequest(forceAngle){
+    const angle = forceAngle !== undefined ? forceAngle : Math.random()*360;
+    const start = pt(angle, r);
+    const target = nextClockwise(angle);
+    const end = pt(target.angle, r);
+    const dot = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    dot.setAttribute('r','5'); dot.setAttribute('fill','var(--text)');
+    dot.setAttribute('cx',start.x); dot.setAttribute('cy',start.y);
+    svg.appendChild(dot);
+    const midAngle = (angle + target.angle)/2;
+    const mid = pt(midAngle, r*0.55);
+    const path = `M${start.x},${start.y} Q${mid.x},${mid.y} ${end.x},${end.y}`;
+    const anim = document.createElementNS('http://www.w3.org/2000/svg','animateMotion');
+    anim.setAttribute('dur','0.9s'); anim.setAttribute('fill','freeze'); anim.setAttribute('path',path);
+    dot.appendChild(anim);
+    log.innerHTML = `Request hashed near ${Math.round(angle)}\u00b0 &rarr; nearest clockwise node is <b>${target.id}</b>`;
+    setTimeout(()=>dot.remove(), 1400);
+  }
+  root.querySelector('[data-act="send"]').onclick = () => sendRequest();
+  root.querySelector('[data-act="kill"]').onclick = () => {
+    const b = nodes.find(n=>n.id==='B');
+    if(!b.alive) return;
+    b.alive = false;
+    draw();
+    log.innerHTML = `<b>Node B failed.</b> Its keys now belong to the next node clockwise &mdash; watch:`;
+    setTimeout(()=>{ sendRequest(90); }, 500);
+    setTimeout(()=>{ sendRequest(105); }, 1600);
+  };
+  root.querySelector('[data-act="reset"]').onclick = () => {
+    nodes.forEach(n=>n.alive=true);
+    draw();
+    log.textContent = 'Click "Send a request" to see it land on the ring.';
+  };
+  draw();
+}
+document.querySelectorAll('[data-ring]').forEach(root => initRing(root));
+</script>
+
+</body>
+</html>
