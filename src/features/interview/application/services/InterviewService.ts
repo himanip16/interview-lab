@@ -147,6 +147,44 @@ export class InterviewService {
     return savedInterview.id;
   }
 
+  async getInterview(id: string) {
+    const { InterviewRepository } = await import("@/features/interview/infrastructure/repositories/InterviewRepository");
+    const repository = new InterviewRepository();
+    return await repository.getById(id);
+  }
+
+  async finishInterview(id: string) {
+    const { InterviewRepository } = await import("@/features/interview/infrastructure/repositories/InterviewRepository");
+    const { EvaluationOrchestrator } = await import("@/features/interview/application/services/evaluation/EvaluationOrchestrator");
+    const { InterviewStatus } = await import("@prisma/client");
+
+    const repository = new InterviewRepository();
+    const evaluationOrchestrator = new EvaluationOrchestrator();
+
+    const exists = await repository.exists(id);
+    if (!exists) {
+      throw new Error("Interview not found");
+    }
+
+    await repository.updateProgress(id, {
+      status: InterviewStatus.COMPLETED,
+      completedAt: new Date(),
+    });
+
+    evaluationOrchestrator.requestEvaluation(id, { background: true }).catch((error) => {
+      logger.error("Background evaluation failed after interview completion", {
+        err: error,
+        interviewId: id,
+      });
+    });
+
+    return {
+      success: true,
+      message: "Interview completed. Evaluation is running in background.",
+      status: "EVALUATION_IN_PROGRESS",
+    };
+  }
+
   private async ensureGuestUser(): Promise<string> {
     const { cookies } = await import("next/headers");
     const { randomUUID } = await import("crypto");

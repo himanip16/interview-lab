@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server";
-
-import { InterviewRepository } from "@/features/interview/repositories/InterviewRepository";
-import { createInterview } from "@/features/interview/services/interview/InterviewFactory";
+import { InterviewService } from "@/features/interview/application/services/InterviewService";
 import { CreateInterviewInput } from "@/features/interview/types/CreateInterviewInput";
-import { ensureGuestUser } from "@/features/auth/getCurrentUserId";
 import logger from "@/shared/logger/logger";
 
 export async function POST(request: Request) {
@@ -21,70 +18,28 @@ export async function POST(request: Request) {
       );
     }
 
-    const repository = new InterviewRepository();
-
-    const interviewData = createInterview(body);
-
-    const userId = await ensureGuestUser();
-
-    const interview = await repository.create({
-      difficulty: interviewData.difficulty,
-      duration: interviewData.duration,
-      company: interviewData.company,
-      status: interviewData.status,
-      problem: {
-        connect: {
-          id: interviewData.problemId,
-        },
-      },
-      template: {
-        connect: {
-          id: interviewData.templateId,
-        },
-      },
-      user: {
-        connect: {
-          id: userId,
-        },
-      },
-      currentPhase: interviewData.currentPhase,
-      summary: interviewData.summary,
-      promptVersion: interviewData.promptVersion,
+    const service = new InterviewService();
+    const interviewId = await service.startInterview({
+      ...body,
+      type: body.templateId,
     });
 
-    return NextResponse.json(
-      {
-        id: interview.id,
-        status: interview.status,
-        templateId: interview.templateId,
-        difficulty: interview.difficulty,
-        duration: interview.duration,
-        company: interview.company,
-        problemId: interview.problemId,
-        currentPhase: interview.currentPhase,
-        summary: interview.summary,
-        createdAt: interview.createdAt,
-        updatedAt: interview.updatedAt,
-      },
-      {
-        status: 201,
-      }
-    );
+    return NextResponse.json({ id: interviewId }, { status: 201 });
 
   } catch (error) {
     if (error instanceof Error) {
       logger.error(
+        "Failed to create interview",
         {
           err: error,
           message: error.message,
           stack: error.stack,
-        },
-        "Failed to create interview"
+        }
       );
     } else {
       logger.error(
-        { error },
-        "Failed to create interview"
+        "Failed to create interview",
+        { error }
       );
     }
 

@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-
-import { InterviewRepository } from "@/features/interview/repositories/InterviewRepository";
+import { InterviewService } from "@/features/interview/application/services/InterviewService";
 import logger from "@/shared/logger/logger";
 
 type Props = {
@@ -24,10 +23,8 @@ export async function GET(request: Request, { params }: Props) {
       );
     }
 
-    const repository = new InterviewRepository();
-
-    const interview =
-      await repository.getById(id);
+    const service = new InterviewService();
+    const interview = await service.getInterview(id);
 
     if (!interview) {
       return NextResponse.json(
@@ -63,20 +60,20 @@ export async function GET(request: Request, { params }: Props) {
 
   } catch (error) {
     if (error instanceof Error) {
-  logger.error(
-    {
-      err: error,
-      message: error.message,
-      stack: error.stack,
-    },
-    "Failed to process interview message"
-  );
-} else {
-  logger.error(
-    { error },
-    "Failed to process interview message"
-  );
-}
+      logger.error(
+        "Failed to get interview",
+        {
+          err: error,
+          message: error.message,
+          stack: error.stack,
+        }
+      );
+    } else {
+      logger.error(
+        "Failed to get interview",
+        { error }
+      );
+    }
 
     return NextResponse.json(
       {

@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
-
 import logger from "@/shared/logger/logger";
-
-import { InterviewMessageService } from "@/features/interview/services/interview/InterviewMessageService";
+import { InterviewMessageService } from "@/features/interview/application/services/interview/InterviewMessageService";
 
 export async function POST(
-  req: Request,{params,}: {
+  req: Request,
+  { params }: {
     params: Promise<{
       id: string;
     }>;
@@ -29,32 +28,21 @@ export async function POST(
     }
 
     const service = new InterviewMessageService();
+    const result = await service.processMessage(id, message);
 
-    const result = await service.processMessage(
-        id,
-        message
-      );
+    return NextResponse.json(result, {
+      status: 200,
+    });
+  } catch (error) {
+    logger.error("Failed to process interview message", { error });
 
     return NextResponse.json(
-      result,
       {
-        status: 200,
+        error: error instanceof Error ? error.message : String(error),
+      },
+      {
+        status: 500,
       }
     );
-  } catch (error) {
-    
-  console.error("ACTUAL INTERVIEW ERROR:", error);
-
-  return NextResponse.json(
-    {
-      error:
-        error instanceof Error
-          ? error.message
-          : String(error),
-    },
-    {
-      status: 500,
-    }
-  );
-}
+  }
 }
