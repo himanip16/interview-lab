@@ -104,7 +104,7 @@ export default function ProblemsPage() {
 
   const getTypeClass = (type: string) => {
     const t = type?.toLowerCase() || "hld";
-    return t === "hld" ? "typeHld" : t === "lld" ? "typeLld" : "typeDsa";
+    return t === "hld" ? "hld" : t === "lld" ? "lld" : "dsa";
   };
 
   const getDifficultyClass = (diff: string) => {
@@ -142,7 +142,7 @@ export default function ProblemsPage() {
   };
 
   return (
-    <div style={{ background: "var(--landing-bg)", minHeight: "100vh" }}>
+    <div style={{ background: "#FAF9F6", minHeight: "100vh" }}>
       <div className={styles.panel}>
         <div className={styles.top}>
           <h2>Problem library</h2>
@@ -317,19 +317,19 @@ export default function ProblemsPage() {
                 className={styles.row}
                 onClick={() => startInterview(problem.id)}
               >
-                <div className={`${styles.bar} ${styles[getTypeClass(problem.interviewType)]}`}></div>
-                <div className={styles.rowMain}>
-                  <div className={styles.rowTitle}>
+                <div className={`bar ${getTypeClass(problem.interviewType)}`}></div>
+                <div className={styles['row-main']}>
+                  <div className={styles['row-title']}>
                     <h3>{problem.title}</h3>
-                    <span className={`${styles.typeTag} ${styles[getTypeClass(problem.interviewType)]}`}>
+                    <span className={`type-tag ${getTypeClass(problem.interviewType)}`}>
                       {problem.interviewType?.toUpperCase() || "HLD"}
                     </span>
                   </div>
-                  <div className={styles.rowCrux}>
-                    {problem.category} {problem.tags?.join(", ")}
+                  <div className="row-crux" style={{fontSize: '12.5px', color: '#5A5B66', marginTop: '3px'}}>
+                    {problem.tags?.join(" · ") || problem.category || 'Design concepts'}
                   </div>
                 </div>
-                <div className={styles.rowRight}>
+                <div className={styles['row-right']}>
                   <span className={`${styles.diff} ${styles[getDifficultyClass(problem.difficulty)]}`}>
                     {problem.difficulty}
                   </span>

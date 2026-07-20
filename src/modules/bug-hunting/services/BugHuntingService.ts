@@ -4,6 +4,7 @@ import type { BugAttemptRepository } from "../repositories/BugAttemptRepository"
 import type { InvestigationArtifactSource } from "../domain/entities/Finding";
 import { BugScenario } from "../domain/entities/BugScenario";
 import { BugAttempt } from "../domain/entities/BugAttempt";
+import { AttemptStatus } from "../domain/value-objects/AttemptStatus";
 
 export class BugHuntingService {
   constructor(
@@ -13,6 +14,10 @@ export class BugHuntingService {
 
   async getScenario(id: string): Promise<BugScenario | null> {
     return this.scenarios.findById(id);
+  }
+
+  async listScenarios(): Promise<BugScenario[]> {
+    return this.scenarios.list();
   }
 
   /** Resumes an in-progress attempt if one exists, otherwise starts a new one. */
@@ -26,21 +31,27 @@ export class BugHuntingService {
     return this.attempts.create({ userId, scenarioId });
   }
 
-  async logHypothesis(attemptId: string, scenarioId: string, userId: string, hypothesis: string): Promise<void> {
+  async logHypothesis(attemptId: string, scenarioId: string, hypothesis: string): Promise<void> {
     if (!hypothesis.trim()) {
       throw new Error("Hypothesis cannot be empty");
     }
     const attempt = await this.attempts.findById(attemptId);
     if (!attempt) throw new Error("Attempt not found");
-    if (!attempt.isActive()) throw new Error("Cannot log a hypothesis on a completed attempt");
+    if (!attempt.canRecordFinding()) throw new Error("Cannot log a hypothesis on a completed attempt");
 
-    await this.attempts.logHypothesis({ attemptId, scenarioId, userId, hypothesis });
+    await this.attempts.logHypothesis({ attemptId, scenarioId, hypothesis });
+
+    // Transition status from STARTED to INVESTIGATING when user logs first hypothesis
+    if (attempt.status === AttemptStatus.STARTED) {
+      const updatedAttempt = attempt.transitionToInvestigating();
+      await this.attempts.updateAttempt(updatedAttempt);
+    }
   }
 
   async recordFinding(attemptId: string, source: InvestigationArtifactSource, refId: string, note?: string) {
     const attempt = await this.attempts.findById(attemptId);
     if (!attempt) throw new Error("Attempt not found");
-    if (!attempt.isActive()) throw new Error("Cannot record findings on a completed attempt");
+    if (!attempt.canRecordFinding()) throw new Error("Cannot record findings on a completed attempt");
 
     return this.attempts.recordFinding({ attemptId, source, refId, note });
   }
@@ -51,7 +62,7 @@ export class BugHuntingService {
     }
     const attempt = await this.attempts.findById(attemptId);
     if (!attempt) throw new Error("Attempt not found");
-    if (!attempt.isActive()) throw new Error("This attempt has already been submitted");
+    if (!attempt.canSubmit()) throw new Error("This attempt has already been submitted");
 
     const submission = await this.attempts.submitFix({ attemptId, rootCause, proposedFix });
 
@@ -61,7 +72,11 @@ export class BugHuntingService {
   }
 
   async gradeAttempt(attemptId: string, score: number, feedback: string) {
-    return this.attempts.gradeAttempt({ attemptId, score, feedback });
+    const attempt = await this.attempts.findById(attemptId);
+    if (!attempt) throw new Error("Attempt not found");
+    
+    const completedAttempt = attempt.complete(score, feedback);
+    return this.attempts.updateAttempt(completedAttempt);
   }
 
   async getAttemptSummary(attemptId: string) {
@@ -85,6 +100,61 @@ export class BugHuntingService {
     if (!scenario) throw new Error("Scenario not found");
 
     const { sql } = scenario.toJSON();
-    return { columns: sql.columns, rows: sql.rows, executedQuery: query };
+    
+    // Basic SQL simulation - filter rows based on simple WHERE clauses
+    let filteredRows = [...sql.rows];
+    
+    // Simple WHERE clause parsing for common patterns
+    const whereMatch = query.match(/WHERE\s+(.+?)(?:\s+ORDER\s+BY|\s+LIMIT|;|$)/i);
+    if (whereMatch) {
+      const whereClause = whereMatch[1].trim();
+      
+      // Handle simple equality conditions: column = 'value'
+      const equalityMatches = whereClause.matchAll(/(\w+)\s*=\s*['"]([^'"]+)['"]/gi);
+      for (const match of equalityMatches) {
+        const column = match[1].toLowerCase();
+        const value = match[2];
+        
+        const colIndex = sql.columns.findIndex(c => c.toLowerCase() === column);
+        if (colIndex !== -1) {
+          filteredRows = filteredRows.filter(row => row[colIndex] === value);
+        }
+      }
+      
+      // Handle simple inequality: column != 'value'
+      const inequalityMatches = whereClause.matchAll(/(\w+)\s*!=\s*['"]([^'"]+)['"]/gi);
+      for (const match of inequalityMatches) {
+        const column = match[1].toLowerCase();
+        const value = match[2];
+        
+        const colIndex = sql.columns.findIndex(c => c.toLowerCase() === column);
+        if (colIndex !== -1) {
+          filteredRows = filteredRows.filter(row => row[colIndex] !== value);
+        }
+      }
+      
+      // Handle LIKE conditions: column LIKE '%value%'
+      const likeMatches = whereClause.matchAll(/(\w+)\s+LIKE\s+['"]%([^'"]*)%['"]/gi);
+      for (const match of likeMatches) {
+        const column = match[1].toLowerCase();
+        const value = match[2].toLowerCase();
+        
+        const colIndex = sql.columns.findIndex(c => c.toLowerCase() === column);
+        if (colIndex !== -1) {
+          filteredRows = filteredRows.filter(row => 
+            row[colIndex]?.toLowerCase().includes(value)
+          );
+        }
+      }
+    }
+    
+    // Handle LIMIT
+    const limitMatch = query.match(/LIMIT\s+(\d+)/i);
+    if (limitMatch) {
+      const limit = parseInt(limitMatch[1], 10);
+      filteredRows = filteredRows.slice(0, limit);
+    }
+    
+    return { columns: sql.columns, rows: filteredRows, executedQuery: query };
   }
 }

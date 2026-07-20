@@ -11,7 +11,6 @@ export interface CreateAttemptInput {
 export interface LogHypothesisInput {
   attemptId: string;
   scenarioId: string;
-  userId: string;
   hypothesis: string;
 }
 
@@ -38,11 +37,11 @@ export interface BugAttemptRepository {
   create(input: CreateAttemptInput): Promise<BugAttempt>;
   findById(attemptId: string): Promise<BugAttempt | null>;
   findActiveAttempt(userId: string, scenarioId: string): Promise<BugAttempt | null>;
+  updateAttempt(attempt: BugAttempt): Promise<BugAttempt>;
 
   logHypothesis(input: LogHypothesisInput): Promise<void>;
   recordFinding(input: RecordFindingInput): Promise<Finding>;
   submitFix(input: SubmitFixInput): Promise<BugSubmission>;
-  gradeAttempt(input: GradeAttemptInput): Promise<BugAttempt>;
 
   getSubmission(attemptId: string): Promise<BugSubmission | null>;
   listFindings(attemptId: string): Promise<Finding[]>;

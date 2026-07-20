@@ -31,12 +31,7 @@ export default async function BugHuntingPage({ params }: Props) {
       <Header scenario={data} />
 
       <div className="bh-body">
-        <ReportSidebar
-          scenario={data}
-          hypothesis=""
-          onHypothesisChange={() => {}}
-          onSubmitHypothesis={() => {}}
-        />
+        <ReportSidebar scenario={data} />
 
         <BugHuntingShell
           logsPanel={<LogsPanel scenario={data} />}

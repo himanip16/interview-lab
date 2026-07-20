@@ -1,14 +1,11 @@
 import { Panel } from "@/components/ui/Panel";
-// Fixed paths
-import type { BugScenario } from "@/features/bug-hunting/types/Scenario";
-import checkoutTimeout from "@/features/bug-hunting/data/checkout-timeout.json";
+import { getBugHuntingService } from "@/modules/bug-hunting";
 
-const SCENARIOS: BugScenario[] = [
-  // Ensure we are getting the plain object from the JSON import
-  (checkoutTimeout as any).default || checkoutTimeout,
-];
+export default async function BugHuntingListPage() {
+  const service = getBugHuntingService();
+  const scenarios = await service.listScenarios();
+  const scenarioData = scenarios.map((s) => s.toJSON());
 
-export default function BugHuntingListPage() {
   return (
     <div className="min-h-screen bg-[var(--paper)] py-12 px-6">
       <Panel variant="default" className="max-w-[1500px] mx-auto p-[36px_40px_44px]">
@@ -22,7 +19,7 @@ export default function BugHuntingListPage() {
         </div>
 
         <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
-          {SCENARIOS.map((scenario) => (
+          {scenarioData.map((scenario) => (
             <a
               key={scenario.id}
               href={`/bug-hunting/${scenario.id}`}

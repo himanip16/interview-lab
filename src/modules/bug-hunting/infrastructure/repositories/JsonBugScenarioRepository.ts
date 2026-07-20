@@ -16,4 +16,15 @@ export class JsonBugScenarioRepository implements BugScenarioRepository {
     const { default: raw } = await loader();
     return BugScenario.fromJSON(raw);
   }
+
+  async list(): Promise<BugScenario[]> {
+    const scenarioIds = Object.keys(SCENARIOS);
+    const scenarios = await Promise.all(
+      scenarioIds.map(async (id) => {
+        const scenario = await this.findById(id);
+        return scenario;
+      })
+    );
+    return scenarios.filter((s): s is BugScenario => s !== null);
+  }
 }
