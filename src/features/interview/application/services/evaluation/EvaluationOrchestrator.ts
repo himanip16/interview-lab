@@ -1,7 +1,9 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/shared/prisma/client";
 import logger from "@/shared/logger/logger";
-import { createEvaluationService } from "@/modules/container";
+import { AIService } from "@/shared/ai";
+import { EvaluationService } from "./EvaluationService";
+import { PromptLoader } from "../../../prompts/prompt/PromptLoader";
 
 // Type alias for the enum - will be resolved after IDE refresh
 type EvaluationStatus = "PENDING" | "RUNNING" | "COMPLETED" | "FAILED";
@@ -82,7 +84,11 @@ export class EvaluationOrchestrator {
     }
 
     // We won the race - perform the evaluation
-    const evaluationService = createEvaluationService();
+    const evaluationService = new EvaluationService(
+      new AIService(),
+      new PromptLoader(),
+      logger
+    );
 
     if (options.background) {
       // Run in background without blocking
@@ -109,14 +115,14 @@ export class EvaluationOrchestrator {
 
   private async runEvaluationInBackground(
     interviewId: string,
-    evaluationService: ReturnType<typeof createEvaluationService>
+    evaluationService: EvaluationService
   ): Promise<void> {
     evaluationService
       .evaluateInterview(interviewId)
       .then(() => {
         logger.info(`Background evaluation completed for interview ${interviewId}`);
       })
-      .catch((error) => {
+      .catch((error: Error) => {
         logger.error(`Background evaluation failed for interview ${interviewId}`, { error });
         // Mark as FAILED so retries are possible
         prisma.evaluation
