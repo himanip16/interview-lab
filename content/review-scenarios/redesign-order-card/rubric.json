@@ -1,0 +1,54 @@
+{
+  "findings": [
+    {
+      "id": "f_001",
+      "category": "CORRECTNESS",
+      "severity": "CRITICAL",
+      "fileId": "OrderSummary.tsx",
+      "line": 2,
+      "keywords": ["collapsible", "default", "state"],
+      "description": "User should ask if the card defaults to open or closed, and whether this is the right UX choice.",
+      "points": 20
+    },
+    {
+      "id": "f_002",
+      "category": "ACCESSIBILITY",
+      "severity": "HIGH",
+      "fileId": "OrderSummary.tsx",
+      "line": 5,
+      "keywords": ["button", "aria", "keyboard", "focus"],
+      "description": "The collapsible header uses a div with onClick instead of a proper button element, which hurts accessibility.",
+      "points": 15
+    },
+    {
+      "id": "f_003",
+      "category": "PERFORMANCE",
+      "severity": "MEDIUM",
+      "fileId": "OrderSummary.tsx",
+      "line": 2,
+      "keywords": ["usecallback", "memo", "rerender"],
+      "description": "The onClick handler is recreated on every render. Should use useCallback for optimization.",
+      "points": 10
+    },
+    {
+      "id": "f_004",
+      "category": "CORRECTNESS",
+      "severity": "MEDIUM",
+      "fileId": "OrderSummary.tsx",
+      "line": 6,
+      "keywords": ["aria", "expanded", "label"],
+      "description": "Missing ARIA attributes (aria-expanded, aria-label) for screen readers.",
+      "points": 10
+    },
+    {
+      "id": "f_005",
+      "category": "TESTING",
+      "severity": "LOW",
+      "fileId": "OrderSummary.tsx",
+      "line": 1,
+      "keywords": ["test", "spec", "coverage"],
+      "description": "No tests added for the new collapsible functionality.",
+      "points": 5
+    }
+  ]
+}

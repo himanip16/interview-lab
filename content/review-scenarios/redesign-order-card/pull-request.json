@@ -1,0 +1,23 @@
+{
+  "title": "feat: Make OrderSummary card collapsible",
+  "description": "This PR adds collapsible functionality to the OrderSummary component to improve UX on mobile devices.",
+  "branch": "feature/collapsible-order-card",
+  "baseBranch": "main",
+  "files": [
+    {
+      "fileId": "OrderSummary.tsx",
+      "filename": "src/components/OrderSummary.tsx",
+      "oldContent": "export const OrderSummary = ({ order }: { order: Order }) => {\n  return (\n    <div className=\"order-summary\">\n      <h2>Order Summary</h2>\n      <div className=\"order-details\">\n        <p>Items: {order.items.length}</p>\n        <p>Total: ${order.total}</p>\n      </div>\n    </div>\n  );\n};",
+      "newContent": "export const OrderSummary = ({ order }: { order: Order }) => {\n  const [isCollapsed, setIsCollapsed] = useState(false);\n  \n  return (\n    <div className=\"order-summary\">\n      <h2 onClick={() => setIsCollapsed(!isCollapsed)}>\n        Order Summary {isCollapsed ? '▶' : '▼'}\n      </h2>\n      {!isCollapsed && (\n        <div className=\"order-details\">\n          <p>Items: {order.items.length}</p>\n          <p>Total: ${order.total}</p>\n        </div>\n      )}\n    </div>\n  );\n};",
+      "diffHunks": [
+        {
+          "oldStart": 1,
+          "oldLines": 8,
+          "newStart": 1,
+          "newLines": 12,
+          "content": "@@ -1,8 +1,12 @@\n export const OrderSummary = ({ order }: { order: Order }) => {\n+  const [isCollapsed, setIsCollapsed] = useState(false);\n+  \n   return (\n     <div className=\"order-summary\">\n-      <h2>Order Summary</h2>\n+      <h2 onClick={() => setIsCollapsed(!isCollapsed)}>\n+        Order Summary {isCollapsed ? '▶' : '▼'}\n+      </h2>\n+      {!isCollapsed && (\n       <div className=\"order-details\">\n         <p>Items: {order.items.length}</p>\n         <p>Total: ${order.total}</p>\n       </div>\n+      )}\n     </div>\n   );\n };"
+        }
+      ]
+    }
+  ]
+}

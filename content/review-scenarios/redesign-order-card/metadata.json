@@ -1,0 +1,6 @@
+{
+  "title": "Redesign Order Card Component",
+  "difficulty": "MEDIUM",
+  "author": "System Design Team",
+  "description": "Review a PR that redesigns the OrderSummary component to be collapsible. Focus on state management, accessibility, and potential performance issues."
+}

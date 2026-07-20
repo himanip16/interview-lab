@@ -52,6 +52,7 @@ model User {
   practiceRecommendations PracticeRecommendation[]
   learningRecommendations LearningRecommendation[]
   bugAttempts             BugAttempt[]
+  reviewAttempts          ReviewAttempt[]
 }
 
 // ---------------------------------------------------------------------------
@@ -862,4 +863,72 @@ enum PracticeAttemptStatus {
   STARTED
   COMPLETED
   ABANDONED
+}
+
+// ---------------------------------------------------------------------------
+// PR Review feature. Models for tracking code review practice attempts with
+// stable comment anchoring, state machine transitions, and structured AI feedback.
+// ---------------------------------------------------------------------------
+
+enum ReviewStatus {
+  CREATED
+  IN_PROGRESS
+  EVALUATING
+  COMPLETED
+  FAILED
+}
+
+enum ReviewDecision {
+  APPROVE
+  REQUEST_CHANGES
+  REJECT
+}
+
+model ReviewAttempt {
+  id          String         @id @default(cuid())
+  userId      String
+  scenarioId  String
+  status      ReviewStatus   @default(CREATED)
+  decision    ReviewDecision?
+
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comments    ReviewComment[]
+  report      ReviewReport?
+
+  startedAt   DateTime       @default(now())
+  completedAt DateTime?
+
+  @@index([userId, scenarioId])
+}
+
+model ReviewComment {
+  id          String        @id @default(cuid())
+  attemptId   String
+  attempt     ReviewAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  // Stable Anchoring
+  fileId      String
+  side        String        // "LEFT" (deleted) or "RIGHT" (added)
+  line        Int
+  anchorText  String?       // The specific snippet selected
+
+  content     String        @db.Text
+  createdAt   DateTime      @default(now())
+
+  @@index([attemptId])
+}
+
+model ReviewReport {
+  id             String        @id @default(cuid())
+  attemptId      String        @unique
+  attempt        ReviewAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  overallScore   Int
+  categoryScores Json          // { "Performance": 80, "Security": 100, ... }
+
+  // Structured AI Feedback
+  summary        String        @db.Text
+  strengths      String[]
+  missedFindings Json          // List of Finding objects the user didn't see
+  recommendations String[]
 }
