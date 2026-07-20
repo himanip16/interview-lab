@@ -153,7 +153,7 @@ export class InterviewService {
     const GUEST_COOKIE = "guest_user_id";
     const GUEST_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 30; // 30 days
 
-    const { auth } = await import("@/modules/auth/auth");
+    const { auth } = await import("@/features/auth/auth");
     const session = await auth();
 
     if (session?.user?.id) {

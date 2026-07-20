@@ -1,7 +1,7 @@
 // src/app/api/reviews/route.ts
 import { NextResponse } from "next/server";
 import { getReviewService } from "@/modules/pr-review";
-import { ensureGuestUser } from "@/modules/auth/getCurrentUserId";
+import { ensureGuestUser } from "@/features/auth/getCurrentUserId";
 
 export async function POST(request: Request) {
   try {

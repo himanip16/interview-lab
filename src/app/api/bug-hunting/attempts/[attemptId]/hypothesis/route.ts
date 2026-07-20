@@ -1,7 +1,7 @@
 // src/app/api/bug-hunting/attempts/[attemptId]/hypothesis/route.ts
 import { NextResponse } from "next/server";
 import { getBugHuntingService } from "@/modules/bug-hunting";
-import { ensureGuestUser } from "@/modules/auth/getCurrentUserId";
+import { ensureGuestUser } from "@/features/auth/getCurrentUserId";
 
 export async function POST(request: Request, { params }: { params: Promise<{ attemptId: string }> }) {
   try {

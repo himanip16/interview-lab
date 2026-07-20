@@ -1,4 +1,4 @@
-import { signIn } from "@/modules/auth/auth";
+import { signIn } from "@/features/auth/auth";
 
 import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
