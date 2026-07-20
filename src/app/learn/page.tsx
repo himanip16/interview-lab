@@ -53,7 +53,7 @@ const CARDS = [
     description: "Practice code review on real pull requests.",
     from: "#3E6BFF",
     to: "#213FCC",
-    href: "#", // Disabled - route doesn't exist yet
+    href: "/pr-review", // Disabled - route doesn't exist yet
     icon: (
       <svg viewBox="0 0 110 110" fill="none">
         <circle cx="55" cy="55" r="52" fill="#fff"/>
