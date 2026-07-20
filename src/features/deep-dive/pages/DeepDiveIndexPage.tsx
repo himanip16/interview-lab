@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import styles from '@/features/deep-dive/components/DeepDiveIndex.module.css';
-import { deepDiveData } from '@/features/deep-dive/data';
+import { deepDiveData } from '@/content/deep-dive';
 
 interface Topic {
   slug: string;

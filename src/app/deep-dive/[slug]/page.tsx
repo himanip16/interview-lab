@@ -21,7 +21,7 @@ import { MongoDBIllustration } from '@/features/deep-dive/illustrations/MongoDB'
 import { ConsistentHashingIllustration } from '@/features/deep-dive/illustrations/ConsistentHashing';
 import { ModuloIllustration } from '@/features/deep-dive/illustrations/ModuloIllustration';
 import { ConsistentHashingHero } from '@/features/deep-dive/illustrations/ConsistentHashingHero';
-import { getDeepDiveBySlug, getPreviousAndNext } from '@/features/deep-dive/data';
+import { getDeepDiveBySlug, getPreviousAndNext } from '@/content/deep-dive';
 import '@/features/deep-dive/styles/deep-dive.css';
 
 const illustrationMap: Record<string, React.ReactNode> = {
