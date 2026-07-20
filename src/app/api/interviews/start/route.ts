@@ -1,8 +1,11 @@
+// src/app/api/interviews/start/route.ts
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
-
-import { InterviewService, StartInterviewSchema } from "@/features/interview/InterviewService";
 import logger from "@/shared/logger/logger";
+
+// CLEAN IMPORTS:
+import { InterviewService } from "@/features/interview";
+import { StartInterviewSchema } from "@/shared/schemas/interviewSchemas";
 
 export async function POST(request: Request) {
   try {
@@ -15,32 +18,19 @@ export async function POST(request: Request) {
     const interviewId = await interviewService.startInterview(validatedInput);
 
     return NextResponse.json({ id: interviewId }, { status: 201 });
-  } 
+  } catch (error) {
+    if (error instanceof ZodError) {
+      logger.error("Validation Error", { issues: error.issues });
+      return NextResponse.json(
+        { error: "Invalid request body", issues: error.issues },
+        { status: 400 }
+      );
+    }
 
-catch (error) {
-  if (error instanceof ZodError) {
-    logger.error(error.issues);
-
+    logger.error("Failed to start interview", { error });
     return NextResponse.json(
-      {
-        error: "Invalid request body",
-        issues: error.issues,
-      },
-      {
-        status: 400,
-      }
+      { error: "Internal server error" },
+      { status: 500 }
     );
   }
-
-  logger.error(error);
-
-  return NextResponse.json(
-    {
-      error: "Internal server error",
-    },
-    {
-      status: 500,
-    }
-  );
-}
 }

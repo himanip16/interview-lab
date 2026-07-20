@@ -1,11 +1,10 @@
-// Public API for interview feature
+// src/features/interview/index.ts
 
 // Application Services
 export { InterviewService } from "./application/services/InterviewService";
 export { InterviewMessageService } from "./application/services/interview/InterviewMessageService";
-export { TranscriptService } from "./application/services/TranscriptService";
+export { SkillGraphService } from "./application/services/mastery/SkillGraphService";
+export { RecommendationService } from "./application/services/recommendation/RecommendationService";
 
 // Types
-export type { StartInterviewInput } from "./application/services/InterviewService";
-export { StartInterviewSchema } from "./application/services/InterviewService";
-export * from "./types/CreateInterviewInput";
+export * from "./types/interview";

@@ -1,4 +1,13 @@
+// src/shared/schemas/interviewSchemas.ts
 import { z } from "zod";
+
+export const StartInterviewSchema = z.object({
+  type: z.string(),
+  difficulty: z.enum(["EASY", "MEDIUM", "HARD"]),
+  duration: z.number().int().positive(),
+  company: z.string(),
+  problemId: z.string(),
+});
 
 export const GoalsSchema = z.array(z.string());
 
@@ -11,9 +20,4 @@ export const ConversationSchema = z.array(
   })
 );
 
-export const JsonSchema = z.unknown();
-
-export type Goal = z.infer<typeof GoalsSchema>[number];
-
-export type EvaluationDimension =
-  z.infer<typeof EvaluationDimensionsSchema>[number];
+export type StartInterviewInput = z.infer<typeof StartInterviewSchema>;
