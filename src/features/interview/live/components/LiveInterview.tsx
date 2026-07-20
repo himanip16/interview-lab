@@ -49,17 +49,12 @@ export function LiveInterview({ interviewId }: LiveInterviewProps) {
         // Refresh interview state to get the AI's response and potential phase changes
         await refetch();
       } catch (err: any) {
-        // Improved error extraction
         const errorMessage = err.response?.data?.error || err.message || 'Unknown error';
-        
-        console.error("DETAILED ERROR:", {
-          message: errorMessage,
-          stack: err.stack,
-          status: err.response?.status,
-          raw: err
+        logger.error('Failed to send interview message', {
+          error: errorMessage,
+          interviewId,
+          status: err.response?.status
         });
-
-        logger.error('Failed to send interview message', err, { interviewId });
       }
     },
     [isSending, sendMessage, refetch, interviewId]
