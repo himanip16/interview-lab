@@ -73,7 +73,7 @@ const CARDS = [
     title: 'Live interview with AI',
     meta: 'Live · 45 min',
     gradient: 'from-[#FFB930] to-[#E8940A]',
-    href: '/interview/problems',
+    href: '/problems',
     icon: (
       <svg viewBox="0 0 84 84" fill="none">
         <circle cx="42" cy="42" r="40" fill="#fff"/>

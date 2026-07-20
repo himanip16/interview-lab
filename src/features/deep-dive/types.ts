@@ -17,6 +17,22 @@ export interface Section {
     label: string;
     content: string;
   };
+  illustration?: {
+    component: string; // Component name to import
+    caption: string;
+    text?: string;
+  };
+  video?: {
+    caption: string;
+    duration?: string;
+  };
+  code?: string;
+  resources?: Array<{
+    icon: string; // SVG icon name or path
+    title: string;
+    subtitle: string;
+    chips?: Array<{ label: string; variant?: 'ok' }>;
+  }>;
 }
 
 export interface TradeoffData {

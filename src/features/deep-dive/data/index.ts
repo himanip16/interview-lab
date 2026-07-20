@@ -5,8 +5,10 @@ import { kafkaData } from './kafka';
 import { postgresData } from './postgres';
 import { dynamodbData } from './dynamodb';
 import { mongodbData } from './mongodb';
+import { consistentHashingData } from './consistent-hashing';
 
 export const deepDiveData: DeepDiveArticle[] = [
+  consistentHashingData,
   cassandraData,
   redisData,
   kafkaData,

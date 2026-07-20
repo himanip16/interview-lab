@@ -40,7 +40,7 @@ export default function NextRecommendedInterview({ recommendation }: Props) {
 
       <div className="mt-6">
         <Link
-          href={`/interview/problems?problem=${recommendation.slug}`}
+          href={`/problems?problem=${recommendation.slug}`}
         >
           <Button size="sm">
             Practice with AI

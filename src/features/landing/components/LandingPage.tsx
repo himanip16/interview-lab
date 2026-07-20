@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
 import styles from './LandingPage.module.css';
@@ -20,6 +21,7 @@ export default function LandingPage() {
   const [problems, setProblems] = useState<Problem[]>([]);
   const [stats, setStats] = useState({ modes: 7, problems: 0, dimensions: 6 });
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
@@ -39,6 +41,35 @@ export default function LandingPage() {
       console.error('Failed to fetch data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const startInterview = async (problemId: string) => {
+    try {
+      const res = await fetch('/api/interviews/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'hld',
+          difficulty: 'MEDIUM',
+          duration: 45,
+          company: 'General',
+          problemId,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(`Failed to start interview: ${data.error}`);
+        return;
+      }
+
+      if (data.id) {
+        router.push(`/interview/live/${data.id}`);
+      }
+    } catch (err) {
+      console.error('Network error starting interview:', err);
     }
   };
 
@@ -103,7 +134,7 @@ export default function LandingPage() {
             instead of a vague score.
           </p>
           <div className={styles.heroActions}>
-            <Link href="/interview/live" className={styles.btnPrimary}>
+            <Link href="/problems" className={styles.btnPrimary}>
               Start an interview
             </Link>
             <Link href="/learn" className={styles.btnGhost}>
@@ -156,7 +187,7 @@ export default function LandingPage() {
       <section className={styles.section}>
         <div className={styles.secLabel}>A taste of what&apos;s inside</div>
         <div className={styles.modeRow}>
-          <Link href="/interview/live" className={`${styles.modeCard} ${styles.m1}`}>
+          <Link href="/problems" className={`${styles.modeCard} ${styles.m1}`}>
             <h4>Live interview</h4>
             <div className={styles.m}>45 min</div>
           </Link>
@@ -209,51 +240,63 @@ export default function LandingPage() {
             </div>
           </div>
         ) : (
-          problems.slice(0, 2).map((problem, index) => (
-            <Link key={problem.id} href={`/problems`} className={styles.row}>
-              <div
-                className={styles.bar}
-                style={{ background: index === 0 ? 'var(--primitive-violet)' : 'var(--primitive-coral)' }}
-              ></div>
-              <div className={styles.rowMain}>
-                <h3>{problem.title}</h3>
-                <div className={styles.rc}>
-                  {problem.category} {problem.tags?.join(', ')}
+          <>
+            {problems.slice(0, 2).map((problem, index) => (
+              <div 
+                key={problem.id} 
+                className={styles.row}
+                onClick={() => startInterview(problem.id)}
+                style={{ cursor: 'pointer' }}
+              >
+                <div
+                  className={styles.bar}
+                  style={{ background: index === 0 ? 'var(--primitive-violet)' : 'var(--primitive-coral)' }}
+                ></div>
+                <div className={styles.rowMain}>
+                  <h3>{problem.title}</h3>
+                  <div className={styles.rc}>
+                    {problem.category} {problem.tags?.join(', ')}
+                  </div>
+                </div>
+                <span
+                  className={styles.diff}
+                  style={{
+                    background:
+                      problem.difficulty === 'Easy'
+                        ? 'rgba(0, 168, 126, 0.12)'
+                        : problem.difficulty === 'Medium'
+                        ? 'rgba(232, 148, 10, 0.12)'
+                        : 'rgba(255, 90, 60, 0.12)',
+                    color:
+                      problem.difficulty === 'Easy'
+                        ? 'var(--mint-deep)'
+                        : problem.difficulty === 'Medium'
+                        ? 'var(--primitive-amber)'
+                        : 'var(--primitive-coral)',
+                  }}
+                >
+                  {problem.difficulty}
+                </span>
+                <div className={styles.check}>
+                  <svg
+                    width="11"
+                    height="11"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                  >
+                    <path d="M5 12l5 5L20 7" />
+                  </svg>
                 </div>
               </div>
-              <span
-                className={styles.diff}
-                style={{
-                  background:
-                    problem.difficulty === 'Easy'
-                      ? 'rgba(0, 168, 126, 0.12)'
-                      : problem.difficulty === 'Medium'
-                      ? 'rgba(232, 148, 10, 0.12)'
-                      : 'rgba(255, 90, 60, 0.12)',
-                  color:
-                    problem.difficulty === 'Easy'
-                      ? 'var(--mint-deep)'
-                      : problem.difficulty === 'Medium'
-                      ? 'var(--primitive-amber)'
-                      : 'var(--primitive-coral)',
-                }}
-              >
-                {problem.difficulty}
-              </span>
-              <div className={styles.check}>
-                <svg
-                  width="11"
-                  height="11"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="3"
-                >
-                  <path d="M5 12l5 5L20 7" />
-                </svg>
-              </div>
-            </Link>
-          ))
+            ))}
+            <div style={{ marginTop: '16px', textAlign: 'right' }}>
+              <Link href="/problems" className={styles.btnGhost} style={{ fontSize: '14px' }}>
+                See more →
+              </Link>
+            </div>
+          </>
         )}
       </section>
     </div>

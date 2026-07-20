@@ -87,7 +87,7 @@ const CARDS = [
     description: "Practice with an AI interviewer.",
     from: "#FFB930",
     to: "#E8940A",
-    href: "/interview/problems", // exact match — the general setup flow
+    href: "/problems", // exact match — the general setup flow
     icon: (
       <svg viewBox="0 0 110 110" fill="none">
         <circle cx="55" cy="55" r="52" fill="#fff"/>

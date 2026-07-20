@@ -61,7 +61,7 @@ export default function RecommendationCard({ recommendation }: Props) {
 
         <div className="flex items-center justify-end pt-2">
           <Link
-            href={`/interview/problems?problem=${recommendation.slug}`}
+            href={`/problems?problem=${recommendation.slug}`}
           >
             <Button size="sm">
               Practice with AI
