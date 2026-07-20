@@ -1,6 +1,6 @@
 // src/features/dashboard/components/ExploreProblems.tsx
 import Link from "next/link";
-import Heading from "@/components/ui/Heading";
+import Heading from "@/shared/ui/Heading";
 import type { Difficulty } from "@prisma/client";
 
 export type ExploreProblem = {

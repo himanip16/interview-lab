@@ -1,6 +1,6 @@
 // src/features/dashboard/components/LiveFeedbackCard.tsx
-import Card from "@/components/ui/Card";
-import Text from "@/components/ui/Text";
+import Card from "@/shared/ui/Card";
+import Text from "@/shared/ui/Text";
 import type { SkillGraph } from "@/modules/interview/services/mastery/SkillGraphService";
 
 type Props = {

@@ -2,9 +2,9 @@
 
 import React, { useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search } from '@/components/ui/Search';
-import { Panel } from '@/components/ui/Panel';
-import { cn } from '@/lib/utils';
+import { Search } from '@/shared/ui/Search';
+import { Panel } from '@/shared/ui/Panel';
+import { cn } from '@/shared/utils/utils';
 
 const CARDS = [
   {

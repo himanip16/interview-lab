@@ -9,8 +9,8 @@ import {
 
 import { TranscriptSummary } from "@/content/transcripts/types";
 
-import Card from "@/components/ui/Card";
-import Text from "@/components/ui/Text";
+import Card from "@/shared/ui/Card";
+import Text from "@/shared/ui/Text";
 
 import DialogueBubble from "./transcript/DialogueBubble";
 import HighlightExplanation from "./transcript/HighlightExplanation";

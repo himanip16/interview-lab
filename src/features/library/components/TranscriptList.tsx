@@ -2,7 +2,7 @@
 "use client";
 
 import { CompletedInterviewItem } from "../types";
-import Card from "@/components/ui/Card";
+import Card from "@/shared/ui/Card";
 import EmptyState from "./EmptyState";
 
 type Props = {

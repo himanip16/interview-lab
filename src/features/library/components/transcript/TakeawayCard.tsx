@@ -1,6 +1,6 @@
 "use client";
 
-import Card from "@/components/ui/Card";
+import Card from "@/shared/ui/Card";
 import { type ContentBlock } from "../../types/transcript";
 
 type Props = {

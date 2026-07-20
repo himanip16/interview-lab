@@ -1,8 +1,8 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-import { cn } from "@/lib/utils";
-import { useClickOutside } from "@/lib/hooks/useClickOutside";
+import { cn } from "@/shared/utils/utils";
+import { useClickOutside } from "@/shared/hooks/useClickOutside";
 import { SORT_OPTIONS, SORT_LABELS, type SortOption } from "../types/problem";
 
 type Props = {

@@ -1,6 +1,6 @@
 // src/features/dashboard/components/CurrentStandingCard.tsx
-import Card from "@/components/ui/Card";
-import Text from "@/components/ui/Text";
+import Card from "@/shared/ui/Card";
+import Text from "@/shared/ui/Text";
 import { Stars } from "./Stars";
 
 const TEMPLATE_LABELS: Record<string, string> = {

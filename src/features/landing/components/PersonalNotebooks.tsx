@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import Card from "@/components/ui/Card";
-import Heading from "@/components/ui/Heading";
-import Text from "@/components/ui/Text";
+import Card from "@/shared/ui/Card";
+import Heading from "@/shared/ui/Heading";
+import Text from "@/shared/ui/Text";
 
 interface Problem {
   id: string;

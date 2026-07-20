@@ -1,4 +1,4 @@
-import { Panel } from "@/components/ui/Panel";
+import { Panel } from "@/shared/ui/Panel";
 import { getBugHuntingService } from "@/modules/bug-hunting";
 
 export default async function BugHuntingListPage() {

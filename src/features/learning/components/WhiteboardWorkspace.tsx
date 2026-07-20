@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import { cn } from '@/lib/utils';
-import { Panel } from '@/components/ui/Panel';
-import { Breadcrumb } from '@/components/layout/Breadcrumb';
+import { cn } from '@/shared/utils/utils';
+import { Panel } from '@/shared/ui/Panel';
+import { Breadcrumb } from '@/shared/layout/Breadcrumb';
 import { WHITEBOARD_SYSTEMS, WHITEBOARD_SYSTEM_LIST } from '../data/whiteboardSystems';
 import { SYSTEM_DESIGNS, SYSTEM_LAYOUTS } from '../data/whiteboardAdapter';
 import { loadWhiteboardScene } from '../services/WhiteboardService';

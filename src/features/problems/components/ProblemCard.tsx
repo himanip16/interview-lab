@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/utils/utils";
 import type { Problem } from "../types/problem";
 import { Difficulty } from "@prisma/client";
 

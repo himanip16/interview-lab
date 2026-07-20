@@ -3,7 +3,7 @@ import { Inter, Poppins } from "next/font/google";
 
 import "./globals.css";
 
-import Navbar from "@/components/layout/Navbar";
+import Navbar from "@/shared/layout/Navbar";
 import AuthProvider from "@/components/providers/AuthProvider";
 import { ThemeProvider } from "next-themes";
 

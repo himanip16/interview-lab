@@ -1,7 +1,7 @@
 "use client";
 
 import ProblemCard from "./ProblemCard";
-import { Skeleton } from "@/components/ui/Skeleton";
+import { Skeleton } from "@/shared/ui/Skeleton";
 import type { Problem } from "../types/problem";
 
 type Props = {

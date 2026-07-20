@@ -3,7 +3,7 @@
 
 import { Difficulty, ExperienceSource } from "@prisma/client";
 import { ExperienceItem } from "../types";
-import Card from "@/components/ui/Card";
+import Card from "@/shared/ui/Card";
 import EmptyState from "./EmptyState";
 
 const DIFFICULTY_STYLES: Record<Difficulty, string> = {

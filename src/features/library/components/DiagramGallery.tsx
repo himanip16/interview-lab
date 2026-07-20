@@ -2,9 +2,9 @@
 "use client";
 
 import Link from "next/link";
-import Heading from "@/components/ui/Heading";
-import Text from "@/components/ui/Text";
-import Card from "@/components/ui/Card";
+import Heading from "@/shared/ui/Heading";
+import Text from "@/shared/ui/Text";
+import Card from "@/shared/ui/Card";
 
 type Diagram = {
   href: string;

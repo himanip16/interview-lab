@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Panel } from "@/components/ui/Panel";
+import { Panel } from "@/shared/ui/Panel";
 import { LearnHeader } from "@/features/learning/components/LearnHeader";
 import { LearnFooter } from "@/features/learning/components/LearnFooter";
 

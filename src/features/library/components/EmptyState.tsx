@@ -1,8 +1,8 @@
 // src/features/library/components/EmptyState.tsx
 "use client";
 
-import Text from "@/components/ui/Text";
-import Card from "@/components/ui/Card";
+import Text from "@/shared/ui/Text";
+import Card from "@/shared/ui/Card";
 
 type Props = {
   message: string;

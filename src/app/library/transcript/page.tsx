@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { Breadcrumb } from '@/components/layout/Breadcrumb';
+import { Breadcrumb } from '@/shared/layout/Breadcrumb';
 import TranscriptCatalog from '@/features/library/components/TranscriptCatalog';
 
 export default function TranscriptListPage() {

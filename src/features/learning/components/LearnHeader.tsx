@@ -1,6 +1,6 @@
 "use client";
 
-import { Search } from "@/components/ui/Search";
+import { Search } from "@/shared/ui/Search";
 import { BRANDING, getNavigationLinks } from "../config/branding";
 
 interface LearnHeaderProps {

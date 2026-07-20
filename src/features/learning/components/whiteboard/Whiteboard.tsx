@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import { cn } from '@/lib/utils';
-import { Inspector } from '@/components/layout/Inspector';
+import { cn } from '@/shared/utils/utils';
+import { Inspector } from '@/shared/layout/Inspector';
 import { WhiteboardFrame, DiagramNode as NodeType } from '../../types/whiteboard';
 import { DiagramNode } from './DiagramNode';
 import { DiagramEdges } from './DiagramEdges';

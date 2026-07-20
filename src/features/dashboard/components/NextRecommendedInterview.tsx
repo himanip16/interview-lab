@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/shared/ui/Button";
 
 import type { Recommendation } from "@/modules/interview/services/recommendation/RecommendationService";
 

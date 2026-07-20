@@ -1,5 +1,5 @@
 // src/features/dashboard/components/DashboardView.tsx
-import Heading  from "@/components/ui/Heading";
+import Heading  from "@/shared/ui/Heading";
 import { Suspense } from "react";
 
 import CurrentStandingCard from "./CurrentStandingCard";

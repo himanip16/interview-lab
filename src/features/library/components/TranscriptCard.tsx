@@ -4,7 +4,7 @@
 
 import { useRouter } from "next/navigation";
 
-import Card from "@/components/ui/Card";
+import Card from "@/shared/ui/Card";
 import { TranscriptEntry } from "@/content/transcripts/types";
 
 type Props = {

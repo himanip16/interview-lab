@@ -1,8 +1,8 @@
 // src/features/dashboard/components/RecommendationCard.tsx
 import Link from "next/link";
-import Card from "@/components/ui/Card";
-import Text from "@/components/ui/Text";
-import { Button } from "@/components/ui/Button";
+import Card from "@/shared/ui/Card";
+import Text from "@/shared/ui/Text";
+import { Button } from "@/shared/ui/Button";
 import type { Recommendation } from "@/modules/interview/services/recommendation/RecommendationService";
 import type { Difficulty } from "@prisma/client";
 

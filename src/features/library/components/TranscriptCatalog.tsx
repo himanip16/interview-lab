@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Search } from "@/components/ui/Search";
+import { Search } from "@/shared/ui/Search";
 import { getAllTranscripts, getCategories, getCategoryLabel } from "@/content/transcripts";
 import type { TranscriptCategory } from "@/content/transcripts/types";
 import TranscriptCard from "./TranscriptCard";

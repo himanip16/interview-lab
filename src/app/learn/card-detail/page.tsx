@@ -1,10 +1,10 @@
 "use client";
 
 import React from 'react';
-import { Search } from '@/components/ui/Search';
-import { Panel } from '@/components/ui/Panel';
-import { Badge } from '@/components/ui/Badge';
-import { cn } from '@/lib/utils';
+import { Search } from '@/shared/ui/Search';
+import { Panel } from '@/shared/ui/Panel';
+import { Badge } from '@/shared/ui/Badge';
+import { cn } from '@/shared/utils/utils';
 
 export default function CardDetailPage() {
   return (

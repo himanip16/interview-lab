@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/utils/utils";
 import { Difficulty } from "@prisma/client";
 import { INTERVIEW_TYPES, STATUS_FILTERS, type ProblemFilterState } from "../types/problem";
 import SortDropdown from "./SortDropdown";

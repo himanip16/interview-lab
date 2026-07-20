@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/utils/utils";
 import { DiagramNode as NodeType } from "../../types/whiteboard";
 
 const CATEGORY_STYLES: Record<string, string> = {
