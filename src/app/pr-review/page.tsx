@@ -144,9 +144,9 @@ export default function PrReviewPage() {
     if (text && text.length > 1 && sel?.anchorNode) {
       const range = sel.getRangeAt(0);
       const rect = range.getBoundingClientRect();
-      const diffLine = sel.anchorNode.parentElement?.closest(".diff-line");
+      const diffLine = sel.anchorNode.parentElement?.closest('[data-type="diff-line"]');
       if (diffLine) {
-        const lineWrap = diffLine.closest(".diff-line-wrap");
+        const lineWrap = diffLine.closest('[data-type="diff-line-wrap"]');
         if (lineWrap) {
           const lineKey = lineWrap.getAttribute("data-line-key");
           if (lineKey) {
@@ -368,7 +368,7 @@ export default function PrReviewPage() {
                   const showComposer = composers[lineKey];
 
                   return (
-                    <div key={lineKey} className={styles.diffLineWrap} data-line-key={lineKey}>
+                    <div key={lineKey} className={styles.diffLineWrap} data-line-key={lineKey} data-type="diff-line-wrap">
                       <div
                         className={`${styles.diffLine} ${
                           line.type === "add"
@@ -378,6 +378,7 @@ export default function PrReviewPage() {
                             : styles.diffLineCtx
                         }`}
                         onMouseUp={handleTextSelection}
+                        data-type="diff-line"
                       >
                         <span className={styles.diffLineNumber}>{line.line}</span>
                         <span>{line.type === "rm" ? "-" : line.type === "add" ? "+" : " "}</span>

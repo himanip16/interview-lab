@@ -56,7 +56,7 @@ export async function GET(request: Request) {
       }
     };
 
-    let problems, total;
+    let problems: any[], total: number;
 
     // First attempt
     [problems, total] = await Promise.all([

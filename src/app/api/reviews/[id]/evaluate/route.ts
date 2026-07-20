@@ -4,10 +4,11 @@ import { getReviewService } from "@/features/pr-review";
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const report = await getReviewService().completeEvaluation(params.id);
+    const { id } = await params;
+    const report = await getReviewService().completeEvaluation(id);
     return NextResponse.json(report.toProps());
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Failed" }, { status: 500 });

@@ -21,9 +21,9 @@ const DIAGRAM_COMPONENTS: Record<string, React.ComponentType> = {
 };
 
 interface PageProps {
-  params: {
+  params: Promise<{
     slug: string;  // ✅ Must match folder name [slug]
-  };
+  }>;
 }
 
 export default async function DeepDivePage({ params }: PageProps) {

@@ -4,11 +4,12 @@ import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 
-export default function LoginPage({
+export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: { error?: string };
+  searchParams: Promise<{ error?: string }>;
 }) {
+  const resolvedSearchParams = await searchParams;
   async function loginAction(formData: FormData) {
     "use server";
 
@@ -19,6 +20,12 @@ export default function LoginPage({
         redirectTo: "/",
       });
     } catch (error) {
+      // Re-throw redirect errors to allow Next.js redirect to work
+      if (error && typeof error === 'object' && 'digest' in error && 
+          typeof error.digest === 'string' && error.digest.startsWith('NEXT_REDIRECT')) {
+        throw error;
+      }
+      
       if (error instanceof AuthError) {
         // Bad credentials, including "no such user" — authorize() returns
         // null for both cases, so we can't distinguish here. Send them to
@@ -33,7 +40,7 @@ export default function LoginPage({
     <main className="mx-auto max-w-md px-6 py-20">
       <h1 className="text-3xl font-bold text-foreground">Log In</h1>
 
-      {searchParams?.error === "invalid" && (
+      {resolvedSearchParams?.error === "invalid" && (
         <p className="mt-4 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
           Incorrect email or password. If you don't have an account yet,{" "}
           <Link href="/register" className="underline">register here</Link>.

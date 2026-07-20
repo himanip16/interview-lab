@@ -1,20 +1,21 @@
 // src/app/api/reviews/[id]/submit/route.ts
 import { NextResponse } from "next/server";
 import { getReviewService } from "@/features/pr-review";
-import { ReviewDecision } from "@prisma/client";
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const { decision } = await request.json();
-    if (!decision || !Object.values(ReviewDecision).includes(decision)) {
+    const validDecisions = ["APPROVE", "REQUEST_CHANGES", "REJECT"];
+    if (!decision || !validDecisions.includes(decision)) {
       return NextResponse.json({ error: "Invalid decision" }, { status: 400 });
     }
 
     const attempt = await getReviewService().submitReview({
-      attemptId: params.id,
+      attemptId: id,
       decision,
     });
 

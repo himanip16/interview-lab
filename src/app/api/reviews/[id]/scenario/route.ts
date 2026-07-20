@@ -4,10 +4,11 @@ import { getReviewService } from "@/features/pr-review";
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const attempt = await getReviewService().getAttempt(params.id);
+    const { id } = await params;
+    const attempt = await getReviewService().getAttempt(id);
     if (!attempt) {
       return NextResponse.json({ error: "Attempt not found" }, { status:   404 });
     }

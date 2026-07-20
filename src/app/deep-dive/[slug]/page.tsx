@@ -57,7 +57,7 @@ const iconMap: Record<string, React.ReactNode> = {
   )
 };
 
-export default async function DeepDiveArticlePage({ params }: { params: { slug: string } }) {
+export default async function DeepDiveArticlePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const article = getDeepDiveBySlug(slug);
   const { previous, next } = getPreviousAndNext(slug);
@@ -91,19 +91,19 @@ export default async function DeepDiveArticlePage({ params }: { params: { slug: 
 
         <h1 className="title">{article.title}</h1>
         <div className="tags">
-          {article.tags.map(tag => (
+          {article.tags.map((tag: string) => (
             <Tag key={tag}>{tag}</Tag>
           ))}
         </div>
 
         <p className="lede" dangerouslySetInnerHTML={{ __html: article.lede }} />
 
-        {article.sections.map(section => (
+        {article.sections.map((section: any) => (
           <section key={section.number}>
             <div className="h2row">
               <SectionHeading number={section.number}>{section.title}</SectionHeading>
             </div>
-            {section.content.map((paragraph, index) => (
+            {section.content.map((paragraph: string, index: number) => (
               <p key={index} dangerouslySetInnerHTML={{ __html: paragraph }} />
             ))}
             {section.illustration && (
@@ -126,7 +126,7 @@ export default async function DeepDiveArticlePage({ params }: { params: { slug: 
             )}
             {section.resources && (
               <div className="resources">
-                {section.resources.map((resource, index) => (
+                {section.resources.map((resource: any, index: number) => (
                   <ResourceRow
                     key={index}
                     icon={iconMap[resource.icon] || null}
@@ -155,7 +155,7 @@ export default async function DeepDiveArticlePage({ params }: { params: { slug: 
         <div className="related">
           <div className="lbl">Continue the thread</div>
           <div className="rel-row">
-            {article.related.map(related => (
+            {article.related.map((related: any) => (
               <Link key={related.slug} href={`/deep-dive/${related.slug}`}>
                 <RelatedTechnologyCard
                   name={related.name}

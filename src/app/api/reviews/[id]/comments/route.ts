@@ -5,16 +5,17 @@ import { ReviewComment } from "@/features/pr-review";
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const { fileId, side, line, anchorText, content } = await request.json();
     if (!fileId || !side || line === undefined || !content) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
     const comment = await getReviewService().addComment({
-      attemptId: params.id,
+      attemptId: id,
       fileId,
       side,
       line,
@@ -30,10 +31,11 @@ export async function POST(
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const comments = await getReviewService().getComments(params.id);
+    const { id } = await params;
+    const comments = await getReviewService().getComments(id);
     return NextResponse.json(comments.map((c: ReviewComment) => c.toProps()));
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Failed" }, { status: 500 });

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import styles from "@/features/problems/components/ProblemsPage.module.css";
 
 interface Problem {
@@ -19,7 +19,7 @@ interface Problem {
   tags?: string[];
 }
 
-export default function ProblemsPage() {
+function ProblemsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [problems, setProblems] = useState<Problem[]>([]);
@@ -348,5 +348,13 @@ export default function ProblemsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ProblemsPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading problems...</div>}>
+      <ProblemsPageContent />
+    </Suspense>
   );
 }

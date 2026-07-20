@@ -1,28 +1,16 @@
 import { NextResponse } from "next/server";
-import { InterviewService } from "@/features/interview";
-import { CreateInterviewInput } from "@/features/interview/types/CreateInterviewInput";
+import { InterviewService, StartInterviewSchema } from "@/features/interview";
 import logger from "@/shared/logger/logger";
 
 export async function POST(request: Request) {
   try {
-    const body: CreateInterviewInput = await request.json();
+    const body = await request.json();
 
-    if (!body.templateId || !body.difficulty || !body.duration || !body.company || !body.problemId) {
-      return NextResponse.json(
-        {
-          error: "Missing required fields: templateId, difficulty, duration, company, problemId",
-        },
-        {
-          status: 400,
-        }
-      );
-    }
+    // Validate input with Zod schema
+    const validatedInput = StartInterviewSchema.parse(body);
 
     const service = new InterviewService();
-    const interviewId = await service.startInterview({
-      ...body,
-      type: body.templateId,
-    });
+    const interviewId = await service.startInterview(validatedInput);
 
     return NextResponse.json({ id: interviewId }, { status: 201 });
 
