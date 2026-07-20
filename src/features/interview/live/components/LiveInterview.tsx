@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { Prisma } from '@prisma/client';
 
 import { InterviewHeader } from './InterviewHeader';
@@ -28,11 +28,22 @@ interface LiveInterviewProps {
 
 export function LiveInterview({ interviewId }: LiveInterviewProps) {
   const { interview, loading, error, refetch } = useInterview(interviewId);
+  
+  // Initialize useMessages with the initial transcript from the interview
+  const initialMessages = interview?.transcript?.map((msg: any) => ({
+    id: msg.id,
+    role: msg.role,
+    content: msg.content,
+    status: 'sent' as const,
+  })) || [];
+
   const {
+    messages,
     sendMessage,
-    isSending,
+    isAssistantTyping,
     error: messageError,
-  } = useMessages(interviewId);
+    setMessages,
+  } = useMessages(interviewId, initialMessages);
 
   const { remainingSeconds } = useTimer({
     startedAt: interview?.createdAt ?? null,
@@ -42,7 +53,7 @@ export function LiveInterview({ interviewId }: LiveInterviewProps) {
 
   const handleSendMessage = useCallback(
     async (text: string) => {
-      if (isSending || !text.trim()) return;
+      if (!text.trim()) return;
 
       try {
         await sendMessage(text);
@@ -57,8 +68,22 @@ export function LiveInterview({ interviewId }: LiveInterviewProps) {
         });
       }
     },
-    [isSending, sendMessage, refetch, interviewId]
+    [sendMessage, refetch, interviewId]
   );
+
+  // Sync messages when interview data changes (after refetch)
+  useEffect(() => {
+    if (interview?.transcript) {
+      setMessages(
+        interview.transcript.map((msg: any) => ({
+          id: msg.id,
+          role: msg.role,
+          content: msg.content,
+          status: 'sent' as const,
+        }))
+      );
+    }
+  }, [interview?.transcript, setMessages]);
 
   if (loading) {
     return (
@@ -91,10 +116,13 @@ export function LiveInterview({ interviewId }: LiveInterviewProps) {
 
       <div className="flex flex-1 overflow-hidden">
         <div className="flex-1 flex flex-col">
-          <MessageList messages={interview.transcript} />
+          <MessageList 
+            messages={messages} 
+            isAssistantTyping={isAssistantTyping}
+          />
           <ChatInput
             onSendMessage={handleSendMessage}
-            isSending={isSending}
+            isSending={isAssistantTyping}
             error={messageError}
             isInterviewCompleted={interview.status === 'COMPLETED'}
           />

@@ -6,6 +6,7 @@ import ReactMarkdown from 'react-markdown';
 interface MessageProps {
   role: 'assistant' | 'user';
   content: string;
+  status?: 'sending' | 'sent' | 'failed';
 }
 
 /**
@@ -14,12 +15,13 @@ interface MessageProps {
  * Props:
  * - role: 'assistant' (interviewer) or 'user' (candidate)
  * - content: The message text (supports markdown)
+ * - status: Optional status for optimistic UI updates
  *
  * Styling:
  * - User: black bubble, right-aligned
  * - Assistant: gray bubble, left-aligned
  */
-export function Message({ role, content }: MessageProps) {
+export function Message({ role, content, status }: MessageProps) {
   const isUser = role === 'user';
 
   return (
@@ -43,6 +45,12 @@ export function Message({ role, content }: MessageProps) {
         <div className="text-sm leading-relaxed prose prose-sm max-w-none">
           <ReactMarkdown>{content}</ReactMarkdown>
         </div>
+        {status === 'sending' && (
+          <span className="text-xs text-gray-400 mt-2 block">Sending...</span>
+        )}
+        {status === 'failed' && (
+          <span className="text-xs text-red-500 mt-2 block">Failed to send</span>
+        )}
       </div>
     </div>
   );

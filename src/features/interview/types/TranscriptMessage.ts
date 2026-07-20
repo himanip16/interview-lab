@@ -4,4 +4,5 @@ export interface TranscriptMessage {
   id: string;
   role: TranscriptRole;
   content: string;
+  status?: "sending" | "sent" | "failed";
 }
