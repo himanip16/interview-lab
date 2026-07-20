@@ -23,8 +23,10 @@ export function useTimer({
   const calculateRemaining = useCallback(() => {
     if (!startedAt || durationMinutes <= 0) return 0;
 
-    const startMs = new Date(startedAt).getTime();
-    if (isNaN(startMs)) return 0;
+    const startDate = new Date(startedAt);
+    if (isNaN(startDate.getTime())) return 0;
+
+    const startMs = startDate.getTime();
 
     const durationMs = durationMinutes * 60 * 1000;
     const endMs = startMs + durationMs;
