@@ -1,5 +1,5 @@
 import { WHITEBOARD_SYSTEMS, WhiteboardSystem as LegacySystem, WhiteboardNode as LegacyNode } from './whiteboardSystems';
-import { SystemDesign, NodeLayout, NodeId } from '../types/whiteboard';
+import { SystemDesign, NodeLayout, NodeId } from "@/features/whiteboard/types/whiteboard";
 
 /**
  * Adapter to convert legacy whiteboard data to the new SystemDesign format

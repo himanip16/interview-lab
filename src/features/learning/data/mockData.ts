@@ -1,4 +1,4 @@
-import { SystemDesign, NodeLayout, NodeId } from "../types/whiteboard";
+import { SystemDesign, NodeLayout, NodeId } from "@/features/whiteboard/types/whiteboard";
 
 // Helper to cast strings to our Branded NodeId type
 const id = (val: string) => val as NodeId;

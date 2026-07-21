@@ -1,5 +1,6 @@
 // src/modules/pr-review/domain/entities/ReviewAttempt.ts
-import { ReviewStatus, ReviewDecision } from "@prisma/client";
+
+import { ReviewDecision, ReviewStatus } from "@prisma/client";
 
 export interface ReviewAttemptProps {
   id: string;
@@ -12,10 +13,18 @@ export interface ReviewAttemptProps {
 }
 
 export class ReviewAttempt {
-  constructor(private props: ReviewAttemptProps) {}
+  private constructor(private readonly props: ReviewAttemptProps) {}
 
   static fromProps(props: ReviewAttemptProps): ReviewAttempt {
-    return new ReviewAttempt(props);
+    validateInvariants(props);
+
+    return new ReviewAttempt({
+      ...props,
+      startedAt: new Date(props.startedAt),
+      completedAt: props.completedAt
+        ? new Date(props.completedAt)
+        : undefined,
+    });
   }
 
   get id(): string {
@@ -39,42 +48,104 @@ export class ReviewAttempt {
   }
 
   get startedAt(): Date {
-    return this.props.startedAt;
+    return new Date(this.props.startedAt);
   }
 
   get completedAt(): Date | undefined {
-    return this.props.completedAt;
+    return this.props.completedAt
+      ? new Date(this.props.completedAt)
+      : undefined;
   }
 
   public start(): void {
-    if (this.props.status !== 'CREATED') {
-      throw new Error("Can only start a review that is in CREATED status.");
-    }
-    this.props.status = 'IN_PROGRESS';
+    this.ensureStatus(ReviewStatus.CREATED);
+
+    this.props.status = ReviewStatus.IN_PROGRESS;
   }
 
   public submit(decision: ReviewDecision): void {
-    if (this.props.status !== 'IN_PROGRESS') {
-      throw new Error("Can only submit a review that is currently in progress.");
-    }
+    this.ensureStatus(ReviewStatus.IN_PROGRESS);
+
     this.props.decision = decision;
-    this.props.status = 'EVALUATING';
+    this.props.status = ReviewStatus.EVALUATING;
   }
 
   public complete(): void {
-    if (this.props.status !== 'EVALUATING') {
-      throw new Error("Cannot complete a review that isn't being evaluated.");
-    }
-    this.props.status = 'COMPLETED';
+    this.ensureStatus(ReviewStatus.EVALUATING);
+
+    this.props.status = ReviewStatus.COMPLETED;
     this.props.completedAt = new Date();
   }
 
   public fail(): void {
-    this.props.status = 'FAILED';
+    this.ensureStatus(ReviewStatus.EVALUATING);
+
+    this.props.status = ReviewStatus.FAILED;
     this.props.completedAt = new Date();
   }
 
-  toProps(): ReviewAttemptProps {
-    return { ...this.props };
+  public toProps(): ReviewAttemptProps {
+    return {
+      ...this.props,
+      startedAt: new Date(this.props.startedAt),
+      completedAt: this.props.completedAt
+        ? new Date(this.props.completedAt)
+        : undefined,
+    };
+  }
+
+  private ensureStatus(expected: ReviewStatus): void {
+    if (this.props.status !== expected) {
+      throw new Error(
+        `Expected status '${expected}' but found '${this.props.status}'.`
+      );
+    }
+  }
+}
+
+function validateInvariants(props: ReviewAttemptProps): void {
+  if (
+    props.status === ReviewStatus.COMPLETED &&
+    !props.completedAt
+  ) {
+    throw new Error(
+      "Completed review must have completedAt."
+    );
+  }
+
+  if (
+    props.status === ReviewStatus.FAILED &&
+    !props.completedAt
+  ) {
+    throw new Error(
+      "Failed review must have completedAt."
+    );
+  }
+
+  if (
+    props.status === ReviewStatus.CREATED &&
+    props.decision
+  ) {
+    throw new Error(
+      "Created review cannot have a decision."
+    );
+  }
+
+  if (
+    props.status === ReviewStatus.IN_PROGRESS &&
+    props.decision
+  ) {
+    throw new Error(
+      "In-progress review cannot have a decision."
+    );
+  }
+
+  if (
+    props.status === ReviewStatus.EVALUATING &&
+    !props.decision
+  ) {
+    throw new Error(
+      "Evaluating review must have a decision."
+    );
   }
 }

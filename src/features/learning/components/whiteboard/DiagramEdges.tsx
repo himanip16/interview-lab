@@ -1,4 +1,4 @@
-import { PositionedEdge } from "../../types/whiteboard";
+import { PositionedEdge } from "@/features/whiteboard/types/whiteboard";
 
 interface DiagramEdgesProps {
   edges: PositionedEdge[];

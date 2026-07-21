@@ -18,7 +18,7 @@ const BugAttemptSchema = z.object({
   id: z.string(),
   userId: z.string(),
   scenarioId: z.string(),
-  status: z.enum(["STARTED", "INVESTIGATING", "SUBMITTED", "COMPLETED", "ABANDONED"]),
+  status: z.nativeEnum(BugAttemptStatus),
   score: z.number().nullable(),
   feedback: z.string().nullable(),
   startedAt: z.coerce.date(),

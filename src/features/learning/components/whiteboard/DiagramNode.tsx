@@ -1,5 +1,5 @@
 import { cn } from "@/shared/utils/utils";
-import { DiagramNode as NodeType } from "../../types/whiteboard";
+import { DiagramNode as NodeType } from "@/features/whiteboard/types/whiteboard";
 
 const CATEGORY_STYLES: Record<string, string> = {
   entry: "bg-coral border-coral/20",

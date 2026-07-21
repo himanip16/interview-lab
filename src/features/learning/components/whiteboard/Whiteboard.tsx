@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import { cn } from "@/shared/utils/utils";
 import { Inspector } from "@/shared/layout/Inspector";
 
-import { WhiteboardFrame } from "../../types/whiteboard";
+import { WhiteboardFrame } from "@/features/whiteboard/types/whiteboard";
 import { DiagramNode } from "./DiagramNode";
 import { DiagramEdges } from "./DiagramEdges";
 

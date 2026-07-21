@@ -3,25 +3,32 @@ import { prisma } from "@/shared/prisma/client";
 import { ReviewAttempt } from "../../domain/entities/ReviewAttempt";
 import { ReviewComment } from "../../domain/entities/ReviewComment";
 import { ReviewReport } from "../../domain/entities/ReviewReport";
-import type {
-  ReviewAttemptRepository,
-  CreateAttemptInput,
-  AddCommentInput,
-  SubmitReviewInput,
-  CreateReportInput,
-} from "../../repositories/ReviewAttemptRepository";
+import { AddCommentInput, CreateAttemptInput, CreateReportInput, ReviewAttemptRepository, SubmitReviewInput } from "./repositories/ReviewAttemptRepository";
+
+// Mapper function to convert Prisma model to domain props
+function mapToReviewAttemptProps(row: any): any {
+  return {
+    id: row.id,
+    userId: row.userId,
+    scenarioId: row.scenarioId,
+    status: row.status,
+    decision: row.decision ?? undefined,
+    startedAt: row.startedAt,
+    completedAt: row.completedAt ?? undefined,
+  };
+}
 
 export class PrismaReviewAttemptRepository implements ReviewAttemptRepository {
   async create({ userId, scenarioId }: CreateAttemptInput): Promise<ReviewAttempt> {
     const row = await prisma.reviewAttempt.create({
       data: { userId, scenarioId, status: "CREATED" },
     });
-    return ReviewAttempt.fromProps(row);
+    return ReviewAttempt.fromProps(mapToReviewAttemptProps(row));
   }
 
   async findById(attemptId: string): Promise<ReviewAttempt | null> {
     const row = await prisma.reviewAttempt.findUnique({ where: { id: attemptId } });
-    return row ? ReviewAttempt.fromProps(row) : null;
+    return row ? ReviewAttempt.fromProps(mapToReviewAttemptProps(row)) : null;
   }
 
   async findActiveAttempt(userId: string, scenarioId: string): Promise<ReviewAttempt | null> {
@@ -29,7 +36,7 @@ export class PrismaReviewAttemptRepository implements ReviewAttemptRepository {
       where: { userId, scenarioId, status: { in: ["CREATED", "IN_PROGRESS"] } },
       orderBy: { startedAt: "desc" },
     });
-    return row ? ReviewAttempt.fromProps(row) : null;
+    return row ? ReviewAttempt.fromProps(mapToReviewAttemptProps(row)) : null;
   }
 
   async updateAttempt(attempt: ReviewAttempt): Promise<ReviewAttempt> {
@@ -41,7 +48,7 @@ export class PrismaReviewAttemptRepository implements ReviewAttemptRepository {
         completedAt: attempt.completedAt,
       },
     });
-    return ReviewAttempt.fromProps(row);
+    return ReviewAttempt.fromProps(mapToReviewAttemptProps(row));
   }
 
   async addComment({ attemptId, fileId, side, line, anchorText, content }: AddCommentInput): Promise<ReviewComment> {

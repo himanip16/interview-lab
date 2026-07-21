@@ -1,5 +1,5 @@
 import { cn } from "@/shared/utils/utils";
-import { Point } from "../../utils/geometry";
+import { Point } from "@/features/whiteboard/geometry";
 
 const CATEGORY_MAP = {
   entry: "bg-coral border-coral/20 focus:ring-coral/40",
