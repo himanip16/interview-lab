@@ -5,14 +5,24 @@ import { ensureGuestUser } from "@/features/auth/getCurrentUserId";
 
 export async function POST(request: Request) {
   try {
-    const { scenarioId, hypothesis } = await request.json();
-    if (!scenarioId || typeof hypothesis !== "string") {
-      return NextResponse.json({ error: "scenarioId and hypothesis are required" }, { status: 400 });
+    const { attemptId, scenarioId, hypothesis } = await request.json();
+
+    if (!attemptId || !scenarioId || typeof hypothesis !== "string") {
+      return NextResponse.json(
+        { error: "attemptId, scenarioId and hypothesis are required" },
+        { status: 400 }
+      );
     }
 
     const userId = await ensureGuestUser();
     const service = getBugHuntingService();
-    await service.submitHypothesis(scenarioId, userId, hypothesis);
+
+    await service.logHypothesis(
+      attemptId,
+      scenarioId,
+      hypothesis,
+      userId
+    );
 
     return NextResponse.json({ ok: true }, { status: 201 });
   } catch (error) {

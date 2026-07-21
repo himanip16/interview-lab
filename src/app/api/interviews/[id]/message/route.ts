@@ -34,15 +34,19 @@ export async function POST(
       status: 200,
     });
   } catch (error) {
-    logger.error("Failed to process interview message", { error });
+  logger.error("Failed to process interview message", {
+    message: error instanceof Error ? error.message : String(error),
+    stack: error instanceof Error ? error.stack : undefined,
+    error,
+  });
 
-    return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : String(error),
-      },
-      {
-        status: 500,
-      }
-    );
-  }
+  return NextResponse.json(
+    {
+      error: error instanceof Error ? error.message : String(error),
+    },
+    {
+      status: 500,
+    }
+  );
+}
 }

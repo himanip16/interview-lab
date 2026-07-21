@@ -8,6 +8,8 @@ export interface ReportMetadata {
   firstSeen: string;
 }
 
+
+
 export interface Report {
   title: string;
   severity: Severity;

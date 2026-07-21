@@ -33,9 +33,9 @@ export async function PUT(request: Request, { params }: Props) {
 
     const repository = new InterviewRepository();
     const interpreter = new WhiteboardInterpreter();
-    
-    // Verify interview exists
+
     const interview = await repository.getById(id);
+
     if (!interview) {
       return NextResponse.json(
         { error: "Interview not found" },
@@ -43,10 +43,8 @@ export async function PUT(request: Request, { params }: Props) {
       );
     }
 
-    // Generate textual description from whiteboard state
     const whiteboardDescription = interpreter.interpret(whiteboardState);
 
-    // Update whiteboard state and description
     await repository.updateWhiteboardState(id, whiteboardState);
     await repository.updateWhiteboardDescription(id, whiteboardDescription);
 
@@ -54,21 +52,23 @@ export async function PUT(request: Request, { params }: Props) {
       { success: true, whiteboardState },
       { status: 200 }
     );
-
   } catch (error) {
     if (error instanceof Error) {
       logger.error(
+        "Failed to update whiteboard state",
         {
-          err: error,
-          message: error.message,
+          interviewId: id,
+          error: error.message,
           stack: error.stack,
-        },
-        "Failed to update whiteboard state"
+        }
       );
     } else {
       logger.error(
-        { error },
-        "Failed to update whiteboard state"
+        "Failed to update whiteboard state",
+        {
+          interviewId: id,
+          error,
+        }
       );
     }
 

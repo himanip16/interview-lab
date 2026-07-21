@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
+
 import { getBugHuntingService } from "@/features/bug-hunting";
+import type { BugScenario } from "@/features/bug-hunting/types/Scenario";
 
 import BugHuntingShell from "@/features/bug-hunting/components/BugHuntingShell";
 import DeploymentsPanel from "@/features/bug-hunting/components/Tabs/DeploymentsPanel";
@@ -16,6 +18,7 @@ type Props = {
 
 export default async function BugHuntingPage({ params }: Props) {
   const { scenarioId } = await params;
+
   const service = getBugHuntingService();
   const scenario = await service.getScenario(scenarioId);
 
@@ -23,8 +26,7 @@ export default async function BugHuntingPage({ params }: Props) {
     notFound();
   }
 
-  // Use the plain JSON representation for ALL components
-  const data = scenario.toJSON();
+  const data = scenario.toJSON() as BugScenario;
 
   return (
     <main className="bug-hunting-page">

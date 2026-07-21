@@ -13,6 +13,9 @@ export interface ScenarioListItem {
   title: string;
   description?: string;
   slug: string;
+  _count: {
+    segments: number;
+  };
 }
 
 export interface Segment {
@@ -23,7 +26,7 @@ export interface Segment {
 }
 
 export interface ConversationMessage {
-  role: 'user' | 'assistant';
+  role: "user" | "assistant";
   content: string;
 }
 

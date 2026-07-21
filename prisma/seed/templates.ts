@@ -1,5 +1,4 @@
-import { EvaluationDimension, PhaseId, Goal } from "../../src/modules/interview/constants";
-
+import { EvaluationDimension, PhaseId, Goal } from "../../src/features/interview/data/constants";
 function rubric(good: string[], bad: string): string {
   return JSON.stringify({ good, bad });
 }

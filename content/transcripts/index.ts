@@ -60,7 +60,8 @@ export function getCategoryLabel(
     hld: "High Level Design",
     lld: "Low Level Design",
     dsa: "Data Structures & Algorithms",
-    behavioural: "Behavioural",
+    behavioral: "Behavioral",
+    ai: "AI",
   };
 
   return labels[category];

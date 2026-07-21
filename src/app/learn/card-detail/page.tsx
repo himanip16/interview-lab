@@ -3,8 +3,8 @@
 import React from 'react';
 import { Search } from '@/shared/ui/Search';
 import { Panel } from '@/shared/ui/Panel';
-import { Badge } from '@/shared/ui/Badge';
 import { cn } from '@/shared/utils/utils';
+import { Badge } from '@/shared/ui/Badge';
 
 export default function CardDetailPage() {
   return (

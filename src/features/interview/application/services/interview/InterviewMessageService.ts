@@ -92,9 +92,9 @@ export class InterviewMessageService {
       );
     }
 
-    // Transition to IN_PROGRESS if currently in SETUP
+    // Start interview if currently in SETUP (sets both timestamps)
     if (context.status === InterviewStatus.SETUP) {
-      context.interviewAggregate.transitionToInProgress(new Date());
+      context.interviewAggregate.start(new Date());
     }
 
     const currentPhaseDef = context.profile.phases.find(
@@ -122,7 +122,7 @@ export class InterviewMessageService {
     );
 
     const phaseStartedAt =
-      context.interviewAggregate.phaseStartedAt;
+      context.interviewAggregate.requirePhaseStartedAt();
 
     const result =
       await this.engine.processUserMessage({

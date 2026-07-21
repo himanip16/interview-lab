@@ -5,7 +5,7 @@ export type ContentBlock =
   | { type: "text"; value: string }
   | {
       type: "highlight";
-      status: "strong" | "missed";
+      status: "strong" | "missed" | "note";
       value: string;
       explanation: string;
       id: string;

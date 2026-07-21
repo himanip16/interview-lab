@@ -2,8 +2,9 @@
 
 export interface LogContext {
   requestId?: string;
-  interviewId?: string;
-  model?: string;
+  userId?: string;
+  traceId?: string;
+  error?: unknown;
   [key: string]: unknown;
 }
 

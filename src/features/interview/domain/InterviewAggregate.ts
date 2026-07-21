@@ -202,18 +202,16 @@ export class InterviewAggregate {
 
   /**
    * Transition interview from SETUP to IN_PROGRESS
-   * Sets startedAt if not already set (idempotent transition)
+   * Sets both startedAt and phaseStartedAt (idempotent transition)
    */
-  transitionToInProgress(now: Date): void {
+  start(now: Date): void {
     if (this._status !== InterviewStatus.SETUP) {
       return; // Already in progress or completed, no-op
     }
 
     this._status = InterviewStatus.IN_PROGRESS;
-    
-    if (!this._startedAt) {
-      this._startedAt = now;
-    }
+    this._startedAt = now;
+    this._phaseStartedAt = now;
   }
 
   /**
@@ -231,6 +229,23 @@ export class InterviewAggregate {
       );
     }
     return this._startedAt!;
+  }
+
+  /**
+   * Enforces domain invariant: phaseStartedAt must be non-null for IN_PROGRESS and COMPLETED states
+   * @throws Error if phaseStartedAt is null in an invalid state
+   */
+  requirePhaseStartedAt(): Date {
+    if (
+      this._status !== InterviewStatus.SETUP &&
+      !this._phaseStartedAt
+    ) {
+      throw new Error(
+        `Interview ${this._id} has no phaseStartedAt in status ${this._status}. ` +
+        `Domain invariant violation: IN_PROGRESS and COMPLETED interviews must have phaseStartedAt.`
+      );
+    }
+    return this._phaseStartedAt!;
   }
 
   /**

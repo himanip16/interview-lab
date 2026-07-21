@@ -62,10 +62,23 @@ export default function BugHuntingWorkspace({
         return <LogsPanel scenario={scenario} />;
 
       case "sql":
-        return <SqlPanel scenario={scenario} />;
+  return (
+    <SqlPanel
+      scenarioId={scenario.id}
+      fixture={scenario.sql}
+    />
+  );
 
       case "code":
-        return <CodePanel scenario={scenario} />;
+        
+  return (
+    <CodePanel
+      active={true}
+      files={scenario.code}
+      activeFileKey={scenario.code[0]?.key ?? ""}
+      onFileChange={() => {}}
+    />
+  );
 
       case "docs":
         return <DocsPanel scenario={scenario} />;

@@ -21,7 +21,7 @@ const transcript: TranscriptData = {
         {
           type: "text",
           value:
-            "Design a room reservation system. Users search for available rooms and book them for meetings. Think Outlook or Google Calendar's room-booking feature.",
+            "Let's design a meeting room reservation system. Think about a company like Amazon or Google where employees can search for available rooms and reserve them for meetings.",
         },
       ],
     },
@@ -29,12 +29,12 @@ const transcript: TranscriptData = {
     {
       id: "2",
       role: "candidate",
-      elapsedSeconds: 20,
+      elapsedSeconds: 25,
       content: [
         {
           type: "text",
           value:
-            "Okay, so I need classes for rooms and meetings, some way to track bookings, and a service that handles the search-and-book flow.",
+            "Before jumping into classes, I want to understand the scope. Are we only designing room reservation, or are we also responsible for things like sending calendar invites and checking attendee availability?",
         },
       ],
     },
@@ -42,18 +42,20 @@ const transcript: TranscriptData = {
     {
       id: "3",
       role: "interviewer",
-      elapsedSeconds: 40,
+      elapsedSeconds: 45,
       content: [
         {
           type: "text",
           value:
-            "Before you start coding, what questions do you need answered?",
+            "Good question. For this interview, focus on room reservation. Users can create meetings and invite people, but integration with external calendars is out of scope.",
         },
         {
-          id: "eval-Requirements-discipline",
-          type: "annotation",
-          value:
-            "Evaluating: Do they ask clarifying questions, or just start? This separates someone thinking about the problem from someone pattern-matching a solution.",
+          id: "eval-requirements",
+          type: "highlight",
+          status: "note",
+          value: "Requirement clarification",
+          explanation:
+            "Strong candidates avoid immediately writing classes. They clarify boundaries first because the domain model depends heavily on scope.",
         },
       ],
     },
@@ -61,12 +63,12 @@ const transcript: TranscriptData = {
     {
       id: "4",
       role: "candidate",
-      elapsedSeconds: 65,
+      elapsedSeconds: 75,
       content: [
         {
           type: "text",
           value:
-            "Right. Scope first. One building or many buildings? Do we support recurring meetings, or just one-off bookings?",
+            "Okay. Then I think the main flow is: user searches for rooms for a time range, selects a room, and creates a reservation. I would start with entities like User, Room, and Meeting.",
         },
       ],
     },
@@ -74,12 +76,12 @@ const transcript: TranscriptData = {
     {
       id: "5",
       role: "interviewer",
-      elapsedSeconds: 82,
+      elapsedSeconds: 100,
       content: [
         {
           type: "text",
           value:
-            "Thousands of rooms across many buildings. Yes to recurring. And concurrent bookings are common — two people might try to book the same room for overlapping times within milliseconds.",
+            "Let's say an employee creates a meeting called 'Quarterly Review'. They select a room and time. What information would you store in Meeting?",
         },
       ],
     },
@@ -87,12 +89,12 @@ const transcript: TranscriptData = {
     {
       id: "6",
       role: "candidate",
-      elapsedSeconds: 108,
+      elapsedSeconds: 140,
       content: [
         {
           type: "text",
           value:
-            "Okay, so concurrency is critical. One more thing — when you say a room is booked, is that just a room reservation, or is it always tied to a meeting with attendees?",
+            "I would have Meeting with fields like id, title, organizer, attendees, room, startTime, and endTime. The meeting itself represents the booking.",
         },
       ],
     },
@@ -100,18 +102,20 @@ const transcript: TranscriptData = {
     {
       id: "7",
       role: "interviewer",
-      elapsedSeconds: 128,
+      elapsedSeconds: 170,
       content: [
         {
           type: "text",
           value:
-            "HR might reserve a room for a company event without creating a formal meeting first. So a booking is independent of a meeting.",
+            "Okay. Now a new requirement. The facilities team wants to block a room for maintenance tomorrow from 2 PM to 4 PM. There is no meeting, no attendees, and no organizer. How does your design handle this?",
         },
         {
-          id: "eval-probing-model-shape",
-          type: "annotation",
-          value:
-            "Evaluating: This should trigger them to question whether Booking and Meeting are the same thing or separate entities. Does this detail change their design?",
+          id: "eval-meeting-booking",
+          type: "highlight",
+          status: "note",
+          value: "Testing abstraction boundaries",
+          explanation:
+            "The interviewer is checking whether the candidate tied room availability too closely to meetings.",
         },
       ],
     },
@@ -119,12 +123,12 @@ const transcript: TranscriptData = {
     {
       id: "8",
       role: "candidate",
-      elapsedSeconds: 152,
+      elapsedSeconds: 220,
       content: [
         {
           type: "text",
           value:
-            "Okay, so Booking and Meeting might be different things. Let me start with a basic class sketch and see where that leads.",
+            "That doesn't fit my current model. I made Meeting responsible for both the event and the room reservation. But maintenance is not a meeting.",
         },
       ],
     },
@@ -132,19 +136,12 @@ const transcript: TranscriptData = {
     {
       id: "9",
       role: "candidate",
-      elapsedSeconds: 178,
+      elapsedSeconds: 250,
       content: [
         {
           type: "text",
           value:
-            "I'll start simple. Meeting has a room, timeSlot, organizer, and attendees. Room has capacity and location. For concurrency, I need to make sure two books for the same time don't both succeed.",
-        },
-        {
-          id: "codepad-initial-sketch",
-          type: "code",
-          language: "typescript",
-          value:
-            "class TimeSlot {\n  startTime: Date;\n  endTime: Date;\n\n  overlaps(other: TimeSlot): boolean {\n    return this.startTime < other.endTime && other.startTime < this.endTime;\n  }\n}\n\nclass Room {\n  id: string;\n  capacity: number;\n  building: string;\n  equipment: Equipment[];\n}\n\nclass Meeting {\n  id: string;\n  organizer: User;\n  attendees: User[];\n  room: Room;\n  timeSlot: TimeSlot;\n}\n\nclass RoomBookingService {\n  searchAvailableRooms(timeSlot: TimeSlot, capacity: number): Room[] {\n    // find rooms not booked during this time\n  }\n\n  bookRoom(meeting: Meeting): boolean {\n    // verify no overlap, then save\n  }\n}",
+            "I think I need a separate concept. Maybe a Reservation represents that a room is unavailable during a time range, and Meeting becomes optional metadata attached to a reservation.",
         },
       ],
     },
@@ -152,18 +149,12 @@ const transcript: TranscriptData = {
     {
       id: "10",
       role: "interviewer",
-      elapsedSeconds: 210,
+      elapsedSeconds: 290,
       content: [
         {
           type: "text",
           value:
-            "You said Meeting has a room. But HR reserves a room without a meeting. How does that work in your model?",
-        },
-        {
-          id: "eval-model-consistency",
-          type: "annotation",
-          value:
-            "Evaluating: Do they immediately see the contradiction, or do they defend the design? This forces them to reconsider the core abstraction.",
+            "That sounds better. Can you explain the difference between Meeting and Reservation in your model?",
         },
       ],
     },
@@ -171,12 +162,17 @@ const transcript: TranscriptData = {
     {
       id: "11",
       role: "candidate",
-      elapsedSeconds: 238,
+      elapsedSeconds: 320,
       content: [
         {
           type: "text",
           value:
-            "Oh right. I think I need a Booking object that's separate from Meeting. Booking is just a (Room, TimeSlot). Meeting is a Booking plus attendees and an organizer.",
+            "Reservation answers the question: 'Is this room occupied during this time?' Meeting answers: 'Why is this reservation created and who is involved?'",
+        },
+        {
+          type: "text",
+          value:
+            "A maintenance block would only have a Reservation. A normal calendar event would have both a Reservation and a Meeting.",
         },
       ],
     },
@@ -184,17 +180,12 @@ const transcript: TranscriptData = {
     {
       id: "12",
       role: "interviewer",
-      elapsedSeconds: 260,
+      elapsedSeconds: 360,
       content: [
         {
           type: "text",
-          value: "So is Meeting a subclass of Booking, or does Meeting contain a Booking?",
-        },
-        {
-          id: "eval-composition-or-inheritance",
-          type: "annotation",
           value:
-            "Evaluating: Do they think through is-a versus has-a? This is a key OO design question.",
+            "Good. Let's start designing the objects. What would your initial classes look like?",
         },
       ],
     },
@@ -202,12 +193,45 @@ const transcript: TranscriptData = {
     {
       id: "13",
       role: "candidate",
-      elapsedSeconds: 290,
+      elapsedSeconds: 410,
       content: [
         {
-          type: "text",
+          type: "code",
+          language: "typescript",
           value:
-            "Hmm. If Meeting is a subclass of Booking, then both share the bookRoom logic. But if Booking is a concept that includes both HR events and Meetings, they're not really is-a relationships.",
+            `class Room {
+  id: string;
+  name: string;
+  capacity: number;
+  location: string;
+}
+
+
+class TimeRange {
+  startTime: Date;
+  endTime: Date;
+
+  overlaps(other: TimeRange): boolean {
+    return this.startTime < other.endTime &&
+           other.startTime < this.endTime;
+  }
+}
+
+
+class Reservation {
+  id: string;
+  room: Room;
+  timeRange: TimeRange;
+}
+
+
+class Meeting {
+  id: string;
+  title: string;
+  organizer: User;
+  attendees: User[];
+  reservation: Reservation;
+}`,
         },
       ],
     },
@@ -215,17 +239,12 @@ const transcript: TranscriptData = {
     {
       id: "14",
       role: "interviewer",
-      elapsedSeconds: 315,
+      elapsedSeconds: 470,
       content: [
         {
           type: "text",
-          value: "Right, so?",
-        },
-        {
-          id: "eval-decision-confidence",
-          type: "annotation",
           value:
-            "Evaluating: Do they decide, or waffle? Can they justify their choice?",
+            "Looks reasonable. Now let's explore recurring meetings. Users often create meetings every Monday at 10 AM. How would you support that?",
         },
       ],
     },
@@ -233,12 +252,12 @@ const transcript: TranscriptData = {
     {
       id: "15",
       role: "candidate",
-      elapsedSeconds: 340,
+      elapsedSeconds: 520,
       content: [
         {
           type: "text",
           value:
-            "I'd make Booking the core concept. Meeting is just a Booking with metadata — attendees, organizer, agenda. So Meeting has-a Booking, not is-a Booking.",
+            "My first thought is creating a RecurringMeeting class that extends Meeting and generates future reservations.",
         },
       ],
     },
@@ -246,17 +265,20 @@ const transcript: TranscriptData = {
     {
       id: "16",
       role: "interviewer",
-      elapsedSeconds: 365,
+      elapsedSeconds: 560,
       content: [
         {
           type: "text",
-          value: "Okay. Now, you mentioned recurring meetings earlier. How do you model that?",
+          value:
+            "Imagine a weekly meeting happens every Monday. Next Monday's occurrence needs to move from 10 AM to 2 PM, but only for that week. Does inheritance help here?",
         },
         {
-          id: "eval-recurrence-modeling",
-          type: "annotation",
-          value:
-            "Evaluating: Do they immediately think subclass? Or do they reason about it? The answer matters because it shows their instinct on inheritance.",
+          id: "eval-inheritance",
+          type: "highlight",
+          status: "note",
+          value: "Composition vs inheritance",
+          explanation:
+            "The interviewer introduces a change that exposes whether inheritance is the right abstraction.",
         },
       ],
     },
@@ -264,125 +286,102 @@ const transcript: TranscriptData = {
     {
       id: "17",
       role: "candidate",
-      elapsedSeconds: 392,
+      elapsedSeconds: 610,
       content: [
         {
           type: "text",
           value:
-            "I could make a RecurringMeeting subclass that generates multiple bookings based on a rule. Or... actually, I could just give Booking a recurrenceRule field that's optional.",
+            "Actually, inheritance probably does not help much here. A recurring meeting is not really a different type of meeting. It is a meeting with a recurrence pattern.",
         },
       ],
     },
 
     {
       id: "18",
-      role: "interviewer",
-      elapsedSeconds: 418,
+      role: "candidate",
+      elapsedSeconds: 650,
       content: [
         {
           type: "text",
-          value: "What happens in bookRoom if the booking has a recurrence rule?",
-        },
-        {
-          id: "eval-implementation-thinking",
-          type: "annotation",
           value:
-            "Evaluating: Do they think about implementation details? Does their model actually work end-to-end?",
+            "I would probably keep Meeting the same and add a RecurrenceRule object. Individual reservations can be generated from that rule, and specific occurrences can have overrides.",
         },
       ],
     },
-
-    {
+        {
       id: "19",
-      role: "candidate",
-      elapsedSeconds: 448,
+      role: "interviewer",
+      elapsedSeconds: 700,
       content: [
         {
           type: "text",
           value:
-            "I'd expand the rule into individual occurrences at the time of booking, so I only need to store individual timeslot + room pairs in the database. That way, canceling one occurrence or checking conflicts is the same as a regular booking.",
+            "Let's go deeper into recurring meetings. You said reservations can be generated from the recurrence rule. When do you create those reservations?",
         },
       ],
     },
 
     {
       id: "20",
-      role: "interviewer",
-      elapsedSeconds: 475,
+      role: "candidate",
+      elapsedSeconds: 740,
       content: [
         {
           type: "text",
           value:
-            "And if a user cancels just one occurrence of a recurring meeting?",
-        },
-        {
-          id: "eval-edge-case-handling",
-          type: "annotation",
-          value:
-            "Evaluating: Do they think about edge cases immediately, or is this a surprise? Can they adapt their design?",
+            "Initially I would create all future reservations when the recurring meeting is created.",
         },
       ],
     },
 
     {
       id: "21",
-      role: "candidate",
-      elapsedSeconds: 505,
+      role: "interviewer",
+      elapsedSeconds: 780,
       content: [
         {
           type: "text",
           value:
-            "I think I'd store a BookingGroup that ties all occurrences together, and if you cancel one, you're actually deleting an individual Booking but keeping the others in the group.",
+            "Would you create reservations for the next 10 years? What if the user creates a daily meeting forever?",
         },
       ],
     },
 
     {
       id: "22",
-      role: "interviewer",
-      elapsedSeconds: 530,
+      role: "candidate",
+      elapsedSeconds: 820,
       content: [
         {
           type: "text",
           value:
-            "What if the organizer changes the duration of one specific occurrence? Say the recurring meeting is normally 1 hour, but next week needs to be 2 hours?",
-        },
-        {
-          id: "eval-design-pressure",
-          type: "annotation",
-          value:
-            "Evaluating: This is pressure testing. Can they handle it? Do they break, or does the design flex?",
+            "That's a good point. Creating everything upfront may create unnecessary data. I would probably create reservations only for a reasonable horizon, maybe the next few months, and generate more as needed.",
         },
       ],
     },
 
     {
       id: "23",
-      role: "candidate",
-      elapsedSeconds: 562,
+      role: "interviewer",
+      elapsedSeconds: 870,
       content: [
         {
           type: "text",
           value:
-            "Okay, that's trickier. If the original booking had a recurrence rule and a 1-hour slot, and I expanded it to N bookings, then modifying one means... I'd probably store an 'exceptions' map on the BookingGroup that overrides the default time slot for specific dates.",
+            "Okay. Now imagine the user cancels only one occurrence of a recurring meeting. The Monday meetings should continue. How would you model that?",
         },
       ],
     },
 
     {
       id: "24",
-      role: "interviewer",
-      elapsedSeconds: 592,
+      role: "candidate",
+      elapsedSeconds: 920,
       content: [
         {
           type: "text",
-          value: "Getting complicated. Let's step back. What does the bookRoom method actually do?",
-        },
-        {
-          id: "eval-implementation-focus",
-          type: "annotation",
           value:
-            "Evaluating: Can they zoom in and think concretely? Or do they stay abstract?",
+            "If I delete the entire recurring meeting, that breaks the use case. I need to distinguish between the series and individual occurrences.",
         },
       ],
     },
@@ -390,12 +389,12 @@ const transcript: TranscriptData = {
     {
       id: "25",
       role: "candidate",
-      elapsedSeconds: 622,
+      elapsedSeconds: 950,
       content: [
         {
           type: "text",
           value:
-            "It takes a booking, checks if the room is free for the time slot, and if so, inserts the booking into the database.",
+            "I would introduce a MeetingSeries or RecurringReservation entity. Individual reservations reference the series. Cancelling one occurrence only marks that reservation as cancelled.",
         },
       ],
     },
@@ -403,18 +402,12 @@ const transcript: TranscriptData = {
     {
       id: "26",
       role: "interviewer",
-      elapsedSeconds: 648,
+      elapsedSeconds: 1000,
       content: [
         {
           type: "text",
           value:
-            "Two people try to book the same room for 2pm-3pm at exactly the same time. What happens?",
-        },
-        {
-          id: "eval-concurrency-awareness",
-          type: "annotation",
-          value:
-            "Evaluating: Do they see the race condition immediately? Or do they think the check-then-insert is safe?",
+            "Good. Now let's move to the booking flow. A user searches for rooms available from 2 PM to 3 PM. How do you find available rooms?",
         },
       ],
     },
@@ -422,12 +415,12 @@ const transcript: TranscriptData = {
     {
       id: "27",
       role: "candidate",
-      elapsedSeconds: 675,
+      elapsedSeconds: 1050,
       content: [
         {
           type: "text",
           value:
-            "I check if the room is booked, and if it's not, I insert. But if both requests check at the same microsecond before either one inserts, they both think it's free.",
+            "I would query rooms based on requirements like capacity and equipment. Then I would remove rooms that have reservations overlapping with the requested time range.",
         },
       ],
     },
@@ -435,17 +428,12 @@ const transcript: TranscriptData = {
     {
       id: "28",
       role: "interviewer",
-      elapsedSeconds: 700,
+      elapsedSeconds: 1090,
       content: [
         {
           type: "text",
-          value: "Exactly. How do you fix that?",
-        },
-        {
-          id: "eval-concurrency-solution",
-          type: "annotation",
           value:
-            "Evaluating: Do they know about database constraints, transactions, or locks? Can they articulate a real solution?",
+            "The company has 20,000 rooms. Would you load all reservations for every room and filter in memory?",
         },
       ],
     },
@@ -453,12 +441,12 @@ const transcript: TranscriptData = {
     {
       id: "29",
       role: "candidate",
-      elapsedSeconds: 735,
-      content: [
+      elapsedSeconds: 1140,
+      content:[
         {
           type: "text",
           value:
-            "I could use a unique constraint on (room_id, time_slot). Then the database ensures only one booking succeeds. Or I could acquire a lock on the room before checking and inserting.",
+            "No, that would not scale. The database should do the filtering. We need indexes around room_id and reservation time ranges.",
         },
       ],
     },
@@ -466,17 +454,12 @@ const transcript: TranscriptData = {
     {
       id: "30",
       role: "interviewer",
-      elapsedSeconds: 765,
+      elapsedSeconds: 1180,
       content: [
         {
           type: "text",
-          value: "Which would you pick and why?",
-        },
-        {
-          id: "eval-tradeoff-reasoning",
-          type: "annotation",
           value:
-            "Evaluating: Do they think through the implications? Lock overhead? Deadlock risk? Constraint is cleaner but requires normalizing time into buckets.",
+            "Let's focus on the booking operation now. User searched and saw Room A available. They click Book. What happens next?",
         },
       ],
     },
@@ -484,12 +467,12 @@ const transcript: TranscriptData = {
     {
       id: "31",
       role: "candidate",
-      elapsedSeconds: 802,
+      elapsedSeconds: 1230,
       content: [
         {
           type: "text",
           value:
-            "Locks could deadlock if two threads try to lock multiple rooms. A constraint is simpler — I'd normalize the time slot into discrete buckets, say 15-minute slots, and make (room, bucket) unique. If the booking spans multiple buckets, I'd insert a row per bucket.",
+            "The service receives roomId and time range. It checks availability again and creates the reservation.",
         },
       ],
     },
@@ -497,18 +480,12 @@ const transcript: TranscriptData = {
     {
       id: "32",
       role: "interviewer",
-      elapsedSeconds: 835,
+      elapsedSeconds: 1260,
       content: [
         {
           type: "text",
           value:
-            "What if maintenance needs to block a room for 2 hours on a Tuesday?",
-        },
-        {
-          id: "eval-edge-case-maintenance",
-          type: "annotation",
-          value:
-            "Evaluating: Do they realize the constraint model treats maintenance the same as a booking? Or does this surprise them?",
+            "Why do you check availability again? Didn't search already tell us it is available?",
         },
       ],
     },
@@ -516,12 +493,12 @@ const transcript: TranscriptData = {
     {
       id: "33",
       role: "candidate",
-      elapsedSeconds: 863,
+      elapsedSeconds: 1300,
       content: [
         {
           type: "text",
           value:
-            "I'd insert a special 'maintenance' booking for that window, same as a user booking. The system sees it as blocked slots and won't let anyone else book during that time.",
+            "Because search results can become stale. Someone else could have booked the room after the search response was returned.",
         },
       ],
     },
@@ -529,18 +506,20 @@ const transcript: TranscriptData = {
     {
       id: "34",
       role: "interviewer",
-      elapsedSeconds: 888,
+      elapsedSeconds: 1340,
       content: [
         {
           type: "text",
           value:
-            "Good. Now walk me through the full flow from search to confirmation.",
+            "Good. Now two users click Book at exactly the same time. Both requests check availability and see the room is free. Both try inserting reservations. What happens?",
         },
         {
-          id: "eval-end-to-end-flow",
-          type: "annotation",
-          value:
-            "Evaluating: Can they articulate the whole process? Or do they gloss over parts?",
+          id: "eval-race-condition",
+          type: "highlight",
+          status: "strong",
+          value: "Concurrency handling",
+          explanation:
+            "A strong candidate recognizes that check-then-insert is not atomic and thinks about database guarantees.",
         },
       ],
     },
@@ -548,94 +527,77 @@ const transcript: TranscriptData = {
     {
       id: "35",
       role: "candidate",
-      elapsedSeconds: 922,
+      elapsedSeconds: 1400,
       content: [
         {
           type: "text",
           value:
-            "User searches for rooms available 2pm-3pm on Tuesday with capacity ≥10. System queries all rooms with capacity ≥10, filters those with no bookings in any of the time buckets that overlap 2pm-3pm, returns them sorted by proximity or amenities. User picks one. System validates it's still free, then tries the constraint-protected insert. If it succeeds, we create the Meeting record and notify attendees.",
+            "Initially I might have thought the availability check was enough, but it has a race condition. Both requests can pass the check before either inserts.",
         },
       ],
     },
 
     {
       id: "36",
-      role: "interviewer",
-      elapsedSeconds: 965,
+      role: "candidate",
+      elapsedSeconds: 1440,
       content: [
         {
           type: "text",
           value:
-            "What if search returns a room, user reviews it, and by the time they click book, someone else booked it?",
-        },
-        {
-          id: "eval-staleness-handling",
-          type: "annotation",
-          value:
-            "Evaluating: Do they handle the fact that search results are stale? What's the UX recovery?",
+            "We need the database to protect us. One option is locking the room while booking. Another option is enforcing a unique constraint so conflicting reservations cannot both succeed.",
         },
       ],
     },
 
     {
       id: "37",
-      role: "candidate",
-      elapsedSeconds: 1000,
+      role: "interviewer",
+      elapsedSeconds: 1490,
       content: [
         {
           type: "text",
           value:
-            "The insert fails because the constraint is violated. The service returns an error to the user, like 'Room is no longer available.' The user is back to the search results and can pick a different room.",
+            "Which approach would you prefer?",
         },
       ],
     },
 
     {
       id: "38",
-      role: "interviewer",
-      elapsedSeconds: 1028,
+      role: "candidate",
+      elapsedSeconds: 1530,
       content: [
         {
           type: "text",
           value:
-            "What about cancellation? If someone cancels a recurring meeting, do you delete all occurrences or ask which ones?",
-        },
-        {
-          id: "eval-cancellation-design",
-          type: "annotation",
-          value:
-            "Evaluating: Do they handle partial cancellation? Or assume all-or-nothing? Real systems need this nuance.",
+            "I would prefer database constraints where possible because they make correctness the responsibility of the database. Locks can work, but they increase complexity and can introduce deadlocks.",
         },
       ],
     },
 
     {
       id: "39",
-      role: "candidate",
-      elapsedSeconds: 1062,
+      role: "interviewer",
+      elapsedSeconds: 1580,
       content: [
         {
           type: "text",
           value:
-            "I think I'd ask — 'Cancel this event only' or 'Cancel this and all following' or 'Cancel all events in this series'. Then delete the appropriate Booking records from the BookingGroup.",
+            "A reservation is not always a fixed hour. Someone can book 10:10 AM to 10:50 AM. How would you create a unique constraint for overlapping time ranges?",
         },
       ],
     },
 
     {
       id: "40",
-      role: "interviewer",
-      elapsedSeconds: 1090,
+      role: "candidate",
+      elapsedSeconds: 1630,
       content: [
         {
           type: "text",
-          value: "What if the organizer changes from Alice to Bob?",
-        },
-        {
-          id: "eval-organizer-change",
-          type: "annotation",
           value:
-            "Evaluating: Does this break their model? Do they just update a field, or is there more to think about?",
+            "A simple unique constraint on start and end time would not work because ranges can partially overlap.",
         },
       ],
     },
@@ -643,12 +605,12 @@ const transcript: TranscriptData = {
     {
       id: "41",
       role: "candidate",
-      elapsedSeconds: 1118,
+      elapsedSeconds: 1680,
       content: [
         {
           type: "text",
           value:
-            "I'd update the Meeting's organizer field. The Booking itself — the room reservation — doesn't care who the organizer is, so that's fine.",
+            "One approach is storing reservations in time buckets. For example, split time into 15-minute intervals and reserve all buckets covered by the meeting. Then we can have a unique constraint on room and bucket.",
         },
       ],
     },
@@ -656,18 +618,12 @@ const transcript: TranscriptData = {
     {
       id: "42",
       role: "interviewer",
-      elapsedSeconds: 1142,
+      elapsedSeconds: 1730,
       content: [
         {
           type: "text",
           value:
-            "But what if Alice was the only one who could cancel? Now Bob is the organizer. Can Bob cancel the meeting, or only Alice?",
-        },
-        {
-          id: "eval-permission-model",
-          type: "annotation",
-          value:
-            "Evaluating: Do they think about permissions? Do they realize they're missing something?",
+            "What are the downsides of that approach?",
         },
       ],
     },
@@ -675,12 +631,12 @@ const transcript: TranscriptData = {
     {
       id: "43",
       role: "candidate",
-      elapsedSeconds: 1175,
+      elapsedSeconds: 1770,
       content: [
         {
           type: "text",
           value:
-            "That's a good point. I haven't thought through permissions at all. I'd probably add a `canCancel()` method on Meeting that checks if the caller is the organizer or an admin. That's orthogonal to the booking logic, but it matters for the cancellation endpoint.",
+            "Storage increases because every reservation creates multiple bucket records. Also, choosing bucket size is a tradeoff. Smaller buckets give accuracy but more rows.",
         },
       ],
     },
@@ -688,18 +644,12 @@ const transcript: TranscriptData = {
     {
       id: "44",
       role: "interviewer",
-      elapsedSeconds: 1208,
+      elapsedSeconds: 1810,
       content: [
         {
           type: "text",
           value:
-            "Let me ask a different angle. In your class sketch, how does Room know which time slots are booked?",
-        },
-        {
-          id: "eval-query-strategy",
-          type: "annotation",
-          value:
-            "Evaluating: Do they think about queries? Is the data structure suitable for the access patterns?",
+            "Good. Now let's say maintenance blocks a room. Does maintenance need a separate workflow?",
         },
       ],
     },
@@ -707,133 +657,309 @@ const transcript: TranscriptData = {
     {
       id: "45",
       role: "candidate",
-      elapsedSeconds: 1242,
+      elapsedSeconds: 1850,
       content: [
         {
           type: "text",
           value:
-            "It doesn't — Room just has an ID and capacity. The search service queries the Booking table for all bookings in that time range, groups by room, and filters. So Room is just metadata. The real query is against Bookings.",
+            "From the availability perspective, it should behave like any other reservation. The difference is the reservation type.",
         },
       ],
     },
 
     {
       id: "46",
-      role: "interviewer",
-      elapsedSeconds: 1270,
+      role: "candidate",
+      elapsedSeconds: 1880,
       content: [
         {
           type: "text",
-          value: "That works. Let me see the Booking class more clearly. What methods does it have?",
-        },
-        {
-          id: "eval-class-interface",
-          type: "annotation",
           value:
-            "Evaluating: Do they articulate the interface cleanly? Or is it vague?",
+            "I would avoid creating MaintenanceReservation, MeetingReservation, and EventReservation classes unless their behavior differs. Most of the booking logic is shared.",
         },
       ],
     },
-
-    {
+        {
       id: "47",
-      role: "candidate",
-      elapsedSeconds: 1305,
+      role: "interviewer",
+      elapsedSeconds: 1920,
       content: [
         {
-          type: "code",
-          language: "typescript",
+          type: "text",
           value:
-            "class Booking {\n  id: string;\n  roomId: string;\n  timeSlot: TimeSlot;\n  createdBy: User;\n  createdAt: Date;\n  bookingType: 'MEETING' | 'MAINTENANCE' | 'BLOCKED';\n  recurrenceRule?: RecurrenceRule;\n\n  // Expand a recurring booking into individual bookings\n  expandOccurrences(): Booking[] {\n    if (!this.recurrenceRule) return [this];\n    // generate bookings up to horizon\n  }\n\n  // Check if this booking conflicts with a time slot\n  conflictsWith(slot: TimeSlot): boolean {\n    return this.timeSlot.overlaps(slot);\n  }\n}\n\nclass Meeting {\n  id: string;\n  booking: Booking;  // has-a, not is-a\n  organizer: User;\n  attendees: User[];\n  agenda?: string;\n\n  canCancel(user: User): boolean {\n    return user.id === this.organizer.id || user.isAdmin;\n  }\n}",
+            "Let's look at cancellation. A user cancels a normal meeting. What happens to the reservation?",
         },
       ],
     },
 
     {
       id: "48",
-      role: "interviewer",
-      elapsedSeconds: 1348,
+      role: "candidate",
+      elapsedSeconds: 1960,
       content: [
         {
           type: "text",
           value:
-            "I see bookingType. So the system treats a maintenance block the same as a meeting?",
-        },
-        {
-          id: "eval-polymorphism-question",
-          type: "annotation",
-          value:
-            "Evaluating: Do they see that treating everything as a Booking is good design, or do they over-engineer with subclasses?",
+            "The reservation should become cancelled or inactive. I would avoid deleting it because we may need history for auditing.",
         },
       ],
     },
 
     {
       id: "49",
-      role: "candidate",
-      elapsedSeconds: 1375,
+      role: "interviewer",
+      elapsedSeconds: 2000,
       content: [
         {
           type: "text",
           value:
-            "Yes, from the booking system's perspective, they're all just 'this room is not available during this time.' The type is just metadata that affects permissions or UI. A maintenance block can't have attendees, but the slot-blocking logic is identical.",
+            "Now consider a recurring meeting. User clicks cancel. What options should the system support?",
         },
       ],
     },
 
     {
       id: "50",
-      role: "interviewer",
-      elapsedSeconds: 1405,
+      role: "candidate",
+      elapsedSeconds: 2040,
       content: [
         {
           type: "text",
-          value: "Alright. Last one: if you had more time, what would you add or change?",
-        },
-        {
-          id: "eval-self-assessment",
-          type: "annotation",
           value:
-            "Evaluating: Do they see weaknesses in their own design? Are they honest?",
+            "Usually calendar systems support multiple options: cancel only this occurrence, cancel this and future occurrences, or cancel the entire series.",
         },
       ],
     },
 
     {
       id: "51",
-      role: "candidate",
-      elapsedSeconds: 1445,
+      role: "interviewer",
+      elapsedSeconds: 2090,
       content: [
         {
           type: "text",
           value:
-            "A few things. First, I'm not storing conflict information — if I want to ask 'does Alice have a conflict for this time', I'd need to integrate with a user calendar service, which I haven't modeled. Second, I'd add an Observer pattern for notifications — when a booking is created or cancelled, publish an event so notification and audit logging can react independently. Third, I'm using time buckets to avoid conflict, which works but could be fragile if bucket boundaries don't align with meeting needs.",
+            "Good. Now let's talk about permissions. If Alice creates the meeting and later transfers ownership to Bob, who can cancel it?",
         },
       ],
     },
 
     {
       id: "52",
-      role: "interviewer",
-      elapsedSeconds: 1498,
+      role: "candidate",
+      elapsedSeconds: 2140,
       content: [
         {
           type: "text",
           value:
-            "Good self-awareness. That covers what I wanted to explore.",
+            "Initially I only modeled organizer as a field, but this introduces a permission concern. I would separate ownership from the reservation itself.",
         },
       ],
     },
 
     {
       id: "53",
-      role: "takeaway",
-      elapsedSeconds: 1520,
+      role: "candidate",
+      elapsedSeconds: 2180,
       content: [
         {
           type: "text",
           value:
-            "Takeaway: The candidate started with an oversimplified Meeting as the booking record, then got pushed to separate Booking from Meeting when HR use cases surfaced. They initially considered RecurringMeeting as a subclass, but backed away and added recurrenceRule as a field instead — showing they could self-correct. The race condition on concurrent bookings was caught through questioning, not handed to them. They reasoned through time buckets versus locks, trade-offs on expansion timing for recurring meetings, and the complexity that emerges when supporting partial cancellations and organizer changes. They caught themselves missing a permission model, and acknowledged gaps in attendee-calendar integration. Most of all, they showed the ability to design incrementally, adjust when challenged, and be honest about what they didn't know.",
+            "The Reservation should not know about permissions. A Meeting or AccessPolicy layer should decide whether the current user can modify or cancel it.",
+        },
+        {
+          id: "eval-permissions",
+          type: "highlight",
+          status: "strong",
+          value: "Separating responsibilities",
+          explanation:
+            "Good designs avoid putting authorization rules inside domain objects that only represent data.",
+        },
+      ],
+    },
+
+    {
+      id: "54",
+      role: "interviewer",
+      elapsedSeconds: 2230,
+      content: [
+        {
+          type: "text",
+          value:
+            "Let's return to your classes. Show me how the main service would look.",
+        },
+      ],
+    },
+
+    {
+      id: "55",
+      role: "candidate",
+      elapsedSeconds: 2280,
+      content: [
+        {
+          type: "code",
+          language: "typescript",
+          value:
+            `class RoomReservationService {
+
+  searchAvailableRooms(
+    criteria: SearchCriteria
+  ): Room[] {
+    // query rooms and exclude conflicting reservations
+  }
+
+
+  createReservation(
+    request: ReservationRequest
+  ): Reservation {
+
+    // validate request
+
+    // verify availability again
+
+    // persist reservation
+
+    // publish event
+
+  }
+
+
+  cancelReservation(
+    reservationId: string
+  ): void {
+
+    // mark cancelled
+
+  }
+
+}
+
+
+class Reservation {
+  id: string;
+  roomId: string;
+  timeRange: TimeRange;
+  type: "MEETING" | "MAINTENANCE";
+  status: "ACTIVE" | "CANCELLED";
+}
+
+
+class Meeting {
+  id: string;
+  reservationId: string;
+  organizerId: string;
+  attendees: User[];
+  recurrenceRule?: RecurrenceRule;
+}`,
+        },
+      ],
+    },
+
+    {
+      id: "56",
+      role: "interviewer",
+      elapsedSeconds: 2400,
+      content: [
+        {
+          type: "text",
+          value:
+            "Looks good. One final question. After a booking succeeds, we need to notify attendees and update audit logs. Would you do that inside createReservation?",
+        },
+      ],
+    },
+
+    {
+      id: "57",
+      role: "candidate",
+      elapsedSeconds: 2450,
+      content: [
+        {
+          type: "text",
+          value:
+            "I would avoid doing it synchronously. Creating the reservation is the critical operation. Notification failure should not rollback a successful booking.",
+        },
+      ],
+    },
+
+    {
+      id: "58",
+      role: "candidate",
+      elapsedSeconds: 2490,
+      content: [
+        {
+          type: "text",
+          value:
+            "I would publish a ReservationCreated event after saving. Notification service, audit logging, and analytics can consume that event independently.",
+        },
+        {
+          id: "eval-events",
+          type: "highlight",
+          status: "strong",
+          value: "Good separation of responsibilities",
+          explanation:
+            "The candidate keeps the booking flow focused and avoids coupling unrelated side effects.",
+        },
+      ],
+    },
+
+    {
+      id: "59",
+      role: "interviewer",
+      elapsedSeconds: 2540,
+      content: [
+        {
+          type: "text",
+          value:
+            "What are some things you would improve if you had more time?",
+        },
+      ],
+    },
+
+    {
+      id: "60",
+      role: "candidate",
+      elapsedSeconds: 2580,
+      content: [
+        {
+          type: "text",
+          value:
+            "I would improve a few areas. First, I would add better conflict checking because users may have external calendar conflicts. Second, I would think more about scaling room search with caching and indexes. Third, I would define clearer permission rules for organizers, delegates, and administrators.",
+        },
+      ],
+    },
+
+    {
+      id: "61",
+      role: "interviewer",
+      elapsedSeconds: 2630,
+      content: [
+        {
+          type: "text",
+          value:
+            "Good. That covers the design.",
+        },
+      ],
+    },
+
+    {
+      id: "62",
+      role: "takeaway",
+      elapsedSeconds: 2660,
+      content: [
+        {
+          type: "text",
+          value:
+            "The candidate did not start with a perfect model. They initially coupled Meeting and room reservation, but a new requirement exposed that the abstraction was too narrow. They separated Reservation from Meeting and used the discussion to refine the model.",
+        },
+        {
+          type: "text",
+          value:
+            "The interview explored realistic design pressure points: recurring meetings, cancelling individual occurrences, concurrent booking conflicts, stale search results, permissions, and asynchronous notifications.",
+        },
+        {
+          type: "text",
+          value:
+            "The important signal was not knowing every answer immediately. The candidate demonstrated the ability to identify gaps, explain tradeoffs, and evolve the design when new requirements appeared.",
         },
       ],
     },
@@ -854,12 +980,12 @@ const amazonMeetingRoomReservation: TranscriptEntry = {
       "Concurrency",
       "Database Constraints",
       "Race Conditions",
-      "Edge Cases",
-      "Time Slot Management",
-      "Recurring Events",
+      "Recurring Meetings",
+      "Domain Modeling",
+      "Event Driven Design",
     ],
     description:
-      "SDE2 low-level design interview with real design evolution. Candidate starts by conflating Meeting with Booking, gets pushed to separate them. Handles race conditions on concurrent bookings. Reasons through recurrence expansion, partial cancellations, and organizer changes. Self-corrects on inheritance versus composition. Shows honest gaps on permission models and calendar conflicts.",
+      "A realistic SDE2 low-level design interview where the candidate evolves the design through discussion. The candidate initially couples meetings with reservations, discovers the limitation through new requirements, and gradually introduces better abstractions. The interview covers recurring meetings, concurrency handling, database constraints, permissions, and event-driven notifications.",
   },
 
   transcript,

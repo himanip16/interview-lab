@@ -6,7 +6,7 @@ export const TRANSCRIPT_CATEGORIES = [
   "hld",
   "lld",
   "dsa",
-  "behavioural",
+  "behavioral",
   "ai",
 ] as const;
 
