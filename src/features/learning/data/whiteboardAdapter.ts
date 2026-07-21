@@ -58,6 +58,7 @@ export function convertLegacyToSystemDesign(legacy: LegacySystem): SystemDesign 
 
   return {
     slug: legacy.slug,
+    title: legacy.title,
     nodes,
     edges
   };

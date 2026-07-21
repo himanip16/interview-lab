@@ -1,5 +1,5 @@
 interface SegmentTakeawayProps {
-  takeaway: string | null;
+  takeaway: string | undefined;
 }
 
 export function SegmentTakeaway({ takeaway }: SegmentTakeawayProps) {

@@ -1,24 +1,31 @@
-import { SystemDesign, NodeLayout, WhiteboardFrame, DEFAULT_CONFIG } from "../types/whiteboard";
-import { validateDesignIntegrity } from "../utils/validation";
-import { calculateWhiteboardFrame } from "../utils/layoutEngine";
+import {
+  SystemDesign,
+  NodeLayout,
+  WhiteboardFrame,
+} from "@/features/whiteboard/types/whiteboard";
+
+import {
+  DEFAULT_WHITEBOARD_CONFIG,
+  WhiteboardConfig,
+} from "@/features/whiteboard/config";
+
+import { validateDesign } from "@/features/whiteboard/validation";
+import { calculateWhiteboardFrame } from "@/features/whiteboard/calculateWhiteboardFrame";
 
 /**
  * Production Scene Loader
- * Handles the full lifecycle from raw data to a calculcated render frame.
+ * Handles the full lifecycle from raw data to a calculated render frame.
  */
 export function loadWhiteboardScene(
-  design: SystemDesign, 
+  design: SystemDesign,
   layout: NodeLayout[],
-  config = DEFAULT_CONFIG
+  config: WhiteboardConfig = DEFAULT_WHITEBOARD_CONFIG
 ): WhiteboardFrame {
   try {
-    // 1. Validate
-    validateDesignIntegrity(design, layout);
+    validateDesign(design, layout, config);
 
-    // 2. Project Layout
     return calculateWhiteboardFrame(design, layout, config);
   } catch (error) {
-    // In production, log to Sentry/NewRelic here
     console.error("Failed to load whiteboard scene:", error);
     throw error;
   }

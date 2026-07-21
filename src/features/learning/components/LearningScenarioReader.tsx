@@ -10,6 +10,8 @@ import { PredictAction } from "./actions/PredictAction";
 import { CompareAction } from "./actions/CompareAction";
 import { LearningActionType } from "@prisma/client";
 
+
+
 interface LearningScenarioReaderProps {
   scenario: Scenario;
   userId?: string;
@@ -55,12 +57,12 @@ export function LearningScenarioReader({ scenario, userId }: LearningScenarioRea
 
   const renderAction = (action: Segment["actions"][0]) => {
     const actionMap = {
-      [LearningActionType.OBSERVE]: ObserveAction,
-      [LearningActionType.JUDGE]: JudgeAction,
-      [LearningActionType.FIX]: FixAction,
-      [LearningActionType.PREDICT]: PredictAction,
-      [LearningActionType.COMPARE]: CompareAction,
-    };
+  OBSERVE: ObserveAction,
+  JUDGE: JudgeAction,
+  FIX: FixAction,
+  PREDICT: PredictAction,
+  COMPARE: CompareAction,
+} satisfies Record<LearningActionType, React.ComponentType<any>>;
 
     const ActionComponent = actionMap[action.type];
 
