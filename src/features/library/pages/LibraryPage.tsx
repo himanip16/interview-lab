@@ -8,10 +8,12 @@ import LibraryView from "@/features/library/components/LibraryView";
 import {
   type CompletedInterviewItem,
   type ExperienceItem,
-  type DimensionScore,
-  type EvidenceEntry,
   type EvaluationMetadata,
 } from "@/features/library/types";
+import {
+  mapEvidence,
+  mapDimensionScores,
+} from "@/features/interview/reporting/mappers/EvaluationMapper";
 
 const EXPERIENCE_LIMIT = 30;
 
@@ -132,13 +134,11 @@ export async function LibraryPage() {
               overallScore: interview.evaluation.overallScore,
               feedback: interview.evaluation.feedback,
 
-              dimensionScores:
-                (interview.evaluation.dimensionScores as unknown as DimensionScore[]) ??
-                [],
+              dimensionScores: mapDimensionScores(
+                interview.evaluation.dimensionScores
+              ),
 
-              evidence:
-                (interview.evaluation.evidence as unknown as EvidenceEntry[]) ??
-                [],
+              evidence: mapEvidence(interview.evaluation.evidence),
 
               metadata,
             }

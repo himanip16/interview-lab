@@ -15,7 +15,8 @@ import type {
   EvidenceType,
 } from "@/features/interview/domain/evaluation/types";
 
-const EvidenceItemSchema = z.object({
+// Raw AI output shape (without timestampSeconds which is added during processing)
+const RawEvidenceItemSchema = z.object({
   messageId: z.string(),
   quote: z.string().min(1),
   comment: z.string().min(1),
@@ -23,11 +24,13 @@ const EvidenceItemSchema = z.object({
   type: z.enum(["STRENGTH", "WEAKNESS"]),
 });
 
+type RawEvidenceItem = z.infer<typeof RawEvidenceItemSchema>;
+
 const DimensionScoreSchema = z.object({
   dimension: z.string(),
   score: z.number().min(0).max(10),
   summary: z.string(),
-  evidence: z.array(EvidenceItemSchema).max(4).default([]),
+  evidence: z.array(RawEvidenceItemSchema).max(4).default([]),
 });
 
 
@@ -229,7 +232,7 @@ const parsed: EvaluationResponse =
     const dimensionScores = parsed.dimensionScores.map(
       (dimension) => {
         // First, filter evidence items that point to non-existent messages
-        const validMessageEvidence: EvidenceItem[] =
+        const validMessageEvidence: RawEvidenceItem[] =
   dimension.evidence.filter((item) => {
           const message = transcriptById.get(item.messageId);
           return message !== undefined;
@@ -467,9 +470,9 @@ Return JSON only. No markdown, no commentary outside the JSON.
    * Select the best evidence item when no perfectly grounded evidence is found
    */
  private selectBestEvidence(
-  evidenceItems: EvidenceItem[],
+  evidenceItems: RawEvidenceItem[],
   transcriptById: Map<string, TranscriptMessage>
-): EvidenceItem[] {
+): RawEvidenceItem[] {
     if (evidenceItems.length === 0) {
       return [];
     }

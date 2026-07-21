@@ -1,13 +1,6 @@
 import Card from "@/shared/ui/Card";
 import Text from "@/shared/ui/Text";
-
-type EvidenceItem = {
-  dimension: string;
-  timestampSeconds: number;
-  quote: string;
-  comment: string;
-  type: "strength" | "weakness";
-};
+import type { EvidenceItem } from "@/features/interview/domain/evaluation/types";
 
 type Props = {
   evidence: EvidenceItem[];
@@ -28,7 +21,7 @@ export default function ConversationCard({ evidence }: Props) {
             <div key={index} className="border-b border-border pb-4 last:border-0 last:pb-0">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm font-semibold text-muted-foreground">
-                  {item.type === 'strength' ? 'STRENGTH' : 'WEAKNESS'}
+                  {item.type}
                 </span>
                 <Text variant="small">
                   {formatTimestamp(item.timestampSeconds)}

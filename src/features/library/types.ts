@@ -1,5 +1,6 @@
 // src/features/library/types.ts
 import { Difficulty, ExperienceSource, InterviewMode } from "@prisma/client";
+import type { DimensionScore, EvidenceItem } from "@/features/interview/domain/evaluation/types";
 
 export type ExperienceItem = {
   id: string;
@@ -27,19 +28,6 @@ export type TranscriptMessage = {
   elapsedSeconds: number;
 };
 
-export type DimensionScore = {
-  dimension: string;
-  score: number;
-  summary: string;
-};
-
-export type EvidenceEntry = {
-  dimension: string;
-  timestampSeconds: number;
-  quote: string;
-  comment: string;
-};
-
 export type EvaluationMetadata = {
   strengths?: string[];
   weaknesses?: string[];
@@ -63,7 +51,7 @@ export type CompletedInterviewItem = {
     overallScore: number;
     feedback: string;
     dimensionScores: DimensionScore[];
-    evidence: EvidenceEntry[];
+    evidence: EvidenceItem[];
     metadata: EvaluationMetadata;
   } | null;
 };

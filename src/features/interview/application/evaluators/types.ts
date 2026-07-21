@@ -1,18 +1,7 @@
-export interface EvidenceItem {
-  messageId: string;
-  timestampSeconds: number;
-  quote: string;
-  comment: string;
-  type: "strength" | "weakness";
-  conceptSlugs: string[];
-}
-
-export interface DimensionScore {
-  dimension: string;
-  score: number; // 0-10
-  summary: string;
-  evidence: EvidenceItem[];
-}
+import type {
+  EvidenceItem,
+  DimensionScore,
+} from "@/features/interview/domain/evaluation/types";
 
 export interface EvaluationResult {
   overallScore: number; // 0-100

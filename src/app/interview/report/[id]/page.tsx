@@ -2,7 +2,14 @@ import { prisma } from "@/shared/prisma/client";
 import ConversationCard from "@/features/interview/report/components/ConversationCard";
 import OverallScoreCard from "@/features/interview/report/components/OverallScoreCard";
 import WhatHappenedCard from "@/features/interview/report/components/WhatHappenedCard";
-import { EvidenceType } from "@prisma/client";
+import type {
+  DimensionScore,
+  EvidenceItem,
+} from "@/features/interview/domain/evaluation/types";
+import {
+  mapEvidence,
+  mapDimensionScores,
+} from "@/features/interview/reporting/mappers/EvaluationMapper";
 
 type Props = {
   params: Promise<{
@@ -14,20 +21,6 @@ type EvaluationMetadata = {
   strengths?: string[];
   weaknesses?: string[];
   observations?: Array<{ type: "OBSERVATION" | "ADVISORY"; text: string }>;
-};
-
-type DimensionScore = {
-  dimension: string;
-  score: number;
-  summary: string;
-};
-
-type EvidenceItem = {
-  dimension: string;
-  timestampSeconds: number;
-  quote: string;
-  comment: string;
-  type: EvidenceType;
 };
 
 export default async function ReportPage({ params }: Props) {
@@ -79,11 +72,9 @@ export default async function ReportPage({ params }: Props) {
   const metadata: EvaluationMetadata =
     (evaluation.metadata as EvaluationMetadata | null) ?? {};
 
-  const dimensionScores =
-    (evaluation.dimensionScores as unknown as DimensionScore[]) ?? [];
+  const dimensionScores = mapDimensionScores(evaluation.dimensionScores);
 
-  const evidence =
-    (evaluation.evidence as unknown as EvidenceItem[]) ?? [];
+  const evidence = mapEvidence(evaluation.evidence);
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
