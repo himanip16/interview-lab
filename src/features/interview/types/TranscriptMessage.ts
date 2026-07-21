@@ -1,8 +1,8 @@
-import { TranscriptRole } from "@/shared/config/common-constants";
+import { MessageRole } from "@prisma/client";
 
 export interface TranscriptMessage {
   id: string;
-  role: TranscriptRole;
+  role: MessageRole;
   content: string;
   status?: "sending" | "sent" | "failed";
 }

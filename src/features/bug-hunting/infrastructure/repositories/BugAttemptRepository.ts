@@ -1,7 +1,8 @@
 // src/modules/bug-hunting/repositories/BugAttemptRepository.ts
 import { BugAttempt } from "@/features/bug-hunting/domain/entities/BugAttempt";
 import { BugSubmission } from "@/features/bug-hunting/domain/entities/BugSubmission";
-import { Finding, InvestigationArtifactSource } from "@/features/bug-hunting/domain/entities/Finding";
+import { Finding } from "@/features/bug-hunting/domain/entities/Finding";
+import { InvestigationArtifactSource } from "@prisma/client";
 
 export interface CreateAttemptInput {
   userId: string;

@@ -1,4 +1,4 @@
-export enum EvidenceType {
+export enum ArtifactType {
   LOG = "LOG",
   METRIC = "METRIC",
   TRACE = "TRACE",

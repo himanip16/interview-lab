@@ -1,12 +1,9 @@
-import { Prisma } from "@prisma/client";
+import { Prisma, EvaluationStatus } from "@prisma/client";
 import { prisma } from "@/shared/prisma/client";
 import logger from "@/shared/logger/logger";
 import { AIService } from "@/shared/ai";
 import { EvaluationService } from "./EvaluationService";
 import { PromptLoader } from "../../../prompts/prompt/PromptLoader";
-
-// Type alias for the enum - will be resolved after IDE refresh
-type EvaluationStatus = "PENDING" | "RUNNING" | "COMPLETED" | "FAILED";
 
 /**
  * EvaluationOrchestrator ensures idempotent evaluation by using atomic state transitions.

@@ -3,7 +3,7 @@ import { prisma } from "@/shared/prisma/client";
 import { BugAttempt } from "../../domain/entities/BugAttempt";
 import { BugSubmission } from "../../domain/entities/BugSubmission";
 import { Finding } from "../../domain/entities/Finding";
-import { AttemptStatus } from "../../domain/value-objects/AttemptStatus";
+import { BugAttemptStatus } from "@prisma/client";
 import type {
   BugAttemptRepository,
   CreateAttemptInput,
@@ -14,8 +14,8 @@ import type {
 } from "@/features/bug-hunting/infrastructure/repositories/BugAttemptRepository";
 
 export class PrismaBugAttemptRepository implements BugAttemptRepository {
-  private convertStatus(status: string): AttemptStatus {
-    return status as AttemptStatus;
+  private convertStatus(status: string): BugAttemptStatus {
+    return status as BugAttemptStatus;
   }
 
   async create({ userId, scenarioId }: CreateAttemptInput): Promise<BugAttempt> {

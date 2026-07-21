@@ -41,13 +41,6 @@ export type SortOption = (typeof SORT_OPTIONS)[number];
 export const ALL_FILTER = "all" as const;
 
 // ---------------------------------------------------------------------------
-// Transcript Roles
-// ---------------------------------------------------------------------------
-
-export const TRANSCRIPT_ROLES = ["assistant", "user"] as const;
-export type TranscriptRole = (typeof TRANSCRIPT_ROLES)[number];
-
-// ---------------------------------------------------------------------------
 // Time Constants (in milliseconds)
 // ---------------------------------------------------------------------------
 

@@ -1,5 +1,5 @@
 // src/modules/bug-hunting/domain/entities/Finding.ts
-export type InvestigationArtifactSource = "LOG" | "SQL" | "CODE" | "DOC" | "DEPLOYMENT";
+import { InvestigationArtifactSource } from "@prisma/client";
 
 interface FindingProps {
   id: string;

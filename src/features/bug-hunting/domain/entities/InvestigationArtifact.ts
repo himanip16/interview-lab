@@ -1,11 +1,11 @@
-import { EvidenceType } from "../value-objects/EvidenceType";
+import { ArtifactType } from "../value-objects/ArtifactType";
 
 export class InvestigationArtifact {
   private unlocked: boolean;
 
   constructor(
     readonly id: string,
-    readonly type: EvidenceType,
+    readonly type: ArtifactType,
     readonly label: string,
     readonly description: string,
     readonly content: string,

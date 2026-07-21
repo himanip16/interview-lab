@@ -2,9 +2,9 @@
 
 import { BugScenarioRepository } from "@/features/bug-hunting/infrastructure/repositories/BugScenarioRepository";
 import { BugAttemptRepository } from "@/features/bug-hunting/infrastructure/repositories/BugAttemptRepository";
-import type { InvestigationArtifactSource } from "../domain/entities/Finding";
+import { InvestigationArtifactSource } from "@prisma/client";
 import { BugAttempt } from "../domain/entities/BugAttempt";
-import { AttemptStatus } from "../domain/value-objects/AttemptStatus";
+import { BugAttemptStatus } from "@prisma/client";
 import { BugScenarioMapper } from "../application/mappers/BugScenarioMapper";
 import type {
   BugScenarioDetailDTO,
@@ -68,7 +68,7 @@ export class BugHuntingService {
     await this.attempts.logHypothesis({ attemptId, scenarioId, hypothesis });
 
     // Transition status from STARTED to INVESTIGATING when user logs first hypothesis
-    if (attempt.status === AttemptStatus.STARTED) {
+    if (attempt.status === BugAttemptStatus.STARTED) {
       const updatedAttempt = attempt.transitionToInvestigating();
       await this.attempts.updateAttempt(updatedAttempt);
     }

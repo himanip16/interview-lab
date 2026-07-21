@@ -1,12 +1,12 @@
 // src/modules/bug-hunting/domain/entities/BugAttempt.ts
-import { AttemptStatus } from "../value-objects/AttemptStatus";
+import { BugAttemptStatus } from "@prisma/client";
 import { z } from "zod";
 
 interface BugAttemptProps {
   id: string;
   userId: string;
   scenarioId: string;
-  status: AttemptStatus;
+  status: BugAttemptStatus;
   score: number | null;
   feedback: string | null;
   startedAt: Date;
@@ -70,7 +70,7 @@ export class BugAttempt {
   }
 
   isActive(): boolean {
-    return this.props.status === AttemptStatus.STARTED || this.props.status === AttemptStatus.INVESTIGATING;
+    return this.props.status === BugAttemptStatus.STARTED || this.props.status === BugAttemptStatus.INVESTIGATING;
   }
 
   canSubmit(): boolean {
@@ -82,26 +82,26 @@ export class BugAttempt {
   }
 
   transitionToInvestigating(): BugAttempt {
-    if (this.props.status !== AttemptStatus.STARTED) {
+    if (this.props.status !== BugAttemptStatus.STARTED) {
       throw new Error("Can only transition to INVESTIGATING from STARTED");
     }
-    return new BugAttempt({ ...this.props, status: AttemptStatus.INVESTIGATING });
+    return new BugAttempt({ ...this.props, status: BugAttemptStatus.INVESTIGATING });
   }
 
   submit(): BugAttempt {
     if (!this.canSubmit()) {
       throw new Error("Cannot submit an inactive or already submitted attempt");
     }
-    return new BugAttempt({ ...this.props, status: AttemptStatus.SUBMITTED });
+    return new BugAttempt({ ...this.props, status: BugAttemptStatus.SUBMITTED });
   }
 
   complete(score: number, feedback: string): BugAttempt {
-    if (this.props.status !== AttemptStatus.SUBMITTED) {
+    if (this.props.status !== BugAttemptStatus.SUBMITTED) {
       throw new Error("Can only complete a submitted attempt");
     }
     return new BugAttempt({
       ...this.props,
-      status: AttemptStatus.COMPLETED,
+      status: BugAttemptStatus.COMPLETED,
       score,
       feedback,
       completedAt: new Date(),
