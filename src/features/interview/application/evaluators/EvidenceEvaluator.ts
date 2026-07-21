@@ -3,6 +3,7 @@ import { z } from "zod";
 import { AIService } from "@/shared/ai";
 import { StructuredOutputParser } from "@/shared/ai/parsers/StructuredOutputParser";
 import { prisma } from "@/shared/prisma/client";
+import { EvidenceType } from "@prisma/client";
 
 import { PromptLoader } from "@/features/interview/prompts/prompt/PromptLoader";
 import {
@@ -12,7 +13,6 @@ import {
 import type {
   EvidenceItem,
   DimensionScore,
-  EvidenceType,
 } from "@/features/interview/domain/evaluation/types";
 
 // Raw AI output shape (without timestampSeconds which is added during processing)
@@ -21,7 +21,7 @@ const RawEvidenceItemSchema = z.object({
   quote: z.string().min(1),
   comment: z.string().min(1),
   conceptSlugs: z.array(z.string()).default([]),
-  type: z.enum(["STRENGTH", "WEAKNESS"]),
+  type: z.nativeEnum(EvidenceType),
 });
 
 type RawEvidenceItem = z.infer<typeof RawEvidenceItemSchema>;

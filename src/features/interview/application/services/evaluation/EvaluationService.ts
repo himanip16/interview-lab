@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { Prisma, EvidenceType } from "@prisma/client";
 import { prisma } from "@/shared/prisma/client";
 import { AIService } from "@/shared/ai";
 import logger from "@/shared/logger/logger";
@@ -120,7 +120,7 @@ export class EvaluationService {
       timestampSeconds: number;
       quote: string;
       comment: string;
-      type: "strength" | "weakness";
+      type: EvidenceType;
       normalizedScore: number;
       conceptSlugs: string[];
     }>
@@ -150,7 +150,7 @@ export class EvaluationService {
             timestampSeconds: item.timestampSeconds,
             quote: item.quote,
             comment: item.comment,
-            type: item.type as "STRENGTH" | "WEAKNESS",
+            type: item.type,
             normalizedScore: item.normalizedScore,
           },
         });

@@ -1,6 +1,4 @@
-export type EvidenceType =
-  | "STRENGTH"
-  | "WEAKNESS";
+import { EvidenceType } from "@prisma/client";
 
 export interface EvidenceItem {
   messageId: string;

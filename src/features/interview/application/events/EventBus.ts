@@ -1,4 +1,4 @@
-import { DomainEvent } from "../domain/InterviewAggregate";
+import { DomainEvent } from "../../domain/InterviewAggregate";
 
 /**
  * EventBus Interface
