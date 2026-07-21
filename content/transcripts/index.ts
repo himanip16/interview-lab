@@ -53,17 +53,24 @@ export function getCategories(): TranscriptCategory[] {
 export function getCategoryLabel(
   category: TranscriptCategory
 ): string {
-  const labels: Record<
-    TranscriptCategory,
-    string
-  > = {
-    hld: "High Level Design",
-    lld: "Low Level Design",
-    dsa: "Data Structures & Algorithms",
-    behavioral: "Behavioral",
-    ai: "AI",
-  };
-
+  const labels: Record<TranscriptCategory, string> = {
+  dsa: "Data Structures & Algorithms",
+  hld: "High Level Design",
+  lld: "Low Level Design",
+  "machine-coding": "Machine Coding",
+  sql: "SQL",
+  database: "Database Internals",
+  cpp: "C++",
+  java: "Java",
+  python: "Python",
+  go: "Go",
+  frontend: "Frontend",
+  devops: "DevOps",
+  os: "Operating Systems",
+  networking: "Networking",
+  behavioral: "Behavioral",
+  ai: "AI / ML",
+};
   return labels[category];
 }
 

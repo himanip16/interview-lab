@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+
 import type { BugScenario } from "@/features/bug-hunting/domain/entities/BugScenario";
 
 export type TabId =
@@ -23,15 +24,17 @@ export function useInvestigation(
   const [databaseQuery, setDatabaseQuery] = useState("");
 
   useEffect(() => {
-    if (!scenario) return;
+    if (!scenario) {
+      return;
+    }
 
     setActiveFileKey(
       scenario.code[0]?.key ?? ""
     );
 
     setDatabaseQuery(
-  scenario.database.initialQueries[0]?.query ?? ""
-);
+      scenario.database?.initialQueries[0]?.query ?? ""
+    );
   }, [scenario]);
 
   return {

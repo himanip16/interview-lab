@@ -62,11 +62,15 @@ export default function BugHuntingWorkspace({
         return <LogsPanel scenario={scenario} />;
 
       case "sql":
-  return (
+  return scenario.database ? (
     <SqlPanel
       scenarioId={scenario.id}
       fixture={scenario.database}
     />
+  ) : (
+    <div className="bh-empty-state">
+      No database is available for this scenario.
+    </div>
   );
 
       case "code":

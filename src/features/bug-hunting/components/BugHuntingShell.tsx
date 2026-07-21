@@ -1,11 +1,13 @@
-// src/features/bug-hunting/components/BugHuntingShell.tsx
 "use client";
 
 import { useState, type ReactNode } from "react";
+
 import { BUG_TABS, TAB_LIST, type TabId } from "../constants/tabs";
+import type { CodeFile } from "../domain/types";
+import type { DatabaseFixture } from "../domain/types";
+
 import CodePanel from "./Tabs/CodePanel";
 import SqlPanel from "./Tabs/SqlPanel";
-import { CodeFile, DatabaseFixture } from "../domain/types";
 
 type Props = {
   logsPanel: ReactNode;
@@ -25,20 +27,22 @@ export default function BugHuntingShell({
   scenarioId,
 }: Props) {
   const [activeTab, setActiveTab] = useState<TabId>(BUG_TABS.LOGS);
-  const [activeFileKey, setActiveFileKey] = useState<string>("");
+  const [activeFileKey, setActiveFileKey] = useState("");
 
   const panels: Record<TabId, ReactNode> = {
     [BUG_TABS.LOGS]: logsPanel,
+
     [BUG_TABS.SQL]: sqlFixture ? (
-  <SqlPanel
-    scenarioId={scenarioId}
-    fixture={sqlFixture}
-  />
-) : (
-  <div className="bh-empty-state">
-    No database is available for this scenario.
-  </div>
-),
+      <SqlPanel
+        scenarioId={scenarioId}
+        fixture={sqlFixture}
+      />
+    ) : (
+      <div className="bh-empty-state">
+        No database is available for this scenario.
+      </div>
+    ),
+
     [BUG_TABS.CODE]: (
       <CodePanel
         files={codeFiles}
@@ -47,13 +51,15 @@ export default function BugHuntingShell({
         onFileChange={setActiveFileKey}
       />
     ),
+
     [BUG_TABS.DOCS]: docsPanel,
+
     [BUG_TABS.DEPLOYMENTS]: deploymentsPanel,
   };
 
   return (
-    <section className="bh-main">
-      <div className="bh-tabbar">
+    <>
+      <div className="bh-tabs">
         {TAB_LIST.map((tab) => (
           <button
             key={tab.id}
@@ -65,7 +71,8 @@ export default function BugHuntingShell({
           </button>
         ))}
       </div>
-      <div className="bh-panel">{panels[activeTab]}</div>
-    </section>
+
+      {panels[activeTab]}
+    </>
   );
 }

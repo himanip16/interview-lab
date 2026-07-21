@@ -127,11 +127,19 @@ export class BugHuntingService {
     const scenario = await this.scenarios.findById(scenarioId);
     if (!scenario) throw new Error("Scenario not found");
 
-    const { database } = scenario.toJSON();
+   
+
+const { database } = scenario.toJSON();
+
+if (!database) {
+  throw new Error(
+    "This scenario does not contain a database."
+  );
+}
 
 const sql = {
-  columns: database.tables[0].columns.map((c) => c.name),
-  rows: database.tables[0].rows,
+  columns: database.tables[0]?.columns.map((c) => c.name) ?? [],
+  rows: database.tables[0]?.rows ?? [],
 };
     
     // Basic SQL simulation - filter rows based on simple WHERE clauses

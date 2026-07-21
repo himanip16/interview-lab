@@ -8,6 +8,20 @@ export const TRANSCRIPT_CATEGORIES = [
   "dsa",
   "behavioral",
   "ai",
+  "machine-coding",
+   "sql",
+  "database",
+  "cpp",
+  "java",
+  "python",
+  
+  "go",
+  
+  "frontend",
+  
+  "devops",
+  "os",
+  "networking"
 ] as const;
 
 export type TranscriptCategory = typeof TRANSCRIPT_CATEGORIES[number];
