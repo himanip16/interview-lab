@@ -37,7 +37,7 @@ export interface BugScenarioDetailDTO {
   };
 
   logs: LogEntry[];
-  database: DatabaseFixture;
+  database?: DatabaseFixture;
   code: CodeFile[];
   documentation: DocumentationSection[];
   deployments: Deployment[];

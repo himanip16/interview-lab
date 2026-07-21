@@ -11,7 +11,7 @@ type Props = {
   logsPanel: ReactNode;
   docsPanel: ReactNode;
   deploymentsPanel: ReactNode;
-  sqlFixture: DatabaseFixture;
+  sqlFixture?: DatabaseFixture;
   codeFiles: CodeFile[];
   scenarioId: string;
 };
@@ -29,7 +29,16 @@ export default function BugHuntingShell({
 
   const panels: Record<TabId, ReactNode> = {
     [BUG_TABS.LOGS]: logsPanel,
-    [BUG_TABS.SQL]: <SqlPanel scenarioId={scenarioId} fixture={sqlFixture} />,
+    [BUG_TABS.SQL]: sqlFixture ? (
+  <SqlPanel
+    scenarioId={scenarioId}
+    fixture={sqlFixture}
+  />
+) : (
+  <div className="bh-empty-state">
+    No database is available for this scenario.
+  </div>
+),
     [BUG_TABS.CODE]: (
       <CodePanel
         files={codeFiles}
