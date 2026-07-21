@@ -30,9 +30,18 @@ export interface ConversationMessage {
   content: string;
 }
 
+
+export type ActionType =
+  | "OBSERVE"
+  | "JUDGE"
+  | "FIX"
+  | "PREDICT"
+  | "COMPARE";
+
+
 export interface Action {
   id: string;
-  type: string;
+  type: ActionType;
   title: string;
   instructions?: string;
   content: unknown;
@@ -43,29 +52,34 @@ export interface ObserveActionContent {
   reflection: string;
 }
 
+
+
 export interface JudgeActionContent {
   question: string;
-  options: string[];
-  correctAnswer: number;
-  explanation: string;
+  options: Array<{
+    id: string;
+    text: string;
+  }>;
+  correctOptionId: string;
+  reflection: string;
 }
 
 export interface FixActionContent {
-  problem: string;
-  solution: string;
-  hints?: string[];
+  interviewerQuestion: string;
+  flawedAnswer: string;
+  reflection: string;
 }
 
+
 export interface PredictActionContent {
-  context: string;
-  prediction: string;
-  explanation: string;
+  question: string;
+  revealExplanation: string;
+  reflection?: string;
 }
 
 export interface CompareActionContent {
-  items: Array<{
-    name: string;
-    description: string;
-  }>;
-  comparison: string;
+  candidateA: string;
+  candidateB: string;
+  correctChoice: "A" | "B";
+  reflection: string;
 }

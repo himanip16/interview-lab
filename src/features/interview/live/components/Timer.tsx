@@ -10,23 +10,48 @@ interface TimerProps {
   onFinish?: () => void;
 }
 
-export default function Timer({ durationInMinutes, interviewId, onFinish }: TimerProps) {
+export default function Timer({
+  durationInMinutes,
+  interviewId,
+  onFinish,
+}: TimerProps) {
   const router = useRouter();
 
   const handleFinish = async () => {
-    const response = await fetch(`/api/interviews/${interviewId}/finish`, {
-      method: 'POST',
-    });
+    const response = await fetch(
+      `/api/interviews/${interviewId}/finish`,
+      {
+        method: 'POST',
+      }
+    );
+
     if (response.ok) {
-      router.push(`/interview/report/${interviewId}`);
+      router.push(
+        `/interview/report/${interviewId}`
+      );
     }
+
     onFinish?.();
   };
 
-  const { formattedTime, timeLeft } = useTimer(durationInMinutes, handleFinish);
+  const {
+    formattedTime,
+    remainingSeconds,
+  } = useTimer({
+    durationMinutes: durationInMinutes,
+    startedAt: new Date(),
+    isRunning: true,
+    onFinish: handleFinish,
+  });
 
   return (
-    <div className={`p-2 rounded-lg font-mono text-xl ${timeLeft < 300 ? 'text-red-500 animate-pulse' : 'text-slate-700'}`}>
+    <div
+      className={`p-2 rounded-lg font-mono text-xl ${
+        remainingSeconds < 300
+          ? 'text-red-500 animate-pulse'
+          : 'text-slate-700'
+      }`}
+    >
       {formattedTime}
     </div>
   );

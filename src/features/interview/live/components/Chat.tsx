@@ -1,8 +1,9 @@
-// components/interview/live/Chat.tsx
 'use client';
+
 import { useRef, useEffect } from 'react';
-import MessageList from './MessageList';
-import ChatInput from './ChatInput';
+
+import { MessageList } from '@/features/interview/live/components/MessageList';
+import { ChatInput } from './ChatInput';
 import { TranscriptMessage } from '../../types/TranscriptMessage';
 
 interface ChatProps {
@@ -11,12 +12,17 @@ interface ChatProps {
   isLoading: boolean;
 }
 
-export default function Chat({ messages, onSendMessage, isLoading }: ChatProps) {
+export default function Chat({
+  messages,
+  onSendMessage,
+  isLoading,
+}: ChatProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      scrollRef.current.scrollTop =
+        scrollRef.current.scrollHeight;
     }
   }, [messages, isLoading]);
 
@@ -29,9 +35,11 @@ export default function Chat({ messages, onSendMessage, isLoading }: ChatProps) 
         aria-atomic="false"
       >
         <MessageList messages={messages} />
+
         {isLoading && (
           <div className="flex gap-3 animate-pulse">
             <div className="w-8 h-8 bg-muted rounded-full" />
+
             <div className="flex-1 space-y-2">
               <div className="h-4 bg-muted rounded w-1/4" />
               <div className="h-10 bg-muted rounded w-3/4" />
@@ -39,8 +47,12 @@ export default function Chat({ messages, onSendMessage, isLoading }: ChatProps) 
           </div>
         )}
       </div>
+
       <div className="p-6 border-t border-border bg-card">
-        <ChatInput onSendMessage={onSendMessage} disabled={isLoading} />
+        <ChatInput
+          onSendMessage={onSendMessage}
+          disabled={isLoading}
+        />
       </div>
     </div>
   );

@@ -12,30 +12,39 @@ import { Sidebar } from './Sidebar';
 import { useInterview } from '../hooks/useInterview';
 import { useMessages } from '../hooks/useMessages';
 import { useTimer } from '../hooks/useTimer';
+
 import logger from '@/shared/logger/logger';
 
-// Type representing the API response with relations included
-export type InterviewWithRelations = Prisma.InterviewGetPayload<{
-  include: {
-    problem: true;
-    transcript: true;
-  };
-}>;
+export type InterviewWithRelations =
+  Prisma.InterviewGetPayload<{
+    include: {
+      problem: true;
+      transcript: true;
+    };
+  }>;
 
 interface LiveInterviewProps {
   interviewId: string;
 }
 
-export function LiveInterview({ interviewId }: LiveInterviewProps) {
-  const { interview, loading, error, refetch } = useInterview(interviewId);
-  
-  // Initialize useMessages with the initial transcript from the interview
-  const initialMessages = interview?.transcript?.map((msg: any) => ({
-    id: msg.id,
-    role: msg.role,
-    content: msg.content,
-    status: 'sent' as const,
-  })) || [];
+export function LiveInterview({
+  interviewId,
+}: LiveInterviewProps) {
+  const {
+    interview,
+    loading,
+    error,
+    refetch,
+  } = useInterview(interviewId);
+
+  const initialMessages =
+    interview?.transcript?.map((msg) => ({
+      id: msg.id,
+      role: msg.role,
+      content: msg.content,
+      status: 'sent' as const,
+    })) ?? [];
+
 
   const {
     messages,
@@ -43,13 +52,19 @@ export function LiveInterview({ interviewId }: LiveInterviewProps) {
     isAssistantTyping,
     error: messageError,
     setMessages,
-  } = useMessages(interviewId, initialMessages);
+  } = useMessages(
+    interviewId,
+    initialMessages
+  );
+
 
   const { remainingSeconds } = useTimer({
     startedAt: interview?.createdAt ?? null,
     durationMinutes: interview?.duration ?? 0,
-    isRunning: interview?.status === 'IN_PROGRESS',
+    isRunning:
+      interview?.status === 'IN_PROGRESS',
   });
+
 
   const handleSendMessage = useCallback(
     async (text: string) => {
@@ -57,25 +72,32 @@ export function LiveInterview({ interviewId }: LiveInterviewProps) {
 
       try {
         await sendMessage(text);
-        // Refresh interview state to get the AI's response and potential phase changes
         await refetch();
+
       } catch (err: any) {
-        const errorMessage = err.response?.data?.error || err.message || 'Unknown error';
-        logger.error('Failed to send interview message', {
-          error: errorMessage,
-          interviewId,
-          status: err.response?.status
-        });
+        logger.error(
+          'Failed to send interview message',
+          {
+            error:
+              err.message ??
+              'Unknown error',
+            interviewId,
+          }
+        );
       }
     },
-    [sendMessage, refetch, interviewId]
+    [
+      sendMessage,
+      refetch,
+      interviewId,
+    ]
   );
 
-  // Sync messages when interview data changes (after refetch)
+
   useEffect(() => {
     if (interview?.transcript) {
       setMessages(
-        interview.transcript.map((msg: any) => ({
+        interview.transcript.map((msg) => ({
           id: msg.id,
           role: msg.role,
           content: msg.content,
@@ -83,63 +105,97 @@ export function LiveInterview({ interviewId }: LiveInterviewProps) {
         }))
       );
     }
-  }, [interview?.transcript, setMessages]);
+  }, [
+    interview?.transcript,
+    setMessages,
+  ]);
+
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <p className="text-gray-600">Loading interview...</p>
+        Loading interview...
       </div>
     );
   }
+
 
   if (error || !interview) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <p className="text-red-600">{error || 'Failed to load interview'}</p>
+      <div className="flex items-center justify-center h-screen text-red-600">
+        {error ?? 'Failed to load interview'}
       </div>
     );
   }
 
+
   return (
     <div className="flex flex-col h-screen bg-white">
+
       <InterviewHeader
         title={interview.problem.title}
-        isLive={interview.status === 'IN_PROGRESS'}
+        isLive={
+          interview.status === 'IN_PROGRESS'
+        }
         remainingSeconds={remainingSeconds}
       />
 
+
       <PhaseProgress
         currentPhase={interview.currentPhase}
-        isCompleted={interview.status === 'COMPLETED'}
+        isCompleted={
+          interview.status === 'COMPLETED'
+        }
       />
 
+
       <div className="flex flex-1 overflow-hidden">
+
         <div className="flex-1 flex flex-col">
-          <MessageList 
-            messages={messages} 
-            isAssistantTyping={isAssistantTyping}
+
+          <MessageList
+            messages={messages}
+            isAssistantTyping={
+              isAssistantTyping
+            }
           />
+
+
           <ChatInput
             onSendMessage={handleSendMessage}
-            isSending={isAssistantTyping}
+            isSending={
+              isAssistantTyping
+            }
             error={messageError}
-            isInterviewCompleted={interview.status === 'COMPLETED'}
+            isInterviewCompleted={
+              interview.status === 'COMPLETED'
+            }
+            disabled={
+              isAssistantTyping
+            }
           />
+
         </div>
 
+
         <Sidebar
-  problem={interview.problem}
-  currentPhase={interview.currentPhase}
-  // 1. Fixes the 'string | null' error by providing '' if null
-  summary={interview.summary ?? ''} 
-  
-  // 2. Fixes missing property errors by accessing the problem sub-object
-  // and providing fallback values if they are optional in your schema
-  difficulty={(interview.problem as any).difficulty ?? 'Intermediate'} 
-  company={(interview.problem as any).company ?? 'General'}
-/>
+          problem={interview.problem}
+          currentPhase={interview.currentPhase}
+          summary={
+            interview.summary ?? ''
+          }
+          difficulty={
+            (interview.problem as any)
+              .difficulty ?? 'Intermediate'
+          }
+          company={
+            (interview.problem as any)
+              .company ?? 'General'
+          }
+        />
+
       </div>
+
     </div>
   );
 }

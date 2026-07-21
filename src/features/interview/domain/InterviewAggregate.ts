@@ -6,7 +6,7 @@ import {
 
 import { InterviewProfile } from "@/features/interview/data/profiles/InterviewProfile";
 import { PhaseId } from "@/features/interview/data/constants";
-import { PhaseAssessment, TransitionResult } from "../engine/InterviewStateMachine";
+import { PhaseAssessment, TransitionResult } from "@/features/interview/application/engine/InterviewStateMachine";
 
 /**
  * Interview Domain Aggregate

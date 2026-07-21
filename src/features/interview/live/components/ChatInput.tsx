@@ -4,7 +4,8 @@ import React, { useState } from 'react';
 import { Mic, ArrowRight } from 'lucide-react';
 
 interface ChatInputProps {
-  onSendMessage: (text: string) => void;
+  onSendMessage: (msg: string) => void;
+  disabled?: boolean;
   isSending?: boolean;
   error?: string | null;
   isInterviewCompleted?: boolean;
@@ -28,6 +29,7 @@ export function ChatInput({
   isSending = false,
   error,
   isInterviewCompleted = false,
+  
 }: ChatInputProps) {
   const [input, setInput] = useState('');
 
