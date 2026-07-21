@@ -6,7 +6,7 @@ const TABS: { id: TabId; label: string }[] = [
   { id: "sql", label: "SQL runner" },
   { id: "code", label: "Code" },
   { id: "docs", label: "Tech docs" },
-  { id: "deploys", label: "Deployments" },
+  { id: "deployments", label: "Deployments" },
 ];
 
 export default function TabBar({ active, onChange }: { active: TabId; onChange: (t: TabId) => void }) {

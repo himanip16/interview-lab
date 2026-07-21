@@ -1,41 +1,11 @@
-// src/modules/bug-hunting/domain/entities/BugScenario.ts
 import { z } from "zod";
 
-export type Severity = "P0" | "P1" | "P2" | "P3";
-
-export interface LogEntry {
-  id: string;
-  timestamp: string;
-  level: "INFO" | "WARN" | "ERROR";
-  message: string;
-}
-
-export interface SqlFixture {
-  initialQuery: string;
-  columns: string[];
-  rows: string[][];
-}
-
-export interface CodeFile {
-  id: string;
-  key: string;
-  name: string;
-  language: string;
-  contentHtml: string; // pre-highlighted markup, matches CodeBlock's dangerouslySetInnerHTML
-}
-
-export interface DocSection {
-  title: string;
-  body: string;
-}
-
-export interface Deployment {
-  id: string;
-  version: string;
-  status: "rolled" | "ok";
-  message: string;
-  time: string;
-}
+import { Severity } from "../value-objects";
+import type { LogEntry } from "../types/LogEntry";
+import type { CodeFile } from "../types/CodeFile";
+import type { Deployment } from "../types/Deployment";
+import type { DatabaseFixture } from "../types/DatabaseFixture";
+import type { DocumentationSection } from "../types/DocumentationSection";
 
 export interface ScenarioReportMetadata {
   service: string;
@@ -54,24 +24,35 @@ export interface ScenarioReport {
 
 interface BugScenarioProps {
   id: string;
+
   report: ScenarioReport;
+
   logs: LogEntry[];
-  sql: SqlFixture;
+
+  database: DatabaseFixture;
+
   code: CodeFile[];
-  docs: DocSection[];
+
+  documentation: DocumentationSection[];
+
   deployments: Deployment[];
+
   description: string;
+
   timerSeconds: number;
+
   createdAt: string;
-  metadata: any;
+
+  metadata: Record<string, unknown>;
 }
 
-// Zod schema for validation
+
 const BugScenarioSchema = z.object({
   id: z.string(),
+
   report: z.object({
     title: z.string(),
-    severity: z.enum(["P0", "P1", "P2", "P3"]),
+    severity: z.enum(Severity),
     severityLabel: z.string(),
     symptom: z.string(),
     metadata: z.object({
@@ -81,55 +62,72 @@ const BugScenarioSchema = z.object({
       firstSeen: z.string(),
     }),
   }),
+
   logs: z.array(z.object({
     id: z.string(),
     timestamp: z.string(),
-    level: z.enum(["INFO", "WARN", "ERROR"]),
+    level: z.enum([
+      "INFO",
+      "WARN",
+      "ERROR",
+    ]),
     message: z.string(),
   })),
-  sql: z.object({
-    initialQuery: z.string(),
-    columns: z.array(z.string()),
-    rows: z.array(z.array(z.string())),
-  }),
-  code: z.array(z.object({
-    id: z.string(),
-    key: z.string(),
-    name: z.string(),
-    language: z.string(),
-    contentHtml: z.string(),
-  })),
-  docs: z.array(z.object({
-    title: z.string(),
-    body: z.string(),
-  })),
-  deployments: z.array(z.object({
-    id: z.string(),
-    version: z.string(),
-    status: z.enum(["rolled", "ok"]),
-    message: z.string(),
-    time: z.string(),
-  })),
+
+  database: z.any(),
+
+  code: z.array(z.any()),
+
+  documentation: z.array(z.any()),
+
+  deployments: z.array(z.any()),
+
   description: z.string(),
+
   timerSeconds: z.number(),
+
   createdAt: z.string(),
-  metadata: z.any(),
+
+  metadata: z.record(z.string(), z.unknown()),
 });
 
-/** Domain entity — the UI only ever sees this shape via toJSON(). */
+
 export class BugScenario {
-  private constructor(private readonly props: BugScenarioProps) {}
+  private constructor(
+    private readonly props: BugScenarioProps
+  ) {}
 
   static fromJSON(raw: unknown): BugScenario {
     const validated = BugScenarioSchema.parse(raw);
     return new BugScenario(validated);
   }
 
+
   get id() {
     return this.props.id;
   }
 
-  // Getters to provide flattened API for UI compatibility without duplicating data
+  get code() {
+    return this.props.code;
+  }
+
+  get database() {
+    return this.props.database;
+  }
+
+  get documentation() {
+    return this.props.documentation;
+  }
+
+  get deployments() {
+    return this.props.deployments;
+  }
+
+  get logs() {
+    return this.props.logs;
+  }
+
+
   get title() {
     return this.props.report.title;
   }
@@ -146,17 +144,6 @@ export class BugScenario {
     return this.props.report.severity;
   }
 
-  get endpoint() {
-    return this.props.report.metadata.endpoint;
-  }
-
-  get errorRate() {
-    return this.props.report.metadata.errorRate;
-  }
-
-  get firstSeen() {
-    return this.props.report.metadata.firstSeen;
-  }
 
   toJSON(): BugScenarioProps {
     return this.props;

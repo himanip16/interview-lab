@@ -9,6 +9,11 @@ import {
   EvaluatableInterview,
   EvaluationResult,
 } from "./types";
+import type {
+  EvidenceItem,
+  DimensionScore,
+  EvidenceType,
+} from "@/features/interview/domain/evaluation/types";
 
 const EvidenceItemSchema = z.object({
   messageId: z.string(),
@@ -25,15 +30,30 @@ const DimensionScoreSchema = z.object({
   evidence: z.array(EvidenceItemSchema).max(4).default([]),
 });
 
+
+
 const EvaluationResponseSchema = z.object({
   dimensionScores: z.array(DimensionScoreSchema).min(1),
   strengths: z.array(z.string()).default([]),
   weaknesses: z.array(z.string()).default([]),
   missedConcepts: z.array(z.string()).default([]),
   riskAssessment: z.array(z.string()).default([]),
-  hireRecommendation: z.enum(["STRONG_HIRE", "HIRE", "NO_HIRE", "STRONG_NO_HIRE"]),
+  hireRecommendation: z.enum([
+    "STRONG_HIRE",
+    "HIRE",
+    "NO_HIRE",
+    "STRONG_NO_HIRE",
+  ]),
   feedback: z.string(),
 });
+
+type EvaluationResponse = z.infer<typeof EvaluationResponseSchema>;
+
+type TranscriptMessage = {
+  id: string;
+  content: string;
+  elapsedSeconds?: number | null;
+};
 
 const MAX_QUOTE_WORDS = 20;
 
@@ -143,12 +163,12 @@ export class EvidenceEvaluator {
       .map((c) => `- ${c.slug} (${c.category}): ${c.name}`)
       .join("\n");
 
-    const transcriptById = new Map(
-      interview.transcript.map((message) => [
-        message.id,
-        message,
-      ])
-    );
+    const transcriptById = new Map<string, TranscriptMessage>(
+  interview.transcript.map((message) => [
+    message.id,
+    message,
+  ])
+);
 
     const transcriptSection = interview.transcript
       .map((message) => {
@@ -182,30 +202,35 @@ export class EvidenceEvaluator {
   }
 );
 
-const parsed = await StructuredOutputParser.parse(
-  raw,
-  EvaluationResponseSchema,
-  () =>
-    this.ai.chat(
-      [
+const parsed: EvaluationResponse =
+  await StructuredOutputParser.parse(
+    raw,
+    EvaluationResponseSchema,
+    () =>
+      this.ai.chat(
+        [
+          {
+            role: "system",
+            content:
+              "Repair the response into valid JSON matching the requested schema. Return ONLY JSON.",
+          },
+          {
+            role: "user",
+            content: raw,
+          },
+        ],
         {
-          role: "system",
-          content:
-            "Repair the response into valid JSON matching the requested schema. Return ONLY JSON.",
-        },
-        { role: "user", content: raw },
-      ],
-      {
-        task: "repair",
-        format: EVALUATION_JSON_SCHEMA,
-      }
-    )
-);
+          task: "repair",
+          format: EVALUATION_JSON_SCHEMA,
+        }
+      )
+  );
 
     const dimensionScores = parsed.dimensionScores.map(
       (dimension) => {
         // First, filter evidence items that point to non-existent messages
-        const validMessageEvidence = dimension.evidence.filter((item) => {
+        const validMessageEvidence: EvidenceItem[] =
+  dimension.evidence.filter((item) => {
           const message = transcriptById.get(item.messageId);
           return message !== undefined;
         });
@@ -248,8 +273,8 @@ const parsed = await StructuredOutputParser.parse(
               // Ground concepts against the known vocabulary — never trust
               // a slug the model invented.
               conceptSlugs: item.conceptSlugs.filter((slug) =>
-                knownConceptSlugs.has(slug)
-              ),
+  knownConceptSlugs.has(slug)
+),
             };
           }),
         };
@@ -441,10 +466,10 @@ Return JSON only. No markdown, no commentary outside the JSON.
   /**
    * Select the best evidence item when no perfectly grounded evidence is found
    */
-  private selectBestEvidence(
-    evidenceItems: Array<any>,
-    transcriptById: Map<string, any>
-  ): Array<any> {
+ private selectBestEvidence(
+  evidenceItems: EvidenceItem[],
+  transcriptById: Map<string, TranscriptMessage>
+): EvidenceItem[] {
     if (evidenceItems.length === 0) {
       return [];
     }

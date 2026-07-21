@@ -1,12 +1,15 @@
 // src/modules/bug-hunting/services/BugHuntingService.ts
-import type { BugScenarioRepository } from "../repositories/BugScenarioRepository";
-import type { BugAttemptRepository } from "../repositories/BugAttemptRepository";
+
+import { BugScenarioRepository } from "@/features/bug-hunting/infrastructure/repositories/BugScenarioRepository";
+import { BugAttemptRepository } from "@/features/bug-hunting/infrastructure/repositories/BugAttemptRepository";
 import type { InvestigationArtifactSource } from "../domain/entities/Finding";
-import { BugScenario } from "../domain/entities/BugScenario";
 import { BugAttempt } from "../domain/entities/BugAttempt";
 import { AttemptStatus } from "../domain/value-objects/AttemptStatus";
 import { BugScenarioMapper } from "../application/mappers/BugScenarioMapper";
-import type { BugScenarioListDTO } from "../application/dtos/BugScenarioDTO";
+import type {
+  BugScenarioDetailDTO,
+  BugScenarioListDTO,
+} from "../application/dtos/BugScenarioDTO";
 
 export class BugHuntingService {
   constructor(
@@ -14,24 +17,43 @@ export class BugHuntingService {
     private readonly attempts: BugAttemptRepository
   ) {}
 
-  async getScenario(id: string): Promise<BugScenario | null> {
-    return this.scenarios.findById(id);
+  async getScenario(id: string): Promise<BugScenarioDetailDTO | null> {
+    const scenario = await this.scenarios.findById(id);
+
+    if (!scenario) return null;
+
+    return BugScenarioMapper.toDTO(scenario);
   }
 
   async listScenarios(): Promise<BugScenarioListDTO[]> {
     const scenarios = await this.scenarios.list();
+
     return scenarios.map((s) => BugScenarioMapper.toListDTO(s));
   }
 
-  /** Resumes an in-progress attempt if one exists, otherwise starts a new one. */
-  async startOrResumeAttempt(userId: string, scenarioId: string): Promise<BugAttempt> {
+  async startOrResumeAttempt(
+    userId: string,
+    scenarioId: string
+  ): Promise<BugAttempt> {
     const scenario = await this.scenarios.findById(scenarioId);
-    if (!scenario) throw new Error("Scenario not found");
 
-    const existing = await this.attempts.findActiveAttempt(userId, scenarioId);
-    if (existing) return existing;
+    if (!scenario) {
+      throw new Error("Scenario not found");
+    }
 
-    return this.attempts.create({ userId, scenarioId });
+    const existing = await this.attempts.findActiveAttempt(
+      userId,
+      scenarioId
+    );
+
+    if (existing) {
+      return existing;
+    }
+
+    return this.attempts.create({
+      userId,
+      scenarioId,
+    });
   }
 
   async logHypothesis(attemptId: string, scenarioId: string, hypothesis: string, userId: string): Promise<void> {
@@ -105,7 +127,12 @@ export class BugHuntingService {
     const scenario = await this.scenarios.findById(scenarioId);
     if (!scenario) throw new Error("Scenario not found");
 
-    const { sql } = scenario.toJSON();
+    const { database } = scenario.toJSON();
+
+const sql = {
+  columns: database.tables[0].columns.map((c) => c.name),
+  rows: database.tables[0].rows,
+};
     
     // Basic SQL simulation - filter rows based on simple WHERE clauses
     let filteredRows = [...sql.rows];
@@ -139,19 +166,26 @@ export class BugHuntingService {
         }
       }
       
-      // Handle LIKE conditions: column LIKE '%value%'
-      const likeMatches = whereClause.matchAll(/(\w+)\s+LIKE\s+['"]%([^'"]*)%['"]/gi);
-      for (const match of likeMatches) {
-        const column = match[1].toLowerCase();
-        const value = match[2].toLowerCase();
-        
-        const colIndex = sql.columns.findIndex(c => c.toLowerCase() === column);
-        if (colIndex !== -1) {
-          filteredRows = filteredRows.filter(row => 
-            row[colIndex]?.toLowerCase().includes(value)
-          );
-        }
-      }
+      const likeMatches = whereClause.matchAll(
+  /(\w+)\s+LIKE\s+['"]%([^'"]*)%['"]/gi
+);
+
+for (const match of likeMatches) {
+  const column = match[1].toLowerCase();
+  const value = match[2].toLowerCase();
+
+  const colIndex = sql.columns.findIndex(
+    (c) => c.toLowerCase() === column
+  );
+
+  if (colIndex !== -1) {
+    filteredRows = filteredRows.filter((row) =>
+      String(row[colIndex] ?? "")
+        .toLowerCase()
+        .includes(value)
+    );
+  }
+}
     }
     
     // Handle LIMIT

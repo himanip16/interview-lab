@@ -2,6 +2,7 @@ import { prisma } from "@/shared/prisma/client";
 import ConversationCard from "@/features/interview/report/components/ConversationCard";
 import OverallScoreCard from "@/features/interview/report/components/OverallScoreCard";
 import WhatHappenedCard from "@/features/interview/report/components/WhatHappenedCard";
+import { EvidenceType } from "@prisma/client";
 
 type Props = {
   params: Promise<{
@@ -26,7 +27,7 @@ type EvidenceItem = {
   timestampSeconds: number;
   quote: string;
   comment: string;
-  type: "strength" | "weakness";
+  type: EvidenceType;
 };
 
 export default async function ReportPage({ params }: Props) {

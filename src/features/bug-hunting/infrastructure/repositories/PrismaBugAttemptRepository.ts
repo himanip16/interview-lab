@@ -11,7 +11,7 @@ import type {
   RecordFindingInput,
   SubmitFixInput,
   GradeAttemptInput,
-} from "../../repositories/BugAttemptRepository";
+} from "@/features/bug-hunting/infrastructure/repositories/BugAttemptRepository";
 
 export class PrismaBugAttemptRepository implements BugAttemptRepository {
   private convertStatus(status: string): AttemptStatus {

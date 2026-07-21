@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { StartInterviewResponseSchema } from "../problems/types/interview";
+import { StartInterviewResponseSchema } from "@/features/interview/api/schemas";
 
 export interface StartInterviewPayload {
   type: string;

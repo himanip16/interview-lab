@@ -1,12 +1,10 @@
 "use client";
 
-import type {
-  BugScenario,
-  LogEntry,
-} from "../../types/Scenario";
+import type { BugScenarioDetailDTO } from "../../application/dtos/BugScenarioDTO";
+import type { LogEntry } from "../../domain/types";
 
 interface Props {
-  scenario: BugScenario;
+  scenario: BugScenarioDetailDTO;
 }
 
 export default function LogsPanel({

@@ -1,2 +1,2 @@
-export * from "../infrastructure/repositories/repositories/BugAttemptRepository";
-export * from "../infrastructure/repositories/repositories/BugScenarioRepository";
+export * from "../infrastructure/repositories/BugAttemptRepository";
+export * from "../infrastructure/repositories/BugScenarioRepository";

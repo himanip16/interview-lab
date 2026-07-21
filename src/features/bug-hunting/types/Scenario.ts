@@ -1,78 +1,89 @@
 // src/features/bug-hunting/types/Scenario.ts
-export type Severity = "P0" | "P1" | "P2" | "P3";
 
-export interface ReportMetadata {
-  service: string;
-  endpoint: string;
-  errorRate: string;
-  firstSeen: string;
-}
+import type { IncidentReport } from "@/features/bug-hunting/domain/types/IncidentReport";
+import type { TimelineEvent } from "@/features/bug-hunting/domain/types/TimelineEvent";
+import type { MetricSnapshot } from "@/features/bug-hunting/domain/types/MetricSnapshot";
+import type { DatabaseFixture } from "@/features/bug-hunting/domain/types/DatabaseFixture";
+import type { CodeFile } from "@/features/bug-hunting/domain/types/CodeFile";
+import type { Hint } from "@/features/bug-hunting/domain/types/Hint";
+import type { InvestigationPath } from "@/features/bug-hunting/domain/types/InvestigationPath";
+import type { Deployment } from "@/features/bug-hunting/domain/types/Deployment";
+import type { LogEntry } from "@/features/bug-hunting/domain/types/LogEntry";
+import type { Environment } from "@/features/bug-hunting/domain/types/Environment";
+import type { DocumentationSection } from "@/features/bug-hunting/domain/types/DocumentationSection";
 
-
-
-export interface Report {
-  title: string;
-  severity: Severity;
-  severityLabel: string; // e.g. "Intermittent"
-  symptom: string;
-  metadata: ReportMetadata;
-}
-
-export interface LogEntry {
-  id: string;
-  timestamp: string;
-  level: "INFO" | "WARN" | "ERROR";
-  message: string;
-}
-
-export interface SqlQuery {
-  initialQuery: string;
-  columns: string[];
-  rows: string[][];
-}
-
-export interface SourceFile {
-  id: string;
-  key: string;
-  name: string;
-  language: string;
-  contentHtml: string; // pre-highlighted markup, matches CodeBlock's dangerouslySetInnerHTML
-}
-
-export interface DocumentationSection {
-  title: string;
-  body: string;
-}
-
-export interface Deployment {
-  id: string;
-  version: string;
-  status: "rolled" | "ok"; // matches mockup's .dep.rolled / .dep.ok classes
-  message: string;
-  time: string;
-}
 
 export interface BugScenarioMetadata {
-  difficulty: string;
-  category: string;
+  id: string;
+  slug: string;
+
+  title: string;
+  shortDescription: string;
+
+  difficulty: "easy" | "medium" | "hard";
+
+  category:
+    | "database"
+    | "backend"
+    | "distributed-systems"
+    | "networking"
+    | "performance";
+
   estimatedTimeMinutes: number;
+
+  tags: string[];
+
+  severity: "P0" | "P1" | "P2" | "P3";
+
+  skills: string[];
+
+  createdAt: string;
+  updatedAt: string;
+
+  isPublished: boolean;
 }
+
 export interface BugScenario {
   id: string;
   title: string;
-  description: string;
-  symptom: string;
-  service: string;
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  timerSeconds: number;
-  createdAt: string;
-  metadata: any;
 
-  // Tab Data
+  report: IncidentReport;
+
+  environment: Environment;
+
+  timeline: TimelineEvent[];
+
   logs: LogEntry[];
-  docs: DocumentationSection[];
+
+  metrics: MetricSnapshot[];
+
   deployments: Deployment[];
-  sql: SqlQuery;
-  code: SourceFile[];
-  report: Report;
+
+  database: DatabaseFixture;
+
+  code: CodeFile[];
+
+  documentation: DocumentationSection[];
+
+  hints: Hint[];
+
+  expectedInvestigation: InvestigationPath;
+
+  createdAt: string;
+}
+
+export interface InvestigationEvidence {
+  id: string;
+
+  type:
+    | "logs"
+    | "metrics"
+    | "database"
+    | "code"
+    | "deployment"
+    | "documentation";
+
+  title: string;
+
+  data: unknown;
 }

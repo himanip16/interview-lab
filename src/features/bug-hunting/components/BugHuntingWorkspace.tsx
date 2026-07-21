@@ -11,7 +11,7 @@ import CodePanel from "./Tabs/CodePanel";
 import DocsPanel from "./Tabs/DocsPanel";
 import DeploymentsPanel from "./Tabs/DeploymentsPanel";
 
-import type { BugScenario } from "../types/Scenario";
+import type { BugScenarioDetailDTO } from "../application/dtos/BugScenarioDTO";
 
 type TabId =
   | "logs"
@@ -21,7 +21,7 @@ type TabId =
   | "deployments";
 
 interface Props {
-  scenario: BugScenario;
+  scenario: BugScenarioDetailDTO;
 }
 
 const TABS: {
@@ -65,7 +65,7 @@ export default function BugHuntingWorkspace({
   return (
     <SqlPanel
       scenarioId={scenario.id}
-      fixture={scenario.sql}
+      fixture={scenario.database}
     />
   );
 
@@ -81,14 +81,20 @@ export default function BugHuntingWorkspace({
   );
 
       case "docs":
-        return <DocsPanel scenario={scenario} />;
+  return (
+    <DocsPanel
+      docs={scenario.documentation}
+      active={true}
+    />
+  );
 
       case "deployments":
-        return (
-          <DeploymentsPanel
-            scenario={scenario}
-          />
-        );
+  return (
+    <DeploymentsPanel
+      deployments={scenario.deployments}
+      active={true}
+    />
+  );
 
       default:
         return null;

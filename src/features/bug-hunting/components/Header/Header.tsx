@@ -4,10 +4,10 @@ import { useRouter } from "next/navigation";
 
 import Timer from "./Timer";
 
-import type { BugScenario } from "../../types/Scenario";
+import type { BugScenarioDetailDTO } from "../../application/dtos/BugScenarioDTO";
 
 interface Props {
-  scenario: BugScenario;
+  scenario: BugScenarioDetailDTO;
 }
 
 export default function Header({

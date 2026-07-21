@@ -1,19 +1,18 @@
 import { notFound } from "next/navigation";
 
 import { getBugHuntingService } from "@/features/bug-hunting";
-import type { BugScenario } from "@/features/bug-hunting/types/Scenario";
-
 import BugHuntingShell from "@/features/bug-hunting/components/BugHuntingShell";
 import DeploymentsPanel from "@/features/bug-hunting/components/Tabs/DeploymentsPanel";
 import DocsPanel from "@/features/bug-hunting/components/Tabs/DocsPanel";
 import LogsPanel from "@/features/bug-hunting/components/Tabs/LogsPanel";
 import Header from "@/features/bug-hunting/components/Header/Header";
 import ReportSidebar from "@/features/bug-hunting/components/Sidebar/ReportSidebar";
+import type { BugScenario } from "@/features/bug-hunting/types/Scenario";
 
 type Props = {
-  params: Promise<{
+  params: {
     scenarioId: string;
-  }>;
+  };
 };
 
 export default async function BugHuntingPage({ params }: Props) {
@@ -26,24 +25,30 @@ export default async function BugHuntingPage({ params }: Props) {
     notFound();
   }
 
-  const data = scenario.toJSON() as BugScenario;
-
   return (
     <main className="bug-hunting-page">
-      <Header scenario={data} />
+      <Header scenario={scenario} />
 
       <div className="bh-body">
-        <ReportSidebar scenario={data} />
+        <ReportSidebar scenario={scenario} />
 
         <BugHuntingShell
-          logsPanel={<LogsPanel scenario={data} />}
-          docsPanel={<DocsPanel docs={data.docs} active={false} />}
-          deploymentsPanel={
-            <DeploymentsPanel deployments={data.deployments} active={false} />
+          logsPanel={<LogsPanel scenario={scenario} />}
+          docsPanel={
+            <DocsPanel
+              docs={scenario.documentation}
+              active={false}
+            />
           }
-          sqlFixture={data.sql}
-          codeFiles={data.code}
-          scenarioId={data.id}
+          deploymentsPanel={
+            <DeploymentsPanel
+              deployments={scenario.deployments}
+              active={false}
+            />
+          }
+          sqlFixture={scenario.database}
+          codeFiles={scenario.code}
+          scenarioId={scenario.id}
         />
       </div>
     </main>

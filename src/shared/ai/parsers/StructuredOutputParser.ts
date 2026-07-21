@@ -1,11 +1,8 @@
 import { ZodSchema } from "zod";
 
 export class StructuredOutputParser {
-  static async parse<T>(
-    response: string,
-    schema: ZodSchema<T>,
-    repair?: () => Promise<string>
-  ): Promise<T> {
+  static async parse<T>(response: string,schema: ZodSchema<T>,
+    repair?: () => Promise<string>): Promise<T> {
     const tryParse = (text: string): T => {
       const cleaned = text
         .replace(/^```json/i, "")

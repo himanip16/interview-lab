@@ -1,9 +1,9 @@
 import CodeBlock from "../shared/CodeBlock";
-import type { SourceFile } from "../../types/Scenario";
+import type { CodeFile } from "@/features/bug-hunting/domain/types/CodeFile";
 
 type Props = {
   active: boolean;
-  files: SourceFile[];
+  files: CodeFile[];
   activeFileKey: string;
   onFileChange: (key: string) => void;
 };
@@ -15,7 +15,7 @@ export default function CodePanel({
   onFileChange,
 }: Props) {
   const activeFile =
-    files.find((f) => f.key === activeFileKey) ?? files[0];
+    files.find((file) => file.key === activeFileKey) ?? files[0];
 
   return (
     <div className={`panel${active ? " active" : ""}`}>
@@ -29,14 +29,19 @@ export default function CodePanel({
               }`}
               onClick={() => onFileChange(file.key)}
             >
-              {file.name}
+              {file.path}
             </div>
           ))}
         </div>
 
         <div className="code-view">
           {activeFile && (
-            <CodeBlock content={activeFile.contentHtml} />
+            <CodeBlock
+              content={
+                activeFile.highlightedHtml ??
+                activeFile.content
+              }
+            />
           )}
         </div>
       </div>
