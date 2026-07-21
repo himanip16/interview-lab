@@ -2,7 +2,7 @@
 import { BugAttemptStatus } from "@prisma/client";
 import { z } from "zod";
 
-interface BugAttemptProps {
+export interface BugAttemptProps {
   id: string;
   userId: string;
   scenarioId: string;

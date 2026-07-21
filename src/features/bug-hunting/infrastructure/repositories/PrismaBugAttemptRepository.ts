@@ -1,8 +1,8 @@
 // src/modules/bug-hunting/infrastructure/repositories/PrismaBugAttemptRepository.ts
 import { prisma } from "@/shared/prisma/client";
-import { BugAttempt } from "../../domain/entities/BugAttempt";
-import { BugSubmission } from "../../domain/entities/BugSubmission";
-import { Finding } from "../../domain/entities/Finding";
+import { BugAttempt, BugAttemptProps } from "../../domain/entities/BugAttempt";
+import { BugSubmission, BugSubmissionProps } from "../../domain/entities/BugSubmission";
+import { Finding, FindingProps } from "../../domain/entities/Finding";
 import { BugAttemptStatus } from "@prisma/client";
 import type {
   BugAttemptRepository,
@@ -13,21 +13,52 @@ import type {
   GradeAttemptInput,
 } from "@/features/bug-hunting/infrastructure/repositories/BugAttemptRepository";
 
-export class PrismaBugAttemptRepository implements BugAttemptRepository {
-  private convertStatus(status: string): BugAttemptStatus {
-    return status as BugAttemptStatus;
-  }
+// Mapper function to convert Prisma model to domain props
+function mapToBugAttemptProps(row: any): BugAttemptProps {
+  return {
+    id: row.id,
+    userId: row.userId,
+    scenarioId: row.scenarioId,
+    status: row.status as BugAttemptStatus,
+    score: row.score,
+    feedback: row.feedback,
+    startedAt: row.startedAt,
+    completedAt: row.completedAt,
+  };
+}
 
+function mapToBugSubmissionProps(row: any): BugSubmissionProps {
+  return {
+    id: row.id,
+    attemptId: row.attemptId,
+    rootCause: row.rootCause,
+    proposedFix: row.proposedFix,
+    submittedAt: row.submittedAt,
+  };
+}
+
+function mapToFindingProps(row: any): FindingProps {
+  return {
+    id: row.id,
+    attemptId: row.attemptId,
+    source: row.source,
+    refId: row.refId,
+    note: row.note,
+    createdAt: row.createdAt,
+  };
+}
+
+export class PrismaBugAttemptRepository implements BugAttemptRepository {
   async create({ userId, scenarioId }: CreateAttemptInput): Promise<BugAttempt> {
     const row = await prisma.bugAttempt.create({
       data: { userId, scenarioId, status: "STARTED" },
     });
-    return BugAttempt.fromProps({ ...row, status: this.convertStatus(row.status) });
+    return BugAttempt.fromProps(mapToBugAttemptProps(row));
   }
 
   async findById(attemptId: string): Promise<BugAttempt | null> {
     const row = await prisma.bugAttempt.findUnique({ where: { id: attemptId } });
-    return row ? BugAttempt.fromProps({ ...row, status: this.convertStatus(row.status) }) : null;
+    return row ? BugAttempt.fromProps(mapToBugAttemptProps(row)) : null;
   }
 
   async findActiveAttempt(userId: string, scenarioId: string): Promise<BugAttempt | null> {
@@ -35,7 +66,7 @@ export class PrismaBugAttemptRepository implements BugAttemptRepository {
       where: { userId, scenarioId, status: { in: ["STARTED", "INVESTIGATING", "SUBMITTED"] } },
       orderBy: { startedAt: "desc" },
     });
-    return row ? BugAttempt.fromProps({ ...row, status: this.convertStatus(row.status) }) : null;
+    return row ? BugAttempt.fromProps(mapToBugAttemptProps(row)) : null;
   }
 
   async logHypothesis({ attemptId, scenarioId, hypothesis }: LogHypothesisInput): Promise<void> {
@@ -48,7 +79,7 @@ export class PrismaBugAttemptRepository implements BugAttemptRepository {
     const row = await prisma.finding.create({
       data: { attemptId, source, refId, note: note ?? null },
     });
-    return Finding.fromProps(row);
+    return Finding.fromProps(mapToFindingProps(row));
   }
 
   async submitFix({ attemptId, rootCause, proposedFix }: SubmitFixInput): Promise<BugSubmission> {
@@ -63,7 +94,7 @@ export class PrismaBugAttemptRepository implements BugAttemptRepository {
         data: { status: "SUBMITTED" },
       }),
     ]);
-    return BugSubmission.fromProps(submission);
+    return BugSubmission.fromProps(mapToBugSubmissionProps(submission));
   }
 
   async updateAttempt(attempt: BugAttempt): Promise<BugAttempt> {
@@ -76,12 +107,12 @@ export class PrismaBugAttemptRepository implements BugAttemptRepository {
         completedAt: attempt.completedAt,
       },
     });
-    return BugAttempt.fromProps({ ...row, status: this.convertStatus(row.status) });
+    return BugAttempt.fromProps(mapToBugAttemptProps(row));
   }
 
   async getSubmission(attemptId: string): Promise<BugSubmission | null> {
     const row = await prisma.bugSubmission.findUnique({ where: { attemptId } });
-    return row ? BugSubmission.fromProps(row) : null;
+    return row ? BugSubmission.fromProps(mapToBugSubmissionProps(row)) : null;
   }
 
   async listFindings(attemptId: string): Promise<Finding[]> {
@@ -89,6 +120,6 @@ export class PrismaBugAttemptRepository implements BugAttemptRepository {
       where: { attemptId },
       orderBy: { createdAt: "asc" },
     });
-    return rows.map(Finding.fromProps);
+    return rows.map(row => Finding.fromProps(mapToFindingProps(row)));
   }
 }

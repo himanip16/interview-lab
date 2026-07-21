@@ -1,7 +1,7 @@
 // src/modules/bug-hunting/domain/entities/Finding.ts
 import { InvestigationArtifactSource } from "@prisma/client";
 
-interface FindingProps {
+export interface FindingProps {
   id: string;
   attemptId: string;
   source: InvestigationArtifactSource;

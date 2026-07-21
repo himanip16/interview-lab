@@ -1,5 +1,5 @@
 // src/modules/bug-hunting/domain/entities/BugSubmission.ts
-interface BugSubmissionProps {
+export interface BugSubmissionProps {
   id: string;
   attemptId: string;
   rootCause: string;
