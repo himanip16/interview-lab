@@ -2,7 +2,7 @@
 import { ReviewAttempt } from "../domain/entities/ReviewAttempt";
 import { ReviewComment } from "../domain/entities/ReviewComment";
 import { ReviewReport } from "../domain/entities/ReviewReport";
-import type { ReviewAttemptRepository } from "../repositories/ReviewAttemptRepository";
+import type { ReviewAttemptRepository } from "../infrastructure/repositories/repositories/ReviewAttemptRepository";
 import type { ScenarioLoader, Finding } from "./ScenarioLoader";
 import { FindingMatcher } from "./FindingMatcher";
 import { AIReportGenerator } from "./AIReportGenerator";

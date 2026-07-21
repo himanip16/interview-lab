@@ -2,9 +2,9 @@
 import { ReviewAttempt } from "../domain/entities/ReviewAttempt";
 import { ReviewComment } from "../domain/entities/ReviewComment";
 import { ReviewReport } from "../domain/entities/ReviewReport";
-import type { ReviewAttemptRepository } from "../repositories/ReviewAttemptRepository";
+import type { ReviewAttemptRepository } from "../infrastructure/repositories/repositories/ReviewAttemptRepository";
 import type { ScenarioLoader } from "./ScenarioLoader";
-import type { AddCommentInput, SubmitReviewInput } from "../repositories/ReviewAttemptRepository";
+import type { AddCommentInput, SubmitReviewInput } from "../infrastructure/repositories/repositories/ReviewAttemptRepository";
 import { ReviewEvaluationService } from "./ReviewEvaluationService";
 
 export class ReviewService {

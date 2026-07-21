@@ -2,6 +2,7 @@ import { env } from "@/shared/config/env";
 import type { ChatMessage, AIProvider } from "../types";
 import { OllamaProvider } from "./OllamaProvider";
 import { OpenAIProvider } from "./OpenAIProvider";
+import type { UserAIConfig } from "../config/modelRouting";
 
 export type { ChatMessage };
 
@@ -15,14 +16,18 @@ export interface FallbackGenerateOptions {
 export class FallbackAIProvider {
   private readonly provider: AIProvider;
 
-  constructor() {
-    if (env.AI_PROVIDER === "openai") {
-      if (!env.OPENAI_API_KEY) {
+  constructor(userConfig?: UserAIConfig) {
+    const provider = userConfig?.provider || env.AI_PROVIDER;
+    
+    if (provider === "openai") {
+      const apiKey = userConfig?.apiKey || env.OPENAI_API_KEY;
+      if (!apiKey) {
         throw new Error("OPENAI_API_KEY is required when AI_PROVIDER is 'openai'");
       }
-      this.provider = new OpenAIProvider(env.OPENAI_API_KEY);
+      this.provider = new OpenAIProvider(apiKey);
     } else {
-      this.provider = new OllamaProvider(env.OLLAMA_BASE_URL);
+      const baseUrl = userConfig?.baseUrl || env.OLLAMA_BASE_URL;
+      this.provider = new OllamaProvider(baseUrl);
     }
   }
 

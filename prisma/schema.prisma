@@ -45,6 +45,12 @@ model User {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
+  // User AI Configuration - allows users to bring their own model and API key
+  aiProvider     String?  // "openai" | "ollama" | "custom"
+  aiApiKey       String?  // Encrypted API key for the user's chosen provider
+  aiModel        String?  // Model name (e.g., "gpt-4o", "qwen3:8b")
+  aiBaseUrl      String?  // Custom base URL for custom providers or self-hosted Ollama
+
   interviews              Interview[]
   masteries               ConceptMastery[]
   learningAttempts        UserLearningAttempt[]

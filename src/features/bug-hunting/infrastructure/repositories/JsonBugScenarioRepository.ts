@@ -1,6 +1,7 @@
 // src/features/bug-hunting/infrastructure/repositories/JsonBugScenarioRepository.ts
 
 import { BugScenario } from "../../domain/entities/BugScenario";
+import { ScenarioLoader } from "../../infrastructure/ScenarioLoader";
 import type { BugScenarioRepository } from "./BugScenarioRepository";
 
 const SCENARIOS: Record<string, () => Promise<unknown>> = {
@@ -20,7 +21,7 @@ export class JsonBugScenarioRepository implements BugScenarioRepository {
 
     const raw = await loader();
 
-    return BugScenario.fromJSON(raw);
+    return ScenarioLoader.load(raw);
   }
 
   async list(): Promise<BugScenario[]> {
@@ -28,7 +29,7 @@ export class JsonBugScenarioRepository implements BugScenarioRepository {
       Object.keys(SCENARIOS).map(async (id) => {
         const raw = await SCENARIOS[id]();
 
-        return BugScenario.fromJSON(raw);
+        return ScenarioLoader.load(raw);
       })
     );
 

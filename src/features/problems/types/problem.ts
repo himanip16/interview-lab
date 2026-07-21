@@ -64,3 +64,12 @@ export const SORT_LABELS: Record<SortOption, string> = {
   difficulty: "Difficulty",
   estimatedMinutes: "Time estimate",
 };
+
+export interface ProblemFilterState {
+  type: InterviewTypeFilter;
+  difficulty: "ALL" | Difficulty;
+  status: StatusFilter;
+  sort: SortOption;
+  category?: string;
+  page?: number;
+}

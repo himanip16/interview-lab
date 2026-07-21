@@ -40,7 +40,7 @@ export function useProblems(
       const params = new URLSearchParams();
       if (filters.type !== "all") params.set("interviewType", filters.type);
       if (filters.difficulty !== "ALL") params.set("difficulty", filters.difficulty);
-      if (filters.category !== "all") params.set("category", filters.category);
+      if (filters.category && filters.category !== "all") params.set("category", filters.category);
       params.set("sort", filters.sort);
       params.set("page", String(filters.page));
       params.set("limit", String(DEFAULT_PAGE_SIZE));

@@ -6,6 +6,7 @@ import CurrentStandingCard from "./CurrentStandingCard";
 import LiveFeedbackCard from "./LiveFeedbackCard";
 import RecommendationCard from "./RecommendationCard";
 import ExploreProblems, { type ExploreProblem } from "./ExploreProblems";// Corrected paths
+import AIConfigSettings from "./AIConfigSettings";
 import { SkillGraphService } from "@/features/interview/application/services/mastery/SkillGraphService";
 import { RecommendationService } from "@/features/interview/application/services/recommendation/RecommendationService";
 
@@ -102,6 +103,18 @@ export default function DashboardView({
           <Suspense fallback={<div className="p-4">Loading...</div>}>
             <RecommendationWidget userId={userId} />
           </Suspense>
+        </div>
+
+        <div className="space-y-4 md:col-span-2">
+          <div>
+            <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+              04. AI Configuration
+            </span>
+            <Heading level="h3" className="mt-1">
+              Configure Your AI Model
+            </Heading>
+          </div>
+          <AIConfigSettings />
         </div>
       </div>
 

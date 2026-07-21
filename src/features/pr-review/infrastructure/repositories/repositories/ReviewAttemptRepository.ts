@@ -1,8 +1,8 @@
 // src/modules/pr-review/repositories/ReviewAttemptRepository.ts
-import { ReviewAttempt } from "../domain/entities/ReviewAttempt";
-import { ReviewComment } from "../domain/entities/ReviewComment";
-import { ReviewReport } from "../domain/entities/ReviewReport";
-import { ReviewDecision } from "@prisma/client";
+
+import { ReviewAttempt } from "../../../domain/entities/ReviewAttempt";
+import { ReviewComment } from "../../../domain/entities/ReviewComment";
+import { ReviewReport } from "../../../domain/entities/ReviewReport";
 
 export interface CreateAttemptInput {
   userId: string;
@@ -20,7 +20,7 @@ export interface AddCommentInput {
 
 export interface SubmitReviewInput {
   attemptId: string;
-  decision: ReviewDecision;
+  decision: "APPROVE" | "REQUEST_CHANGES" | "REJECT";
 }
 
 export interface CreateReportInput {

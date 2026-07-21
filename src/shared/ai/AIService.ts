@@ -3,7 +3,7 @@ import { ZodSchema } from "zod";
 import { FallbackAIProvider } from "./providers/FallbackAIProvider";
 import { StructuredOutputParser } from "./parsers/StructuredOutputParser";
 import type { ChatMessage } from "./types";
-import { getTaskConfig, type AITask } from "./config/modelRouting";
+import { getTaskConfig, type AITask, type UserAIConfig } from "./config/modelRouting";
 
 export type { ChatMessage, AITask };
 
@@ -12,16 +12,21 @@ export interface AIRequestOptions {
   temperature?: number; // overrides the task's default
   format?: object; // raw JSON Schema for Ollama's structured output — the
                     // caller's schema, never a provider-level constant
+  userConfig?: UserAIConfig; // user-specific AI configuration
 }
 
 export class AIService {
-  private readonly provider = new FallbackAIProvider();
+  private provider: FallbackAIProvider;
+
+  constructor(userConfig?: UserAIConfig) {
+    this.provider = new FallbackAIProvider(userConfig);
+  }
 
   async chat(
     messages: ChatMessage[],
     options: AIRequestOptions
   ): Promise<string> {
-    const config = getTaskConfig()[options.task];
+    const config = getTaskConfig(options.userConfig)[options.task];
 
     return this.provider.generateResponse(messages, {
       model: config.model,
@@ -63,6 +68,7 @@ The JSON must satisfy the requested schema.
           // schema-less retry — otherwise the repair model has just as much
           // room to drift as the first attempt did.
           format: options.format,
+          userConfig: options.userConfig,
         }
       );
     });

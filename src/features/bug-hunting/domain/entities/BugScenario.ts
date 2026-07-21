@@ -25,29 +25,29 @@ export interface ScenarioReport {
 interface BugScenarioProps {
   id: string;
 
-  report: ScenarioReport;
+  report?: ScenarioReport;
 
-  logs: LogEntry[];
+  logs?: LogEntry[];
 
-  database: DatabaseFixture;
+  database?: DatabaseFixture;
 
-  code: CodeFile[];
+  code?: CodeFile[];
 
-  documentation: DocumentationSection[];
+  documentation?: DocumentationSection[];
 
-  deployments: Deployment[];
+  deployments?: Deployment[];
 
-  description: string;
+  description?: string;
 
-  timerSeconds: number;
+  timerSeconds?: number;
 
-  createdAt: string;
+  createdAt?: string;
 
-  metadata: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
 }
 
 
-const BugScenarioSchema = z.object({
+export const BugScenarioSchema = z.object({
   id: z.string(),
 
   report: z.object({
@@ -61,7 +61,7 @@ const BugScenarioSchema = z.object({
       errorRate: z.string(),
       firstSeen: z.string(),
     }),
-  }),
+  }).optional(),
 
   logs: z.array(z.object({
     id: z.string(),
@@ -72,23 +72,23 @@ const BugScenarioSchema = z.object({
       "ERROR",
     ]),
     message: z.string(),
-  })),
+  })).optional(),
 
-  database: z.any(),
+  database: z.any().optional(),
 
-  code: z.array(z.any()),
+  code: z.array(z.any()).optional(),
 
-  documentation: z.array(z.any()),
+  documentation: z.array(z.any()).optional(),
 
-  deployments: z.array(z.any()),
+  deployments: z.array(z.any()).optional(),
 
-  description: z.string(),
+  description: z.string().optional(),
 
-  timerSeconds: z.number(),
+  timerSeconds: z.number().optional(),
 
-  createdAt: z.string(),
+  createdAt: z.string().optional(),
 
-  metadata: z.record(z.string(), z.unknown()),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 
@@ -98,8 +98,16 @@ export class BugScenario {
   ) {}
 
   static fromJSON(raw: unknown): BugScenario {
-    const validated = BugScenarioSchema.parse(raw);
-    return new BugScenario(validated);
+    const result = BugScenarioSchema.safeParse(raw);
+
+    if (!result.success) {
+      const id = typeof raw === 'object' && raw !== null && 'id' in raw ? String(raw.id) : 'unknown';
+      throw new Error(
+        `Invalid scenario "${id}":\n${result.error.message}`
+      );
+    }
+
+    return new BugScenario(result.data);
   }
 
 
@@ -108,7 +116,7 @@ export class BugScenario {
   }
 
   get code() {
-    return this.props.code;
+    return this.props.code ?? [];
   }
 
   get database() {
@@ -116,32 +124,32 @@ export class BugScenario {
   }
 
   get documentation() {
-    return this.props.documentation;
+    return this.props.documentation ?? [];
   }
 
   get deployments() {
-    return this.props.deployments;
+    return this.props.deployments ?? [];
   }
 
   get logs() {
-    return this.props.logs;
+    return this.props.logs ?? [];
   }
 
 
   get title() {
-    return this.props.report.title;
+    return this.props.report?.title ?? '';
   }
 
   get symptom() {
-    return this.props.report.symptom;
+    return this.props.report?.symptom ?? '';
   }
 
   get service() {
-    return this.props.report.metadata.service;
+    return this.props.report?.metadata.service ?? '';
   }
 
   get severity() {
-    return this.props.report.severity;
+    return this.props.report?.severity;
   }
 
 

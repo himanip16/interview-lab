@@ -1,7 +1,5 @@
 import { env } from "./env";
 
-export const MODEL_NAME = env.OPENAI_MODEL;
-
 export const TEMPERATURE =
   env.MODEL_TEMPERATURE;
 
