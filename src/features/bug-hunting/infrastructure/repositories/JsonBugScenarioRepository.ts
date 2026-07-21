@@ -6,7 +6,7 @@ import type { BugScenarioRepository } from "./BugScenarioRepository";
 
 const SCENARIOS: Record<string, () => Promise<unknown>> = {
   "checkout-timeout": () =>
-    import("../../data/scenarios/checkout-timeout.json").then(
+    import("content/bug-hunting/scenarios/checkout-timeout.json").then(
       (module) => module.default
     ),
 };

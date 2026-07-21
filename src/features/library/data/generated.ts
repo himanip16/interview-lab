@@ -13,6 +13,7 @@ import meetingRoomReservation from "@/content/transcripts/lld/meeting-room-reser
 import readReceipts from "@/content/transcripts/lld/read-receipts";
 import vendingMachine from "@/content/transcripts/lld/vending-machine";
 import inMemoryDatabase from "@/content/transcripts/machine-coding/in-memory-database";
+import matrixWinning from "@/content/transcripts/machine-coding/matrix-winning";
 import webhookDeliveryPlatform from "@/content/transcripts/machine-coding/webhook-delivery-platform";
 
 export const TRANSCRIPTS = [
@@ -27,5 +28,6 @@ export const TRANSCRIPTS = [
   readReceipts,
   vendingMachine,
   inMemoryDatabase,
+  matrixWinning,
   webhookDeliveryPlatform,
 ] as const;
