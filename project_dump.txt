@@ -1,6 +1,6 @@
 PROJECT STRUCTURE
 =================
-src/app/
+src/app
 ├── (marketing)
 │   ├── layout.tsx
 │   └── page.tsx
@@ -42,6 +42,8 @@ src/app/
 │   │   │   └── whiteboard
 │   │   │       └── route.ts
 │   │   ├── route.ts
+│   │   ├── setup-and-start
+│   │   │   └── route.ts
 │   │   ├── start
 │   │   │   └── route.ts
 │   │   └── status
@@ -115,6 +117,8 @@ src/app/
 │   └── report
 │       └── [id]
 │           └── page.tsx
+├── interview-setup
+│   └── page.tsx
 ├── layout.tsx
 ├── learn
 │   ├── action-carousel
@@ -148,12 +152,10 @@ src/app/
 ├── pr-review
 │   ├── PrReviewPage.module.css
 │   └── page.tsx
-├── problems
-│   └── page.tsx
 └── register
     └── page.tsx
 
-82 directories, 70 files
+83 directories, 71 files
 
 FILE CONTENTS
 
@@ -1208,370 +1210,6 @@ export default async function DeepDiveArticlePage({ params }: { params: Promise<
   );
 }
 ================================================
-FILE: src/app/problems/page.tsx
-================================================
-"use client";
-
-import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useEffect, useRef, Suspense } from "react";
-import styles from "@/features/problems/components/ProblemsPage.module.css";
-
-interface Problem {
-  id: string;
-  title: string;
-  difficulty: string;
-  category: string;
-  interviewType: string;
-  estimatedMinutes: number;
-  completionHistory?: {
-    completed: boolean;
-    timesCompleted: number;
-    lastCompletedAt: string | null;
-  };
-  tags?: string[];
-}
-
-function ProblemsPageContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [problems, setProblems] = useState<Problem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchInput, setSearchInput] = useState("");
-  const [filters, setFilters] = useState({
-    type: "all",
-    difficulty: "all",
-    status: "all",
-  });
-  const [sort, setSort] = useState("popularity");
-  const [sortMenuOpen, setSortMenuOpen] = useState(false);
-  const debounceRef = useRef<NodeJS.Timeout | undefined>(undefined);
-
-  useEffect(() => {
-    fetchProblems();
-  }, []);
-
-  const fetchProblems = async () => {
-    try {
-      const res = await fetch("/api/problems");
-      const data = await res.json();
-      if (data.problems) {
-        setProblems(data.problems);
-      }
-    } catch (error) {
-      console.error("Failed to fetch problems:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-    }
-    debounceRef.current = setTimeout(() => {
-      // Search filtering is done client-side
-    }, 300);
-
-    return () => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-      }
-    };
-  }, [searchInput]);
-
-  const getFilteredProblems = () => {
-    let filtered = problems.filter((p) => {
-      const matchesSearch =
-        searchInput === "" ||
-        p.title.toLowerCase().includes(searchInput.toLowerCase());
-      const matchesType =
-        filters.type === "all" ||
-        p.interviewType?.toLowerCase() === filters.type;
-      const matchesDifficulty =
-        filters.difficulty === "all" ||
-        p.difficulty?.toLowerCase() === filters.difficulty;
-      const matchesStatus =
-        filters.status === "all" ||
-        (filters.status === "done" ? p.completionHistory?.completed : !p.completionHistory?.completed);
-
-      return matchesSearch && matchesType && matchesDifficulty && matchesStatus;
-    });
-
-    // Sort
-    const DIFF_ORDER = { easy: 0, medium: 1, hard: 2 };
-    if (sort === "popularity") {
-      filtered.sort((a, b) => (b.completionHistory?.timesCompleted || 0) - (a.completionHistory?.timesCompleted || 0));
-    } else if (sort === "alpha") {
-      filtered.sort((a, b) => a.title.localeCompare(b.title));
-    } else if (sort === "difficulty") {
-      filtered.sort((a, b) => DIFF_ORDER[a.difficulty?.toLowerCase() as keyof typeof DIFF_ORDER] - DIFF_ORDER[b.difficulty?.toLowerCase() as keyof typeof DIFF_ORDER]);
-    } else if (sort === "time") {
-      filtered.sort((a, b) => (a.estimatedMinutes || 0) - (b.estimatedMinutes || 0));
-    }
-
-    return filtered;
-  };
-
-  const filteredProblems = getFilteredProblems();
-
-  const getTypeClass = (type: string) => {
-    const t = type?.toLowerCase() || "hld";
-    return t === "hld" ? "hld" : t === "lld" ? "lld" : "dsa";
-  };
-
-  const getDifficultyClass = (diff: string) => {
-    const d = diff?.toLowerCase() || "medium";
-    return d === "easy" ? "easy" : d === "medium" ? "medium" : "hard";
-  };
-
-  const startInterview = async (problemId: string) => {
-    try {
-      const res = await fetch("/api/interviews/start", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "hld",
-          difficulty: "MEDIUM",
-          duration: 45,
-          company: "General",
-          problemId,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        
-        alert(`Failed to start interview: ${data.error, data.message, data.code}`);
-        return;
-      }
-
-      if (data.id) {
-        router.push(`/interview/live/${data.id}`);
-      }
-    } catch (err) {
-      console.error("Network error starting interview:", err);
-    }
-  };
-
-  return (
-    <div style={{ background: "#FAF9F6", minHeight: "100vh" }}>
-      <div className={styles.panel}>
-        <div className={styles.top}>
-          <h2>Problem library</h2>
-          <div className={styles.search}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="11" cy="11" r="7" />
-              <path d="M21 21l-4.3-4.3" />
-            </svg>
-            <input
-              type="text"
-              placeholder="Search problems..."
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className={styles.filters}>
-          <div className={styles.filterRow}>
-            <span className={styles.filterLabel}>Type</span>
-            <div className={styles.pillgroup}>
-              <button
-                className={`${styles.fpill} ${filters.type === "all" ? styles.active : ""}`}
-                onClick={() => setFilters({ ...filters, type: "all" })}
-              >
-                All
-              </button>
-              <button
-                className={`${styles.fpill} ${styles.typeHld} ${filters.type === "hld" ? styles.active : ""}`}
-                onClick={() => setFilters({ ...filters, type: "hld" })}
-              >
-                HLD
-              </button>
-              <button
-                className={`${styles.fpill} ${styles.typeLld} ${filters.type === "lld" ? styles.active : ""}`}
-                onClick={() => setFilters({ ...filters, type: "lld" })}
-              >
-                LLD
-              </button>
-              <button
-                className={`${styles.fpill} ${styles.typeDsa} ${filters.type === "dsa" ? styles.active : ""}`}
-                onClick={() => setFilters({ ...filters, type: "dsa" })}
-              >
-                DSA
-              </button>
-            </div>
-          </div>
-          <div className={styles.filterRow}>
-            <span className={styles.filterLabel}>Difficulty</span>
-            <div className={styles.pillgroup}>
-              <button
-                className={`${styles.fpill} ${filters.difficulty === "all" ? styles.active : ""}`}
-                onClick={() => setFilters({ ...filters, difficulty: "all" })}
-              >
-                All
-              </button>
-              <button
-                className={`${styles.fpill} ${filters.difficulty === "easy" ? styles.active : ""}`}
-                onClick={() => setFilters({ ...filters, difficulty: "easy" })}
-              >
-                Easy
-              </button>
-              <button
-                className={`${styles.fpill} ${filters.difficulty === "medium" ? styles.active : ""}`}
-                onClick={() => setFilters({ ...filters, difficulty: "medium" })}
-              >
-                Medium
-              </button>
-              <button
-                className={`${styles.fpill} ${filters.difficulty === "hard" ? styles.active : ""}`}
-                onClick={() => setFilters({ ...filters, difficulty: "hard" })}
-              >
-                Hard
-              </button>
-            </div>
-            <span className={styles.filterLabel} style={{ marginLeft: "8px" }}>
-              Status
-            </span>
-            <div className={styles.pillgroup}>
-              <button
-                className={`${styles.fpill} ${filters.status === "all" ? styles.active : ""}`}
-                onClick={() => setFilters({ ...filters, status: "all" })}
-              >
-                All
-              </button>
-              <button
-                className={`${styles.fpill} ${filters.status === "done" ? styles.active : ""}`}
-                onClick={() => setFilters({ ...filters, status: "done" })}
-              >
-                Completed
-              </button>
-              <button
-                className={`${styles.fpill} ${filters.status === "pending" ? styles.active : ""}`}
-                onClick={() => setFilters({ ...filters, status: "pending" })}
-              >
-                Not started
-              </button>
-            </div>
-          </div>
-
-          <div className={styles.barBottom}>
-            <div className={styles.count}>
-              <b>{filteredProblems.length}</b> problem{filteredProblems.length !== 1 ? "s" : ""}
-            </div>
-            <div className={styles.sortWrap}>
-              <button
-                className={styles.sortBtn}
-                onClick={() => setSortMenuOpen(!sortMenuOpen)}
-              >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-                  <path d="M4 7h10M4 12h7M4 17h4" />
-                  <path d="M16 6v13M16 19l-3-3M16 19l3-3" />
-                </svg>
-                <span>
-                  {sort === "popularity" ? "Popularity" : sort === "alpha" ? "Alphabetical" : sort === "difficulty" ? "Difficulty" : "Time estimate"}
-                </span>
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
-                  <path d="M6 9l6 6 6-6" />
-                </svg>
-              </button>
-              <div className={`${styles.sortMenu} ${sortMenuOpen ? styles.open : ""}`}>
-                <div
-                  className={`${styles.sortOpt} ${sort === "popularity" ? styles.active : ""}`}
-                  onClick={() => {
-                    setSort("popularity");
-                    setSortMenuOpen(false);
-                  }}
-                >
-                  Popularity
-                </div>
-                <div
-                  className={`${styles.sortOpt} ${sort === "alpha" ? styles.active : ""}`}
-                  onClick={() => {
-                    setSort("alpha");
-                    setSortMenuOpen(false);
-                  }}
-                >
-                  Alphabetical
-                </div>
-                <div
-                  className={`${styles.sortOpt} ${sort === "difficulty" ? styles.active : ""}`}
-                  onClick={() => {
-                    setSort("difficulty");
-                    setSortMenuOpen(false);
-                  }}
-                >
-                  Difficulty
-                </div>
-                <div
-                  className={`${styles.sortOpt} ${sort === "time" ? styles.active : ""}`}
-                  onClick={() => {
-                    setSort("time");
-                    setSortMenuOpen(false);
-                  }}
-                >
-                  Time estimate
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className={styles.list}>
-          {loading ? (
-            <div className={styles.emptyState}>Loading problems...</div>
-          ) : filteredProblems.length === 0 ? (
-            <div className={styles.emptyState}>No problems match these filters.</div>
-          ) : (
-            filteredProblems.map((problem) => (
-              <div
-                key={problem.id}
-                className={styles.row}
-                onClick={() => startInterview(problem.id)}
-              >
-                <div className={`bar ${getTypeClass(problem.interviewType)}`}></div>
-                <div className={styles['row-main']}>
-                  <div className={styles['row-title']}>
-                    <h3>{problem.title}</h3>
-                    <span className={`type-tag ${getTypeClass(problem.interviewType)}`}>
-                      {problem.interviewType?.toUpperCase() || "HLD"}
-                    </span>
-                  </div>
-                  <div className="row-crux" style={{fontSize: '12.5px', color: '#5A5B66', marginTop: '3px'}}>
-                    {problem.tags?.join(" · ") || problem.category || 'Design concepts'}
-                  </div>
-                </div>
-                <div className={styles['row-right']}>
-                  <span className={`${styles.diff} ${styles[getDifficultyClass(problem.difficulty)]}`}>
-                    {problem.difficulty}
-                  </span>
-                  <span className={styles.mins}>{problem.estimatedMinutes}m</span>
-                  <div className={`${styles.check} ${problem.completionHistory?.completed ? styles.done : styles.pending}`}>
-                    {problem.completionHistory?.completed ? (
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                        <path d="M5 12l5 5L20 7" />
-                      </svg>
-                    ) : null}
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export default function ProblemsPage() {
-  return (
-    <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading problems...</div>}>
-      <ProblemsPageContent />
-    </Suspense>
-  );
-}
-================================================
 FILE: src/app/library/page.tsx
 ================================================
 import { LibraryPage } from "@/features/library";
@@ -1884,6 +1522,548 @@ export default async function ReportPage({ params }: Props) {
   );
 }
 ================================================
+FILE: src/app/interview-setup/page.tsx
+================================================
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+
+interface State {
+  duration: string | null;
+  type: string | null;
+  source: string | null;
+  company: string;
+  role: string;
+  ownText: string;
+  pickedProblem: string | null;
+}
+
+interface Option {
+  val: string;
+  label: string;
+  cls: string;
+}
+
+interface StepConfig {
+  title: string;
+  desc: string;
+  label: string;
+  options: Option[];
+}
+
+const stepsConfig: Record<string, StepConfig> = {
+  duration: {
+    title: 'Choose duration',
+    desc: 'How long should this interview run? This also sets the timer during your session.',
+    label: 'Pick one',
+    options: [
+      { val: '15', label: '15 min', cls: 'clip1' },
+      { val: '30', label: '30 min', cls: 'clip2' },
+      { val: '45', label: '45 min', cls: 'clip3' },
+      { val: '60', label: '60 min', cls: 'clip6' },
+    ]
+  },
+  type: {
+    title: 'Choose interview type',
+    desc: 'Pick the format. This decides what kind of problem gets used and how it is graded.',
+    label: 'Pick one',
+    options: [
+      { val: 'HLD', label: 'HLD', cls: 'clip1' },
+      { val: 'LLD', label: 'LLD', cls: 'clip2' },
+      { val: 'DSA', label: 'DSA', cls: 'clip3' },
+      { val: 'AI', label: 'AI / ML', cls: 'clip4' },
+      { val: 'Behavioral', label: 'Behavioral', cls: 'clip5' },
+      { val: 'PR', label: 'Code Review', cls: 'clip6' },
+    ]
+  },
+  source: {
+    title: 'Choose problem source',
+    desc: 'How do you want your problem statement to be decided?',
+    label: 'Pick one',
+    options: [
+      { val: 'ai', label: 'Generate with AI', cls: 'clip1' },
+      { val: 'own', label: 'Write your own', cls: 'clip2' },
+    ]
+  }
+};
+
+const gradients: Record<string, string> = {
+  clip1: 'linear-gradient(160deg,#3E6BFF,#213FCC)',
+  clip2: 'linear-gradient(160deg,#00E0AB,#00A87E)',
+  clip3: 'linear-gradient(160deg,#262832,#121319)',
+  clip4: 'linear-gradient(160deg,#FF6B6B,#C93030)',
+  clip5: 'linear-gradient(160deg,#B084F5,#7B3FD9)',
+  clip6: 'linear-gradient(160deg,#FFB930,#C97800)',
+};
+
+export default function InterviewSetupPage() {
+  const [mounted, setMounted] = useState(false);
+  const [currentStep, setCurrentStep] = useState('duration');
+  const [state, setState] = useState<State>({
+    duration: null,
+    type: null,
+    source: null,
+    company: '',
+    role: '',
+    ownText: '',
+    pickedProblem: null,
+  });
+  const router = useRouter();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+
+  const selectOption = (step: string, val: string) => {
+    setState(prev => ({ ...prev, [step]: val }));
+    
+    if (step === 'duration' && !state.type) {
+      setTimeout(() => setCurrentStep('type'), 350);
+    } else if (step === 'type' && !state.source) {
+      setTimeout(() => setCurrentStep('source'), 350);
+    }
+  };
+
+  const updateField = (field: keyof State, value: string) => {
+    setState(prev => ({ ...prev, [field]: value }));
+  };
+
+  const doneSteps = [state.duration, state.type, state.source].filter(Boolean).length;
+  const currentStepNum = doneSteps < 3 ? doneSteps + 1 : 3;
+
+  const metaParts = [];
+  if (state.duration) metaParts.push(`<b>${state.duration} min</b>`);
+  if (state.type) metaParts.push(`<b>${state.type}</b>`);
+  if (state.source) {
+    const sourceLabels: Record<string, string> = {
+      ai: 'AI generated',
+      own: 'Own statement'
+    };
+    metaParts.push(`<b>${sourceLabels[state.source]}</b>`);
+  }
+
+  const isReady = state.duration && state.type && state.source &&
+    (state.source !== 'own' || state.ownText.trim().length > 0);
+
+  const startInterview = async () => {
+    try {
+      const payload = {
+        duration: parseInt(state.duration!),
+        type: state.type!.toLowerCase(),
+        source: state.source,
+        company: state.company || 'General',
+        role: state.role,
+        ownText: state.ownText,
+      };
+
+      const res = await fetch('/api/interviews/setup-and-start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(`Failed to start interview: ${data.error}`);
+        return;
+      }
+
+      if (data.id) {
+        router.push(`/interview/live/${data.id}`);
+      }
+    } catch (err) {
+      console.error('Network error starting interview:', err);
+      alert('Network error starting interview');
+    }
+  };
+
+  const cfg = stepsConfig[currentStep];
+
+  return (
+    <div style={{
+      background: '#FAF9F6',
+      color: '#15161C',
+      fontFamily: '"Inter", sans-serif',
+      WebkitFontSmoothing: 'antialiased',
+      padding: '48px 24px',
+      minHeight: '100vh'
+    }}>
+      <div style={{
+        maxWidth: '1080px',
+        margin: '0 auto',
+        background: '#fff',
+        borderRadius: '32px',
+        padding: '36px 40px 40px',
+        boxShadow: '0 24px 60px rgba(21,22,28,0.06)',
+        border: '1px solid rgba(21,22,28,0.06)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '28px', gap: '24px' }}>
+          <div style={{ fontFamily: '"Poppins", sans-serif', fontWeight: 700, fontSize: '18px', whiteSpace: 'nowrap' }}>
+            interview<span style={{ color: '#C97800' }}>.</span>lab
+          </div>
+          <div style={{
+            flex: 1,
+            maxWidth: '340px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            background: '#FAF9F6',
+            border: '1px solid rgba(21,22,28,0.08)',
+            borderRadius: '999px',
+            padding: '10px 18px',
+            fontSize: '13.5px',
+            color: '#5A5B66'
+          }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ opacity: 0.5 }}>
+              <circle cx="11" cy="11" r="7"/>
+              <path d="M21 21l-4.3-4.3"/>
+            </svg>
+            <span>Search actions&hellip;</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13.5px', fontWeight: 600, color: '#5A5B66', whiteSpace: 'nowrap' }}>
+            Menu
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="5" cy="12" r="2"/>
+              <circle cx="12" cy="12" r="2"/>
+              <circle cx="19" cy="12" r="2"/>
+            </svg>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', borderRadius: '26px', overflow: 'hidden', minHeight: '460px' }}>
+          <div style={{
+            width: '52px',
+            flexShrink: 0,
+            background: '#FAF9F6',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '20px 0'
+          }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '26px', alignItems: 'center' }}>
+              {['duration', 'type', 'source'].map((step) => (
+                <div
+                  key={step}
+                  onClick={() => setCurrentStep(step)}
+                  style={{
+                    writingMode: 'vertical-rl',
+                    transform: 'rotate(180deg)',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    color: currentStep === step ? '#15161C' : '#5A5B66',
+                    letterSpacing: '0.02em',
+                    cursor: 'pointer',
+                    padding: '2px'
+                  }}
+                >
+                  {step.charAt(0).toUpperCase() + step.slice(1)}
+                </div>
+              ))}
+            </div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5A5B66" strokeWidth="2.5" style={{ animation: 'bob 2s ease-in-out infinite' }}>
+              <path d="M6 9l6 6 6-6"/>
+            </svg>
+          </div>
+
+          <div style={{
+            flex: '0 0 42%',
+            position: 'relative',
+            background: 'linear-gradient(165deg,#FFB930,#C97800)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <div style={{ position: 'absolute', top: '18px', right: '18px' }}>
+              <button 
+                onClick={() => router.push('/')}
+                style={{
+                  position: 'relative',
+                  width: '34px',
+                  height: '34px',
+                  borderRadius: '50%',
+                  border: 'none',
+                  background: 'rgba(255,255,255,0.18)',
+                  color: '#fff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  zIndex: 1
+                }}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M6 6l12 12M18 6L6 18"/>
+                </svg>
+              </button>
+            </div>
+
+            {currentStep === 'duration' && (
+              <svg width="120" height="120" viewBox="0 0 200 200" fill="none" style={{ animation: 'float 4.5s ease-in-out infinite' }}>
+                <circle cx="100" cy="100" r="92" fill="rgba(255,255,255,0.14)"/>
+                <circle cx="100" cy="100" r="52" stroke="#fff" strokeWidth="7" fill="none"/>
+                <line x1="100" y1="100" x2="100" y2="66" stroke="#fff" strokeWidth="7" strokeLinecap="round"/>
+                <line x1="100" y1="100" x2="124" y2="112" stroke="#fff" strokeWidth="7" strokeLinecap="round"/>
+              </svg>
+            )}
+
+            {currentStep === 'type' && (
+              <svg width="120" height="120" viewBox="0 0 200 200" fill="none" style={{ animation: 'float 4.5s ease-in-out infinite' }}>
+                <circle cx="100" cy="100" r="92" fill="rgba(255,255,255,0.14)"/>
+                <path d="M100 56L150 84L100 112L50 84Z" stroke="#fff" strokeWidth="7" strokeLinejoin="round" fill="none"/>
+                <path d="M50 106L100 134L150 106" stroke="#fff" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                <path d="M50 128L100 156L150 128" stroke="#fff" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+              </svg>
+            )}
+
+            {currentStep === 'source' && (
+              <svg width="120" height="120" viewBox="0 0 200 200" fill="none" style={{ animation: 'float 4.5s ease-in-out infinite' }}>
+                <circle cx="100" cy="100" r="92" fill="rgba(255,255,255,0.14)"/>
+                <circle cx="100" cy="100" r="46" stroke="#fff" strokeWidth="7" fill="none"/>
+                <circle cx="100" cy="100" r="24" stroke="#fff" strokeWidth="7" fill="none"/>
+                <circle cx="100" cy="100" r="6" fill="#fff"/>
+              </svg>
+            )}
+
+            <div style={{ position: 'absolute', bottom: '26px', left: '26px' }}>
+              <button 
+                onClick={startInterview}
+                disabled={!isReady}
+                style={{
+                  position: 'relative',
+                  width: '58px',
+                  height: '58px',
+                  borderRadius: '50%',
+                  border: 'none',
+                  background: '#fff',
+                  color: '#C97800',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: isReady ? 'pointer' : 'not-allowed',
+                  zIndex: 1,
+                  boxShadow: '0 10px 24px rgba(0,0,0,0.18)',
+                  opacity: isReady ? 1 : 0.35
+                }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M8 5v14l11-7z"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div style={{ flex: 1, padding: '34px 38px', display: 'flex', flexDirection: 'column' }}>
+            <div style={{
+              alignSelf: 'flex-end',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontSize: '11px',
+              fontWeight: 600,
+              color: '#C97800',
+              background: 'rgba(232,148,10,0.1)',
+              padding: '5px 12px',
+              borderRadius: '999px',
+              marginBottom: 'auto'
+            }}>
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#E8940A', animation: 'pulse 1.8s ease-in-out infinite' }}></span>
+              Step {currentStepNum} of 3
+            </div>
+
+            <h2 style={{ fontSize: '30px', fontWeight: 700, marginTop: '18px', fontFamily: '"Poppins", sans-serif', letterSpacing: '-0.02em' }}>
+              {cfg.title}
+            </h2>
+            <div style={{ fontSize: '13px', color: '#5A5B66', marginTop: '4px', fontWeight: 500 }} dangerouslySetInnerHTML={{ __html: metaParts.length ? metaParts.join(' &middot; ') : 'Nothing selected yet' }} />
+            <p style={{ fontSize: '14px', color: '#5A5B66', lineHeight: 1.65, marginTop: '16px', maxWidth: '420px' }}>
+              {cfg.desc}
+            </p>
+
+            <div style={{ fontSize: '12.5px', fontWeight: 600, color: '#5A5B66', margin: '22px 0 12px' }}>
+              {cfg.label}
+            </div>
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+              {cfg.options.map((opt) => (
+                <div
+                  key={opt.val}
+                  onClick={() => selectOption(currentStep, opt.val)}
+                  style={{
+                    flex: 1,
+                    minWidth: '110px',
+                    height: '56px',
+                    borderRadius: '14px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#fff',
+                    fontSize: '12.5px',
+                    fontWeight: 600,
+                    gap: '6px',
+                    cursor: 'pointer',
+                    padding: '0 10px',
+                    textAlign: 'center',
+                    background: gradients[opt.cls],
+                    transition: 'transform 0.25s cubic-bezier(0.34,1.56,0.64,1)',
+                    outline: state[currentStep as keyof State] === opt.val ? '2px solid #15161C' : '2px solid transparent',
+                    outlineOffset: '2px'
+                  }}
+                >
+                  {opt.label}
+                </div>
+              ))}
+            </div>
+
+            {currentStep === 'source' && state.source === 'ai' && (
+              <div style={{
+                marginTop: '16px',
+                border: '1px solid rgba(21,22,28,0.08)',
+                borderRadius: '14px',
+                padding: '16px 18px',
+                background: '#FAF9F6'
+              }}>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: '#5A5B66', marginBottom: '6px' }}>
+                      Target company (optional)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Amazon, Stripe"
+                      value={state.company}
+                      onChange={(e) => updateField('company', e.target.value)}
+                      style={{
+                        width: '100%',
+                        border: '1px solid rgba(21,22,28,0.1)',
+                        borderRadius: '10px',
+                        padding: '9px 11px',
+                        fontSize: '13px',
+                        fontFamily: '"Inter", sans-serif',
+                        color: '#15161C',
+                        background: '#fff',
+                        outline: 'none'
+                      }}
+                    />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: '#5A5B66', marginBottom: '6px' }}>
+                      Role level (optional)
+                    </label>
+                    <select
+                      value={state.role}
+                      onChange={(e) => updateField('role', e.target.value)}
+                      style={{
+                        width: '100%',
+                        border: '1px solid rgba(21,22,28,0.1)',
+                        borderRadius: '10px',
+                        padding: '9px 11px',
+                        fontSize: '13px',
+                        fontFamily: '"Inter", sans-serif',
+                        color: '#15161C',
+                        background: '#fff',
+                        outline: 'none'
+                      }}
+                    >
+                      <option value="">Any</option>
+                      <option value="Junior">Junior / L3</option>
+                      <option value="Mid">Mid / L4</option>
+                      <option value="Senior">Senior / L5</option>
+                      <option value="Staff">Staff / L6</option>
+                    </select>
+                  </div>
+                </div>
+                <div style={{ fontSize: '11.5px', color: '#5A5B66', marginTop: '8px' }}>
+                  Leave blank — AI generates a generic problem for the selected type.
+                </div>
+              </div>
+            )}
+
+            {currentStep === 'source' && state.source === 'own' && (
+              <div style={{
+                marginTop: '16px',
+                border: '1px solid rgba(21,22,28,0.08)',
+                borderRadius: '14px',
+                padding: '16px 18px',
+                background: '#FAF9F6'
+              }}>
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: '#5A5B66', marginBottom: '6px' }}>
+                  Problem statement
+                </label>
+                <textarea
+                  placeholder="Type or paste your problem..."
+                  value={state.ownText}
+                  onChange={(e) => updateField('ownText', e.target.value)}
+                  style={{
+                    width: '100%',
+                    border: '1px solid rgba(21,22,28,0.1)',
+                    borderRadius: '10px',
+                    padding: '9px 11px',
+                    fontSize: '13px',
+                    fontFamily: '"Inter", sans-serif',
+                    color: '#15161C',
+                    background: '#fff',
+                    outline: 'none',
+                    resize: 'vertical',
+                    minHeight: '70px'
+                  }}
+                />
+              </div>
+            )}
+
+            {isReady && (
+              <button
+                onClick={startInterview}
+                style={{
+                  marginTop: '24px',
+                  padding: '14px 32px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: 'linear-gradient(160deg,#FFB930,#C97800)',
+                  color: '#fff',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  boxShadow: '0 8px 20px rgba(201,120,0,0.25)',
+                  transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 12px 28px rgba(201,120,0,0.35)';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 8px 20px rgba(201,120,0,0.25)';
+                }}
+              >
+                Start Interview
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <style jsx global>{`
+        @keyframes bob {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(4px); }
+        }
+        @keyframes float {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.25; }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+================================================
 FILE: src/app/layout.tsx
 ================================================
 import type { Metadata } from "next";
@@ -1891,9 +2071,8 @@ import { Inter, Poppins } from "next/font/google";
 
 import "./globals.css";
 
-import Navbar from "@/shared/layout/Navbar";
-import AuthProvider from "@/shared/providers/AuthProvider";
-import { ThemeProvider } from "next-themes";
+import AppShell from "@/shared/layout/AppShell";
+import { MainProvider } from "@/shared/providers/MainProvider";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -1924,18 +2103,11 @@ export default function RootLayout({
       className={`${poppins.variable} ${inter.variable} h-full antialiased`}
     >
       <body className="flex min-h-screen flex-col">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          disableTransitionOnChange
-        >
-          <AuthProvider>
-            <Navbar />
-            <div className="pt-16">
-              {children}
-            </div>
-          </AuthProvider>
-        </ThemeProvider>
+        <MainProvider>
+          <AppShell>
+            {children}
+          </AppShell>
+        </MainProvider>
       </body>
     </html>
   );
@@ -2013,17 +2185,54 @@ export async function DELETE(request: NextRequest) {
 FILE: src/app/api/transcripts/route.ts
 ================================================
 import { NextResponse } from "next/server";
-import { prisma } from "@/shared/prisma/client";
+
+import { getAllTranscripts } from "@/content/transcripts";
+
 export async function GET() {
-  const transcripts = await prisma.transcript.findMany({
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
+  try {
+    const source = getAllTranscripts();
 
-  console.log(JSON.stringify(transcripts[0], null, 2));
+    const transcripts = source.map((item) => ({
+  id: item.summary.slug,
+  slug: item.summary.slug,
+  title: item.summary.title,
+  category: item.summary.category,
+  difficulty: item.summary.difficulty,
+  company: item.summary.company ?? null,
 
-  return NextResponse.json(transcripts);
+  interviewer: null,
+  candidate: null,
+
+  duration: item.summary.duration,
+
+  summary: item.summary.description,
+
+  transcript: item.transcript,
+
+  createdAt: new Date(),
+  updatedAt: new Date(),
+
+  summaryData: {
+    title: item.summary.title,
+    category: item.summary.category,
+    difficulty: item.summary.difficulty,
+    company: item.summary.company ?? null,
+    duration: item.summary.duration,
+    description: item.summary.description,
+    tags: item.summary.tags,
+  },
+}));
+    console.info(`Fetched ${transcripts.length} transcript(s).`);
+
+    return NextResponse.json(transcripts);
+  } catch (error) {
+    console.error("Failed to fetch transcripts:", error);
+
+    return NextResponse.json(
+      { error: "Failed to fetch transcripts" },
+      { status: 500 }
+    );
+  }
 }
 ================================================
 FILE: src/app/api/transcripts/save/route.ts
@@ -2497,6 +2706,7 @@ import { z } from "zod";
 
 import { prisma } from "@/shared/prisma/client";
 import { getCurrentUserId } from "@/features/auth/getCurrentUserId";
+import { encrypt } from "@/shared/security/encryption";
 
 const aiConfigSchema = z.object({
   provider: z.enum(["openai", "ollama", "custom"]).optional(),
@@ -2505,7 +2715,7 @@ const aiConfigSchema = z.object({
   baseUrl: z.string().url().optional(),
 });
 
-// GET /api/user/ai-config - Get current user's AI configuration
+// GET /api/user/ai-config
 export async function GET() {
   try {
     const userId = await getCurrentUserId();
@@ -2521,18 +2731,21 @@ export async function GET() {
     });
 
     if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "User not found" },
+        { status: 404 }
+      );
     }
 
-    // Don't return the actual API key for security
     return NextResponse.json({
       provider: user.aiProvider,
-      hasApiKey: !!user.aiApiKey,
+      hasApiKey: Boolean(user.aiApiKey),
       model: user.aiModel,
       baseUrl: user.aiBaseUrl,
     });
   } catch (error) {
     console.error("Error fetching AI config:", error);
+
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
@@ -2540,7 +2753,7 @@ export async function GET() {
   }
 }
 
-// PUT /api/user/ai-config - Update user's AI configuration
+// PUT /api/user/ai-config
 export async function PUT(request: Request) {
   try {
     const userId = await getCurrentUserId();
@@ -2548,11 +2761,15 @@ export async function PUT(request: Request) {
 
     const validatedData = aiConfigSchema.parse(body);
 
+    const encryptedApiKey = validatedData.apiKey
+      ? encrypt(validatedData.apiKey)
+      : undefined;
+
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: {
         aiProvider: validatedData.provider,
-        aiApiKey: validatedData.apiKey,
+        aiApiKey: encryptedApiKey,
         aiModel: validatedData.model,
         aiBaseUrl: validatedData.baseUrl,
       },
@@ -2567,19 +2784,22 @@ export async function PUT(request: Request) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Invalid request data", details: error.issues },
+        {
+          error: "Invalid request data",
+          details: error.issues,
+        },
         { status: 400 }
       );
     }
 
     console.error("Error updating AI config:", error);
+
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
     );
   }
 }
-
 ================================================
 FILE: src/app/api/recommendations/route.ts
 ================================================
@@ -2934,20 +3154,79 @@ export async function POST(request: Request, { params }: { params: Promise<{ att
 ================================================
 FILE: src/app/api/bug-hunting/sql/route.ts
 ================================================
-// src/app/api/bug-hunting/sql/route.ts
 import { NextResponse } from "next/server";
 import { getBugHuntingService } from "@/features/bug-hunting";
+
+const BLOCKED_KEYWORDS = [
+  "INSERT",
+  "UPDATE",
+  "DELETE",
+  "DROP",
+  "ALTER",
+  "CREATE",
+  "TRUNCATE",
+  "GRANT",
+  "REVOKE",
+  "MERGE",
+  "CALL",
+  "EXEC",
+  "EXECUTE",
+];
 
 export async function POST(request: Request) {
   try {
     const { scenarioId, query } = await request.json();
+
+    if (!scenarioId || typeof scenarioId !== "string") {
+      return NextResponse.json(
+        { error: "Invalid scenarioId." },
+        { status: 400 }
+      );
+    }
+
+    if (!query || typeof query !== "string") {
+      return NextResponse.json(
+        { error: "Query is required." },
+        { status: 400 }
+      );
+    }
+
+    const normalizedQuery = query.trim().toUpperCase();
+
+    if (!normalizedQuery.startsWith("SELECT")) {
+      return NextResponse.json(
+        {
+          error: "Only SELECT queries are permitted.",
+        },
+        { status: 400 }
+      );
+    }
+
+    for (const keyword of BLOCKED_KEYWORDS) {
+      if (normalizedQuery.includes(keyword)) {
+        return NextResponse.json(
+          {
+            error: `Query contains forbidden keyword: ${keyword}`,
+          },
+          { status: 400 }
+        );
+      }
+    }
+
     const service = getBugHuntingService();
     const result = await service.runSqlQuery(scenarioId, query);
+
     return NextResponse.json(result);
   } catch (error) {
+    console.error("SQL execution failed:", error);
+
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Query failed" },
-      { status: 500 }
+      {
+        error: error instanceof Error ? error.message : "Query failed",
+      },
+      {
+        status: 500,
+      }
     );
   }
 }
@@ -3072,6 +3351,137 @@ export async function POST(request: Request) {
       {
         status: 500,
       }
+    );
+  }
+}
+
+================================================
+FILE: src/app/api/interviews/setup-and-start/route.ts
+================================================
+import { NextResponse } from "next/server";
+import { ZodError } from "zod";
+import logger from "@/shared/logger/logger";
+import { prisma } from "@/shared/prisma/client";
+import { randomUUID } from "crypto";
+import { Difficulty, InterviewMode, ProblemCategory } from "@prisma/client";
+
+const SetupAndStartSchema = {
+  duration: "number",
+  type: "string",
+  source: "string",
+  company: "string",
+  role: "string",
+  ownText: "string",
+};
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const { duration, type, source, company, role, ownText } = body;
+
+    // Validate required fields
+    if (!duration || !type || !source) {
+      return NextResponse.json(
+        { error: "Missing required fields: duration, type, source" },
+        { status: 400 }
+      );
+    }
+
+    if (source === 'own' && !ownText?.trim()) {
+      return NextResponse.json(
+        { error: "Problem statement is required when source is 'own'" },
+        { status: 400 }
+      );
+    }
+
+    let problemId: string;
+
+    // Map interview type to ProblemCategory
+    const typeToCategory: Record<string, ProblemCategory> = {
+      'hld': ProblemCategory.SYSTEM_DESIGN,
+      'lld': ProblemCategory.LOW_LEVEL_DESIGN,
+      'dsa': ProblemCategory.BACKEND,
+      'ai': ProblemCategory.BACKEND,
+      'behavioral': ProblemCategory.BACKEND,
+      'pr': ProblemCategory.BACKEND,
+    };
+
+    const category = typeToCategory[type.toLowerCase()] || ProblemCategory.SYSTEM_DESIGN;
+
+    if (source === 'ai') {
+      // For AI generation, we need to create a problem or use an existing one
+      // For now, let's create a temporary problem from the AI generation
+      // In a real implementation, this would call an AI service to generate the problem
+      
+      const problemTitle = `${type.toUpperCase()} Design - ${company || 'General'}`;
+      const problemDescription = ownText || `AI-generated ${type} design problem for ${company || 'general'}. This is a placeholder - in production, this would be generated by AI based on the type, company, and role.`;
+      const slug = `${type.toLowerCase()}-${company?.toLowerCase().replace(/\s+/g, '-') || 'general'}-${randomUUID().slice(0, 8)}`;
+      
+      // Create a new problem in the database
+      const problem = await prisma.problem.create({
+        data: {
+          id: randomUUID(),
+          title: problemTitle,
+          description: problemDescription,
+          difficulty: Difficulty.MEDIUM,
+          category,
+          interviewCount: 0,
+          slug,
+        },
+      });
+      
+      problemId = problem.id;
+    } else if (source === 'own') {
+      // Create a problem from user's own text
+      const slug = `custom-${type.toLowerCase()}-${randomUUID().slice(0, 8)}`;
+      const problem = await prisma.problem.create({
+        data: {
+          id: randomUUID(),
+          title: `Custom ${type.toUpperCase()} Problem`,
+          description: ownText,
+          difficulty: Difficulty.MEDIUM,
+          category,
+          interviewCount: 0,
+          slug,
+        },
+      });
+      
+      problemId = problem.id;
+    } else {
+      return NextResponse.json(
+        { error: "Invalid source. Must be 'ai' or 'own'" },
+        { status: 400 }
+      );
+    }
+
+    // Now call the existing interview start API
+    const startPayload = {
+      type: type.toLowerCase(),
+      difficulty: Difficulty.MEDIUM,
+      duration: duration,
+      company: company || 'General',
+      problemId: problemId,
+      mode: InterviewMode.CANDIDATE,
+    };
+
+    const interviewService = (await import("@/features/interview")).InterviewService;
+    const service = new interviewService();
+    const interviewId = await service.startInterview(startPayload);
+
+    return NextResponse.json({ id: interviewId }, { status: 201 });
+  } catch (error) {
+    if (error instanceof ZodError) {
+      logger.error("Validation Error", { issues: error.issues });
+      return NextResponse.json(
+        { error: "Invalid request body", issues: error.issues },
+        { status: 400 }
+      );
+    }
+
+    logger.error("Failed to setup and start interview", { error });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
     );
   }
 }
@@ -4097,6 +4507,96 @@ These will be deprecated over time.
 }
 
 /* Dark mode support */
+[data-theme="dark"] {
+  /* Primitive Colors - Dark Mode */
+  --primitive-white: #0a0a0a;
+  --primitive-off-white: #171717;
+  --primitive-light-gray: #262626;
+  --primitive-medium-gray: #404040;
+  --primitive-dark-gray: #525252;
+  --primitive-very-dark: #fafafa;
+  --primitive-near-black: #f5f5f5;
+
+  /* Surface Tokens - Dark Mode */
+  --surface-page: #0a0a0a;
+  --surface-panel: #171717;
+  --surface-elevated: #262626;
+  --surface-overlay: rgba(0, 0, 0, 0.7);
+
+  /* Text Tokens - Dark Mode */
+  --text-primary: #fafafa;
+  --text-secondary: #a3a3a3;
+  --text-tertiary: #737373;
+  --text-inverse: #0a0a0a;
+
+  /* Border Tokens - Dark Mode */
+  --border-default: #262626;
+  --border-light: #404040;
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-focus: var(--primitive-mint-deep);
+
+  /* Background Tokens - Dark Mode */
+  --background-primary: #0a0a0a;
+  --background-secondary: #171717;
+  --background-muted: #262626;
+
+  /* Legacy Token Aliases - Dark Mode */
+  --paper: #0a0a0a;
+  --paper-50: #171717;
+  --paper-100: #262626;
+  --paper-200: #404040;
+  --paper-300: #525252;
+  --paper-400: #737373;
+  --paper-500: #a3a3a3;
+  --paper-600: #d4d4d4;
+  --paper-700: #e5e5e5;
+  --paper-800: #f5f5f5;
+  --paper-900: #fafafa;
+  --paper-950: #ffffff;
+
+  --ink: #fafafa;
+  --ink-50: #f5f5f5;
+  --ink-100: #e5e5e5;
+  --ink-200: #d4d4d4;
+  --ink-300: #a3a3a3;
+  --ink-400: #737373;
+  --ink-500: #525252;
+  --ink-600: #404040;
+  --ink-700: #262626;
+  --ink-800: #171717;
+  --ink-900: #0a0a0a;
+  --ink-950: #050505;
+
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #171717;
+  --bg-tertiary: #262626;
+  --bg-muted: #404040;
+  --surface: #0a0a0a;
+  --surface-elevated: #171717;
+  --border: #262626;
+  --border-light: #171717;
+  --border-dark: #404040;
+
+  /* Semantic Theme Tokens - Dark Mode */
+  --background: var(--bg-primary);
+  --foreground: var(--ink);
+  --card: var(--surface);
+  --card-foreground: var(--ink);
+  --primary: var(--primitive-mint);
+  --primary-foreground: var(--paper);
+  --muted: var(--paper-200);
+  --muted-foreground: var(--ink-400);
+  --accent: var(--paper-200);
+  --accent-foreground: var(--ink);
+  --success: #34d399;
+  --success-foreground: var(--paper);
+  --error: #f87171;
+  --error-foreground: var(--paper);
+  --warning: #fbbf24;
+  --warning-foreground: var(--ink);
+}
+
+/* Keep .dark class for backward compatibility */
 .dark {
   --paper: #0a0a0a;
   --paper-50: #171717;

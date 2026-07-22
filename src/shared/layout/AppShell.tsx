@@ -13,6 +13,8 @@ interface NavItem {
   icon: React.ReactNode;
 }
 
+// Primary navigation — deliberately short, shown in the sidebar (desktop)
+// and as the bottom tab bar (mobile).
 const navItems: NavItem[] = [
   {
     name: "Home",
@@ -20,6 +22,37 @@ const navItems: NavItem[] = [
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <path d="M3 11l9-8 9 8M5 10v10h14V10" />
+      </svg>
+    ),
+  },
+  {
+    name: "Deep dive",
+    path: "/deep-dive",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <circle cx="12" cy="12" r="3.2" />
+        <circle cx="12" cy="12" r="7.5" opacity="0.55" />
+        <circle cx="12" cy="12" r="10.5" opacity="0.3" />
+      </svg>
+    ),
+  },
+  {
+    name: "Transcripts",
+    path: "/learn/transcripts",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M4 19.5A2.5 2.5 0 016.5 17H20M4 4.5A2.5 2.5 0 016.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15z" />
+        <path d="M8 7h8M8 11h8" />
+      </svg>
+    ),
+  },
+  {
+    name: "Whiteboard",
+    path: "/learn/whiteboard",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <rect x="3" y="4" width="18" height="13" rx="2" />
+        <path d="M8 21h8M9 8h6M9 12h4" />
       </svg>
     ),
   },
@@ -35,58 +68,37 @@ const navItems: NavItem[] = [
       </svg>
     ),
   },
-  {
-    name: "Learn",
-    path: "/learn",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M4 19.5A2.5 2.5 0 016.5 17H20M4 4.5A2.5 2.5 0 016.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15z" />
-      </svg>
-    ),
-  },
-  {
-    name: "Problems",
-    path: "/problems",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M9 6l-6 6 6 6M15 6l6 6-6 6" />
-      </svg>
-    ),
-  },
-  {
-    name: "Library",
-    path: "/library",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <rect x="4" y="4" width="16" height="16" rx="2" />
-        <path d="M4 10h16M10 10v10" />
-      </svg>
-    ),
-  },
 ];
 
-const insightItems: NavItem[] = [
-  {
-    name: "Analytics",
-    path: "/analytics",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M4 19V9M11 19V4M18 19v-6" />
-      </svg>
-    ),
-  },
-];
+const SIDEBAR_EXPANDED = 236;
+const SIDEBAR_COLLAPSED = 76;
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { data: session, status } = useSession();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [userXP, setUserXP] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useClickOutside(menuRef, () => setMenuOpen(false), menuOpen);
+
+  // Restore the collapsed preference (desktop sidebar only).
+  useEffect(() => {
+    const saved = localStorage.getItem("sidebarCollapsed");
+    if (saved) setCollapsed(saved === "true");
+    setMounted(true);
+  }, []);
+
+  const toggleCollapsed = () => {
+    setCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem("sidebarCollapsed", String(next));
+      return next;
+    });
+  };
 
   // Theme management
   useEffect(() => {
@@ -129,32 +141,48 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   const email = session?.user?.email;
   const initial = email ? email.charAt(0).toUpperCase() : "?";
+  const sidebarWidth = collapsed ? SIDEBAR_COLLAPSED : SIDEBAR_EXPANDED;
 
   return (
-    <div className="min-h-screen bg-[var(--surface-page)]">
-      {/* Mobile Overlay */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      {/* Sidebar */}
+    <div
+      className="min-h-screen bg-[var(--surface-page)]"
+      style={{ "--sidebar-w": `${sidebarWidth}px` } as React.CSSProperties}
+    >
+      {/* Sidebar — desktop only. On mobile, navigation lives in the bottom bar. */}
       <aside
         className={cn(
-          "fixed left-0 top-0 bottom-0 w-[236px] bg-[var(--surface-panel)] border-r border-[var(--border)] z-50 flex flex-col transition-transform duration-300 lg:translate-x-0",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          "hidden lg:flex fixed left-0 top-0 bottom-0 bg-[var(--surface-panel)] border-r border-[var(--border)] z-50 flex-col w-[var(--sidebar-w)]",
+          mounted && "transition-[width] duration-200 ease-out"
         )}
       >
-        {/* Logo */}
-        <div className="p-6 pb-5">
-          <Link
-            href="/"
-            className="font-['Poppins'] font-bold text-[17px] text-[var(--text-primary)]"
+        {/* Logo + collapse toggle */}
+        <div className={cn("flex items-center pt-6 pb-5 gap-2", collapsed ? "justify-center px-2" : "justify-between px-4")}>
+          {!collapsed && (
+            <Link
+              href="/"
+              className="font-['Poppins'] font-bold text-[17px] text-[var(--text-primary)] whitespace-nowrap overflow-hidden"
+            >
+              interview<span className="text-[var(--category-learn-deep)]">.lab</span>
+            </Link>
+          )}
+          <button
+            onClick={toggleCollapsed}
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            className="w-8 h-8 rounded-full border border-[var(--border)] text-[var(--text-secondary)] flex items-center justify-center flex-shrink-0 hover:border-[var(--category-learn-deep)] hover:text-[var(--text-primary)] transition-colors"
           >
-            interview<span className="text-[var(--category-learn-deep)]">.lab</span>
-          </Link>
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.4"
+              className={cn("transition-transform duration-200", collapsed && "rotate-180")}
+            >
+              <path d="M15 6l-6 6 6 6" />
+            </svg>
+          </button>
         </div>
 
         {/* Navigation */}
@@ -163,9 +191,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <Link
               key={item.path}
               href={item.path}
-              onClick={() => setSidebarOpen(false)}
+              title={collapsed ? item.name : undefined}
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13.5px] font-medium relative transition-colors",
+                "flex items-center gap-3 py-2.5 rounded-xl text-[13.5px] font-medium relative transition-colors",
+                collapsed ? "justify-center px-0" : "px-3",
                 isActive(item.path)
                   ? "bg-[var(--category-learn-bg)] text-[var(--text-primary)] font-semibold"
                   : "text-[var(--text-secondary)] hover:bg-[var(--surface-page)] hover:text-[var(--text-primary)]"
@@ -181,41 +210,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               >
                 {item.icon}
               </span>
-              {item.name}
-              {isActive(item.path) && (
-                <span className="absolute left-[-12px] top-2 bottom-2 w-[3px] rounded-[3px] bg-[var(--category-learn-deep)]" />
+              {!collapsed && (
+                <span className="whitespace-nowrap overflow-hidden">{item.name}</span>
               )}
-            </Link>
-          ))}
-
-          <div className="h-px bg-[var(--border)] my-2.5 mx-3" />
-          <div className="px-3 py-2.5 pb-1 text-[10px] font-bold tracking-[0.07em] text-[var(--text-secondary)] uppercase opacity-70">
-            Insights
-          </div>
-          {insightItems.map((item) => (
-            <Link
-              key={item.path}
-              href={item.path}
-              onClick={() => setSidebarOpen(false)}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13.5px] font-medium relative transition-colors",
-                isActive(item.path)
-                  ? "bg-[var(--category-learn-bg)] text-[var(--text-primary)] font-semibold"
-                  : "text-[var(--text-secondary)] hover:bg-[var(--surface-page)] hover:text-[var(--text-primary)]"
-              )}
-            >
-              <span
-                className={cn(
-                  "w-[18px] h-[18px] flex-shrink-0",
-                  isActive(item.path)
-                    ? "text-[var(--category-learn-deep)]"
-                    : "text-[var(--text-secondary)]"
-                )}
-              >
-                {item.icon}
-              </span>
-              {item.name}
-              {isActive(item.path) && (
+              {isActive(item.path) && !collapsed && (
                 <span className="absolute left-[-12px] top-2 bottom-2 w-[3px] rounded-[3px] bg-[var(--category-learn-deep)]" />
               )}
             </Link>
@@ -225,7 +223,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         {/* Footer */}
         <div className="p-3.5 border-t border-[var(--border)]">
           {/* Streak Card */}
-          <div className="flex items-center gap-2.5 p-2.5 rounded-[14px] bg-[var(--surface-page)] mb-2.5">
+          <div
+            className={cn(
+              "flex items-center gap-2.5 rounded-[14px] bg-[var(--surface-page)] mb-2.5 p-2.5",
+              collapsed && "justify-center"
+            )}
+            title={collapsed ? "5 day streak" : undefined}
+          >
             <svg
               className="w-4 h-4 text-[var(--category-practice)] animate-pulse flex-shrink-0"
               viewBox="0 0 24 24"
@@ -233,26 +237,36 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             >
               <path d="M12 2c1 4-3 5-3 9a3 3 0 006 0c0-1-1-2-1-3 2 1 3 3 3 5a5 5 0 01-10 0c0-5 4-6 5-11z" />
             </svg>
-            <div className="text-[11.5px]">
-              <span className="block font-semibold text-[13px]">5 day streak</span>
-              keep it going
-            </div>
+            {!collapsed && (
+              <div className="text-[11.5px] whitespace-nowrap overflow-hidden">
+                <span className="block font-semibold text-[13px]">5 day streak</span>
+                keep it going
+              </div>
+            )}
           </div>
 
           {/* User Card */}
           {email && (
-            <div className="flex items-center gap-2.5 p-1.5 rounded-[14px] cursor-pointer hover:bg-[var(--surface-page)] transition-colors">
+            <div
+              className={cn(
+                "flex items-center gap-2.5 rounded-[14px] cursor-pointer hover:bg-[var(--surface-page)] transition-colors p-1.5",
+                collapsed && "justify-center"
+              )}
+              title={collapsed ? email : undefined}
+            >
               <div className="w-8 h-8 rounded-full bg-[var(--category-learn-deep)] text-white flex items-center justify-center text-[12.5px] font-bold flex-shrink-0">
                 {initial}
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-[12.5px] font-semibold text-[var(--text-primary)] truncate">
-                  {email.split("@")[0]}
+              {!collapsed && (
+                <div className="flex-1 min-w-0">
+                  <div className="text-[12.5px] font-semibold text-[var(--text-primary)] truncate">
+                    {email.split("@")[0]}
+                  </div>
+                  <div className="text-[10.5px] text-[var(--text-secondary)]">
+                    {userXP} XP · Free plan
+                  </div>
                 </div>
-                <div className="text-[10.5px] text-[var(--text-secondary)]">
-                  {userXP} XP · Free plan
-                </div>
-              </div>
+              )}
             </div>
           )}
         </div>
@@ -261,31 +275,29 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       {/* Topbar */}
       <header
         className={cn(
-          "fixed top-0 right-0 left-0 lg:left-[236px] h-16 bg-[var(--surface-panel)] border-b border-[var(--border)] flex items-center justify-between px-6 lg:px-6 z-30 transition-all duration-300",
-          sidebarOpen && "left-0"
+          "fixed top-0 right-0 left-0 lg:left-[var(--sidebar-w)] h-16 bg-[var(--surface-panel)] border-b border-[var(--border)] flex items-center justify-between px-4 sm:px-6 z-30",
+          mounted && "transition-[left] duration-200 ease-out"
         )}
       >
-        {/* Mobile Toggle */}
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="lg:hidden w-9.5 h-9.5 rounded-full border border-[var(--border)] bg-[var(--surface-panel)] text-[var(--text-secondary)] flex items-center justify-center flex-shrink-0"
+        {/* Mobile logo (sidebar is hidden on mobile) */}
+        <Link
+          href="/"
+          className="lg:hidden font-['Poppins'] font-bold text-[16px] text-[var(--text-primary)] whitespace-nowrap"
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M3 12h18M3 6h18M3 18h18" />
-          </svg>
-        </button>
+          interview<span className="text-[var(--category-learn-deep)]">.lab</span>
+        </Link>
 
-        {/* Breadcrumb */}
-        <div className="text-[13.5px] font-semibold text-[var(--text-secondary)]">
+        {/* Breadcrumb (desktop) */}
+        <div className="hidden lg:block text-[13.5px] font-semibold text-[var(--text-secondary)]">
           <span className="text-[var(--text-primary)]">
             {navItems.find((item) => isActive(item.path))?.name || "Home"}
           </span>
         </div>
 
         {/* Right Actions */}
-        <div className="flex items-center gap-3.5">
+        <div className="flex items-center gap-2 sm:gap-3.5">
           {/* Search */}
-          <div className="hidden sm:flex items-center gap-2 bg-[var(--surface-page)] border border-[var(--border)] rounded-full px-3.5 py-2 text-[12.5px] text-[var(--text-secondary)] w-[190px] focus-within:border-[var(--category-learn-deep)] transition-colors">
+          <div className="hidden md:flex items-center gap-2 bg-[var(--surface-page)] border border-[var(--border)] rounded-full px-3.5 py-2 text-[12.5px] text-[var(--text-secondary)] w-[190px] focus-within:border-[var(--category-learn-deep)] transition-colors">
             <svg className="w-[13px] h-[13px] opacity-50 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="11" cy="11" r="7" />
               <path d="M21 21l-4.3-4.3" />
@@ -304,7 +316,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
-            className="w-9.5 h-9.5 rounded-full border border-[var(--border)] bg-[var(--surface-panel)] text-[var(--text-secondary)] flex items-center justify-center hover:border-[var(--category-learn-deep)] transition-colors flex-shrink-0"
+            className="w-9 h-9 sm:w-9.5 sm:h-9.5 rounded-full border border-[var(--border)] bg-[var(--surface-panel)] text-[var(--text-secondary)] flex items-center justify-center hover:border-[var(--category-learn-deep)] transition-colors flex-shrink-0"
           >
             {theme === "dark" ? (
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -334,7 +346,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
               {menuOpen && (
                 <div className="absolute right-0 top-10 z-50 min-w-[180px] rounded-xl border border-[var(--border)] bg-[var(--surface-panel)] p-2 shadow-lg">
-                  <div className="mb-2 border-b border-[var(--border)] px-3 py-2 text-sm text-[var(--text-secondary)]">
+                  <div className="mb-2 border-b border-[var(--border)] px-3 py-2 text-sm text-[var(--text-secondary)] truncate">
                     {email}
                   </div>
 
@@ -350,7 +362,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           ) : (
             <Link
               href="/login"
-              className="font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+              className="font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-sm"
             >
               Log in
             </Link>
@@ -358,42 +370,37 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      {/* Mobile Bottom Tab Bar */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-[var(--surface-panel)] border-t border-[var(--border)] z-40 flex items-center justify-around py-2 px-4">
-        {navItems.slice(0, 4).map((item) => (
+      {/* Mobile Bottom Tab Bar — this *is* the mobile navigation; no drawer/hamburger. */}
+      <nav
+        className="lg:hidden fixed bottom-0 left-0 right-0 bg-[var(--surface-panel)] border-t border-[var(--border)] z-40 flex items-stretch justify-around"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
+        {navItems.map((item) => (
           <Link
             key={item.path}
             href={item.path}
             className={cn(
-              "flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors",
+              "flex-1 flex flex-col items-center justify-center gap-1 py-2 min-w-0 transition-colors",
               isActive(item.path)
                 ? "text-[var(--category-learn-deep)]"
                 : "text-[var(--text-secondary)]"
             )}
           >
-            <span className="w-5 h-5">{item.icon}</span>
-            <span className="text-[10.5px] font-medium">{item.name}</span>
+            <span className="w-5 h-5 flex-shrink-0">{item.icon}</span>
+            <span className="text-[10px] font-medium truncate w-full text-center px-0.5">
+              {item.name}
+            </span>
           </Link>
         ))}
-        <Link
-          href="/library"
-          className={cn(
-            "flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors",
-            isActive("/library")
-              ? "text-[var(--category-learn-deep)]"
-              : "text-[var(--text-secondary)]"
-          )}
-        >
-          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <rect x="4" y="4" width="16" height="16" rx="2" />
-            <path d="M4 10h16M10 10v10" />
-          </svg>
-          <span className="text-[10.5px] font-medium">Library</span>
-        </Link>
       </nav>
 
       {/* Main Content */}
-      <main className="pt-16 lg:pl-[236px] lg:pt-16 pb-16 lg:pb-0 min-h-screen">
+      <main
+        className={cn(
+          "pt-16 pb-16 lg:pb-0 lg:pl-[var(--sidebar-w)] min-h-screen",
+          mounted && "transition-[padding-left] duration-200 ease-out"
+        )}
+      >
         {children}
       </main>
     </div>
