@@ -7,12 +7,13 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
     "generate:transcripts": "tsx scripts/generate-transcripts.ts",
     "predev": "npm run generate:transcripts",
-    "prebuild": "npm run generate:transcripts"
+    "prebuild": "npm run generate:transcripts",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

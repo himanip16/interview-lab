@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>interview.lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FAF9F6; --ink:#15161C; --ink-soft:#5A5B66; --mint:#00D9A3; --mint-deep:#00A87E; --coral:#FF5A3C;
+    --sidebar-w:236px; --topbar-h:64px;
+    --border:rgba(21,22,28,0.07); --border-hover:rgba(21,22,28,0.12); --bg-card:#fff; --bg-input:#fff;
+  }
+  [data-theme="dark"]{
+    --paper:#0D0E12; --ink:#FAF9F6; --ink-soft:#9A9BAA; --mint:#00D9A3; --mint-deep:#00A87E; --coral:#FF5A3C;
+    --border:rgba(255,255,255,0.08); --border-hover:rgba(255,255,255,0.15); --bg-card:#15161C; --bg-input:#1A1B21;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; transition:background 0.3s ease,color 0.3s ease; }
+  h1,h2,h3{ font-family:'Poppins',sans-serif; letter-spacing:-0.02em; }
+  a{ text-decoration:none; color:inherit; }
+
+  /* ================= SIDEBAR ================= */
+  .sidebar{
+    position:fixed; top:0; left:0; bottom:0; width:var(--sidebar-w); background:var(--bg-card);
+    border-right:1px solid var(--border); display:flex; flex-direction:column; z-index:20;
+    transition:transform 0.3s ease;
+  }
+  .sidebar.closed{ transform:translateX(-100%); }
+  .overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:19; opacity:0; pointer-events:none; transition:opacity 0.3s ease;
+  }
+  .overlay.active{ opacity:1; pointer-events:auto; }
+  .mobile-toggle{ display:none; width:38px; height:38px; border-radius:50%; border:1px solid var(--border); background:var(--bg-card); color:var(--ink-soft); align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; }
+  .side-logo{ padding:22px 22px 18px; font-family:'Poppins',sans-serif; font-weight:700; font-size:17px; }
+  .side-logo span{ color:var(--mint-deep); }
+
+  .side-nav{ flex:1; padding:6px 12px; display:flex; flex-direction:column; gap:2px; }
+  .side-item{ display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:12px; font-size:13.5px; font-weight:500; color:var(--ink-soft); cursor:pointer; position:relative; }
+  .side-item:hover{ background:var(--paper); color:var(--ink); transition:background 0.2s ease; }
+  .side-item.active{ background:rgba(0,217,163,0.1); color:var(--ink); font-weight:600; }
+  .side-item.active .side-ic{ color:var(--mint-deep); }
+  .side-item.active::before{ content:''; position:absolute; left:-12px; top:8px; bottom:8px; width:3px; border-radius:3px; background:var(--mint-deep); }
+  .side-ic{ width:18px; height:18px; flex-shrink:0; color:var(--ink-soft); }
+  .side-divider{ height:1px; background:var(--border); margin:10px 12px; }
+  .side-label{ font-size:10px; font-weight:700; letter-spacing:.07em; color:var(--ink-soft); text-transform:uppercase; padding:10px 12px 4px; opacity:.7; }
+
+  .side-foot{ padding:14px; border-top:1px solid var(--border); }
+  .streak-card{ display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:14px; background:var(--paper); margin-bottom:10px; }
+  .streak-card .flame{ animation:pulse 1.8s ease-in-out infinite; flex-shrink:0; }
+  @keyframes pulse{ 0%,100%{ opacity:1; } 50%{ opacity:.4; } }
+  .streak-card .txt{ font-size:11.5px; }
+  .streak-card .txt b{ display:block; font-size:13px; }
+  .user-card{ display:flex; align-items:center; gap:10px; padding:6px; border-radius:14px; cursor:pointer; }
+  .user-card:hover{ background:var(--paper); transition:background 0.2s ease; }
+  .avatar{ width:32px; height:32px; border-radius:50%; background:var(--mint-deep); color:#fff; display:flex; align-items:center; justify-content:center; font-size:12.5px; font-weight:700; flex-shrink:0; }
+  .user-card .txt div:first-child{ font-size:12.5px; font-weight:600; }
+  .user-card .txt div:last-child{ font-size:10.5px; color:var(--ink-soft); }
+
+  /* ================= TOPBAR ================= */
+  .topbar{
+    position:fixed; top:0; left:var(--sidebar-w); right:0; height:var(--topbar-h);
+    background:var(--bg-card); backdrop-filter:blur(8px); border-bottom:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between; padding:0 26px; z-index:15;
+    transition:left 0.3s ease, background 0.3s ease, border-color 0.3s ease;
+  }
+  .topbar.mobile-open{ left:0; }
+  .crumb{ font-size:13.5px; font-weight:600; color:var(--ink-soft); }
+  .crumb b{ color:var(--ink); }
+
+  .top-right{ display:flex; align-items:center; gap:14px; }
+  .search-mini{ display:flex; align-items:center; gap:8px; background:var(--bg-input); border:1px solid var(--border); border-radius:999px; padding:8px 14px; font-size:12.5px; color:var(--ink-soft); width:190px; transition:border-color 0.2s ease; }
+  .search-mini:focus-within{ border-color:var(--mint-deep); }
+  .search-mini svg{ width:13px; height:13px; opacity:.5; flex-shrink:0; }
+  .xp-badge{ display:flex; align-items:center; gap:5px; font-size:12px; font-weight:600; color:#E8940A; background:rgba(232,148,10,0.1); padding:6px 12px; border-radius:999px; }
+  .theme-toggle{ width:38px; height:38px; border-radius:50%; border:1px solid var(--border); background:var(--bg-card); color:var(--ink-soft); display:flex; align-items:center; justify-content:center; cursor:pointer; transition:border-color 0.2s ease; }
+  .theme-toggle:hover{ border-color:var(--mint-deep); }
+
+  /* ================= MAIN ================= */
+  .main{ margin-left:var(--sidebar-w); margin-top:var(--topbar-h); padding:48px 46px; min-height:calc(100vh - var(--topbar-h)); }
+
+  .hero{ display:flex; align-items:center; gap:40px; min-height:60vh; }
+  .hero-left{ flex:1; max-width:600px; }
+  .eyebrow{ display:inline-flex; align-items:center; gap:8px; font-size:12.5px; font-weight:600; color:var(--mint-deep); background:rgba(0,217,163,0.1); padding:6px 14px; border-radius:999px; }
+  .eyebrow .dot{ width:6px; height:6px; border-radius:50%; background:var(--mint); animation:pulse 1.8s ease-in-out infinite; }
+  .hero h1{ font-size:58px; line-height:1.05; font-weight:800; margin-top:20px; }
+  .hero p.sub{ font-size:16px; color:var(--ink-soft); margin-top:18px; max-width:460px; line-height:1.6; }
+  .hero-actions{ display:flex; gap:14px; margin-top:30px; }
+  .btn-primary{ background:var(--ink); color:#fff; border:none; padding:15px 26px; border-radius:999px; font-weight:600; font-size:14.5px; cursor:pointer; }
+  .btn-ghost{ background:none; border:1.5px solid var(--border-hover); padding:15px 26px; border-radius:999px; font-weight:600; font-size:14.5px; cursor:pointer; color:var(--ink); transition:border-color 0.2s ease; }
+  .btn-ghost:hover{ border-color:var(--mint-deep); }
+
+  .mascot{ flex:0 0 280px; }
+  .mascot svg{ width:100%; animation:float 5s ease-in-out infinite; filter:drop-shadow(0 24px 30px rgba(21,22,28,0.1)); }
+  @keyframes float{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-12px); } }
+
+  .stats-row{ display:flex; margin-top:56px; border-top:1px solid var(--border); }
+  .stat-col{ flex:1; padding:22px 0; text-align:center; border-right:1px solid var(--border); }
+  .stat-col:last-child{ border-right:none; }
+  .stat-col .n{ font-family:'Poppins',sans-serif; font-size:26px; font-weight:700; }
+  .stat-col .l{ font-size:12px; color:var(--ink-soft); margin-top:2px; }
+
+  @media (max-width:900px){
+    .sidebar{ transform:translateX(-100%); } .sidebar.open{ transform:translateX(0); } .topbar{ left:0; padding:0 16px; } .main{ margin-left:0; padding:36px 20px; }
+    .hero{ flex-direction:column; align-items:flex-start; } .hero h1{ font-size:38px; } .mascot{ align-self:center; }
+    .mobile-toggle{ display:flex; } .search-mini{ width:140px; }
+    .top-right{ gap:10px; } .xp-badge{ display:none; }
+  }
+  @media (max-width:600px){
+    .hero h1{ font-size:32px; } .hero p.sub{ font-size:14px; } .hero-actions{ flex-direction:column; width:100%; }
+    .btn-primary, .btn-ghost{ width:100%; text-align:center; } .stats-row{ flex-direction:column; }
+    .stat-col{ border-right:none; border-bottom:1px solid var(--border); } .stat-col:last-child{ border-bottom:none; }
+    .search-mini{ display:none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= OVERLAY ================= -->
+<div class="overlay" id="overlay"></div>
+
+<!-- ================= SIDEBAR ================= -->
+<div class="sidebar" id="sidebar">
+  <div class="side-logo">interview<span>.</span>lab</div>
+
+  <div class="side-nav">
+    <div class="side-item active">
+      <svg class="side-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></svg>
+      Home
+    </div>
+    <div class="side-item">
+      <svg class="side-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+      Dashboard
+    </div>
+    <div class="side-item">
+      <svg class="side-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20M4 4.5A2.5 2.5 0 016.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15z"/></svg>
+      Learn
+    </div>
+    <div class="side-item">
+      <svg class="side-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l-6 6 6 6M15 6l6 6-6 6"/></svg>
+      Problems
+    </div>
+    <div class="side-item">
+      <svg class="side-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 10h16M10 10v10"/></svg>
+      Library
+    </div>
+
+    <div class="side-divider"></div>
+    <div class="side-label">Insights</div>
+    <div class="side-item">
+      <svg class="side-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V9M11 19V4M18 19v-6"/></svg>
+      Analytics
+    </div>
+  </div>
+
+  <div class="side-foot">
+    <div class="streak-card">
+      <svg class="flame" width="16" height="16" viewBox="0 0 24 24" fill="var(--coral)"><path d="M12 2c1 4-3 5-3 9a3 3 0 006 0c0-1-1-2-1-3 2 1 3 3 3 5a5 5 0 01-10 0c0-5 4-6 5-11z"/></svg>
+      <div class="txt"><b>5 day streak</b>keep it going</div>
+    </div>
+    <div class="user-card">
+      <div class="avatar">H</div>
+      <div class="txt"><div>Himani</div><div>0 XP &middot; Free plan</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= TOPBAR ================= -->
+<div class="topbar" id="topbar">
+  <button class="mobile-toggle" id="mobileToggle">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+  </button>
+  <div class="crumb"><b>Home</b></div>
+  <div class="top-right">
+    <div class="search-mini">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      Search&hellip;
+    </div>
+    <div class="xp-badge">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 7h7l-5.5 4.5L18.5 21 12 16.5 5.5 21 7.5 13.5 2 9h7z"/></svg>
+      0 XP
+    </div>
+    <button class="theme-toggle"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg></button>
+  </div>
+</div>
+
+<!-- ================= MAIN ================= -->
+<div class="main">
+  <div class="hero">
+    <div class="hero-left">
+      <div class="eyebrow"><span class="dot"></span>Practice like top tech companies</div>
+      <h1>Interviews that<br/>actually prepare<br/>you.</h1>
+      <p class="sub">An AI interviewer that adapts to what you say &mdash; evidence-backed feedback instead of a vague score.</p>
+      <div class="hero-actions">
+        <button class="btn-primary">Start an interview</button>
+        <button class="btn-ghost">See how it works</button>
+      </div>
+    </div>
+
+    <div class="mascot">
+      <svg viewBox="0 0 200 260" fill="none">
+        <circle cx="100" cy="60" r="38" fill="#F4E4D4"/>
+        <path d="M62 56a38 38 0 0176 0v6H62z" fill="#15161C"/>
+        <circle cx="86" cy="62" r="4" fill="#15161C"/><circle cx="114" cy="62" r="4" fill="#15161C"/>
+        <path d="M88 76q12 8 24 0" stroke="#15161C" stroke-width="3" stroke-linecap="round" fill="none"/>
+        <path d="M60 108q40-22 80 0v70q-40 16-80 0z" fill="#00D9A3"/>
+        <rect x="80" y="130" width="40" height="30" rx="4" fill="#fff"/>
+        <path d="M86 142h28M86 150h20" stroke="#00A87E" stroke-width="3" stroke-linecap="round"/>
+        <rect x="70" y="212" width="24" height="34" rx="10" fill="#15161C"/>
+        <rect x="106" y="212" width="24" height="34" rx="10" fill="#15161C"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-col"><div class="n">7</div><div class="l">Practice modes</div></div>
+    <div class="stat-col"><div class="n">3+</div><div class="l">Problems</div></div>
+    <div class="stat-col"><div class="n">6</div><div class="l">Dimensions scored</div></div>
+  </div>
+</div>
+
+<script>
+// Sidebar navigation active state
+document.querySelectorAll('.side-item').forEach(el => {
+  el.onclick = () => { document.querySelectorAll('.side-item').forEach(e=>e.classList.remove('active')); el.classList.add('active'); };
+});
+
+// Mobile sidebar toggle
+const mobileToggle = document.getElementById('mobileToggle');
+const sidebar = document.getElementById('sidebar');
+const overlay = document.getElementById('overlay');
+const topbar = document.getElementById('topbar');
+
+function toggleSidebar() {
+  sidebar.classList.toggle('open');
+  overlay.classList.toggle('active');
+  topbar.classList.toggle('mobile-open');
+}
+
+mobileToggle.addEventListener('click', toggleSidebar);
+overlay.addEventListener('click', toggleSidebar);
+
+// Close sidebar when clicking a nav item on mobile
+document.querySelectorAll('.side-item').forEach(el => {
+  el.addEventListener('click', () => {
+    if (window.innerWidth <= 900) {
+      toggleSidebar();
+    }
+  });
+});
+
+// Theme toggle
+const themeToggle = document.querySelector('.theme-toggle');
+const html = document.documentElement;
+
+// Check for saved theme preference or default to light
+const savedTheme = localStorage.getItem('theme') || 'light';
+html.setAttribute('data-theme', savedTheme);
+
+// Update theme toggle icon
+function updateThemeIcon(theme) {
+  const svg = themeToggle.querySelector('svg');
+  if (theme === 'dark') {
+    svg.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+  } else {
+    svg.innerHTML = '<path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>';
+  }
+}
+
+updateThemeIcon(savedTheme);
+
+themeToggle.addEventListener('click', () => {
+  const currentTheme = html.getAttribute('data-theme');
+  const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', newTheme);
+  localStorage.setItem('theme', newTheme);
+  updateThemeIcon(newTheme);
+});
+</script>
+
+</body>
+</html>

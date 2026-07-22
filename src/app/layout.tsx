@@ -3,7 +3,7 @@ import { Inter, Poppins } from "next/font/google";
 
 import "./globals.css";
 
-import Navbar from "@/shared/layout/Navbar";
+import AppShell from "@/shared/layout/AppShell";
 import { MainProvider } from "@/shared/providers/MainProvider";
 
 const poppins = Poppins({
@@ -36,10 +36,9 @@ export default function RootLayout({
     >
       <body className="flex min-h-screen flex-col">
         <MainProvider>
-          <Navbar />
-          <div className="pt-16">
+          <AppShell>
             {children}
-          </div>
+          </AppShell>
         </MainProvider>
       </body>
     </html>
