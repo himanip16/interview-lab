@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<title>Browse Transcripts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FAF9F6; --surface:#FFFFFF; --text:#15161C; --text-soft:#5A5B66;
+    --border:rgba(21,22,28,0.08); --border-soft:rgba(21,22,28,0.06);
+    --mint:#00D9A3; --mint-deep:#00A87E; --coral:#FF5A3C; --violet:#6A5AE0; --amber:#E8940A;
+  }
+  [data-theme="dark"]{
+    --bg:#121218; --surface:#1B1C23; --text:#F3F2EE; --text-soft:#9A9BA6;
+    --border:rgba(255,255,255,0.09); --border-soft:rgba(255,255,255,0.06);
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{ background:#EAE7DF; font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; padding:28px; }
+  html[data-theme="dark"] body{ background:#08090B; }
+  h1,h2,h3{ font-family:'Poppins',sans-serif; letter-spacing:-0.02em; }
+
+  .controlbar{ max-width:1400px; margin:0 auto 20px; display:flex; align-items:center; justify-content:space-between; }
+  .controlbar h2{ font-size:15px; font-weight:600; color:#3a3a3a; }
+  html[data-theme="dark"] .controlbar h2{ color:#ddd; }
+  .switch{ position:relative; width:52px; height:28px; border-radius:999px; background:var(--surface); border:1px solid var(--border); cursor:pointer; }
+  .switch .thumb{ position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:var(--text); transition:left .3s cubic-bezier(.34,1.56,.64,1), background .35s ease; }
+  [data-theme="dark"] .switch .thumb{ left:27px; background:var(--mint); }
+
+  .frames{ max-width:1400px; margin:0 auto; display:flex; gap:24px; align-items:flex-start; }
+  .frame-label{ font-size:12px; font-weight:600; color:#8a8a8a; margin-bottom:8px; text-align:center; }
+  .desktop-shell{ flex:1; min-width:0; }
+  .desktop-chrome{ background:#3a3a3a; border-radius:12px 12px 0 0; padding:9px 14px; display:flex; gap:6px; }
+  .desktop-chrome span{ width:9px; height:9px; border-radius:50%; background:#666; }
+  .desktop-viewport{ container-type:inline-size; container-name:device; background:var(--bg); border-radius:0 0 12px 12px; height:820px; overflow:hidden; }
+
+  .mobile-shell{ flex:0 0 340px; }
+  .mobile-bezel{ background:#2a2a2a; border-radius:34px; padding:14px; }
+  .mobile-notch{ width:70px; height:16px; background:#2a2a2a; border-radius:0 0 12px 12px; margin:0 auto; position:relative; z-index:2; }
+  .mobile-viewport{ container-type:inline-size; container-name:device; background:var(--bg); height:740px; overflow:hidden; border-radius:20px; transform:translateZ(0); position:relative; }
+
+  .app{ height:100%; display:flex; flex-direction:column; position:relative; color:var(--text); }
+  .topbar{ display:flex; align-items:center; justify-content:space-between; padding:16px 22px; border-bottom:1px solid var(--border); flex-shrink:0; }
+  .topbar h1{ font-size:18px; font-weight:700; }
+  .search-mini{ display:flex; align-items:center; gap:7px; background:var(--surface); border:1px solid var(--border); border-radius:999px; padding:7px 13px; font-size:12px; color:var(--text-soft); }
+  .search-mini input{ border:none; outline:none; background:none; font-family:'Inter',sans-serif; font-size:12px; color:var(--text); width:100px; }
+
+  .body{ flex:1; display:flex; min-height:0; }
+
+  .rail{ flex:0 0 200px; border-right:1px solid var(--border); padding:18px 14px; overflow-y:auto; position:relative; }
+  .rail-blob{ width:120px; height:120px; border-radius:50%; background:radial-gradient(circle, rgba(0,217,163,0.16), transparent 70%); position:absolute; top:0; left:0; filter:blur(10px); animation:breathe 7s ease-in-out infinite; pointer-events:none; }
+  @keyframes breathe{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.2); } }
+  .rail-label{ font-size:10px; font-weight:700; letter-spacing:.06em; color:var(--text-soft); text-transform:uppercase; margin:14px 0 8px; position:relative; }
+  .rail-label:first-child{ margin-top:2px; }
+  .cat-btn{ display:flex; align-items:center; gap:9px; width:100%; text-align:left; padding:8px 10px; border-radius:10px; border:none; background:none; font-size:12.5px; font-weight:600; color:var(--text-soft); cursor:pointer; margin-bottom:2px; position:relative; }
+  .cat-btn:hover{ background:var(--border-soft); }
+  .cat-btn.active{ background:var(--text); color:var(--bg); }
+  .cat-dot{ width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .cat-btn .n{ margin-left:auto; opacity:.6; font-weight:500; }
+
+  .sort-select{ width:100%; font-size:12px; font-weight:600; padding:8px 10px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text); margin-top:4px; position:relative; }
+
+  .spotlight{ margin-top:22px; padding:14px; border-radius:16px; background:linear-gradient(160deg, var(--surface), var(--border-soft)); border:1px solid var(--border); position:relative; }
+  .spotlight .sl{ display:flex; align-items:center; gap:6px; font-size:9.5px; font-weight:700; color:var(--mint-deep); text-transform:uppercase; letter-spacing:.05em; }
+  .spotlight .sl .d{ width:5px; height:5px; border-radius:50%; background:var(--mint); animation:pulse 1.8s ease-in-out infinite; }
+  @keyframes pulse{ 0%,100%{ opacity:1; } 50%{ opacity:.3; } }
+  .spotlight h4{ font-size:12px; font-weight:600; margin-top:7px; line-height:1.4; }
+
+  .mobile-filter-bar{ display:none; gap:7px; padding:12px 16px; overflow-x:auto; border-bottom:1px solid var(--border); flex-shrink:0; }
+  .mchip{ font-size:11.5px; font-weight:600; padding:7px 13px; border-radius:999px; border:1px solid var(--border); color:var(--text-soft); white-space:nowrap; cursor:pointer; }
+  .mchip.active{ background:var(--text); color:var(--bg); border-color:var(--text); }
+
+  .list-col{ flex:1; display:flex; flex-direction:column; min-width:0; border-right:1px solid var(--border); }
+  .list{ flex:1; overflow-y:auto; padding:10px 14px; }
+  .row{ display:flex; gap:11px; padding:12px 12px; border-radius:14px; cursor:pointer; margin-bottom:4px; transition:background .2s ease, transform .2s ease; }
+  .row:hover{ background:var(--border-soft); }
+  .row.selected{ background:var(--border-soft); }
+  .row-dot{ width:8px; height:8px; border-radius:50%; margin-top:5px; flex-shrink:0; }
+  .row-main{ flex:1; min-width:0; }
+  .row-meta{ font-size:10.5px; color:var(--text-soft); font-weight:500; }
+  .row-title{ font-size:13px; font-weight:600; margin-top:3px; line-height:1.35; }
+  .row-desc{ font-size:11.5px; color:var(--text-soft); margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .row-arrow{ align-self:center; color:var(--text-soft); opacity:0; transition:opacity .2s ease; flex-shrink:0; }
+  .row:hover .row-arrow, .row.selected .row-arrow{ opacity:1; }
+
+  .pagination{ display:flex; align-items:center; justify-content:center; gap:10px; padding:12px; border-top:1px solid var(--border); flex-shrink:0; }
+  .pg-btn{ font-size:11.5px; font-weight:600; padding:6px 12px; border-radius:999px; border:1px solid var(--border); background:var(--surface); color:var(--text); cursor:pointer; }
+  .pg-btn:disabled{ opacity:.35; cursor:default; }
+  .pg-dots{ display:flex; gap:5px; }
+  .pgdot{ width:6px; height:6px; border-radius:50%; background:var(--border); }
+  .pgdot.active{ background:var(--mint-deep); width:14px; border-radius:3px; transition:all .3s ease; }
+
+  .detail{ flex:0 0 320px; padding:24px 22px; overflow-y:auto; }
+  .detail-content{ animation:fadeIn .35s ease; }
+  @keyframes fadeIn{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:translateY(0); } }
+  .detail-empty{ height:100%; display:flex; align-items:center; justify-content:center; text-align:center; color:var(--text-soft); font-size:12.5px; padding:20px; }
+  .d-meta-row{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
+  .d-chip{ font-size:10px; font-weight:700; padding:4px 10px; border-radius:999px; text-transform:uppercase; }
+  .d-title{ font-size:19px; font-weight:700; line-height:1.25; }
+  .d-desc{ font-size:12.5px; color:var(--text-soft); line-height:1.7; margin-top:14px; }
+  .d-tags{ display:flex; gap:6px; flex-wrap:wrap; margin-top:16px; }
+  .d-tag{ font-size:10px; font-weight:600; padding:4px 10px; border-radius:999px; background:var(--border-soft); color:var(--text-soft); }
+  .d-actions{ display:flex; gap:8px; margin-top:22px; }
+  .d-primary{ flex:1; background:var(--mint-deep); color:#fff; border:none; padding:11px; border-radius:999px; font-weight:600; font-size:12.5px; cursor:pointer; }
+  .d-ghost{ padding:11px 16px; border-radius:999px; border:1px solid var(--border); background:none; color:var(--text); font-weight:600; font-size:12.5px; cursor:pointer; }
+
+  .mobile-sheet{ display:none; position:fixed; inset:0; background:var(--surface); z-index:20; transform:translateY(100%); transition:transform .35s cubic-bezier(.32,.72,0,1); flex-direction:column; }
+  .mobile-sheet.open{ transform:translateY(0); }
+  .sheet-handle{ width:36px; height:4px; border-radius:2px; background:var(--border); margin:10px auto 4px; flex-shrink:0; }
+  .sheet-close{ position:absolute; top:14px; right:16px; width:28px; height:28px; border-radius:50%; border:1px solid var(--border); background:none; color:var(--text); display:flex; align-items:center; justify-content:center; }
+  .sheet-body{ flex:1; overflow-y:auto; padding:20px; }
+
+  @container device (max-width: 480px){
+    .rail{ display:none; }
+    .detail{ display:none; }
+    .mobile-filter-bar{ display:flex; }
+    .mobile-sheet{ display:flex; }
+    .list-col{ border-right:none; }
+    .topbar h1{ font-size:16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="controlbar">
+  <h2>Browse Transcripts &mdash; creative layout</h2>
+  <div class="switch" id="switch"><div class="thumb"></div></div>
+</div>
+
+<div class="frames">
+  <div class="desktop-shell">
+    <div class="frame-label">Web</div>
+    <div class="desktop-chrome"><span></span><span></span><span></span></div>
+    <div class="desktop-viewport"><div class="app" data-app="1"></div></div>
+  </div>
+  <div class="mobile-shell">
+    <div class="frame-label">Mobile</div>
+    <div class="mobile-bezel">
+      <div class="mobile-notch"></div>
+      <div class="mobile-viewport"><div class="app" data-app="2"></div></div>
+    </div>
+  </div>
+</div>
+
+<template id="appTemplate">
+  <div class="topbar">
+    <h1>Transcripts</h1>
+    <div class="search-mini">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input class="q-input" placeholder="Search&hellip;" />
+    </div>
+  </div>
+
+  <div class="mobile-filter-bar" data-filterbar></div>
+
+  <div class="body">
+    <div class="rail">
+      <div class="rail-blob"></div>
+      <div class="rail-label">Category</div>
+      <div data-catlist></div>
+      <div class="rail-label">Sort by</div>
+      <select class="sort-select" data-sort>
+        <option value="recent">Most recent</option>
+        <option value="company">Company (A&ndash;Z)</option>
+        <option value="duration">Duration</option>
+        <option value="difficulty">Difficulty</option>
+      </select>
+      <div class="spotlight" data-spotlight></div>
+    </div>
+
+    <div class="list-col">
+      <div class="list" data-list></div>
+      <div class="pagination">
+        <button class="pg-btn" data-prev>&larr; Prev</button>
+        <div class="pg-dots" data-dots></div>
+        <button class="pg-btn" data-next>Next &rarr;</button>
+      </div>
+    </div>
+
+    <div class="detail" data-detail>
+      <div class="detail-empty">Select a transcript to preview it here.</div>
+    </div>
+  </div>
+
+  <div class="mobile-sheet" data-sheet>
+    <button class="sheet-close" data-sheetclose>&times;</button>
+    <div class="sheet-handle"></div>
+    <div class="sheet-body" data-sheetbody></div>
+  </div>
+</template>
+
+<script>
+const CATS = { behavioral:{label:'Behavioral', color:'var(--amber)'}, dsa:{label:'Data Structures & Algorithms', color:'var(--mint-deep)'}, hld:{label:'High Level Design', color:'var(--violet)'}, lld:{label:'Low Level Design', color:'var(--coral)'} };
+const DIFF_RANK = { easy:0, medium:1, hard:2 };
+const DIFF_COLOR = { easy:'var(--mint-deep)', medium:'var(--amber)', hard:'var(--coral)' };
+
+const TRANSCRIPTS = [
+  { company:'Amazon', diff:'medium', mins:30, cat:'behavioral', featured:true,
+    title:'Customer Obsession: Closing the Self-Service Reporting Gap',
+    desc:"STAR-format behavioral interview built from a real project on Uber's Iris regulatory reporting platform \u2014 tracing a recurring Slack pattern to a systemic gap, and why the easy fix was rejected in favor of reusing the validated pipeline.",
+    tags:['Customer Obsession','Ownership','Bias for Action'] },
+  { company:'Stripe', diff:'medium', mins:42, cat:'hld',
+    title:'Car Pooling Capacity Validation',
+    desc:'SDE2 DSA + systems design on validating car pooling capacity. TreeMap O(N log N), then a difference-array optimization, scaling to a sharded DB with snapshot isolation.',
+    tags:['Difference Array','TreeMap','Sharding'] },
+  { company:'Amazon', diff:'medium', mins:35, cat:'dsa',
+    title:'Cutting Poles to Collect Minimum Wood',
+    desc:'Binary search on the answer space, monotonicity argument, 64-bit overflow handling, and follow-ups on continuous heights.',
+    tags:['Binary Search','Monotonic Function'] },
+  { company:'Amazon', diff:'hard', mins:50, cat:'hld',
+    title:'Design a Video Recommendation Pipeline',
+    desc:'Candidate generation, feature stores, and how caching decisions change once personalization enters the picture.',
+    tags:['Caching','Feature Store'] },
+  { company:'Meta', diff:'hard', mins:45, cat:'hld',
+    title:'Design a News Feed Ranking Service',
+    desc:'Fanout-on-write vs fanout-on-read, and eventual consistency across timeline caches.',
+    tags:['Fanout','Consistency'] },
+  { company:'Google', diff:'medium', mins:40, cat:'hld',
+    title:'Design a Rate Limiter for a Multi-Tenant API',
+    desc:'Token bucket vs sliding window, and moving counter state into Redis for horizontal scaling.',
+    tags:['Token Bucket','Redis'] },
+  { company:'Amazon', diff:'hard', mins:50, cat:'lld',
+    title:'Design a Parking Lot System',
+    desc:'Object modeling for vehicle types, a state machine for spot occupancy, and why the first design overused inheritance.',
+    tags:['Object Modeling','State Machine'] },
+  { company:'Stripe', diff:'medium', mins:35, cat:'lld',
+    title:'Design an Idempotent Payment API',
+    desc:'Idempotency keys and the exact failure mode when a client retries mid-processing instead of after a response.',
+    tags:['Idempotency','Concurrency'] },
+  { company:'Uber', diff:'hard', mins:45, cat:'lld',
+    title:'Design a Ride Matching Engine (LLD)',
+    desc:'Strategy pattern for swappable matching algorithms, and where the design would deadlock under concurrent cancellations.',
+    tags:['Strategy Pattern','Concurrency'] },
+  { company:'Google', diff:'medium', mins:30, cat:'dsa',
+    title:'Longest Substring Without Repeating Characters, Extended',
+    desc:'Sliding window fundamentals, then a live follow-up changing the constraint mid-interview.',
+    tags:['Sliding Window','Hash Map'] },
+];
+
+const PAGE_SIZE = 4;
+
+function initApp(root){
+  let state = { cat:'all', query:'', sort:'recent', page:1, selected:null };
+
+  const catlist = root.querySelector('[data-catlist]');
+  catlist.innerHTML = `<button class="cat-btn active" data-cat="all"><span class="cat-dot" style="background:var(--text)"></span>All<span class="n">${TRANSCRIPTS.length}</span></button>` +
+    Object.entries(CATS).map(([key,c]) => `<button class="cat-btn" data-cat="${key}"><span class="cat-dot" style="background:${c.color}"></span>${c.label}<span class="n">${TRANSCRIPTS.filter(t=>t.cat===key).length}</span></button>`).join('');
+
+  const filterbar = root.querySelector('[data-filterbar]');
+  filterbar.innerHTML = `<div class="mchip active" data-cat="all">All</div>` +
+    Object.entries(CATS).map(([key,c]) => `<div class="mchip" data-cat="${key}">${c.label}</div>`).join('');
+
+  const featured = TRANSCRIPTS.find(t=>t.featured);
+  root.querySelector('[data-spotlight]').innerHTML = `<div class="sl"><span class="d"></span>Editor's pick</div><h4>${featured.title}</h4>`;
+
+  function getFiltered(){
+    let items = TRANSCRIPTS.filter(t => state.cat==='all' || t.cat===state.cat);
+    if(state.query.trim()){
+      const q = state.query.toLowerCase();
+      items = items.filter(t => t.title.toLowerCase().includes(q) || t.company.toLowerCase().includes(q));
+    }
+    if(state.sort==='company') items = [...items].sort((a,b)=>a.company.localeCompare(b.company));
+    if(state.sort==='duration') items = [...items].sort((a,b)=>a.mins-b.mins);
+    if(state.sort==='difficulty') items = [...items].sort((a,b)=>DIFF_RANK[a.diff]-DIFF_RANK[b.diff]);
+    return items;
+  }
+
+  function renderList(){
+    const items = getFiltered();
+    const totalPages = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
+    state.page = Math.min(state.page, totalPages);
+    const pageItems = items.slice((state.page-1)*PAGE_SIZE, state.page*PAGE_SIZE);
+
+    const list = root.querySelector('[data-list]');
+    list.innerHTML = pageItems.map(t => `
+      <div class="row ${state.selected===t.title?'selected':''}" data-title="${t.title}">
+        <span class="row-dot" style="background:${CATS[t.cat].color}"></span>
+        <div class="row-main">
+          <div class="row-meta">${t.company} &middot; ${t.diff} &middot; ${t.mins}m</div>
+          <div class="row-title">${t.title}</div>
+          <div class="row-desc">${t.desc}</div>
+        </div>
+        <svg class="row-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg>
+      </div>
+    `).join('') || `<div style="padding:30px; text-align:center; color:var(--text-soft); font-size:12.5px;">No transcripts match.</div>`;
+
+    root.querySelectorAll('.row').forEach(r => r.onclick = () => selectItem(r.dataset.title));
+
+    root.querySelector('[data-dots]').innerHTML = Array.from({length:totalPages}).map((_,i)=>`<div class="pgdot ${i+1===state.page?'active':''}"></div>`).join('');
+    root.querySelector('[data-prev]').disabled = state.page<=1;
+    root.querySelector('[data-next]').disabled = state.page>=totalPages;
+  }
+
+  function detailHTML(t){
+    return `
+      <div class="detail-content">
+        <div class="d-meta-row">
+          <span class="d-chip" style="background:${DIFF_COLOR[t.diff]}22; color:${DIFF_COLOR[t.diff]}">${t.diff}</span>
+          <span class="d-chip" style="background:${CATS[t.cat].color}22; color:${CATS[t.cat].color}">${CATS[t.cat].label}</span>
+        </div>
+        <div class="d-title">${t.title}</div>
+        <div class="row-meta" style="margin-top:8px;">${t.company} &middot; ${t.mins} min read</div>
+        <div class="d-desc">${t.desc}</div>
+        <div class="d-tags">${t.tags.map(tag=>`<span class="d-tag">${tag}</span>`).join('')}</div>
+        <div class="d-actions">
+          <button class="d-primary">Start reading</button>
+          <button class="d-ghost">Save</button>
+        </div>
+      </div>`;
+  }
+
+  function selectItem(title){
+    state.selected = title;
+    const t = TRANSCRIPTS.find(x=>x.title===title);
+    renderList();
+    root.querySelector('[data-detail]').innerHTML = detailHTML(t);
+    const sheet = root.querySelector('[data-sheet]');
+    root.querySelector('[data-sheetbody]').innerHTML = detailHTML(t);
+    sheet.classList.add('open');
+  }
+
+  root.querySelectorAll('[data-cat]').forEach(el => {
+    el.onclick = () => {
+      state.cat = el.dataset.cat; state.page = 1;
+      root.querySelectorAll('.cat-btn').forEach(x=>x.classList.remove('active'));
+      root.querySelectorAll('.mchip').forEach(x=>x.classList.remove('active'));
+      root.querySelectorAll(`[data-cat="${state.cat}"]`).forEach(x=>x.classList.add('active'));
+      renderList();
+    };
+  });
+  root.querySelector('[data-sort]').onchange = (e) => { state.sort = e.target.value; renderList(); };
+  root.querySelector('.q-input').oninput = (e) => { state.query = e.target.value; state.page = 1; renderList(); };
+  root.querySelector('[data-prev]').onclick = () => { state.page--; renderList(); };
+  root.querySelector('[data-next]').onclick = () => { state.page++; renderList(); };
+  root.querySelector('[data-sheetclose]').onclick = () => root.querySelector('[data-sheet]').classList.remove('open');
+
+  renderList();
+}
+
+document.querySelectorAll('[data-app]').forEach(el => {
+  el.innerHTML = document.getElementById('appTemplate').innerHTML;
+  initApp(el);
+});
+
+document.getElementById('switch').onclick = () => {
+  const html = document.documentElement;
+  html.setAttribute('data-theme', html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+};
+</script>
+
+</body>
+</html>

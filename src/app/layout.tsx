@@ -42,7 +42,10 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AuthProvider>
-            {children}
+            <Navbar />
+            <div className="pt-16">
+              {children}
+            </div>
           </AuthProvider>
         </ThemeProvider>
       </body>

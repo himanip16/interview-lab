@@ -59,6 +59,9 @@ model User {
   learningRecommendations LearningRecommendation[]
   bugAttempts             BugAttempt[]
   reviewAttempts          ReviewAttempt[]
+  savedTranscripts        SavedTranscript[]
+  todoItems               TodoItem[]
+  userXP                  UserXP?
 }
 
 // ---------------------------------------------------------------------------
@@ -176,6 +179,8 @@ model Transcript {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  savedTranscripts SavedTranscript[]
 
   @@index([category])
 }
@@ -937,4 +942,67 @@ model ReviewReport {
   strengths      String[]
   missedFindings Json          // List of Finding objects the user didn't see
   recommendations String[]
+}
+
+// ---------------------------------------------------------------------------
+// Transcript Browser Enhancements - Saved transcripts, todos, and XP system
+// ---------------------------------------------------------------------------
+
+model SavedTranscript {
+  id           String   @id @default(cuid())
+  userId       String
+  transcriptId String // References Transcript.id
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transcript Transcript @relation(fields: [transcriptId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, transcriptId])
+  @@index([userId])
+  @@index([transcriptId])
+}
+
+model TodoItem {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  completed Boolean  @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model UserXP {
+  id      String @id @default(cuid())
+  userId  String @unique
+  totalXP Int    @default(0)
+  level   Int    @default(1)
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  xpActivities XPActivity[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model XPActivity {
+  id          String   @id @default(cuid())
+  userId      String
+  activityType String // "article_read", "interview_completed", "problem_solved", "bug_hunt"
+  xpEarned    Int
+  metadata    Json? // Additional context about the activity
+
+  userXP UserXP @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([activityType])
 }

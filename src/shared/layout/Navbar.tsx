@@ -33,8 +33,11 @@ export default function Navbar() {
   const email = session?.user?.email;
   const initial = email ? email.charAt(0).toUpperCase() : "?";
 
+  // TODO: Fetch user XP from API when available
+  const userXP = 0;
+
   return (
-    <nav className="border-b border-[var(--border)] bg-[var(--surface)]">
+    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-[var(--border)] bg-[var(--surface)]">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
         <Link
           href="/"
@@ -61,30 +64,39 @@ export default function Navbar() {
           {status === "loading" ? (
             <div className="h-8 w-8 rounded-full bg-[var(--paper-200)] animate-pulse" />
           ) : email ? (
-            <div className="relative" ref={menuRef}>
-              <button
-                onClick={() => setMenuOpen((v) => !v)}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--ink)] text-sm font-semibold text-white"
-                aria-haspopup="menu"
-                aria-expanded={menuOpen}
-              >
-                {initial}
-              </button>
+            <div className="flex items-center gap-4">
+              {/* XP Display */}
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--paper-100)] text-sm font-medium text-[var(--ink)]">
+                <span>⭐</span>
+                <span>{userXP} XP</span>
+              </div>
 
-              {menuOpen && (
-                <div className="absolute right-0 top-10 z-50 min-w-[180px] rounded-xl border border-[var(--border)] bg-[var(--surface)] p-2 shadow-lg">
-                  <div className="mb-2 border-b border-[var(--border)] px-3 py-2 text-sm text-[var(--ink-400)]">
-                    {email}
+              {/* User Avatar */}
+              <div className="relative" ref={menuRef}>
+                <button
+                  onClick={() => setMenuOpen((v) => !v)}
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--ink)] text-sm font-semibold text-white"
+                  aria-haspopup="menu"
+                  aria-expanded={menuOpen}
+                >
+                  {initial}
+                </button>
+
+                {menuOpen && (
+                  <div className="absolute right-0 top-10 z-50 min-w-[180px] rounded-xl border border-[var(--border)] bg-[var(--surface)] p-2 shadow-lg">
+                    <div className="mb-2 border-b border-[var(--border)] px-3 py-2 text-sm text-[var(--ink-400)]">
+                      {email}
+                    </div>
+
+                    <button
+                      onClick={() => signOut({ redirectTo: "/" })}
+                      className="w-full rounded-md px-3 py-2 text-left text-sm hover:bg-[var(--paper-100)]"
+                    >
+                      Sign out
+                    </button>
                   </div>
-
-                  <button
-                    onClick={() => signOut({ redirectTo: "/" })}
-                    className="w-full rounded-md px-3 py-2 text-left text-sm hover:bg-[var(--paper-100)]"
-                  >
-                    Sign out
-                  </button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           ) : (
             <Link
