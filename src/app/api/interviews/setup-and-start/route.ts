@@ -3,7 +3,7 @@ import { ZodError } from "zod";
 import logger from "@/shared/logger/logger";
 import { prisma } from "@/shared/prisma/client";
 import { randomUUID } from "crypto";
-import { Difficulty, InterviewMode } from "@prisma/client";
+import { Difficulty, InterviewMode, ProblemCategory } from "@prisma/client";
 
 const SetupAndStartSchema = {
   duration: "number",
@@ -36,6 +36,18 @@ export async function POST(request: Request) {
 
     let problemId: string;
 
+    // Map interview type to ProblemCategory
+    const typeToCategory: Record<string, ProblemCategory> = {
+      'hld': ProblemCategory.SYSTEM_DESIGN,
+      'lld': ProblemCategory.LOW_LEVEL_DESIGN,
+      'dsa': ProblemCategory.BACKEND,
+      'ai': ProblemCategory.BACKEND,
+      'behavioral': ProblemCategory.BACKEND,
+      'pr': ProblemCategory.BACKEND,
+    };
+
+    const category = typeToCategory[type.toLowerCase()] || ProblemCategory.SYSTEM_DESIGN;
+
     if (source === 'ai') {
       // For AI generation, we need to create a problem or use an existing one
       // For now, let's create a temporary problem from the AI generation
@@ -52,7 +64,7 @@ export async function POST(request: Request) {
           title: problemTitle,
           description: problemDescription,
           difficulty: Difficulty.MEDIUM,
-          category: type.toUpperCase(),
+          category,
           interviewCount: 0,
           slug,
         },
@@ -68,7 +80,7 @@ export async function POST(request: Request) {
           title: `Custom ${type.toUpperCase()} Problem`,
           description: ownText,
           difficulty: Difficulty.MEDIUM,
-          category: type.toUpperCase(),
+          category,
           interviewCount: 0,
           slug,
         },

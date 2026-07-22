@@ -7,40 +7,35 @@ export async function GET() {
     const source = getAllTranscripts();
 
     const transcripts = source.map((item) => ({
-      id: item.slug,
-      slug: item.slug,
-      title: item.title,
-      category: item.category,
-      difficulty: item.difficulty,
-      company: item.company ?? null,
-      interviewer: null,
-      candidate: null,
-      duration: item.duration ?? null,
+  id: item.summary.slug,
+  slug: item.summary.slug,
+  title: item.summary.title,
+  category: item.summary.category,
+  difficulty: item.summary.difficulty,
+  company: item.summary.company ?? null,
 
-      summary:
-        typeof item.description === "string"
-          ? item.description
-          : null,
+  interviewer: null,
+  candidate: null,
 
-      transcript: item,
+  duration: item.summary.duration,
 
-      createdAt: new Date(),
-      updatedAt: new Date(),
+  summary: item.summary.description,
 
-      summaryData: {
-        title: item.title,
-        category: item.category,
-        difficulty: item.difficulty,
-        company: item.company ?? null,
-        duration: item.duration ?? null,
-        description:
-          typeof item.description === "string"
-            ? item.description
-            : null,
-        tags: item.tags ?? [],
-      },
-    }));
+  transcript: item.transcript,
 
+  createdAt: new Date(),
+  updatedAt: new Date(),
+
+  summaryData: {
+    title: item.summary.title,
+    category: item.summary.category,
+    difficulty: item.summary.difficulty,
+    company: item.summary.company ?? null,
+    duration: item.summary.duration,
+    description: item.summary.description,
+    tags: item.summary.tags,
+  },
+}));
     console.info(`Fetched ${transcripts.length} transcript(s).`);
 
     return NextResponse.json(transcripts);
