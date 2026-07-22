@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>New session — interview.lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FAF9F6;
+    --ink:#15161C;
+    --ink-soft:#5A5B66;
+    --amber:#E8940A;
+    --amber-deep:#C97800;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased; padding:48px 24px;
+  }
+  h1,h2,h3,.display{ font-family:'Poppins',sans-serif; letter-spacing:-0.02em; }
+
+  .panel{
+    max-width:1080px; margin:0 auto; background:#fff; border-radius:32px;
+    padding:36px 40px 40px; box-shadow:0 24px 60px rgba(21,22,28,0.06); border:1px solid rgba(21,22,28,0.06);
+  }
+
+  .top{ display:flex; align-items:center; justify-content:space-between; margin-bottom:28px; gap:24px; }
+  .logo{ font-family:'Poppins',sans-serif; font-weight:700; font-size:18px; white-space:nowrap; }
+  .logo span{ color:var(--amber-deep); }
+  .search{
+    flex:1; max-width:340px; display:flex; align-items:center; gap:10px;
+    background:var(--paper); border:1px solid rgba(21,22,28,0.08); border-radius:999px;
+    padding:10px 18px; font-size:13.5px; color:var(--ink-soft);
+  }
+  .search svg{ width:15px; height:15px; opacity:.5; flex-shrink:0; }
+  .menu{ display:flex; align-items:center; gap:8px; font-size:13.5px; font-weight:600; color:var(--ink-soft); white-space:nowrap; }
+
+  .detail{ display:flex; border-radius:26px; overflow:hidden; min-height:460px; }
+
+  .rail{
+    width:52px; flex-shrink:0; background:var(--paper); display:flex; flex-direction:column;
+    align-items:center; justify-content:space-between; padding:20px 0;
+  }
+  .rail-list{ display:flex; flex-direction:column; gap:26px; align-items:center; }
+  .rail-item{
+    writing-mode:vertical-rl; transform:rotate(180deg); font-size:12px; font-weight:600;
+    color:var(--ink-soft); letter-spacing:.02em; cursor:pointer; padding:2px; transition:color .2s ease;
+  }
+  .rail-item.active{ color:var(--ink); }
+  .rail-item.done::after{ content:' ✓'; }
+  .chev{ color:var(--ink-soft); animation:bob 2s ease-in-out infinite; }
+  @keyframes bob{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(4px); } }
+
+  .hero{
+    flex:0 0 42%; position:relative; background:linear-gradient(165deg,#FFB930,var(--amber-deep));
+    display:flex; align-items:center; justify-content:center;
+  }
+  .illust-big{ width:120px; height:120px; animation:float 4.5s ease-in-out infinite; transition:opacity .2s ease; }
+  @keyframes float{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-10px); } }
+
+  .close-wrap{ position:absolute; top:18px; right:18px; }
+  .close-btn{
+    position:relative; width:34px; height:34px; border-radius:50%; border:none; background:rgba(255,255,255,0.18);
+    color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:1;
+  }
+  .close-ring{ position:absolute; inset:-5px; border-radius:50%; border:1.5px solid rgba(255,255,255,0.6); animation:breathe 2.6s ease-in-out infinite; }
+  @keyframes breathe{ 0%,100%{ transform:scale(1); opacity:.7; } 50%{ transform:scale(1.22); opacity:0; } }
+
+  .play-wrap{ position:absolute; bottom:26px; left:26px; }
+  .play-btn{
+    position:relative; width:58px; height:58px; border-radius:50%; border:none; background:#fff;
+    color:var(--amber-deep); display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:1;
+    box-shadow:0 10px 24px rgba(0,0,0,0.18); transition:opacity .2s ease;
+  }
+  .play-btn:disabled{ opacity:.35; cursor:not-allowed; }
+  .play-ring{ position:absolute; inset:-8px; border-radius:50%; border:1.5px solid rgba(255,255,255,0.7); animation:breathe 2.4s ease-in-out infinite; }
+
+  .content{ flex:1; padding:34px 38px; display:flex; flex-direction:column; }
+  .badge{
+    align-self:flex-end; display:flex; align-items:center; gap:6px; font-size:11px; font-weight:600;
+    color:var(--amber-deep); background:rgba(232,148,10,0.1); padding:5px 12px; border-radius:999px; margin-bottom:auto;
+  }
+  .badge .dot{ width:6px; height:6px; border-radius:50%; background:var(--amber); animation:pulse 1.8s ease-in-out infinite; }
+  @keyframes pulse{ 0%,100%{ opacity:1; } 50%{ opacity:.25; } }
+
+  .content h2{ font-size:30px; font-weight:700; margin-top:18px; }
+  .content .meta{ font-size:13px; color:var(--ink-soft); margin-top:4px; font-weight:500; }
+  .content .meta b{ color:var(--ink); }
+  .content p.desc{ font-size:14px; color:var(--ink-soft); line-height:1.65; margin-top:16px; max-width:420px; }
+
+  .clips-label{ font-size:12.5px; font-weight:600; color:var(--ink-soft); margin:22px 0 12px; }
+  .clips{ display:flex; gap:10px; flex-wrap:wrap; }
+  .clip{
+    flex:1; min-width:110px; height:56px; border-radius:14px; display:flex; align-items:center; justify-content:center;
+    color:#fff; font-size:12.5px; font-weight:600; gap:6px; cursor:pointer; padding:0 10px; text-align:center;
+    transition:transform .25s cubic-bezier(.34,1.56,.64,1), outline .15s ease; outline:2px solid transparent; outline-offset:2px;
+  }
+  .clip:hover{ transform:translateY(-4px); }
+  .clip.selected{ outline-color:var(--ink); }
+  .clip1{ background:linear-gradient(160deg,#3E6BFF,#213FCC); }
+  .clip2{ background:linear-gradient(160deg,#00E0AB,#00A87E); }
+  .clip3{ background:linear-gradient(160deg,#262832,#121319); }
+  .clip4{ background:linear-gradient(160deg,#FF6B6B,#C93030); }
+  .clip5{ background:linear-gradient(160deg,#B084F5,#7B3FD9); }
+  .clip6{ background:linear-gradient(160deg,#FFB930,var(--amber-deep)); }
+
+  .extra{ max-height:0; overflow:hidden; transition:max-height .3s ease, margin-top .3s ease; }
+  .extra.open{ max-height:220px; margin-top:16px; }
+  .extra-inner{ border:1px solid rgba(21,22,28,0.08); border-radius:14px; padding:16px 18px; background:var(--paper); }
+  .field-row{ display:flex; gap:12px; }
+  .field{ flex:1; margin-bottom:0; }
+  .field label{ display:block; font-size:11px; font-weight:600; color:var(--ink-soft); margin-bottom:6px; }
+  .field input, .field select, .field textarea{
+    width:100%; border:1px solid rgba(21,22,28,0.1); border-radius:10px; padding:9px 11px; font-size:13px;
+    font-family:'Inter',sans-serif; color:var(--ink); background:#fff; outline:none;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{ border-color:var(--amber-deep); }
+  .field textarea{ resize:vertical; min-height:70px; }
+  .hint{ font-size:11.5px; color:var(--ink-soft); margin-top:8px; }
+  .list-item{
+    display:flex; justify-content:space-between; align-items:center; padding:9px 12px;
+    border:1px solid rgba(21,22,28,0.08); border-radius:10px; font-size:12.5px; cursor:pointer;
+    margin-bottom:8px; transition:all .15s ease;
+  }
+  .list-item:last-child{ margin-bottom:0; }
+  .list-item:hover{ border-color:rgba(21,22,28,0.2); }
+  .list-item.selected{ border-color:var(--amber-deep); background:rgba(232,148,10,0.06); }
+
+  @media (max-width:760px){
+    .detail{ flex-direction:column; }
+    .rail{ display:none; }
+    .hero{ min-height:200px; }
+    .search{ display:none; }
+    .field-row{ flex-direction:column; }
+  }
+</style>
+</head>
+<body>
+
+<div class="panel">
+  <div class="top">
+    <div class="logo">interview<span>.</span>lab</div>
+    <div class="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <span>Search actions&hellip;</span>
+    </div>
+    <div class="menu">Menu
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+    </div>
+  </div>
+
+  <div class="detail">
+    <div class="rail">
+      <div class="rail-list" id="rail-list">
+        <div class="rail-item active" data-step="duration">Duration</div>
+        <div class="rail-item" data-step="type">Type</div>
+        <div class="rail-item" data-step="source">Source</div>
+      </div>
+      <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+
+    <div class="hero">
+      <div class="close-wrap">
+        <button class="close-btn" onclick="alert('goes to home')"><div class="close-ring"></div>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+
+      <svg class="illust-big" id="hero-icon-duration" viewBox="0 0 200 200" fill="none">
+        <circle cx="100" cy="100" r="92" fill="rgba(255,255,255,0.14)"/>
+        <circle cx="100" cy="100" r="52" stroke="#fff" stroke-width="7" fill="none"/>
+        <line x1="100" y1="100" x2="100" y2="66" stroke="#fff" stroke-width="7" stroke-linecap="round"/>
+        <line x1="100" y1="100" x2="124" y2="112" stroke="#fff" stroke-width="7" stroke-linecap="round"/>
+      </svg>
+      <svg class="illust-big" id="hero-icon-type" viewBox="0 0 200 200" fill="none" style="display:none">
+        <circle cx="100" cy="100" r="92" fill="rgba(255,255,255,0.14)"/>
+        <path d="M100 56L150 84L100 112L50 84Z" stroke="#fff" stroke-width="7" stroke-linejoin="round" fill="none"/>
+        <path d="M50 106L100 134L150 106" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M50 128L100 156L150 128" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      </svg>
+      <svg class="illust-big" id="hero-icon-source" viewBox="0 0 200 200" fill="none" style="display:none">
+        <circle cx="100" cy="100" r="92" fill="rgba(255,255,255,0.14)"/>
+        <circle cx="100" cy="100" r="46" stroke="#fff" stroke-width="7" fill="none"/>
+        <circle cx="100" cy="100" r="24" stroke="#fff" stroke-width="7" fill="none"/>
+        <circle cx="100" cy="100" r="6" fill="#fff"/>
+      </svg>
+
+      <div class="play-wrap">
+        <button class="play-btn" id="play-btn" disabled onclick="startInterview()"><div class="play-ring"></div>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="badge" id="badge"><span class="dot"></span>Step 1 of 3</div>
+
+      <h2 id="step-title">Choose duration</h2>
+      <div class="meta" id="step-meta">Nothing selected yet</div>
+      <p class="desc" id="step-desc">How long should this interview run? This also sets the timer during your session.</p>
+
+      <div class="clips-label" id="clips-label">Pick one</div>
+      <div class="clips" id="clips"></div>
+      <div class="extra" id="extra"><div class="extra-inner" id="extra-inner"></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const state = { duration: null, type: null, source: null, company:'', role:'', ownText:'', pickedProblem:null };
+
+  const stepsConfig = {
+    duration: {
+      title: 'Choose duration', desc: 'How long should this interview run? This also sets the timer during your session.',
+      label: 'Pick one',
+      options: [
+        {val:'15', label:'15 min', cls:'clip1'},
+        {val:'30', label:'30 min', cls:'clip2'},
+        {val:'45', label:'45 min', cls:'clip3'},
+        {val:'60', label:'60 min', cls:'clip6'},
+      ]
+    },
+    type: {
+      title: 'Choose interview type', desc: 'Pick the format. This decides what kind of problem gets used and how it is graded.',
+      label: 'Pick one',
+      options: [
+        {val:'HLD', label:'HLD', cls:'clip1'},
+        {val:'LLD', label:'LLD', cls:'clip2'},
+        {val:'DSA', label:'DSA', cls:'clip3'},
+        {val:'AI', label:'AI / ML', cls:'clip4'},
+        {val:'Behavioral', label:'Behavioral', cls:'clip5'},
+        {val:'PR', label:'Code Review', cls:'clip6'},
+      ]
+    },
+    source: {
+      title: 'Choose problem source', desc: 'How do you want your problem statement to be decided?',
+      label: 'Pick one',
+      options: [
+        {val:'ai', label:'Generate with AI', cls:'clip1'},
+        {val:'list', label:'Pick from list', cls:'clip2'},
+        {val:'own', label:'Write your own', cls:'clip3'},
+      ]
+    }
+  };
+
+  let currentStep = 'duration';
+
+  function renderStep(step){
+    currentStep = step;
+    const cfg = stepsConfig[step];
+    document.getElementById('step-title').textContent = cfg.title;
+    document.getElementById('step-desc').textContent = cfg.desc;
+    document.getElementById('clips-label').textContent = cfg.label;
+
+    document.querySelectorAll('[id^="hero-icon-"]').forEach(el => el.style.display = 'none');
+    document.getElementById('hero-icon-' + step).style.display = 'block';
+
+    document.querySelectorAll('.rail-item').forEach(r => r.classList.toggle('active', r.dataset.step === step));
+
+    const clipsEl = document.getElementById('clips');
+    clipsEl.innerHTML = '';
+    cfg.options.forEach(opt => {
+      const div = document.createElement('div');
+      div.className = 'clip ' + opt.cls + (state[step] === opt.val ? ' selected' : '');
+      div.textContent = opt.label;
+      div.onclick = () => selectOption(step, opt.val);
+      clipsEl.appendChild(div);
+    });
+
+    renderExtra(step);
+    updateBadgeAndMeta();
+  }
+
+  function selectOption(step, val){
+    state[step] = val;
+    renderStep(step);
+    if(step === 'duration' && !state.type) setTimeout(() => renderStep('type'), 350);
+    else if(step === 'type' && !state.source) setTimeout(() => renderStep('source'), 350);
+  }
+
+  function renderExtra(step){
+    const extra = document.getElementById('extra');
+    const inner = document.getElementById('extra-inner');
+    inner.innerHTML = '';
+    let show = false;
+
+    if(step === 'source' && state.source === 'ai'){
+      show = true;
+      inner.innerHTML = `
+        <div class="field-row">
+          <div class="field"><label>Target company (optional)</label><input id="f-company" type="text" placeholder="e.g. Amazon, Stripe" value="${state.company}"/></div>
+          <div class="field"><label>Role level (optional)</label>
+            <select id="f-role">
+              <option value="">Any</option>
+              <option ${state.role==='Junior'?'selected':''}>Junior / L3</option>
+              <option ${state.role==='Mid'?'selected':''}>Mid / L4</option>
+              <option ${state.role==='Senior'?'selected':''}>Senior / L5</option>
+              <option ${state.role==='Staff'?'selected':''}>Staff / L6</option>
+            </select>
+          </div>
+        </div>
+        <div class="hint">Leave blank — AI generates a generic problem for the selected type.</div>`;
+      document.getElementById('f-company').oninput = e => { state.company = e.target.value; updateBadgeAndMeta(); };
+      document.getElementById('f-role').onchange = e => { state.role = e.target.value; updateBadgeAndMeta(); };
+    }
+
+    if(step === 'source' && state.source === 'list'){
+      show = true;
+      inner.innerHTML = `<a href="http://localhost:3000/problems" target="_blank" style="color:var(--amber-deep); text-decoration:none; font-weight:600;">Open Problem library →</a>` +
+        `<div class="hint">Browse and select a problem from the library.</div>`;
+    }
+
+    if(step === 'source' && state.source === 'own'){
+      show = true;
+      inner.innerHTML = `<div class="field"><label>Problem statement</label><textarea id="f-own" placeholder="Type or paste your problem...">${state.ownText}</textarea></div>`;
+      document.getElementById('f-own').oninput = e => { state.ownText = e.target.value; updateBadgeAndMeta(); };
+    }
+
+    extra.classList.toggle('open', show);
+  }
+
+  function updateBadgeAndMeta(){
+    const done = [state.duration, state.type, state.source].filter(Boolean).length;
+    document.getElementById('badge').innerHTML = `<span class="dot"></span>Step ${done < 3 ? done + 1 : 3} of 3`;
+
+    const parts = [];
+    if(state.duration) parts.push(`<b>${state.duration} min</b>`);
+    if(state.type) parts.push(`<b>${state.type}</b>`);
+    if(state.source) parts.push(`<b>${{ai:'AI generated',list:'From list',own:'Own statement'}[state.source]}</b>`);
+    document.getElementById('step-meta').innerHTML = parts.length ? parts.join(' &middot; ') : 'Nothing selected yet';
+
+    const ready = state.duration && state.type && state.source &&
+      (state.source !== 'list' || state.pickedProblem) &&
+      (state.source !== 'own' || state.ownText.trim().length > 0);
+    document.getElementById('play-btn').disabled = !ready;
+  }
+
+  document.querySelectorAll('.rail-item').forEach(item => {
+    item.addEventListener('click', () => renderStep(item.dataset.step));
+  });
+
+  function startInterview(){
+    console.log('payload', state);
+    alert('Starting interview with: ' + JSON.stringify(state, null, 2));
+  }
+
+  renderStep('duration');
+</script>
+
+</body>
+</html>

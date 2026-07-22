@@ -43,7 +43,7 @@ const CARDS = [
     title: 'Read a transcript',
     meta: 'Library · Full session',
     gradient: 'from-[#262832] to-[#121319]',
-    href: '/library/transcript',
+    href: '/learn/transcripts',
     icon: (
       <svg viewBox="0 0 84 84" fill="none">
         <circle cx="42" cy="42" r="40" fill="#fff"/>

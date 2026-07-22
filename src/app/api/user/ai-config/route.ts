@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { prisma } from "@/shared/prisma/client";
 import { getCurrentUserId } from "@/features/auth/getCurrentUserId";
+import { encrypt } from "@/shared/security/encryption";
 
 const aiConfigSchema = z.object({
   provider: z.enum(["openai", "ollama", "custom"]).optional(),
@@ -11,7 +12,7 @@ const aiConfigSchema = z.object({
   baseUrl: z.string().url().optional(),
 });
 
-// GET /api/user/ai-config - Get current user's AI configuration
+// GET /api/user/ai-config
 export async function GET() {
   try {
     const userId = await getCurrentUserId();
@@ -27,18 +28,21 @@ export async function GET() {
     });
 
     if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "User not found" },
+        { status: 404 }
+      );
     }
 
-    // Don't return the actual API key for security
     return NextResponse.json({
       provider: user.aiProvider,
-      hasApiKey: !!user.aiApiKey,
+      hasApiKey: Boolean(user.aiApiKey),
       model: user.aiModel,
       baseUrl: user.aiBaseUrl,
     });
   } catch (error) {
     console.error("Error fetching AI config:", error);
+
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
@@ -46,7 +50,7 @@ export async function GET() {
   }
 }
 
-// PUT /api/user/ai-config - Update user's AI configuration
+// PUT /api/user/ai-config
 export async function PUT(request: Request) {
   try {
     const userId = await getCurrentUserId();
@@ -54,11 +58,15 @@ export async function PUT(request: Request) {
 
     const validatedData = aiConfigSchema.parse(body);
 
+    const encryptedApiKey = validatedData.apiKey
+      ? encrypt(validatedData.apiKey)
+      : undefined;
+
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: {
         aiProvider: validatedData.provider,
-        aiApiKey: validatedData.apiKey,
+        aiApiKey: encryptedApiKey,
         aiModel: validatedData.model,
         aiBaseUrl: validatedData.baseUrl,
       },
@@ -73,12 +81,16 @@ export async function PUT(request: Request) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Invalid request data", details: error.issues },
+        {
+          error: "Invalid request data",
+          details: error.issues,
+        },
         { status: 400 }
       );
     }
 
     console.error("Error updating AI config:", error);
+
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

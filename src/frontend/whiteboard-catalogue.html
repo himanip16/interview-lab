@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Learn whiteboarding</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{ --paper:#FAF9F6; --ink:#15161C; --ink-soft:#5A5B66; --mint:#00D9A3; --mint-deep:#00A87E; --coral:#FF5A3C; --violet:#6A5AE0; --amber:#E8940A; }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; }
+  h1,h2,h3{ font-family:'Poppins',sans-serif; letter-spacing:-0.02em; }
+  .wrap{ max-width:1000px; margin:0 auto; padding:0 24px 80px; }
+  nav{ display:flex; align-items:center; justify-content:space-between; padding:30px 0; }
+  .navlinks{ display:flex; gap:30px; font-size:13.5px; color:var(--ink-soft); font-weight:500; }
+  .navlinks b{ color:var(--ink); font-weight:600; border-bottom:2px solid var(--ink); padding-bottom:2px; }
+  .ham{ width:36px; height:36px; border-radius:50%; border:1px solid rgba(21,22,28,0.14); background:none; color:var(--ink); display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  .header{ padding:20px 0 30px; }
+  .eyebrow{ font-size:12.5px; font-weight:700; letter-spacing:.1em; color:var(--mint-deep); }
+  .header h1{ font-size:38px; font-weight:800; margin-top:10px; max-width:520px; }
+  .header p{ font-size:14.5px; color:var(--ink-soft); margin-top:12px; max-width:460px; line-height:1.6; }
+  .grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  .card{ background:#fff; border-radius:22px; padding:22px; border:1px solid rgba(21,22,28,0.07); cursor:pointer;
+    transition:transform .3s cubic-bezier(.34,1.56,.64,1), box-shadow .3s ease; }
+  .card:hover{ transform:translateY(-6px); box-shadow:0 20px 40px rgba(21,22,28,0.08); }
+  .mark{ width:64px; height:64px; margin-bottom:14px; }
+  .card h3{ font-size:16px; font-weight:600; }
+  .card .one-liner{ font-size:12.5px; color:var(--ink-soft); margin-top:6px; line-height:1.55; min-height:38px; }
+  .card-foot{ display:flex; align-items:center; justify-content:space-between; margin-top:16px; padding-top:14px; border-top:1px solid rgba(21,22,28,0.06); }
+  .tag{ font-size:9.5px; font-weight:700; padding:3px 8px; border-radius:999px; background:var(--paper); color:var(--ink-soft); text-transform:uppercase; }
+  .comp-count{ font-size:11px; color:var(--ink-soft); }
+  @media (max-width:820px){ .grid{ grid-template-columns:repeat(2,1fr); } .navlinks{ display:none; } }
+  @media (max-width:560px){ .grid{ grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <nav>
+    <div class="navlinks"><span>About Learn</span><b>Whiteboarding</b><span>Deep Dives</span><span>Library</span></div>
+    <button class="ham"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </nav>
+
+  <div class="header">
+    <div class="eyebrow">LEARN WHITEBOARDING</div>
+    <h1>Pick a system to explore</h1>
+    <p>Click into any component to see its role, who calls it, what it fails to, and how it stays resilient &mdash; or walk through a real user flow step by step.</p>
+  </div>
+
+  <div class="grid" id="grid"></div>
+</div>
+
+<script>
+const SYSTEMS = [
+  { slug:'uber', title:'Uber', one:'Real-time matching, geospatial indexing, surge pricing.', comps:7, flows:3,
+    mark:`<circle cx="12" cy="32" r="6" fill="#FF5A3C"/><circle cx="52" cy="32" r="6" fill="#FF5A3C"/><circle cx="32" cy="14" r="6" fill="#15161C"/><circle cx="32" cy="50" r="6" fill="#6A5AE0"/><path d="M12 32L32 14M52 32L32 14M32 14L32 50" stroke="#15161C" stroke-width="1.5" opacity=".25"/>` },
+  { slug:'twitter', title:'Twitter / X', one:'Timeline fanout and eventual consistency.', comps:6, flows:2,
+    mark:`<circle cx="32" cy="12" r="6" fill="#FF5A3C"/><circle cx="14" cy="32" r="5" fill="#6A5AE0"/><circle cx="50" cy="32" r="5" fill="#6A5AE0"/><circle cx="14" cy="52" r="4.5" fill="#00A87E"/><circle cx="50" cy="52" r="4.5" fill="#00A87E"/><path d="M32 12L14 32M32 12L50 32M14 32L14 52M50 32L50 52" stroke="#15161C" stroke-width="1.5" opacity=".25"/>` },
+  { slug:'netflix', title:'Netflix', one:'Video streaming, CDN distribution, recommendations.', comps:6, flows:2,
+    mark:`<rect x="10" y="10" width="44" height="44" rx="10" stroke="#6A5AE0" stroke-width="2" fill="none"/><circle cx="32" cy="32" r="9" fill="#FF5A3C"/><path d="M32 23v-9M32 41v9M23 32h-9M41 32h9" stroke="#00A87E" stroke-width="2.5" stroke-linecap="round"/>` },
+  { slug:'whatsapp', title:'WhatsApp', one:'Real-time messaging, delivery guarantees, E2E encryption.', comps:6, flows:2,
+    mark:`<circle cx="32" cy="14" r="6" fill="#15161C"/><circle cx="14" cy="42" r="5" fill="#00D9A3"/><circle cx="50" cy="42" r="5" fill="#00D9A3"/><circle cx="32" cy="42" r="5" fill="#00A87E"/><path d="M32 14L14 42M32 14L32 42M32 14L50 42" stroke="#15161C" stroke-width="1.5" opacity=".25"/>` },
+  { slug:'dropbox', title:'Dropbox', one:'Block-level sync, metadata service, S3-backed storage.', comps:6, flows:2,
+    mark:`<circle cx="16" cy="20" r="5" fill="#FF5A3C"/><circle cx="48" cy="20" r="5" fill="#6A5AE0"/><circle cx="16" cy="44" r="5" fill="#00A87E"/><circle cx="48" cy="44" r="5" fill="#00A87E"/><path d="M16 20L48 20M16 20L16 44M48 20L48 44" stroke="#15161C" stroke-width="1.5" opacity=".25"/>` },
+  { slug:'instagram', title:'Instagram', one:'Feed ranking, media pipeline, ephemeral stories.', comps:6, flows:2,
+    mark:`<circle cx="32" cy="32" r="18" stroke="#FF5A3C" stroke-width="2" fill="none"/><circle cx="32" cy="32" r="7" fill="#6A5AE0"/><circle cx="44" cy="20" r="3" fill="#00A87E"/>` },
+];
+
+document.getElementById('grid').innerHTML = SYSTEMS.map(s => `
+  <div class="card" onclick="alert('Would navigate to /learn/whiteboard/${s.slug}')">
+    <svg class="mark" viewBox="0 0 64 64" fill="none">${s.mark}</svg>
+    <h3>Design ${s.title}</h3>
+    <div class="one-liner">${s.one}</div>
+    <div class="card-foot">
+      <span class="tag">HLD</span>
+      <span class="comp-count">${s.comps} components &middot; ${s.flows} flows</span>
+    </div>
+  </div>
+`).join('');
+</script>
+
+</body>
+</html>

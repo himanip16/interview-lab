@@ -3,6 +3,7 @@ import { type ContentBlock } from "../../types/transcript";
 import Highlight from "./Highlight";
 import TakeawayCard from "./TakeawayCard";
 
+
 type Props = {
   role: "interviewer" | "candidate" | "takeaway";
   content: ContentBlock[] | string;

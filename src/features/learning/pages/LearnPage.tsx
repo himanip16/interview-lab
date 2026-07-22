@@ -17,7 +17,7 @@ const CARDS = [
     description: "Study real interview conversations.",
     from: "#262832",
     to: "#121319",
-    href: "/library/transcript", // exact match — the sample transcript page
+    href: "/learn/transcripts", // exact match — the sample transcript page
     icon: (
       <svg viewBox="0 0 110 110" fill="none">
         <circle cx="55" cy="55" r="52" fill="#fff"/>

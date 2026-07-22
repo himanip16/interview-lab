@@ -17,6 +17,7 @@ import HighlightExplanation from "./transcript/HighlightExplanation";
 import TranscriptHeader from "./transcript/TranscriptHeader";
 import TranscriptLegend from "./transcript/TranscriptLegend";
 
+
 type Props = {
   transcript: TranscriptData;
   summary: TranscriptSummary;

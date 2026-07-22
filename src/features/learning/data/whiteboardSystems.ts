@@ -14,6 +14,10 @@ export interface WhiteboardSystem {
   slug: string;
   label: string;
   title: string;
+  oneLiner: string;
+  comps: number;
+  flows: number;
+  mark: string;
   nodes: WhiteboardNode[];
 }
 
@@ -25,6 +29,10 @@ export const WHITEBOARD_SYSTEMS: Record<string, WhiteboardSystem> = {
     slug: "url-shortener",
     label: "URL shortener",
     title: "Design a URL shortener",
+    oneLiner: "Unique ID generation, redirect performance, and scalability.",
+    comps: 4,
+    flows: 2,
+    mark: `<circle cx="12" cy="32" r="6" fill="#FF5A3C"/><circle cx="52" cy="32" r="6" fill="#FF5A3C"/><circle cx="32" cy="14" r="6" fill="#15161C"/><circle cx="32" cy="50" r="6" fill="#6A5AE0"/><path d="M12 32L32 14M52 32L32 14M32 14L32 50" stroke="#15161C" stroke-width="1.5" opacity=".25"/>`,
     nodes: [
       {
         id: "client",
@@ -71,6 +79,66 @@ export const WHITEBOARD_SYSTEMS: Record<string, WhiteboardSystem> = {
         position: { bottom: "24px", left: "50%", transform: "translateX(-50%)" },
       },
     ],
+  },
+  "uber": {
+    slug: "uber",
+    label: "Uber",
+    title: "Design Uber",
+    oneLiner: "Real-time matching, geospatial indexing, surge pricing.",
+    comps: 7,
+    flows: 3,
+    mark: `<circle cx="12" cy="32" r="6" fill="#FF5A3C"/><circle cx="52" cy="32" r="6" fill="#FF5A3C"/><circle cx="32" cy="14" r="6" fill="#15161C"/><circle cx="32" cy="50" r="6" fill="#6A5AE0"/><path d="M12 32L32 14M52 32L32 14M32 14L32 50" stroke="#15161C" stroke-width="1.5" opacity=".25"/>`,
+    nodes: [],
+  },
+  "twitter": {
+    slug: "twitter",
+    label: "Twitter / X",
+    title: "Design Twitter / X",
+    oneLiner: "Timeline fanout and eventual consistency.",
+    comps: 6,
+    flows: 2,
+    mark: `<circle cx="32" cy="12" r="6" fill="#FF5A3C"/><circle cx="14" cy="32" r="5" fill="#6A5AE0"/><circle cx="50" cy="32" r="5" fill="#6A5AE0"/><circle cx="14" cy="52" r="4.5" fill="#00A87E"/><circle cx="50" cy="52" r="4.5" fill="#00A87E"/><path d="M32 12L14 32M32 12L50 32M14 32L14 52M50 32L50 52" stroke="#15161C" stroke-width="1.5" opacity=".25"/>`,
+    nodes: [],
+  },
+  "netflix": {
+    slug: "netflix",
+    label: "Netflix",
+    title: "Design Netflix",
+    oneLiner: "Video streaming, CDN distribution, recommendations.",
+    comps: 6,
+    flows: 2,
+    mark: `<rect x="10" y="10" width="44" height="44" rx="10" stroke="#6A5AE0" stroke-width="2" fill="none"/><circle cx="32" cy="32" r="9" fill="#FF5A3C"/><path d="M32 23v-9M32 41v9M23 32h-9M41 32h9" stroke="#00A87E" stroke-width="2.5" stroke-linecap="round"/>`,
+    nodes: [],
+  },
+  "whatsapp": {
+    slug: "whatsapp",
+    label: "WhatsApp",
+    title: "Design WhatsApp",
+    oneLiner: "Real-time messaging, delivery guarantees, E2E encryption.",
+    comps: 6,
+    flows: 2,
+    mark: `<circle cx="32" cy="14" r="6" fill="#15161C"/><circle cx="14" cy="42" r="5" fill="#00D9A3"/><circle cx="50" cy="42" r="5" fill="#00D9A3"/><circle cx="32" cy="42" r="5" fill="#00A87E"/><path d="M32 14L14 42M32 14L32 42M32 14L50 42" stroke="#15161C" stroke-width="1.5" opacity=".25"/>`,
+    nodes: [],
+  },
+  "dropbox": {
+    slug: "dropbox",
+    label: "Dropbox",
+    title: "Design Dropbox",
+    oneLiner: "Block-level sync, metadata service, S3-backed storage.",
+    comps: 6,
+    flows: 2,
+    mark: `<circle cx="16" cy="20" r="5" fill="#FF5A3C"/><circle cx="48" cy="20" r="5" fill="#6A5AE0"/><circle cx="16" cy="44" r="5" fill="#00A87E"/><circle cx="48" cy="44" r="5" fill="#00A87E"/><path d="M16 20L48 20M16 20L16 44M48 20L48 44" stroke="#15161C" stroke-width="1.5" opacity=".25"/>`,
+    nodes: [],
+  },
+  "instagram": {
+    slug: "instagram",
+    label: "Instagram",
+    title: "Design Instagram",
+    oneLiner: "Feed ranking, media pipeline, ephemeral stories.",
+    comps: 6,
+    flows: 2,
+    mark: `<circle cx="32" cy="32" r="18" stroke="#FF5A3C" stroke-width="2" fill="none"/><circle cx="32" cy="32" r="7" fill="#6A5AE0"/><circle cx="44" cy="20" r="3" fill="#00A87E"/>`,
+    nodes: [],
   },
 };
 

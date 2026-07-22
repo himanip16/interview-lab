@@ -4,8 +4,7 @@ import { Inter, Poppins } from "next/font/google";
 import "./globals.css";
 
 import Navbar from "@/shared/layout/Navbar";
-import AuthProvider from "@/shared/providers/AuthProvider";
-import { ThemeProvider } from "next-themes";
+import { MainProvider } from "@/shared/providers/MainProvider";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -36,18 +35,12 @@ export default function RootLayout({
       className={`${poppins.variable} ${inter.variable} h-full antialiased`}
     >
       <body className="flex min-h-screen flex-col">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          disableTransitionOnChange
-        >
-          <AuthProvider>
-            <Navbar />
-            <div className="pt-16">
-              {children}
-            </div>
-          </AuthProvider>
-        </ThemeProvider>
+        <MainProvider>
+          <Navbar />
+          <div className="pt-16">
+            {children}
+          </div>
+        </MainProvider>
       </body>
     </html>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import Link from "next/link";
 import { LearnHeader } from "./LearnHeader";
 import { LearnFooter } from "./LearnFooter";
 
@@ -108,7 +109,7 @@ export default function ActionCarousel() {
           </div>
 
           {/* Card 5 */}
-          <div className="card c5 relative flex-shrink-0 w-[216px] h-[300px] rounded-[26px] p-[22px] scroll-snap-start cursor-pointer overflow-visible transition-transform duration-[0.35s] ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:-translate-y-2 flex flex-col justify-end" style={{ background: 'linear-gradient(160deg,#FFB930,#E8940A)' }}>
+          <Link href="/interview-setup" className="card c5 relative flex-shrink-0 w-[216px] h-[300px] rounded-[26px] p-[22px] scroll-snap-start cursor-pointer overflow-visible transition-transform duration-[0.35s] ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:-translate-y-2 flex flex-col justify-end" style={{ background: 'linear-gradient(160deg,#FFB930,#E8940A)' }}>
             <svg className="icon-float absolute -top-[30px] left-1/2 -translate-x-1/2 w-[84px] h-[84px]" viewBox="0 0 84 84" fill="none">
               <circle cx="42" cy="42" r="40" fill="#fff"/>
               <rect x="35" y="24" width="14" height="24" rx="7" fill="#E8940A"/>
@@ -121,7 +122,7 @@ export default function ActionCarousel() {
               <span className="dot w-1 h-1 rounded-full bg-white/60"></span>
               <span>45 min</span>
             </div>
-          </div>
+          </Link>
 
           {/* Card 6 */}
           <div className="card c6 relative flex-shrink-0 w-[216px] h-[300px] rounded-[26px] p-[22px] scroll-snap-start cursor-pointer overflow-visible transition-transform duration-[0.35s] ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:-translate-y-2 flex flex-col justify-end" style={{ background: 'linear-gradient(160deg,#7A6BFF,#4C3FD6)' }}>

@@ -134,7 +134,7 @@ export default function LandingPage() {
             instead of a vague score.
           </p>
           <div className={styles.heroActions}>
-            <Link href="/problems" className={styles.btnPrimary}>
+            <Link href="/interview-setup" className={styles.btnPrimary}>
               Start an interview
             </Link>
             <Link href="/learn" className={styles.btnGhost}>
@@ -187,7 +187,7 @@ export default function LandingPage() {
       <section className={styles.section}>
         <div className={styles.secLabel}>A taste of what&apos;s inside</div>
         <div className={styles.modeRow}>
-          <Link href="/problems" className={`${styles.modeCard} ${styles.m1}`}>
+          <Link href="/interview-setup" className={`${styles.modeCard} ${styles.m1}`}>
             <h4>Live interview</h4>
             <div className={styles.m}>45 min</div>
           </Link>
