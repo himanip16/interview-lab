@@ -14,7 +14,6 @@ export default function LibraryTabs({ activeTab, onTabChange }: Props) {
       {(
         [
           ["problems", "Problem Library"],
-          ["transcripts", "Completed Interviews"],
           ["experiences", "Interview Experiences"],
           ["diagrams", "Interactive Diagrams"],
         ] as [Tab, string][]

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useClickOutside } from "@/shared/hooks/useClickOutside";
 
 // Uncomment this if you have a ROUTES constant
@@ -15,8 +15,27 @@ export default function Navbar() {
 
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const [userXP, setUserXP] = useState(0);
 
   useClickOutside(menuRef, () => setMenuOpen(false), menuOpen);
+
+  // Fetch user XP
+  useEffect(() => {
+    async function fetchXP() {
+      if (session?.user?.id) {
+        try {
+          const response = await fetch('/api/xp');
+          const data = await response.json();
+          if (data.totalXP !== undefined) {
+            setUserXP(data.totalXP);
+          }
+        } catch (error) {
+          console.error('Error fetching XP:', error);
+        }
+      }
+    }
+    fetchXP();
+  }, [session?.user?.id]);
 
   const isActive = (path: string) => {
     if (path === "/") return pathname === "/";
@@ -26,15 +45,13 @@ export default function Navbar() {
   const navItems = [
     { name: "Home", path: "/" },
     { name: "Problems", path: "/problems" },
-    { name: "Dashboard", path: "/dashboard" }, // or ROUTES.DASHBOARD
+    { name: "Dashboard", path: "/dashboard" },
+    { name: "Learn", path: "/learn" },
     { name: "Library", path: "/library" },
   ];
 
   const email = session?.user?.email;
   const initial = email ? email.charAt(0).toUpperCase() : "?";
-
-  // TODO: Fetch user XP from API when available
-  const userXP = 0;
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 border-b border-[var(--border)] bg-[var(--surface)]">

@@ -12,10 +12,8 @@ import {
 import LibraryTabs from "./LibraryTabs";
 import ExperienceList from "./ExperienceList";
 import DiagramGallery from "./DiagramGallery";
-import TranscriptCatalog from "./TranscriptCatalog";
 
 const VALID_TABS = new Set<Tab>([
-  "transcripts",
   "experiences",
   "diagrams",
 ]);
@@ -32,7 +30,7 @@ export default function LibraryView({
   const searchParams = useSearchParams();
 
   const [activeTab, setActiveTab] =
-    useState<Tab>("transcripts");
+    useState<Tab>("experiences");
 
   useEffect(() => {
     const tab = searchParams.get("tab");
@@ -68,10 +66,6 @@ export default function LibraryView({
       </div>
 
       <div className="mt-8">
-        {activeTab === "transcripts" && (
-          <TranscriptCatalog />
-        )}
-
         {activeTab === "experiences" && (
           <ExperienceList
             experiences={experiences}

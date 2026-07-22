@@ -56,4 +56,4 @@ export type CompletedInterviewItem = {
   } | null;
 };
 
-export type Tab = "problems" | "transcripts" | "diagrams" | "experiences";
+export type Tab = "problems" | "diagrams" | "experiences";
