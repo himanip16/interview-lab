@@ -89,7 +89,6 @@ export default function LandingPage() {
         </Link>
         <div className={styles.navlinks}>
           <Link href="/learn">Learn</Link>
-          <Link href="/problems">Problems</Link>
           <Link href="/dashboard">Dashboard</Link>
         </div>
         <div className={styles.navRight}>

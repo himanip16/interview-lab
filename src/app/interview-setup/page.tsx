@@ -57,8 +57,7 @@ const stepsConfig: Record<string, StepConfig> = {
     label: 'Pick one',
     options: [
       { val: 'ai', label: 'Generate with AI', cls: 'clip1' },
-      { val: 'list', label: 'Pick from list', cls: 'clip2' },
-      { val: 'own', label: 'Write your own', cls: 'clip3' },
+      { val: 'own', label: 'Write your own', cls: 'clip2' },
     ]
   }
 };
@@ -115,19 +114,45 @@ export default function InterviewSetupPage() {
   if (state.source) {
     const sourceLabels: Record<string, string> = {
       ai: 'AI generated',
-      list: 'From list',
       own: 'Own statement'
     };
     metaParts.push(`<b>${sourceLabels[state.source]}</b>`);
   }
 
   const isReady = state.duration && state.type && state.source &&
-    (state.source !== 'list' || state.pickedProblem) &&
     (state.source !== 'own' || state.ownText.trim().length > 0);
 
-  const startInterview = () => {
-    console.log('payload', state);
-    alert('Starting interview with: ' + JSON.stringify(state, null, 2));
+  const startInterview = async () => {
+    try {
+      const payload = {
+        duration: parseInt(state.duration!),
+        type: state.type!.toLowerCase(),
+        source: state.source,
+        company: state.company || 'General',
+        role: state.role,
+        ownText: state.ownText,
+      };
+
+      const res = await fetch('/api/interviews/setup-and-start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(`Failed to start interview: ${data.error}`);
+        return;
+      }
+
+      if (data.id) {
+        router.push(`/interview/live/${data.id}`);
+      }
+    } catch (err) {
+      console.error('Network error starting interview:', err);
+      alert('Network error starting interview');
+    }
   };
 
   const cfg = stepsConfig[currentStep];
@@ -136,7 +161,7 @@ export default function InterviewSetupPage() {
     <div style={{
       background: '#FAF9F6',
       color: '#15161C',
-      fontFamily: "'Inter', sans-serif",
+      fontFamily: '"Inter", sans-serif',
       WebkitFontSmoothing: 'antialiased',
       padding: '48px 24px',
       minHeight: '100vh'
@@ -151,7 +176,7 @@ export default function InterviewSetupPage() {
         border: '1px solid rgba(21,22,28,0.06)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '28px', gap: '24px' }}>
-          <div style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: '18px', whiteSpace: 'nowrap' }}>
+          <div style={{ fontFamily: '"Poppins", sans-serif', fontWeight: 700, fontSize: '18px', whiteSpace: 'nowrap' }}>
             interview<span style={{ color: '#C97800' }}>.</span>lab
           </div>
           <div style={{
@@ -324,7 +349,7 @@ export default function InterviewSetupPage() {
               Step {currentStepNum} of 3
             </div>
 
-            <h2 style={{ fontSize: '30px', fontWeight: 700, marginTop: '18px', fontFamily: "'Poppins', sans-serif", letterSpacing: '-0.02em' }}>
+            <h2 style={{ fontSize: '30px', fontWeight: 700, marginTop: '18px', fontFamily: '"Poppins", sans-serif', letterSpacing: '-0.02em' }}>
               {cfg.title}
             </h2>
             <div style={{ fontSize: '13px', color: '#5A5B66', marginTop: '4px', fontWeight: 500 }} dangerouslySetInnerHTML={{ __html: metaParts.length ? metaParts.join(' &middot; ') : 'Nothing selected yet' }} />
@@ -390,7 +415,7 @@ export default function InterviewSetupPage() {
                         borderRadius: '10px',
                         padding: '9px 11px',
                         fontSize: '13px',
-                        fontFamily: "'Inter', sans-serif",
+                        fontFamily: '"Inter", sans-serif',
                         color: '#15161C',
                         background: '#fff',
                         outline: 'none'
@@ -410,7 +435,7 @@ export default function InterviewSetupPage() {
                         borderRadius: '10px',
                         padding: '9px 11px',
                         fontSize: '13px',
-                        fontFamily: "'Inter', sans-serif",
+                        fontFamily: '"Inter", sans-serif',
                         color: '#15161C',
                         background: '#fff',
                         outline: 'none'
@@ -426,28 +451,6 @@ export default function InterviewSetupPage() {
                 </div>
                 <div style={{ fontSize: '11.5px', color: '#5A5B66', marginTop: '8px' }}>
                   Leave blank — AI generates a generic problem for the selected type.
-                </div>
-              </div>
-            )}
-
-            {currentStep === 'source' && state.source === 'list' && (
-              <div style={{
-                marginTop: '16px',
-                border: '1px solid rgba(21,22,28,0.08)',
-                borderRadius: '14px',
-                padding: '16px 18px',
-                background: '#FAF9F6'
-              }}>
-                <a 
-                  href="http://localhost:3000/problems" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  style={{ color: '#C97800', textDecoration: 'none', fontWeight: 600 }}
-                >
-                  Open Problem library →
-                </a>
-                <div style={{ fontSize: '11.5px', color: '#5A5B66', marginTop: '8px' }}>
-                  Browse and select a problem from the library.
                 </div>
               </div>
             )}
@@ -473,7 +476,7 @@ export default function InterviewSetupPage() {
                     borderRadius: '10px',
                     padding: '9px 11px',
                     fontSize: '13px',
-                    fontFamily: "'Inter', sans-serif",
+                    fontFamily: '"Inter", sans-serif',
                     color: '#15161C',
                     background: '#fff',
                     outline: 'none',
@@ -482,6 +485,35 @@ export default function InterviewSetupPage() {
                   }}
                 />
               </div>
+            )}
+
+            {isReady && (
+              <button
+                onClick={startInterview}
+                style={{
+                  marginTop: '24px',
+                  padding: '14px 32px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: 'linear-gradient(160deg,#FFB930,#C97800)',
+                  color: '#fff',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  boxShadow: '0 8px 20px rgba(201,120,0,0.25)',
+                  transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 12px 28px rgba(201,120,0,0.35)';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 8px 20px rgba(201,120,0,0.25)';
+                }}
+              >
+                Start Interview
+              </button>
             )}
           </div>
         </div>
