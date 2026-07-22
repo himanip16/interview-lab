@@ -1,44 +1,94 @@
-import { cn } from "@/shared/utils/utils";
 import { DiagramNode as NodeType } from "@/features/whiteboard/types/whiteboard";
 
-const CATEGORY_STYLES: Record<string, string> = {
-  entry: "bg-coral border-coral/20",
-  logic: "bg-violet border-violet/20",
-  storage: "bg-mint-deep border-mint-deep/20",
-  queue: "bg-amber border-amber/20",
-  network: "bg-ink border-ink/20",
+const CATEGORY_COLORS: Record<string, string> = {
+  entry: "var(--category-practice)",
+  logic: "var(--category-concept)",
+  storage: "var(--category-learn-deep)",
+  queue: "var(--category-live)",
+  network: "var(--category-neutral)",
 };
 
-export const DiagramNode = ({ 
-  node, 
-  isSelected, 
+export const DiagramNode = ({
+  node,
+  isSelected,
   onClick,
   x,
-  y 
-}: { 
-  node: NodeType; 
-  isSelected: boolean; 
+  y,
+  width,
+  height,
+}: {
+  node: NodeType;
+  isSelected: boolean;
   onClick: () => void;
   x: number;
   y: number;
+  width: number;
+  height: number;
 }) => {
+  const color = CATEGORY_COLORS[node.category] ?? "var(--category-neutral)";
+  const left = x - width / 2;
+  const top = y - height / 2;
+  const clipId = `clip-${node.id}`;
+
   return (
-    <div
+    <g
+      transform={`translate(${left}, ${top})`}
       onClick={onClick}
-      style={{
-        left: `${x}%`,
-        top: `${y}%`,
-      }}
-      className={cn(
-        "absolute w-40 -translate-x-1/2 -translate-y-1/2 p-4 rounded-xl text-white cursor-pointer transition-all z-20 border shadow-sm",
-        "hover:scale-105 active:scale-95",
-        CATEGORY_STYLES[node.category],
-        isSelected ? "ring-4 ring-offset-4 ring-offset-paper ring-ink/20" : "opacity-90"
-      )}
+      role="button"
+      aria-label={`Inspect ${node.title}`}
+      aria-pressed={isSelected}
+      tabIndex={0}
+      style={{ cursor: "pointer" }}
     >
-      <div className="w-1.5 h-1.5 rounded-full bg-white/40 mb-2" />
-      <h4 className="text-xs font-bold leading-tight">{node.title}</h4>
-      <p className="text-[10px] opacity-70 uppercase tracking-tighter font-semibold">{node.category}</p>
-    </div>
+      <clipPath id={clipId}>
+        <rect width={width} height={height} rx={12} />
+      </clipPath>
+
+      <rect
+        width={width}
+        height={height}
+        rx={12}
+        fill={color}
+        stroke={color}
+        opacity={isSelected ? 1 : 0.9}
+      />
+
+      <g clipPath={`url(#${clipId})`}>
+        <text
+          x={12}
+          y={22}
+          fontSize="12"
+          fontWeight="700"
+          fill="white"
+        >
+          {node.title}
+        </text>
+        <text
+          x={12}
+          y={height - 12}
+          fontSize="9"
+          fontWeight="700"
+          fill="white"
+          opacity="0.7"
+          style={{ textTransform: "uppercase" }}
+        >
+          {node.category}
+        </text>
+      </g>
+
+      {isSelected && (
+        <rect
+          x={-4}
+          y={-4}
+          width={width + 8}
+          height={height + 8}
+          rx={16}
+          fill="none"
+          stroke="var(--ink)"
+          strokeOpacity="0.2"
+          strokeWidth="4"
+        />
+      )}
+    </g>
   );
 };

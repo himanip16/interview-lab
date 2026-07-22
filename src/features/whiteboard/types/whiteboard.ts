@@ -1,3 +1,5 @@
+import { Point, Rect } from "@/features/whiteboard/geometry";
+
 export type NodeId = string & {
   readonly __brand: unique symbol;
 };
@@ -16,25 +18,6 @@ export interface NodeDetails {
   tradeoffs: string;
 }
 
-export interface DiagramConfig {
-  readonly CANVAS_W: number;
-  readonly CANVAS_H: number;
-  readonly GRID_COLS: number;
-  readonly GRID_ROWS: number;
-  readonly NODE_W: number;
-  readonly NODE_H: number;
-}
-
-export const DEFAULT_CONFIG: DiagramConfig = {
-  CANVAS_W: 1000,
-  CANVAS_H: 800,
-  GRID_COLS: 12,
-  GRID_ROWS: 12,
-  NODE_W: 160,
-  NODE_H: 80,
-};
-
-
 /**
  * Logical architecture model.
  * Contains only system information.
@@ -48,10 +31,12 @@ export interface DiagramNode {
 }
 
 export interface DiagramEdge {
+  id: string; // stable identity — required so multiple edges between
+              // the same two nodes (e.g. request + response) don't
+              // collide on a derived key like `${from}-${to}`.
   from: NodeId;
   to: NodeId;
 }
-
 
 export interface SystemDesign {
   slug: string;
@@ -59,7 +44,6 @@ export interface SystemDesign {
   nodes: DiagramNode[];
   edges: DiagramEdge[];
 }
-
 
 /**
  * Layout configuration.
@@ -70,24 +54,13 @@ export interface NodeLayout {
   gridPos: Point;
 }
 
-
-/**
- * Geometry primitives.
- */
-export interface Point {
-  x: number;
-  y: number;
-}
-
-export interface Rect extends Point {
-  width: number;
-  height: number;
-}
-
-
 /**
  * Render layer objects.
  * Generated from SystemDesign + NodeLayout.
+ * x/y are CENTER of node, in canvas-pixel units (config.canvasWidth/Height),
+ * NOT percent. This is the SVG viewBox coordinate space used by
+ * Whiteboard.tsx for pan/zoom — everything (nodes, edges, connection
+ * points) has to live in one consistent unit for that to work.
  */
 export interface PositionedNode extends Rect {
   id: NodeId;
@@ -95,12 +68,12 @@ export interface PositionedNode extends Rect {
 }
 
 export interface PositionedEdge {
+  id: string;
   start: Point;
   end: Point;
   fromId: NodeId;
   toId: NodeId;
 }
-
 
 /**
  * Final object consumed by React components.

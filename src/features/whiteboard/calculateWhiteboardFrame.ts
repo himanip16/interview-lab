@@ -14,9 +14,7 @@ import {
 } from "@/features/whiteboard/config";
 
 import { validateDesign } from "@/features/whiteboard/validation";
-
 import { validateCollisions } from "@/features/whiteboard/collision";
-
 
 export function calculateWhiteboardFrame(
   design: SystemDesign,
@@ -24,120 +22,48 @@ export function calculateWhiteboardFrame(
   config: WhiteboardConfig = DEFAULT_WHITEBOARD_CONFIG
 ): WhiteboardFrame {
 
+  validateDesign(design, layout, config);
 
-  // Validate everything before calculation
-  validateDesign(
-    design,
-    layout,
-    config
-  );
+  const layoutMap = new Map(layout.map(item => [item.nodeId, item]));
 
+  const positionedNodes: PositionedNode[] = design.nodes.map(node => {
+    const position = layoutMap.get(node.id)!;
 
-  const layoutMap = new Map(
-    layout.map(item => [
-      item.nodeId,
-      item
-    ])
-  );
+    return {
+      id: node.id,
+      data: node,
 
+      // CENTER of node, in canvas-pixel space — this IS the SVG viewBox
+      // coordinate system now. No percent conversion, no CSS involved.
+      x: (position.gridPos.x / config.gridColumns) * config.canvasWidth,
+      y: (position.gridPos.y / config.gridRows) * config.canvasHeight,
 
-  const positionedNodes: PositionedNode[] =
-    design.nodes.map(node => {
+      width: config.defaultNodeWidth,
+      height: config.defaultNodeHeight,
+    };
+  });
 
-      const position = layoutMap.get(node.id)!;
-
-
-      return {
-
-        id: node.id,
-
-        data: node,
-
-        x:
-          (position.gridPos.x / config.gridColumns)
-          *
-          config.canvasWidth,
-
-        y:
-          (position.gridPos.y / config.gridRows)
-          *
-          config.canvasHeight,
-
-
-        width:
-          config.defaultNodeWidth,
-
-        height:
-          config.defaultNodeHeight
-      };
-
-    });
-
-
-
-  if(config.enableCollisionDetection) {
-
-    validateCollisions(
-      positionedNodes
-    );
-
+  if (config.enableCollisionDetection) {
+    validateCollisions(positionedNodes);
   }
 
+  const nodeMap = new Map(positionedNodes.map(node => [node.id, node]));
 
+  const positionedEdges: PositionedEdge[] = design.edges.map(edge => {
+    const source = nodeMap.get(edge.from)!;
+    const target = nodeMap.get(edge.to)!;
 
-  const nodeMap = new Map(
-    positionedNodes.map(node => [
-      node.id,
-      node
-    ])
-  );
-
-
-
-  const positionedEdges: PositionedEdge[] =
-    design.edges.map(edge => {
-
-
-      const source =
-        nodeMap.get(edge.from)!;
-
-
-      const target =
-        nodeMap.get(edge.to)!;
-
-
-
-      return {
-
-        fromId: edge.from,
-
-        toId: edge.to,
-
-
-        start:
-          getConnectionPoint(
-            source,
-            target
-          ),
-
-
-        end:
-          getConnectionPoint(
-            target,
-            source
-          )
-
-      };
-
-    });
-
-
+    return {
+      id: edge.id,
+      fromId: edge.from,
+      toId: edge.to,
+      start: getConnectionPoint(source, target),
+      end: getConnectionPoint(target, source),
+    };
+  });
 
   return {
-
     nodes: positionedNodes,
-
-    edges: positionedEdges
-
+    edges: positionedEdges,
   };
 }

@@ -21,184 +21,95 @@ export default function WhiteboardCatalogue() {
         }
       `}</style>
       <div
-        style={{
-          fontFamily: "'Inter', sans-serif",
-          color: '#15161C',
-          background: '#FAF9F6',
-          minHeight: '100vh',
-          padding: '0 24px 80px',
-        }}
+        style={{ fontFamily: "'Inter', sans-serif", color: "#15161C", background: "#FAF9F6" }}
+        className="min-h-screen px-4 pb-20 sm:px-6"
       >
-        <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+        <div className="mx-auto max-w-[1000px]">
           {/* Navigation */}
-          <nav
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '30px 0',
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                gap: '30px',
-                fontSize: '13.5px',
-                color: '#5A5B66',
-                fontWeight: 500,
-              }}
-            >
-              <span>About Learn</span>
-              <span style={{ color: '#15161C', fontWeight: 600, borderBottom: '2px solid #15161C', paddingBottom: '2px' }}>
+          <nav className="flex items-center justify-between py-5 sm:py-[30px]">
+            <div className="flex gap-4 overflow-x-auto text-[12.5px] font-medium sm:gap-[30px] sm:text-[13.5px]" style={{ color: "#5A5B66" }}>
+              <span className="whitespace-nowrap">About Learn</span>
+              <span
+                className="whitespace-nowrap pb-0.5 font-semibold"
+                style={{ color: "#15161C", borderBottom: "2px solid #15161C" }}
+              >
                 Whiteboarding
               </span>
-              <span>Deep Dives</span>
-              <span>Library</span>
+              <span className="whitespace-nowrap">Deep Dives</span>
+              <span className="whitespace-nowrap">Library</span>
             </div>
             <button
-              style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '50%',
-                border: '1px solid rgba(21,22,28,0.14)',
-                background: 'none',
-                color: '#15161C',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-              }}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border"
+              style={{ borderColor: "rgba(21,22,28,0.14)", background: "none", color: "#15161C" }}
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-                <path d="M4 7h16M4 12h16M4 17h16"/>
+                <path d="M4 7h16M4 12h16M4 17h16" />
               </svg>
             </button>
           </nav>
 
           {/* Header */}
-          <div style={{ padding: '20px 0 30px' }}>
-            <div
-              style={{
-                fontSize: '12.5px',
-                fontWeight: 700,
-                letterSpacing: '.1em',
-                color: '#00A87E',
-              }}
-            >
+          <div className="py-4 pb-6 sm:py-5 sm:pb-[30px]">
+            <div className="text-[11.5px] font-bold tracking-[.1em] sm:text-[12.5px]" style={{ color: "#00A87E" }}>
               LEARN WHITEBOARDING
             </div>
             <h1
-              style={{
-                fontFamily: "'Poppins', sans-serif",
-                fontSize: '38px',
-                fontWeight: 800,
-                marginTop: '10px',
-                maxWidth: '520px',
-                letterSpacing: '-0.02em',
-              }}
+              style={{ fontFamily: "'Poppins', sans-serif" }}
+              className="mt-2.5 max-w-[520px] text-[28px] font-extrabold leading-tight tracking-tight sm:text-[38px]"
             >
               Pick a system to explore
             </h1>
-            <p
-              style={{
-                fontSize: '14.5px',
-                color: '#5A5B66',
-                marginTop: '12px',
-                maxWidth: '460px',
-                lineHeight: 1.6,
-              }}
-            >
+            <p className="mt-3 max-w-[460px] text-[13.5px] leading-relaxed sm:text-[14.5px]" style={{ color: "#5A5B66" }}>
               Click into any component to see its role, who calls it, what it fails to, and how it stays resilient — or walk through a real user flow step by step.
             </p>
           </div>
 
           {/* Grid */}
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '16px',
-            }}
-          >
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {systems.map((system) => (
               <Link
                 key={system.slug}
                 href={`/learn/whiteboard/${system.slug}`}
+                className="rounded-[22px] border p-5 no-underline transition-transform duration-300 hover:-translate-y-1.5 sm:p-[22px]"
                 style={{
-                  background: '#fff',
-                  borderRadius: '22px',
-                  padding: '22px',
-                  border: '1px solid rgba(21,22,28,0.07)',
-                  cursor: 'pointer',
-                  transition: 'transform .3s cubic-bezier(.34,1.56,.64,1), box-shadow .3s ease',
-                  textDecoration: 'none',
-                  color: 'inherit',
+                  background: "#fff",
+                  borderColor: "rgba(21,22,28,0.07)",
+                  color: "inherit",
+                  transitionTimingFunction: "cubic-bezier(.34,1.56,.64,1)",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-6px)';
-                  e.currentTarget.style.boxShadow = '0 20px 40px rgba(21,22,28,0.08)';
+                  e.currentTarget.style.boxShadow = "0 20px 40px rgba(21,22,28,0.08)";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = 'none';
+                  e.currentTarget.style.boxShadow = "none";
                 }}
               >
                 <svg
-                  style={{ width: '64px', height: '64px', marginBottom: '14px' }}
+                  className="mb-3.5 h-14 w-14 sm:h-16 sm:w-16"
                   viewBox="0 0 64 64"
                   fill="none"
                   dangerouslySetInnerHTML={{ __html: system.mark }}
                 />
                 <h3
-                  style={{
-                    fontFamily: "'Poppins', sans-serif",
-                    fontSize: '16px',
-                    fontWeight: 600,
-                    letterSpacing: '-0.02em',
-                  }}
+                  style={{ fontFamily: "'Poppins', sans-serif" }}
+                  className="text-[15px] font-semibold tracking-tight sm:text-[16px]"
                 >
                   {system.title}
                 </h3>
-                <div
-                  style={{
-                    fontSize: '12.5px',
-                    color: '#5A5B66',
-                    marginTop: '6px',
-                    lineHeight: 1.55,
-                    minHeight: '38px',
-                  }}
-                >
+                <div className="mt-1.5 min-h-[38px] text-[12.5px] leading-relaxed" style={{ color: "#5A5B66" }}>
                   {system.oneLiner}
                 </div>
                 <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    marginTop: '16px',
-                    paddingTop: '14px',
-                    borderTop: '1px solid rgba(21,22,28,0.06)',
-                  }}
+                  className="mt-4 flex items-center justify-between border-t pt-3.5"
+                  style={{ borderColor: "rgba(21,22,28,0.06)" }}
                 >
                   <span
-                    style={{
-                      fontSize: '9.5px',
-                      fontWeight: 700,
-                      padding: '3px 8px',
-                      borderRadius: '999px',
-                      background: '#FAF9F6',
-                      color: '#5A5B66',
-                      textTransform: 'uppercase',
-                    }}
+                    className="rounded-full px-2 py-[3px] text-[9.5px] font-bold uppercase"
+                    style={{ background: "#FAF9F6", color: "#5A5B66" }}
                   >
                     HLD
                   </span>
-                  <span
-                    style={{
-                      fontSize: '11px',
-                      color: '#5A5B66',
-                    }}
-                  >
+                  <span className="text-[11px]" style={{ color: "#5A5B66" }}>
                     {system.comps} components · {system.flows} flows
                   </span>
                 </div>
