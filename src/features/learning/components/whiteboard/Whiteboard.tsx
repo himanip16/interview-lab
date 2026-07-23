@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState, useCallback, WheelEvent, PointerEvent } from "react";
+import { useMemo, useRef, useState, useCallback, WheelEvent, PointerEvent, DragEvent } from "react";
 
 import { cn } from "@/shared/utils/utils";
 import { Inspector } from "@/shared/layout/Inspector";
@@ -68,6 +68,7 @@ export default function Whiteboard({
     const svg = svgRef.current;
     if (!svg) return { x: 0, y: 0 };
     const rect = svg.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return { x: 0, y: 0 };
     const ratioX = (clientX - rect.left) / rect.width;
     const ratioY = (clientY - rect.top) / rect.height;
     return {
@@ -100,6 +101,8 @@ export default function Whiteboard({
     // not start a pan.
     if ((e.target as SVGElement).closest("g[role='button']")) return;
 
+    e.preventDefault(); // stop native browser drag/text-selection from hijacking this
+
     isPanning.current = true;
     lastPointer.current = { x: e.clientX, y: e.clientY };
     svgRef.current?.setPointerCapture(e.pointerId);
@@ -107,15 +110,16 @@ export default function Whiteboard({
 
   const handlePointerMove = useCallback((e: PointerEvent<SVGSVGElement>) => {
     if (!isPanning.current || !lastPointer.current) return;
+    e.preventDefault();
 
     const svg = svgRef.current;
     if (!svg) return;
     const rect = svg.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return; // guard against NaN viewBox
 
     const dxScreen = e.clientX - lastPointer.current.x;
     const dyScreen = e.clientY - lastPointer.current.y;
 
-    // Convert screen-pixel delta to viewBox-unit delta.
     const dxView = (dxScreen / rect.width) * viewBox.width;
     const dyView = (dyScreen / rect.height) * viewBox.height;
 
@@ -134,6 +138,12 @@ export default function Whiteboard({
     svgRef.current?.releasePointerCapture(e.pointerId);
   }, []);
 
+  const handleDragStart = useCallback((e: DragEvent<SVGSVGElement>) => {
+    // Firefox in particular treats SVG content as natively draggable,
+    // which hijacks pointermove before our pan logic ever sees it.
+    e.preventDefault();
+  }, []);
+
   const resetView = useCallback(() => {
     setViewBox({ x: 0, y: 0, width: CANVAS_W, height: CANVAS_H });
   }, []);
@@ -147,6 +157,8 @@ export default function Whiteboard({
             ref={svgRef}
             viewBox={`${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`}
             className="w-full h-[380px] touch-none select-none"
+            draggable={false}
+            onDragStart={handleDragStart}
             onWheel={handleWheel}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}

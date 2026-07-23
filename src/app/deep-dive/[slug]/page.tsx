@@ -1,3 +1,5 @@
+// src/app/deep-dive/[slug]/page.tsx
+
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ProgressBar } from '@/features/deep-dive/components/ProgressBar';

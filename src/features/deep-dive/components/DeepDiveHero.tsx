@@ -1,3 +1,5 @@
+// src/features/deep-dive/components/DeepDiveHero.tsx
+
 import { ReactNode } from 'react';
 import Link from 'next/link';
 

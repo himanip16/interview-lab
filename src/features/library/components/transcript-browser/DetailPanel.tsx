@@ -44,8 +44,7 @@ export default function DetailPanel({ transcript, categories, diffColor }: Props
 
   const handleStartReading = async () => {
     if (!transcript) return;
-    
-    // Award XP for starting to read
+
     try {
       await fetch('/api/xp', {
         method: 'POST',
@@ -59,13 +58,16 @@ export default function DetailPanel({ transcript, categories, diffColor }: Props
     } catch (error) {
       console.error('Error awarding XP:', error);
     }
-    
-    // Navigate to learn page with transcript ID
+
     router.push(`/learn/transcript/${transcript.slug}`);
   };
+
   if (!transcript) {
     return (
-      <div className="overflow-y-auto" style={{
+      // was missing "desktop-detail" — meant this placeholder ignored the
+      // mobile-collapse rule entirely and always took up column width,
+      // even on narrow screens. That's the empty panel visible in the screenshot.
+      <div className="desktop-detail overflow-y-auto" style={{
         flex: '0 0 320px',
         padding: '24px 22px',
         fontFamily: "'Inter', sans-serif",
@@ -95,7 +97,6 @@ export default function DetailPanel({ transcript, categories, diffColor }: Props
       <div style={{
         animation: 'fadeIn 0.35s ease'
       }}>
-        {/* Meta row */}
         <div style={{
           display: 'flex',
           gap: '6px',
@@ -126,7 +127,6 @@ export default function DetailPanel({ transcript, categories, diffColor }: Props
           </span>
         </div>
 
-        {/* Title */}
         <div style={{
           fontSize: '20.9px',
           fontWeight: 700,
@@ -138,7 +138,6 @@ export default function DetailPanel({ transcript, categories, diffColor }: Props
           {transcript.title}
         </div>
 
-        {/* Meta info */}
         <div style={{
           fontSize: '11.55px',
           color: '#5A5B66',
@@ -148,7 +147,6 @@ export default function DetailPanel({ transcript, categories, diffColor }: Props
           {transcript.company || 'Unknown'} • {transcript.duration} min read
         </div>
 
-        {/* Description */}
         <div style={{
           fontSize: '13.75px',
           color: '#5A5B66',
@@ -158,7 +156,6 @@ export default function DetailPanel({ transcript, categories, diffColor }: Props
           {transcript.summaryData?.description || transcript.summary || ''}
         </div>
 
-        {/* Tags */}
         <div style={{
           display: 'flex',
           gap: '6px',
@@ -182,7 +179,6 @@ export default function DetailPanel({ transcript, categories, diffColor }: Props
           ))}
         </div>
 
-        {/* Actions */}
         <div style={{
           display: 'flex',
           gap: '8px',

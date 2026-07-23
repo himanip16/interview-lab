@@ -151,7 +151,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       {/* Sidebar — desktop only. On mobile, navigation lives in the bottom bar. */}
       <aside
         className={cn(
-          "hidden lg:flex fixed left-0 top-0 bottom-0 bg-[var(--surface-panel)] border-r border-[var(--border)] z-50 flex-col w-[var(--sidebar-w)]",
+          "hidden lg:flex fixed left-0 top-0 bottom-0 bg-[var(--surface-panel)] border-r border-[var(--border)] z-50 flex-col w-[var(--sidebar-w)] overflow-hidden",
           mounted && "transition-[width] duration-200 ease-out"
         )}
       >
@@ -185,8 +185,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </button>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 px-3 py-2 flex flex-col gap-0.5">
+        {/* Navigation — min-h-0 + overflow-y-auto lets this scroll internally
+            instead of pushing the footer (streak/user cards) past the bottom
+            of the fixed-height sidebar on short viewports. Flex items default
+            to min-height:auto, which refuses to shrink below content size —
+            that's what was causing the footer to get clipped/overlapped. */}
+        <nav className="flex-1 min-h-0 overflow-y-auto px-3 py-2 flex flex-col gap-0.5">
           {navItems.map((item) => (
             <Link
               key={item.path}

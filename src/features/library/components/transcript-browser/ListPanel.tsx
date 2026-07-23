@@ -122,6 +122,14 @@ export default function ListPanel({
                       marginTop: "3px",
                       lineHeight: 1.35,
                       color: "#15161C",
+                      // was unbounded — wrapped forever, which is what
+                      // produced the tall vertical text stack in your
+                      // screenshot. Clamped to 2 lines with ellipsis.
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
                     }}
                   >
                     {transcript.title}
