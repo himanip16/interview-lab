@@ -1,192 +1,700 @@
 PROJECT STRUCTURE
 =================
-src/app/deep-dive
-├── [slug]
-│   └── page.tsx
-└── page.tsx
+content/deep-dive/illustrations
+├── Cassandra.tsx
+├── CassandraReadPathIllustration.tsx
+├── CassandraRingIllustration.tsx
+├── CassandraWritePathIllustration.tsx
+├── ConsistentHashing.tsx
+├── ConsistentHashingHero.tsx
+├── DynamoConsistencyIllustration.tsx
+├── DynamoDB.tsx
+├── DynamoManagedLayerIllustration.tsx
+├── Kafka.tsx
+├── ModuloIllustration.tsx
+├── MongoDB.tsx
+├── Postgres.tsx
+├── Redis.tsx
+└── primitives.tsx
 
-2 directories, 2 files
+1 directory, 15 files
 
 FILE CONTENTS
 
 ================================================
-FILE: src/app/deep-dive/page.tsx
+FILE: content/deep-dive/illustrations/ModuloIllustration.tsx
 ================================================
-import { DeepDiveIndexPage } from "@/features/deep-dive";
-
-export default DeepDiveIndexPage;
+export function ModuloIllustration() {
+  return (
+    <svg viewBox="0 0 160 100" width="100%">
+      <rect width="160" height="100" fill="none"/>
+      <text x="10" y="16" fontSize="8" fill="var(--text-soft)" fontFamily="Inter">3 servers</text>
+      <circle cx="20" cy="40" r="5" fill="#00D9A3"/>
+      <circle cx="80" cy="40" r="5" fill="#00A87E"/>
+      <circle cx="140" cy="40" r="5" fill="#6A5AE0"/>
+      <text x="10" y="66" fontSize="8" fill="var(--coral)" fontFamily="Inter">+1 server → ~75% of keys move</text>
+      <circle cx="20" cy="86" r="5" fill="#00D9A3"/>
+      <circle cx="65" cy="86" r="5" fill="#00A87E"/>
+      <circle cx="110" cy="86" r="5" fill="#6A5AE0"/>
+      <circle cx="150" cy="86" r="5" fill="#FF5A3C"/>
+    </svg>
+  );
+}
 
 ================================================
-FILE: src/app/deep-dive/[slug]/page.tsx
+FILE: content/deep-dive/illustrations/DynamoDB.tsx
 ================================================
-import { notFound } from 'next/navigation';
-import Link from 'next/link';
-import { ProgressBar } from '@/features/deep-dive/components/ProgressBar';
-import { Breadcrumb } from '@/features/deep-dive/components/Breadcrumb';
-import { SectionHeading } from '@/features/deep-dive/components/SectionHeading';
-import { Callout } from '@/features/deep-dive/components/Callout';
-import { TradeoffComparison } from '@/features/deep-dive/components/TradeoffComparison';
-import { RelatedTechnologyCard } from '@/features/deep-dive/components/RelatedTechnologyCard';
-import { Tag } from '@/features/deep-dive/components/Tag';
-import { ThemeToggle } from '@/features/deep-dive/components/ThemeToggle';
-import { VideoBlock } from '@/features/deep-dive/components/VideoBlock';
-import { CodeBlock } from '@/features/deep-dive/components/CodeBlock';
-import { IllustrationBlock } from '@/features/deep-dive/components/IllustrationBlock';
-import { ResourceRow } from '@/features/deep-dive/components/ResourceRow';
-import { CassandraIllustration } from '@/features/deep-dive/illustrations/Cassandra';
-import { RedisIllustration } from '@/features/deep-dive/illustrations/Redis';
-import { KafkaIllustration } from '@/features/deep-dive/illustrations/Kafka';
-import { PostgresIllustration } from '@/features/deep-dive/illustrations/Postgres';
-import { DynamoDBIllustration } from '@/features/deep-dive/illustrations/DynamoDB';
-import { MongoDBIllustration } from '@/features/deep-dive/illustrations/MongoDB';
-import { ConsistentHashingIllustration } from '@/features/deep-dive/illustrations/ConsistentHashing';
-import { ModuloIllustration } from '@/features/deep-dive/illustrations/ModuloIllustration';
-import { ConsistentHashingHero } from '@/features/deep-dive/illustrations/ConsistentHashingHero';
-import { getDeepDiveBySlug, getPreviousAndNext } from '@/content/deep-dive';
-import '@/features/deep-dive/styles/deep-dive.css';
-
-const illustrationMap: Record<string, React.ReactNode> = {
-  cassandra: <CassandraIllustration />,
-  redis: <RedisIllustration />,
-  kafka: <KafkaIllustration />,
-  postgres: <PostgresIllustration />,
-  dynamodb: <DynamoDBIllustration />,
-  mongodb: <MongoDBIllustration />,
-  'consistent-hashing': <ConsistentHashingHero />
-};
-
-const componentMap: Record<string, React.ReactNode> = {
-  ModuloIllustration: <ModuloIllustration />,
-  ConsistentHashingIllustration: <ConsistentHashingIllustration />
-};
-
-const iconMap: Record<string, React.ReactNode> = {
-  book: (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M4 19.5A2.5 2.5 0 016.5 17H20M4 4.5A2.5 2.5 0 016.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15z"/>
+export function DynamoDBIllustration() {
+  return (
+    <svg className="mark" viewBox="0 0 220 220" fill="none">
+      <circle cx="110" cy="110" r="88" stroke="#15161C" strokeWidth="2" strokeDasharray="4 7" opacity=".25"/>
+      <circle cx="110" cy="30" r="11" fill="#00D9A3"/>
+      <circle cx="182" cy="70" r="11" fill="#00A87E"/>
+      <circle cx="182" cy="150" r="11" fill="#15161C"/>
+      <circle cx="110" cy="190" r="11" fill="#00A87E"/>
+      <circle cx="38" cy="150" r="11" fill="#00D9A3"/>
+      <circle cx="38" cy="70" r="11" fill="#15161C"/>
+      <circle cx="110" cy="110" r="16" fill="#FF5A3C"/>
+      <path d="M110 30L182 70M182 70L182 150M182 150L110 190M110 190L38 150M38 150L38 70M38 70L110 30" stroke="#15161C" strokeWidth="1.5" opacity=".3"/>
+      <path d="M110 110L110 30M110 110L182 70M110 110L182 150M110 110L110 190M110 110L38 150M110 110L38 70" stroke="#FF5A3C" strokeWidth="1.5" opacity=".35"/>
     </svg>
-  ),
-  message: (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/>
-    </svg>
-  ),
-  code: (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M8 9l-4 3 4 3M16 9l4 3-4 3M13 5l-3 14"/>
-    </svg>
-  )
-};
+  );
+}
 
-export default async function DeepDiveArticlePage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
-  const article = getDeepDiveBySlug(slug);
-  const { previous, next } = getPreviousAndNext(slug);
+================================================
+FILE: content/deep-dive/illustrations/primitives.tsx
+================================================
+// src/features/deep-dive/illustrations/primitives.tsx
+//
+// Small, composable SVG building blocks shared by every illustration in this
+// folder. An illustration should almost never need a raw <circle>/<rect>/<line>
+// — reach for Node / Box / Arrow / Label instead, and only drop to raw SVG for
+// something genuinely one-off.
 
-  if (!article) {
-    notFound();
-  }
+export const palette = {
+  mint: '#00D9A3',
+  mintDeep: '#00A87E',
+  violet: '#6A5AE0',
+  coral: '#FF5A3C',
+  amber: '#E8940A',
+  ink: '#15161C',
+} as const;
 
-  const illustration = illustrationMap[slug] || <CassandraIllustration />;
+type Fill = keyof typeof palette | 'soft' | 'none';
+
+function resolveFill(fill?: Fill, opacity?: number): { fill: string; opacity?: number } {
+  if (!fill || fill === 'none') return { fill: 'none' };
+  if (fill === 'soft') return { fill: 'var(--border-soft)' };
+  return { fill: palette[fill], opacity };
+}
+
+/** A labeled circular node — the basic unit for servers/peers/replicas. */
+export function Node({
+  cx,
+  cy,
+  r = 6,
+  fill = 'mintDeep',
+  label,
+  labelDx = 0,
+  labelDy = -12,
+  labelColor = 'var(--text)',
+}: {
+  cx: number;
+  cy: number;
+  r?: number;
+  fill?: Fill;
+  label?: string;
+  labelDx?: number;
+  labelDy?: number;
+  labelColor?: string;
+}) {
+  return (
+    <g>
+      <circle cx={cx} cy={cy} r={r} {...resolveFill(fill)} />
+      {label && (
+        <text
+          x={cx + labelDx}
+          y={cy + labelDy}
+          fontSize={7}
+          fill={labelColor}
+          fontFamily="Inter"
+          textAnchor="middle"
+        >
+          {label}
+        </text>
+      )}
+    </g>
+  );
+}
+
+/** A labeled rounded box — for pipeline steps, storage layers, states. */
+export function Box({
+  x,
+  y,
+  width,
+  height,
+  fill = 'soft',
+  stroke,
+  title,
+  subtitle,
+  titleColor = 'var(--text)',
+  subtitleColor = 'var(--text-soft)',
+}: {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  fill?: Fill;
+  stroke?: keyof typeof palette | 'border';
+  title?: string;
+  subtitle?: string;
+  titleColor?: string;
+  subtitleColor?: string;
+}) {
+  const strokeColor = !stroke ? 'var(--border)' : stroke === 'border' ? 'var(--border)' : palette[stroke];
+  const { fill: fillColor, opacity } = resolveFill(fill, fill !== 'soft' && fill !== 'none' ? 0.15 : undefined);
 
   return (
-    <>
-      <ProgressBar />
+    <g>
+      <rect x={x} y={y} width={width} height={height} rx={6} fill={fillColor} opacity={opacity} stroke={strokeColor} />
+      {title && (
+        <text x={x + 6} y={y + height / 2 - (subtitle ? 4 : -3)} fontSize={7} fill={titleColor} fontFamily="Inter">
+          {title}
+        </text>
+      )}
+      {subtitle && (
+        <text x={x + 6} y={y + height / 2 + 8} fontSize={6} fill={subtitleColor} fontFamily="Inter">
+          {subtitle}
+        </text>
+      )}
+    </g>
+  );
+}
 
-      <div className="wrap">
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
-          <ThemeToggle />
-        </div>
-        <div className="crumb">
-          <Link href="/deep-dive" className="back">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
-              <path d="M15 6l-6 6 6 6" />
-            </svg>
-          </Link>
-          Deep dives &nbsp;/&nbsp; <b>{article.name}</b>
-        </div>
+function resolveColor(color?: keyof typeof palette | string): string {
+  if (!color) return 'var(--text-soft)';
+  return color in palette ? palette[color as keyof typeof palette] : color;
+}
 
-        <div className="mark-sm" style={{ width: '56px', height: '56px', marginBottom: '16px' }}>
-          {illustration}
-        </div>
+/** A straight or dashed connector, optionally with an arrowhead and label. */
+export function Arrow({
+  x1,
+  y1,
+  x2,
+  y2,
+  color = 'var(--text-soft)',
+  dashed = false,
+  head = false,
+  label,
+  labelColor,
+}: {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  color?: keyof typeof palette | string;
+  dashed?: boolean;
+  head?: boolean;
+  label?: string;
+  labelColor?: string;
+}) {
+  color = resolveColor(color);
+  const angle = Math.atan2(y2 - y1, x2 - x1);
+  const headSize = 5;
+  const hx1 = x2 - headSize * Math.cos(angle - Math.PI / 7);
+  const hy1 = y2 - headSize * Math.sin(angle - Math.PI / 7);
+  const hx2 = x2 - headSize * Math.cos(angle + Math.PI / 7);
+  const hy2 = y2 - headSize * Math.sin(angle + Math.PI / 7);
 
-        <h1 className="title">{article.title}</h1>
-        <div className="tags">
-          {article.tags.map((tag: string) => (
-            <Tag key={tag}>{tag}</Tag>
-          ))}
-        </div>
+  return (
+    <g>
+      <line
+        x1={x1}
+        y1={y1}
+        x2={x2}
+        y2={y2}
+        stroke={color}
+        strokeWidth={1.2}
+        strokeDasharray={dashed ? '2,2' : undefined}
+      />
+      {head && <polygon points={`${x2},${y2} ${hx1},${hy1} ${hx2},${hy2}`} fill={color} />}
+      {label && (
+        <text
+          x={(x1 + x2) / 2}
+          y={(y1 + y2) / 2 - 4}
+          fontSize={6.5}
+          fill={labelColor ?? color}
+          fontFamily="Inter"
+          textAnchor="middle"
+        >
+          {label}
+        </text>
+      )}
+    </g>
+  );
+}
 
-        <p className="lede" dangerouslySetInnerHTML={{ __html: article.lede }} />
+/** A ring path (unfilled circle) for peer-to-peer / hash-ring diagrams. */
+export function RingPath({ cx, cy, r }: { cx: number; cy: number; r: number }) {
+  return <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--border)" strokeWidth={1.5} />;
+}
 
-        {article.sections.map((section: any) => (
-          <section key={section.number}>
-            <div className="h2row">
-              <SectionHeading number={section.number}>{section.title}</SectionHeading>
-            </div>
-            {section.content.map((paragraph: string, index: number) => (
-              <p key={index} dangerouslySetInnerHTML={{ __html: paragraph }} />
-            ))}
-            {section.illustration && (
-              <IllustrationBlock
-                illustration={componentMap[section.illustration.component] || null}
-                caption={section.illustration.caption}
-                width={section.illustration.width}
-              >
-                {section.illustration.text && <p dangerouslySetInnerHTML={{ __html: section.illustration.text }} />}
-              </IllustrationBlock>
-            )}
-            {section.video && (
-              <VideoBlock caption={section.video.caption} duration={section.video.duration} />
-            )}
-            {section.code && <CodeBlock>{section.code}</CodeBlock>}
-            {section.callout && (
-              <Callout label={section.callout.label}>
-                {section.callout.content}
-              </Callout>
-            )}
-            {section.resources && (
-              <div className="resources">
-                {section.resources.map((resource: any, index: number) => (
-                  <ResourceRow
-                    key={index}
-                    icon={iconMap[resource.icon] || null}
-                    title={resource.title}
-                    subtitle={resource.subtitle}
-                    chips={resource.chips}
-                  />
-                ))}
-              </div>
-            )}
-          </section>
-        ))}
+/** Places n items evenly around a circle. Returns {x, y} for each index. */
+export function ringPositions(cx: number, cy: number, r: number, count: number, startDeg = -90) {
+  return Array.from({ length: count }, (_, i) => {
+    const angle = ((startDeg + (360 / count) * i) * Math.PI) / 180;
+    return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
+  });
+}
 
-        {article.tradeoffs && (
-          <section>
-            <SectionHeading number={article.sections.length + 1}>
-              When to reach for it — and when not to
-            </SectionHeading>
-            <TradeoffComparison
-              strengths={article.tradeoffs.strengths}
-              weaknesses={article.tradeoffs.weaknesses}
-            />
-          </section>
-        )}
+/** A standalone text label — for titles, footnotes, standalone captions. */
+export function Label({
+  x,
+  y,
+  children,
+  size = 8,
+  color = 'var(--text-soft)',
+  weight,
+}: {
+  x: number;
+  y: number;
+  children: React.ReactNode;
+  size?: number;
+  color?: string;
+  weight?: number;
+}) {
+  return (
+    <text x={x} y={y} fontSize={size} fill={color} fontFamily="Inter" fontWeight={weight}>
+      {children}
+    </text>
+  );
+}
 
-        <div className="related">
-          <div className="lbl">Continue the thread</div>
-          <div className="rel-row">
-            {article.related.map((related: any) => (
-              <Link key={related.slug} href={`/deep-dive/${related.slug}`}>
-                <RelatedTechnologyCard
-                  name={related.name}
-                  description={related.description}
-                />
-              </Link>
-            ))}
-          </div>
-        </div>
+/** Wraps children in a consistently-sized, non-scaling SVG canvas. */
+export function IllustrationCanvas({
+  viewBox,
+  children,
+}: {
+  viewBox: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <svg viewBox={viewBox} width="100%">
+      {children}
+    </svg>
+  );
+}
+
+================================================
+FILE: content/deep-dive/illustrations/Postgres.tsx
+================================================
+export function PostgresIllustration() {
+  return (
+    <svg className="mark" viewBox="0 0 220 220" fill="none">
+      <circle cx="110" cy="110" r="88" stroke="#15161C" strokeWidth="2" strokeDasharray="4 7" opacity=".25"/>
+      <circle cx="110" cy="30" r="11" fill="#00D9A3"/>
+      <circle cx="182" cy="70" r="11" fill="#00A87E"/>
+      <circle cx="182" cy="150" r="11" fill="#15161C"/>
+      <circle cx="110" cy="190" r="11" fill="#00A87E"/>
+      <circle cx="38" cy="150" r="11" fill="#00D9A3"/>
+      <circle cx="38" cy="70" r="11" fill="#15161C"/>
+      <circle cx="110" cy="110" r="16" fill="#FF5A3C"/>
+      <path d="M110 30L182 70M182 70L182 150M182 150L110 190M110 190L38 150M38 150L38 70M38 70L110 30" stroke="#15161C" strokeWidth="1.5" opacity=".3"/>
+      <path d="M110 110L110 30M110 110L182 70M110 110L182 150M110 110L110 190M110 110L38 150M110 110L38 70" stroke="#FF5A3C" strokeWidth="1.5" opacity=".35"/>
+    </svg>
+  );
+}
+
+================================================
+FILE: content/deep-dive/illustrations/Redis.tsx
+================================================
+export function RedisIllustration() {
+  return (
+    <svg className="mark" viewBox="0 0 220 220" fill="none">
+      <circle cx="110" cy="110" r="88" stroke="#15161C" strokeWidth="2" strokeDasharray="4 7" opacity=".25"/>
+      <circle cx="110" cy="30" r="11" fill="#00D9A3"/>
+      <circle cx="182" cy="70" r="11" fill="#00A87E"/>
+      <circle cx="182" cy="150" r="11" fill="#15161C"/>
+      <circle cx="110" cy="190" r="11" fill="#00A87E"/>
+      <circle cx="38" cy="150" r="11" fill="#00D9A3"/>
+      <circle cx="38" cy="70" r="11" fill="#15161C"/>
+      <circle cx="110" cy="110" r="16" fill="#FF5A3C"/>
+      <path d="M110 30L182 70M182 70L182 150M182 150L110 190M110 190L38 150M38 150L38 70M38 70L110 30" stroke="#15161C" strokeWidth="1.5" opacity=".3"/>
+      <path d="M110 110L110 30M110 110L182 70M110 110L182 150M110 110L110 190M110 110L38 150M110 110L38 70" stroke="#FF5A3C" strokeWidth="1.5" opacity=".35"/>
+    </svg>
+  );
+}
+
+================================================
+FILE: content/deep-dive/illustrations/ConsistentHashing.tsx
+================================================
+'use client';
+
+import { useState, useRef, useEffect } from 'react';
+
+export function ConsistentHashingIllustration() {
+  const svgRef = useRef<SVGSVGElement>(null);
+  const [nodes, setNodes] = useState([
+    { id: 'A', angle: 20, color: '#00D9A3', alive: true },
+    { id: 'B', angle: 110, color: '#FF5A3C', alive: true },
+    { id: 'C', angle: 200, color: '#6A5AE0', alive: true },
+    { id: 'D', angle: 300, color: '#00A87E', alive: true },
+  ]);
+  const [log, setLog] = useState('Click "Send a request" to see it land on the ring.');
+
+  const cx = 110;
+  const cy = 110;
+  const r = 80;
+
+  const pt = (angle: number, radius: number) => {
+    const a = ((angle - 90) * Math.PI) / 180;
+    return {
+      x: cx + radius * Math.cos(a),
+      y: cy + radius * Math.sin(a),
+    };
+  };
+
+  const nextClockwise = (angle: number) => {
+    const alive = nodes.filter((n) => n.alive).sort((a, b) => a.angle - b.angle);
+    for (const n of alive) {
+      if (n.angle >= angle) return n;
+    }
+    return alive[0];
+  };
+
+  const draw = () => {
+    if (!svgRef.current) return;
+    const svg = svgRef.current;
+    svg.innerHTML = '';
+
+    const ring = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    ring.setAttribute('cx', String(cx));
+    ring.setAttribute('cy', String(cy));
+    ring.setAttribute('r', String(r));
+    ring.setAttribute('fill', 'none');
+    ring.setAttribute('stroke', 'var(--border)');
+    ring.setAttribute('stroke-width', '1.5');
+    svg.appendChild(ring);
+
+    nodes.forEach((n) => {
+      const p = pt(n.angle, r);
+      const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      c.setAttribute('cx', String(p.x));
+      c.setAttribute('cy', String(p.y));
+      c.setAttribute('r', String(n.alive ? 9 : 9));
+      c.setAttribute('fill', n.alive ? n.color : 'none');
+      c.setAttribute('stroke', n.alive ? 'none' : '#FF5A3C');
+      c.setAttribute('stroke-width', '2');
+      svg.appendChild(c);
+
+      if (!n.alive) {
+        const x1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        x1.setAttribute('x1', String(p.x - 5));
+        x1.setAttribute('y1', String(p.y - 5));
+        x1.setAttribute('x2', String(p.x + 5));
+        x1.setAttribute('y2', String(p.y + 5));
+        x1.setAttribute('stroke', '#FF5A3C');
+        x1.setAttribute('stroke-width', '2');
+        svg.appendChild(x1);
+      }
+
+      const lp = pt(n.angle, r + 18);
+      const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      t.setAttribute('x', String(lp.x));
+      t.setAttribute('y', String(lp.y));
+      t.setAttribute('text-anchor', 'middle');
+      t.setAttribute('font-size', '11');
+      t.setAttribute('font-weight', '700');
+      t.setAttribute('fill', n.alive ? 'var(--text)' : 'var(--text-soft)');
+      t.textContent = n.id;
+      svg.appendChild(t);
+    });
+  };
+
+  const sendRequest = (forceAngle?: number) => {
+    if (!svgRef.current) return;
+    const angle = forceAngle !== undefined ? forceAngle : Math.random() * 360;
+    const start = pt(angle, r);
+    const target = nextClockwise(angle);
+    const end = pt(target.angle, r);
+
+    const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    dot.setAttribute('r', '5');
+    dot.setAttribute('fill', 'var(--text)');
+    dot.setAttribute('cx', String(start.x));
+    dot.setAttribute('cy', String(start.y));
+    svgRef.current.appendChild(dot);
+
+    const midAngle = (angle + target.angle) / 2;
+    const mid = pt(midAngle, r * 0.55);
+    const path = `M${start.x},${start.y} Q${mid.x},${mid.y} ${end.x},${end.y}`;
+
+    const anim = document.createElementNS('http://www.w3.org/2000/svg', 'animateMotion');
+    anim.setAttribute('dur', '0.9s');
+    anim.setAttribute('fill', 'freeze');
+    anim.setAttribute('path', path);
+    dot.appendChild(anim);
+
+    setLog(`Request hashed near ${Math.round(angle)}° → nearest clockwise node is ${target.id}`);
+
+    setTimeout(() => dot.remove(), 1400);
+  };
+
+  const killNode = () => {
+    const b = nodes.find((n) => n.id === 'B');
+    if (!b || !b.alive) return;
+    b.alive = false;
+    setNodes([...nodes]);
+    draw();
+    setLog('Node B failed. Its keys now belong to the next node clockwise — watch:');
+    setTimeout(() => sendRequest(90), 500);
+    setTimeout(() => sendRequest(105), 1600);
+  };
+
+  const reset = () => {
+    nodes.forEach((n) => (n.alive = true));
+    setNodes([...nodes]);
+    draw();
+    setLog('Click "Send a request" to see it land on the ring.');
+  };
+
+  useEffect(() => {
+    draw();
+  }, [nodes]);
+
+  return (
+    <div className="diagram-card">
+      <div className="ring-stage">
+        <svg className="ringsvg" width="220" height="220" viewBox="0 0 220 220" ref={svgRef} />
       </div>
-    </>
+      <div className="ring-controls">
+        <button className="rbtn primary" onClick={() => sendRequest()}>
+          Send a request
+        </button>
+        <button className="rbtn danger" onClick={killNode}>
+          Node B fails
+        </button>
+        <button className="rbtn" onClick={reset}>
+          Reset
+        </button>
+      </div>
+      <div className="ring-log" dangerouslySetInnerHTML={{ __html: log }} />
+    </div>
+  );
+}
+
+================================================
+FILE: content/deep-dive/illustrations/CassandraRingIllustration.tsx
+================================================
+import { IllustrationCanvas, Label, RingPath, Node, Arrow, ringPositions } from './primitives';
+
+export function CassandraRingIllustration() {
+  const positions = ringPositions(80, 65, 38, 6);
+
+  return (
+    <IllustrationCanvas viewBox="0 0 160 120">
+      <Label x={10} y={14}>Peer ring — every node is equal</Label>
+
+      <RingPath cx={80} cy={65} r={38} />
+      {positions.map((p, i) => (
+        <Node key={i} cx={p.x} cy={p.y} r={6} fill="mintDeep" />
+      ))}
+
+      <Arrow x1={10} y1={30} x2={74} y2={29} color="violet" dashed head label="write A" />
+      <Arrow x1={150} y1={100} x2={86} y2={102} color="coral" dashed head label="write B" />
+
+      <Label x={20} y={118} size={7}>No node coordinates the others — any peer accepts any key</Label>
+    </IllustrationCanvas>
+  );
+}
+
+================================================
+FILE: content/deep-dive/illustrations/DynamoConsistencyIllustration.tsx
+================================================
+import { IllustrationCanvas, Label, Node, Box, Arrow } from './primitives';
+
+export function DynamoConsistencyIllustration() {
+  return (
+    <IllustrationCanvas viewBox="0 0 220 120">
+      <Label x={8} y={14}>One write, two ways to read it back</Label>
+
+      <Box x={8} y={44} width={40} height={22} fill="none" title="WRITE" />
+
+      <Node cx={110} cy={30} r={7} fill="mintDeep" label="Replica A" labelDy={-12} />
+      <Node cx={110} cy={90} r={7} fill="ink" label="Replica B" labelDy={16} labelColor="var(--text-soft)" />
+
+      <Arrow x1={48} y1={50} x2={103} y2={33} label="lands first" />
+      <Arrow x1={110} y1={37} x2={110} y2={83} dashed color="var(--text-soft)" label="replicates" />
+
+      <Arrow x1={130} y1={26} x2={175} y2={16} head color="mintDeep" />
+      <Box x={175} y={4} width={40} height={22} fill="mint" stroke="mintDeep" title="strong read" subtitle="always current" titleColor="var(--mint-deep)" />
+
+      <Arrow x1={130} y1={90} x2={175} y2={90} head color="coral" />
+      <Box x={175} y={78} width={40} height={24} fill="coral" stroke="coral" title="eventual read" subtitle="may be stale" titleColor="var(--coral)" />
+
+      <Label x={8} y={112} size={6.5}>
+        Strong reads always hit the replica with the latest write; eventual reads may hit a lagging one
+      </Label>
+    </IllustrationCanvas>
+  );
+}
+
+================================================
+FILE: content/deep-dive/illustrations/DynamoManagedLayerIllustration.tsx
+================================================
+import { IllustrationCanvas, Label, Box } from './primitives';
+
+export function DynamoManagedLayerIllustration() {
+  return (
+    <IllustrationCanvas viewBox="0 0 200 110">
+      <Label x={8} y={14}>What you see vs what AWS manages</Label>
+
+      <Box x={8} y={24} width={184} height={28} fill="none" title="Your table" subtitle="schema · partition key · read/write capacity" />
+
+      <line x1="8" y1="58" x2="192" y2="58" stroke="var(--border)" strokeWidth={1} strokeDasharray="3,3" />
+      <Label x={62} y={66} size={6}>managed boundary</Label>
+
+      <Box x={8} y={72} width={184} height={30} fill="coral" stroke="coral" title="AWS managed" titleColor="var(--coral)" />
+
+      {[14, 50, 86, 122].map((x) => (
+        <rect key={x} x={x} y={88} width={30} height={10} rx={3} fill="var(--coral)" opacity={0.3} />
+      ))}
+      <Label x={14} y={107} size={6}>partitions — created, split, rebalanced automatically</Label>
+    </IllustrationCanvas>
+  );
+}
+
+================================================
+FILE: content/deep-dive/illustrations/ConsistentHashingHero.tsx
+================================================
+export function ConsistentHashingHero() {
+  return (
+    <svg viewBox="0 0 56 56" fill="none">
+      <circle cx="28" cy="8" r="20" stroke="var(--text)" strokeWidth="1.5" fill="none" opacity=".2" transform="translate(0,12)"/>
+      <circle cx="28" cy="8" r="3.5" fill="#00D9A3"/>
+      <circle cx="44" cy="20" r="3.5" fill="#FF5A3C"/>
+      <circle cx="38" cy="42" r="3.5" fill="#00A87E"/>
+      <circle cx="16" cy="44" r="3.5" fill="#6A5AE0"/>
+      <circle cx="9" cy="18" r="3.5" fill="#00A87E"/>
+    </svg>
+  );
+}
+
+================================================
+FILE: content/deep-dive/illustrations/Cassandra.tsx
+================================================
+export function CassandraIllustration() {
+  return (
+    <svg className="mark" viewBox="0 0 220 220" fill="none">
+      <circle cx="110" cy="110" r="88" stroke="#15161C" strokeWidth="2" strokeDasharray="4 7" opacity=".25"/>
+      <circle cx="110" cy="30" r="11" fill="#00D9A3"/>
+      <circle cx="182" cy="70" r="11" fill="#00A87E"/>
+      <circle cx="182" cy="150" r="11" fill="#15161C"/>
+      <circle cx="110" cy="190" r="11" fill="#00A87E"/>
+      <circle cx="38" cy="150" r="11" fill="#00D9A3"/>
+      <circle cx="38" cy="70" r="11" fill="#15161C"/>
+      <circle cx="110" cy="110" r="16" fill="#FF5A3C"/>
+      <path d="M110 30L182 70M182 70L182 150M182 150L110 190M110 190L38 150M38 150L38 70M38 70L110 30" stroke="#15161C" strokeWidth="1.5" opacity=".3"/>
+      <path d="M110 110L110 30M110 110L182 70M110 110L182 150M110 110L110 190M110 110L38 150M110 110L38 70" stroke="#FF5A3C" strokeWidth="1.5" opacity=".35"/>
+    </svg>
+  );
+}
+
+================================================
+FILE: content/deep-dive/illustrations/MongoDB.tsx
+================================================
+export function MongoDBIllustration() {
+  return (
+    <svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* leaf/document body - mongo shape is a "leaf" traditionally, but here doc-stack to stay consistent with document-store idea */}
+      <rect x="14" y="8" width="28" height="36" rx="4" fill="#F6F6F4" stroke="#15161C" strokeWidth="1.5"/>
+      <rect x="18" y="8" width="24" height="36" rx="4" fill="#00D9A3" opacity=".15"/>
+      
+      {/* folded corner, doc look */}
+      <path d="M34 8V16H42L34 8Z" fill="#15161C" opacity=".08"/>
+
+      {/* nested document lines - show schema-less/flexible shape */}
+      <line x1="20" y1="18" x2="34" y2="18" stroke="#15161C" strokeWidth="1.5" opacity=".5"/>
+      <line x1="20" y1="24" x2="30" y2="24" stroke="#15161C" strokeWidth="1.5" opacity=".5"/>
+      <line x1="20" y1="30" x2="36" y2="30" stroke="#15161C" strokeWidth="1.5" opacity=".5"/>
+      <line x1="20" y1="36" x2="26" y2="36" stroke="#15161C" strokeWidth="1.5" opacity=".5"/>
+
+      {/* accent dot - represents nested/embedded field */}
+      <circle cx="30" cy="24" r="5" fill="#00D9A3"/>
+      <circle cx="30" cy="24" r="2" fill="#15161C"/>
+    </svg>
+  );
+}
+================================================
+FILE: content/deep-dive/illustrations/Kafka.tsx
+================================================
+export function KafkaIllustration() {
+  return (
+    <svg className="mark" viewBox="0 0 220 220" fill="none">
+      <circle cx="110" cy="110" r="88" stroke="#15161C" strokeWidth="2" strokeDasharray="4 7" opacity=".25"/>
+      <circle cx="110" cy="30" r="11" fill="#00D9A3"/>
+      <circle cx="182" cy="70" r="11" fill="#00A87E"/>
+      <circle cx="182" cy="150" r="11" fill="#15161C"/>
+      <circle cx="110" cy="190" r="11" fill="#00A87E"/>
+      <circle cx="38" cy="150" r="11" fill="#00D9A3"/>
+      <circle cx="38" cy="70" r="11" fill="#15161C"/>
+      <circle cx="110" cy="110" r="16" fill="#FF5A3C"/>
+      <path d="M110 30L182 70M182 70L182 150M182 150L110 190M110 190L38 150M38 150L38 70M38 70L110 30" stroke="#15161C" strokeWidth="1.5" opacity=".3"/>
+      <path d="M110 110L110 30M110 110L182 70M110 110L182 150M110 110L110 190M110 110L38 150M110 110L38 70" stroke="#FF5A3C" strokeWidth="1.5" opacity=".35"/>
+    </svg>
+  );
+}
+
+================================================
+FILE: content/deep-dive/illustrations/CassandraReadPathIllustration.tsx
+================================================
+import { IllustrationCanvas, Label, Box, Arrow } from './primitives';
+
+export function CassandraReadPathIllustration() {
+  return (
+    <IllustrationCanvas viewBox="0 0 220 120">
+      <Label x={8} y={14}>Read path — gather every version, then merge</Label>
+
+      <Box x={8} y={46} width={46} height={24} fill="none" title="read key" />
+
+      <Box x={80} y={16} width={60} height={20} fill="mintDeep" stroke="mintDeep" title="memtable @10:00:09" titleColor="var(--mint-deep)" />
+      <Box x={80} y={50} width={60} height={20} fill="violet" stroke="violet" title="SSTable_1 @10:00:04" titleColor="var(--violet)" />
+      <Box x={80} y={84} width={60} height={20} fill="none" title="ruled out (bloom filter)" titleColor="var(--text-soft)" />
+
+      <Arrow x1={54} y1={55} x2={80} y2={27} />
+      <Arrow x1={54} y1={58} x2={80} y2={60} />
+      <Arrow x1={54} y1={62} x2={80} y2={93} dashed />
+
+      <Arrow x1={140} y1={26} x2={168} y2={46} />
+      <Arrow x1={140} y1={60} x2={168} y2={52} />
+
+      <Box x={168} y={40} width={44} height={26} fill="mint" stroke="mintDeep" title="merge —" subtitle="newest wins" />
+    </IllustrationCanvas>
+  );
+}
+
+================================================
+FILE: content/deep-dive/illustrations/CassandraWritePathIllustration.tsx
+================================================
+import { IllustrationCanvas, Label, Box, Arrow } from './primitives';
+
+export function CassandraWritePathIllustration() {
+  return (
+    <IllustrationCanvas viewBox="0 0 220 100">
+      <Label x={8} y={14}>Write path — two steps, no lookup</Label>
+
+      <Box x={8} y={38} width={42} height={24} fill="none" title="WRITE" />
+
+      <Arrow x1={50} y1={45} x2={90} y2={24} />
+      <Arrow x1={50} y1={56} x2={90} y2={76} />
+
+      <Box x={90} y={10} width={60} height={26} fill="violet" stroke="violet" title="Commit log" subtitle="sequential disk write" titleColor="var(--violet)" />
+      <Box x={90} y={64} width={60} height={26} fill="mintDeep" stroke="mintDeep" title="Memtable" subtitle="in-memory insert" titleColor="var(--mint-deep)" />
+
+      <Arrow x1={150} y1={23} x2={182} y2={46} />
+      <Arrow x1={150} y1={77} x2={182} y2={54} />
+
+      <Box x={182} y={38} width={30} height={24} fill="none" title="ACK" />
+    </IllustrationCanvas>
   );
 }

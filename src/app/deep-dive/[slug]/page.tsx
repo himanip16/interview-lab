@@ -6,6 +6,7 @@ import { ProgressBar } from '@/features/deep-dive/components/ProgressBar';
 import { Breadcrumb } from '@/features/deep-dive/components/Breadcrumb';
 import { SectionHeading } from '@/features/deep-dive/components/SectionHeading';
 import { Callout } from '@/features/deep-dive/components/Callout';
+import { ContentRenderer } from '@/features/deep-dive/components/ContentRenderer';
 import { TradeoffComparison } from '@/features/deep-dive/components/TradeoffComparison';
 import { RelatedTechnologyCard } from '@/features/deep-dive/components/RelatedTechnologyCard';
 import { Tag } from '@/features/deep-dive/components/Tag';
@@ -14,15 +15,15 @@ import { VideoBlock } from '@/features/deep-dive/components/VideoBlock';
 import { CodeBlock } from '@/features/deep-dive/components/CodeBlock';
 import { IllustrationBlock } from '@/features/deep-dive/components/IllustrationBlock';
 import { ResourceRow } from '@/features/deep-dive/components/ResourceRow';
-import { CassandraIllustration } from '@/features/deep-dive/illustrations/Cassandra';
-import { RedisIllustration } from '@/features/deep-dive/illustrations/Redis';
-import { KafkaIllustration } from '@/features/deep-dive/illustrations/Kafka';
-import { PostgresIllustration } from '@/features/deep-dive/illustrations/Postgres';
-import { DynamoDBIllustration } from '@/features/deep-dive/illustrations/DynamoDB';
-import { MongoDBIllustration } from '@/features/deep-dive/illustrations/MongoDB';
-import { ConsistentHashingIllustration } from '@/features/deep-dive/illustrations/ConsistentHashing';
-import { ModuloIllustration } from '@/features/deep-dive/illustrations/ModuloIllustration';
-import { ConsistentHashingHero } from '@/features/deep-dive/illustrations/ConsistentHashingHero';
+import { CassandraIllustration } from '@/content/deep-dive/illustrations/Cassandra';
+import { RedisIllustration } from '@/content/deep-dive/illustrations/Redis';
+import { KafkaIllustration } from '@/content/deep-dive/illustrations/Kafka';
+import { PostgresIllustration } from '@/content/deep-dive/illustrations/Postgres';
+import { DynamoDBIllustration } from '@/content/deep-dive/illustrations/DynamoDB';
+import { MongoDBIllustration } from '@/content/deep-dive/illustrations/MongoDB';
+import { ConsistentHashingIllustration } from '@/content/deep-dive/illustrations/ConsistentHashing';
+import { ModuloIllustration } from '@/content/deep-dive/illustrations/ModuloIllustration';
+import { ConsistentHashingHero } from '@/content/deep-dive/illustrations/ConsistentHashingHero';
 import { getDeepDiveBySlug, getPreviousAndNext } from '@/content/deep-dive';
 import '@/features/deep-dive/styles/deep-dive.css';
 
@@ -105,9 +106,12 @@ export default async function DeepDiveArticlePage({ params }: { params: Promise<
             <div className="h2row">
               <SectionHeading number={section.number}>{section.title}</SectionHeading>
             </div>
-            {section.content.map((paragraph: string, index: number) => (
-              <p key={index} dangerouslySetInnerHTML={{ __html: paragraph }} />
-            ))}
+
+            {/* section.content is now Paragraph[] (arrays of {type, text, bold?, href?} spans),
+                not raw HTML strings — ContentRenderer turns each paragraph into a <p> and each
+                span into text, bold text, or a hoverable link. */}
+            <ContentRenderer content={section.content} />
+
             {section.illustration && (
               <IllustrationBlock
                 illustration={componentMap[section.illustration.component] || null}
@@ -122,9 +126,7 @@ export default async function DeepDiveArticlePage({ params }: { params: Promise<
             )}
             {section.code && <CodeBlock>{section.code}</CodeBlock>}
             {section.callout && (
-              <Callout label={section.callout.label}>
-                {section.callout.content}
-              </Callout>
+              <Callout label={section.callout.label} content={section.callout.content} />
             )}
             {section.resources && (
               <div className="resources">

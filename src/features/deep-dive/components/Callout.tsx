@@ -1,13 +1,16 @@
+import { Paragraph } from '@/features/deep-dive/types';
+import { ContentRenderer } from '@/features/deep-dive/components/ContentRenderer';
+
 interface CalloutProps {
   label: string;
-  children: React.ReactNode;
+  content: Paragraph[];
 }
 
-export function Callout({ label, children }: CalloutProps) {
+export function Callout({ label, content }: CalloutProps) {
   return (
     <div className="callout">
       <div className="lbl">{label}</div>
-      <p>{children}</p>
+      <ContentRenderer content={content} />
     </div>
   );
 }

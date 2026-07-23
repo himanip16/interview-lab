@@ -12,6 +12,12 @@
   --amber: #E8940A;
   --code-bg: #15161C;
   --code-text: #E8E6E1;
+
+  /* Aliased so the landing-page block (.stage, .top, .content, .bottom) resolves
+     correctly — those rules reference --ink/--ink-soft, which were never
+     declared before. */
+  --ink: var(--text);
+  --ink-soft: var(--text-soft);
 }
 
 [data-theme="dark"] {
@@ -210,14 +216,16 @@ h1, h2, h3 {
   line-height: 1.75;
 }
 
-.tags {
+/* Landing-page tag pills — scoped to .stage so they no longer collide with
+   the article-page .tag rules further down. */
+.stage .tags {
   display: flex;
   gap: 7px;
   flex-wrap: wrap;
   margin-top: 16px;
 }
 
-.tag {
+.stage .tag {
   font-size: 11px;
   font-weight: 600;
   padding: 5px 11px;
@@ -349,14 +357,15 @@ h1.title {
   }
 }
 
-.tags {
+/* Article-page tag pills — scoped to .wrap, distinct from .stage .tag above. */
+.wrap .tags {
   display: flex;
   gap: 6px;
   margin: 12px 0 22px;
   flex-wrap: wrap;
 }
 
-.tag {
+.wrap .tag {
   font-size: 10.5px;
   font-weight: 600;
   padding: 4px 11px;
@@ -412,6 +421,71 @@ section p {
 section p b {
   color: var(--text);
   font-weight: 600;
+}
+
+/* Hoverable concept/pattern links inside paragraph content. Renders as a
+   dotted-underline span; hovering reveals a small preview card pointing at
+   the linked deep-dive or transcript. Pair with a <span class="content-link">
+   wrapping an absolutely-positioned <span class="content-link-preview">. */
+.content-link {
+  position: relative;
+  color: var(--mint-deep);
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 1px dashed var(--mint-deep);
+  cursor: pointer;
+}
+
+.content-link:hover,
+.content-link:focus-visible {
+  border-bottom-style: solid;
+  color: var(--mint);
+}
+
+.content-link-preview {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 8px);
+  z-index: 20;
+  width: 220px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 10px 24px rgba(21, 22, 28, 0.14);
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--text-soft);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(4px);
+  transition: opacity .18s ease, transform .18s ease, visibility .18s;
+  pointer-events: none;
+}
+
+.content-link:hover .content-link-preview,
+.content-link:focus-visible .content-link-preview {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.content-link-preview .cta {
+  display: block;
+  margin-top: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  color: var(--mint-deep);
+}
+
+@media (max-width: 420px) {
+  /* No hover on touch — fall back to a plain tap-through link */
+  .content-link-preview {
+    display: none;
+  }
 }
 
 .callout {
