@@ -1,4 +1,4 @@
-import { prisma } from "@/shared/prisma/client";
+import { prisma } from "shared/prisma/client";
 import type { UserAIConfig } from "./config/modelRouting";
 
 export async function getUserAIConfig(userId: string): Promise<UserAIConfig | undefined> {

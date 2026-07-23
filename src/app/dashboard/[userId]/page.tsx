@@ -2,7 +2,7 @@
 
 import { notFound } from "next/navigation";
 import { InterviewStatus } from "@prisma/client";
-import { prisma } from "@/shared/prisma/client";
+import { prisma } from "shared/prisma/client";
 import DashboardView from "@/features/dashboard/components/DashboardView";
 
 type Props = {

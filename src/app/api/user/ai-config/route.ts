@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { prisma } from "@/shared/prisma/client";
+import { prisma } from "shared/prisma/client";
 import { getCurrentUserId } from "@/features/auth/getCurrentUserId";
 import { encrypt } from "@/shared/security/encryption";
 

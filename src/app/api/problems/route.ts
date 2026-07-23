@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/shared/prisma/client";
+import { prisma } from "shared/prisma/client";
 import { Difficulty, InterviewStatus } from "@prisma/client";
 import { DEFAULT_PAGE_SIZE } from "@/shared/config/common-constants";
 

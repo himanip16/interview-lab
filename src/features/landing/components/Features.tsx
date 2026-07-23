@@ -1,5 +1,5 @@
+import { features } from "content/learning/features";
 import FeatureCard from "./FeatureCard";
-import { features } from "@/content/learning/features";
 
 export default function Features() {
   return (

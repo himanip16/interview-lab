@@ -1,6 +1,6 @@
 import { DeepDiveArticle } from '@/features/deep-dive/types';
 
-export const consistentHashingData: DeepDiveArticle = {
+export const ConsistentHashingData: DeepDiveArticle = {
   slug: 'consistent-hashing',
   name: 'Consistent hashing',
   eyebrow: 'DISTRIBUTED SYSTEMS · Data distribution',

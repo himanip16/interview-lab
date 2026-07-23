@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import logger from "@/shared/logger/logger";
-import { prisma } from "@/shared/prisma/client";
+import { prisma } from "shared/prisma/client";
 import { randomUUID } from "crypto";
 import { Difficulty, InterviewMode, ProblemCategory } from "@prisma/client";
 

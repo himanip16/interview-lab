@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { AIService } from "@/shared/ai";
 import { StructuredOutputParser } from "@/shared/ai/parsers/StructuredOutputParser";
-import { prisma } from "@/shared/prisma/client";
+import { prisma } from "shared/prisma/client";
 import { EvidenceType } from "@prisma/client";
 
 import { PromptLoader } from "@/features/interview/prompts/prompt/PromptLoader";

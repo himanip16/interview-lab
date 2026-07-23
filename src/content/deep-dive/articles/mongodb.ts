@@ -1,6 +1,6 @@
 import { DeepDiveArticle } from '@/features/deep-dive/types';
 
-export const mongodbData: DeepDiveArticle = {
+export const MongodbData: DeepDiveArticle = {
   slug: 'mongodb',
   name: 'MongoDB',
   eyebrow: 'DOCUMENT · NoSQL',

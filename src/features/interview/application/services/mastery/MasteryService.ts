@@ -1,4 +1,4 @@
-import { prisma } from "@/shared/prisma/client";
+import { prisma } from "shared/prisma/client";
 import logger from "@/shared/logger/logger";
 
 // How quickly old mastery pulls back toward "unknown" (0.5) if a concept

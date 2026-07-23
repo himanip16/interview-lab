@@ -15,6 +15,7 @@ import DialogueBubble from "./transcript/DialogueBubble";
 import HighlightExplanation from "./transcript/HighlightExplanation";
 import TranscriptHeader from "./transcript/TranscriptHeader";
 import TranscriptLegend from "./transcript/TranscriptLegend";
+import { TranscriptSummary } from "@/content/transcripts/types";
 
 
 type Props = {

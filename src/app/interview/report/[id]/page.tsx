@@ -1,4 +1,4 @@
-import { prisma } from "@/shared/prisma/client";
+import { prisma } from "shared/prisma/client";
 import ConversationCard from "@/features/interview/report/components/ConversationCard";
 import OverallScoreCard from "@/features/interview/report/components/OverallScoreCard";
 import WhatHappenedCard from "@/features/interview/report/components/WhatHappenedCard";

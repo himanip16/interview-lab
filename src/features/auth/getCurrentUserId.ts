@@ -1,6 +1,6 @@
 import { cookies, headers } from "next/headers";
 
-import { prisma } from "@/shared/prisma/client";
+import { prisma } from "shared/prisma/client";
 import { auth } from "./auth";
 
 const GUEST_COOKIE = "guest_user_id";

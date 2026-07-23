@@ -1,6 +1,6 @@
 import { Difficulty, InterviewStatus } from "@prisma/client";
 
-import { prisma } from "@/shared/prisma/client";
+import { prisma } from "shared/prisma/client";
 
 const RECENCY_REVIEW_DAYS = 21; // untouched this long -> due for spaced-repetition review
 const RECENT_PRACTICE_PENALTY_DAYS = 3; // touched this recently -> deprioritize to encourage variety

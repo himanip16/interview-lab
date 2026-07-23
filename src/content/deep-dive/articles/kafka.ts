@@ -1,6 +1,6 @@
 import { DeepDiveArticle } from '@/features/deep-dive/types';
 
-export const kafkaData: DeepDiveArticle = {
+export const KafkaData: DeepDiveArticle = {
   slug: 'kafka',
   name: 'Kafka',
   eyebrow: 'STREAMING · EVENT LOG',

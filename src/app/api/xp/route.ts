@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/features/auth/auth";
-import { prisma } from "@/shared/prisma/client";
+import { prisma } from "shared/prisma/client";
 
 // XP thresholds for levels
 const XP_THRESHOLDS = [0, 100, 250, 500, 1000, 2000, 3500, 5000, 7500, 10000];

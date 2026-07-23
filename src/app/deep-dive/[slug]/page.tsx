@@ -2,6 +2,7 @@
 
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import DOMPurify from "isomorphic-dompurify";
 
 import { SectionHeading } from "@/features/deep-dive/components/SectionHeading";
 import { Callout } from "@/features/deep-dive/components/Callout";
@@ -25,6 +26,8 @@ import { contentComponents } from "@/content/deep-dive/component-registry";
 
 import "@/features/deep-dive/styles/deep-dive.css";
 
+import type { ReactNode } from "react";
+
 import {
   BookOpen,
   MessageSquare,
@@ -38,11 +41,39 @@ type PageProps = {
   }>;
 };
 
-const iconMap: Record<string, React.ReactNode> = {
+// --- Content shape types -----------------------------------------------
+// Derived directly from the real return type of `getDeepDiveBySlug`
+// instead of hand-written duplicates, so these can never drift out of
+// sync with the actual content shape (e.g. `callout.content` being
+// `Paragraph[]` rather than `string`).
+
+type Article = NonNullable<ReturnType<typeof getDeepDiveBySlug>>;
+type DeepDiveSection = Article["sections"][number];
+type Resource = NonNullable<DeepDiveSection["resources"]>[number];
+type RelatedArticle = Article["related"][number];
+
+type IconKey = keyof typeof iconMap;
+
+const iconMap: Record<string, ReactNode> = {
   book: <BookOpen size={18} />,
   message: <MessageSquare size={18} />,
   code: <Code2 size={18} />,
 };
+
+/**
+ * Sanitize HTML before rendering with dangerouslySetInnerHTML.
+ * Content here may originate from a CMS or other semi-trusted source,
+ * so we strip anything that isn't plain formatting markup.
+ */
+function sanitize(html: string): string {
+  return DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: [
+      "b", "strong", "i", "em", "u", "a", "br", "span",
+      "code", "sub", "sup",
+    ],
+    ALLOWED_ATTR: ["href", "target", "rel", "class"],
+  });
+}
 
 export default async function DeepDiveArticlePage({
   params,
@@ -57,7 +88,7 @@ export default async function DeepDiveArticlePage({
 
   const { previous, next } = getPreviousAndNext(slug);
 
-  const heroIllustration = heroIllustrations[slug] ?? null;
+  const HeroIllustration = heroIllustrations[slug];
 
   return (
     <div className="wrap">
@@ -80,7 +111,7 @@ export default async function DeepDiveArticlePage({
         <b>{article.name}</b>
       </div>
 
-      {heroIllustration && (
+      {HeroIllustration && (
         <div
           className="mark-sm"
           style={{
@@ -89,7 +120,7 @@ export default async function DeepDiveArticlePage({
             marginBottom: 16,
           }}
         >
-          {heroIllustration}
+          <HeroIllustration />
         </div>
       )}
 
@@ -104,11 +135,11 @@ export default async function DeepDiveArticlePage({
       <p
         className="lede"
         dangerouslySetInnerHTML={{
-          __html: article.lede,
+          __html: sanitize(article.lede),
         }}
       />
 
-      {article.sections.map((section: any) => (
+      {article.sections.map((section: DeepDiveSection) => (
         <section key={section.number}>
           <div className="h2row">
             <SectionHeading number={section.number}>
@@ -118,25 +149,26 @@ export default async function DeepDiveArticlePage({
 
           <ContentRenderer content={section.content} />
 
-          {section.illustration && (
-            <IllustrationBlock
-              illustration={
-                contentComponents[
-                  section.illustration.component
-                ] ?? null
-              }
-              caption={section.illustration.caption}
-              width={section.illustration.width}
-            >
-              {section.illustration.text && (
-                <p
-                  dangerouslySetInnerHTML={{
-                    __html: section.illustration.text,
-                  }}
-                />
-              )}
-            </IllustrationBlock>
-          )}
+          {section.illustration && (() => {
+            const Illustration =
+              contentComponents[section.illustration.component];
+
+            return (
+              <IllustrationBlock
+                illustration={Illustration ? <Illustration /> : null}
+                caption={section.illustration.caption}
+                width={section.illustration.width}
+              >
+                {section.illustration.text && (
+                  <p
+                    dangerouslySetInnerHTML={{
+                      __html: sanitize(section.illustration.text),
+                    }}
+                  />
+                )}
+              </IllustrationBlock>
+            );
+          })()}
 
           {section.video && (
             <VideoBlock
@@ -159,10 +191,10 @@ export default async function DeepDiveArticlePage({
           {section.resources && (
             <div className="resources">
               {section.resources.map(
-                (resource: any, index: number) => (
+                (resource: Resource, index: number) => (
                   <ResourceRow
                     key={index}
-                    icon={iconMap[resource.icon] ?? null}
+                    icon={iconMap[resource.icon as IconKey] ?? null}
                     title={resource.title}
                     subtitle={resource.subtitle}
                     chips={resource.chips}
@@ -192,7 +224,7 @@ export default async function DeepDiveArticlePage({
           <div className="lbl">Continue the thread</div>
 
           <div className="rel-row">
-            {article.related.map((related: any) => (
+            {article.related.map((related: RelatedArticle) => (
               <Link
                 key={related.slug}
                 href={`/deep-dive/${related.slug}`}

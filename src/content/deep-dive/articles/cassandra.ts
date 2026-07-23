@@ -1,15 +1,30 @@
 import { DeepDiveArticle } from '@/features/deep-dive/types';
 
-export const cassandraData: DeepDiveArticle = {
+export const CassandraData: DeepDiveArticle = {
   slug: 'cassandra',
   category: 'db',
   readTime: '12 min',
   name: 'Cassandra',
   eyebrow: 'WIDE-COLUMN · NoSQL',
   description: [
-    '<b style="color:var(--ink)">Cassandra</b> is a distributed, wide-column NoSQL database built on one uncompromising priority: writes must never fail. Every node in the ring is an equal peer — there\'s no leader to bottleneck writes or become a single point of failure.',
-    'That priority has a cost. Writes go straight to disk and memory with almost no work done up front — which is why they\'re so fast. Reads pay for that laziness later, by doing the reconciliation work writes skipped.'
+  [
+    {
+      type: "text",
+      text: "Cassandra",
+      bold: true,
+    },
+    {
+      type: "text",
+      text: " is a distributed, wide-column NoSQL database built on one uncompromising priority: writes must never fail. Every node in the ring is an equal peer—there's no leader to bottleneck writes or become a single point of failure.",
+    },
   ],
+  [
+    {
+      type: "text",
+      text: "That priority has a cost. Writes go straight to disk and memory with almost no work done up front—which is why they're so fast. Reads pay for that laziness later by doing the reconciliation work writes skipped.",
+    },
+  ],
+],
   tags: ['Distributed', 'High write throughput', 'Eventually consistent'],
   credit: 'Maintained by',
   creditOrg: 'Apache Software Foundation',

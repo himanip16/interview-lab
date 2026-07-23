@@ -2,7 +2,7 @@
 
 import { InterviewStatus } from "@prisma/client";
 
-import { prisma } from "@/shared/prisma/client";
+import { prisma } from "shared/prisma/client";
 import { getCurrentUserId } from "@/features/auth/getCurrentUserId";
 import LibraryView from "@/features/library/components/LibraryView";
 import {

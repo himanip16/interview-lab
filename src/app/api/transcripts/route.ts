@@ -1,4 +1,4 @@
-import { getAllTranscripts } from "@/content/transcript/index";
+import { getAllTranscripts } from "@/content/transcripts/index";
 import { NextResponse } from "next/server";
 
 

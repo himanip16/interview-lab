@@ -2,7 +2,7 @@ import { DomainEvent, TurnCompletedEventData } from "@/features/interview/domain
 import { InterviewRepository } from "@/features/interview/infrastructure/repositories/InterviewRepository";
 import { SessionContext } from "@/features/interview/application/context/SessionContext";
 import { InterviewProfileService } from "@/features/interview/data/profiles/InterviewProfileService";
-import { prisma } from "@/shared/prisma/client";
+import { prisma } from "shared/prisma/client";
 
 /**
  * MasteryEventHandler

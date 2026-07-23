@@ -1,4 +1,4 @@
-import { prisma } from "@/shared/prisma/client";
+import { prisma } from "shared/prisma/client";
 
 const CONFIDENCE_THRESHOLD_FOR_RANKING = 0.4; // ~2+ evidence samples before a concept counts toward strengths/weaknesses
 const TOP_N = 5;

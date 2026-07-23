@@ -1,9 +1,9 @@
-import { cassandraData } from "./articles/cassandra";
-import { kafkaData } from "./articles/kafka";
-import { postgresData } from "./articles/postgres";
+import { CassandraData } from "./articles/cassandra";
+import { KafkaData } from "./articles/kafka";
+import { PostgresData } from "./articles/postgres";
 
 export const deepDiveRegistry = [
-  cassandraData,
-  kafkaData,
-  postgresData,
+  CassandraData,
+  KafkaData,
+  PostgresData,
 ];

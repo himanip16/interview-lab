@@ -10,13 +10,10 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
-
     "generate:transcripts": "tsx scripts/generate-transcripts.ts",
     "generate:deep-dives": "tsx scripts/generate-deep-dives.ts",
-
     "predev": "npm run generate:transcripts && npm run generate:deep-dives",
     "prebuild": "npm run generate:transcripts && npm run generate:deep-dives",
-
     "postinstall": "prisma generate"
   },
   "dependencies": {
@@ -25,6 +22,7 @@
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
     "dompurify": "^3.4.12",
+    "isomorphic-dompurify": "^3.19.0",
     "lucide-react": "^1.24.0",
     "next": "^16.2.11",
     "next-auth": "^5.0.0-beta.31",

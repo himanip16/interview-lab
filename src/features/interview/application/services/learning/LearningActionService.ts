@@ -1,5 +1,5 @@
 // src/modules/interview/services/learning/LearningActionService.ts
-import { prisma } from "@/shared/prisma/client";
+import { prisma } from "shared/prisma/client";
 
 const MIN_CONFIDENCE_TO_TARGET = 0.35; // ignore concepts with too little evidence to trust the gap
 const CANDIDATE_CONCEPT_LIMIT = 5; // how many of the user's weakest concepts we search segments for

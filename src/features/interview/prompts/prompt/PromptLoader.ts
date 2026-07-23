@@ -1,7 +1,7 @@
+import { prisma } from "shared/prisma/client";
 import { promises as fs } from "fs";
 import path from "path";
 
-import { prisma } from "@/shared/prisma/client";
 
 const FALLBACK_RUBRIC = (dimension: string) => `
 Score from 0-10 based on how clearly the candidate demonstrated "${dimension}".

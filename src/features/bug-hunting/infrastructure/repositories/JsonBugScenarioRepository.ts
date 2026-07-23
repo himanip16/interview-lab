@@ -1,17 +1,28 @@
 // src/features/bug-hunting/infrastructure/repositories/JsonBugScenarioRepository.ts
 
 import { BugScenario } from "../../domain/entities/BugScenario";
-import { ScenarioLoader } from "../../infrastructure/ScenarioLoader";
+import { ScenarioLoader } from "../ScenarioLoader";
 import type { BugScenarioRepository } from "./BugScenarioRepository";
 
-const SCENARIOS: Record<string, () => Promise<unknown>> = {
-  "checkout-timeout": () =>
-    import("content/bug-hunting/scenarios/checkout-timeout.json").then(
-      (module) => module.default
-    ),
+const SCENARIOS: Record<string, () => Promise<any>> = {
+  "checkout-timeout": async () =>
+    (
+      await import(
+        "@/content/bug-hunting/scenarios/checkout-timeout.json"
+      )
+    ).default,
+
+  "cache-stampede": async () =>
+    (
+      await import(
+        "@/content/bug-hunting/scenarios/cache-stampede.json"
+      )
+    ).default,
 };
 
-export class JsonBugScenarioRepository implements BugScenarioRepository {
+export class JsonBugScenarioRepository
+  implements BugScenarioRepository
+{
   async findById(id: string): Promise<BugScenario | null> {
     const loader = SCENARIOS[id];
 
@@ -26,8 +37,8 @@ export class JsonBugScenarioRepository implements BugScenarioRepository {
 
   async list(): Promise<BugScenario[]> {
     const scenarios = await Promise.all(
-      Object.keys(SCENARIOS).map(async (id) => {
-        const raw = await SCENARIOS[id]();
+      Object.values(SCENARIOS).map(async (loader) => {
+        const raw = await loader();
 
         return ScenarioLoader.load(raw);
       })

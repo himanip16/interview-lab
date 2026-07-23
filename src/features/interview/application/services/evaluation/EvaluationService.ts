@@ -1,5 +1,5 @@
 import { Prisma, EvidenceType } from "@prisma/client";
-import { prisma } from "@/shared/prisma/client";
+import { prisma } from "shared/prisma/client";
 import { AIService } from "@/shared/ai";
 import logger from "@/shared/logger/logger";
 

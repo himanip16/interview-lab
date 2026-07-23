@@ -1,6 +1,6 @@
 import { Difficulty, InterviewMode } from "@prisma/client";
 
-import { prisma } from "@/shared/prisma/client";
+import { prisma } from "shared/prisma/client";
 import { createInterview } from "./interview/InterviewFactory";
 import { TranscriptService } from "./TranscriptService";
 import { pickPersona } from "../reverse/CandidatePersonas";

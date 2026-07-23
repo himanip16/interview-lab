@@ -1,0 +1,207 @@
+{
+  "id": "cache-stampede",
+  "description": "Traffic spikes cause hundreds of requests to regenerate the same expired cache key simultaneously, overloading the database and increasing response latency.",
+
+  "timerSeconds": 1800,
+
+  "createdAt": "2026-07-23T10:00:00Z",
+
+  "metadata": {
+    "difficulty": "Hard",
+    "category": "Caching",
+    "estimatedTimeMinutes": 30
+  },
+
+  "report": {
+    "title": "Homepage latency increased after cache expiration",
+    "severity": "P1",
+    "severityLabel": "Critical",
+    "symptom": "Every few minutes the homepage becomes extremely slow. CPU and database load spike for approximately 20 seconds before recovering automatically.",
+
+    "metadata": {
+      "service": "catalog-service",
+      "endpoint": "GET /api/home",
+      "cacheKey": "homepage:v1",
+      "cacheTtl": "300s",
+      "errorRate": "18%",
+      "firstSeen": "Today 09:42 UTC"
+    }
+  },
+
+  "logs": [
+    {
+      "id": "l1",
+      "timestamp": "09:42:00.001",
+      "level": "INFO",
+      "message": "GET /api/home cache miss key=homepage:v1"
+    },
+    {
+      "id": "l2",
+      "timestamp": "09:42:00.004",
+      "level": "INFO",
+      "message": "Executing homepage aggregation query"
+    },
+    {
+      "id": "l3",
+      "timestamp": "09:42:00.006",
+      "level": "INFO",
+      "message": "GET /api/home cache miss key=homepage:v1"
+    },
+    {
+      "id": "l4",
+      "timestamp": "09:42:00.007",
+      "level": "INFO",
+      "message": "Executing homepage aggregation query"
+    },
+    {
+      "id": "l5",
+      "timestamp": "09:42:00.010",
+      "level": "INFO",
+      "message": "GET /api/home cache miss key=homepage:v1"
+    },
+    {
+      "id": "l6",
+      "timestamp": "09:42:00.013",
+      "level": "WARN",
+      "message": "Database active connections=188 max=200"
+    },
+    {
+      "id": "l7",
+      "timestamp": "09:42:01.842",
+      "level": "WARN",
+      "message": "Homepage query duration=1835ms"
+    },
+    {
+      "id": "l8",
+      "timestamp": "09:42:02.115",
+      "level": "ERROR",
+      "message": "Connection pool exhausted while rendering homepage"
+    },
+    {
+      "id": "l9",
+      "timestamp": "09:42:02.482",
+      "level": "INFO",
+      "message": "Cache populated key=homepage:v1 ttl=300"
+    },
+    {
+      "id": "l10",
+      "timestamp": "09:42:02.483",
+      "level": "INFO",
+      "message": "Subsequent requests served from cache"
+    }
+  ],
+
+  "sql": {
+    "initialQuery": "SELECT category_id, COUNT(*) AS products FROM products WHERE active = true GROUP BY category_id ORDER BY products DESC LIMIT 20;",
+    "columns": [
+      "category_id",
+      "products"
+    ],
+    "rows": [
+      [
+        "12",
+        "1820"
+      ],
+      [
+        "5",
+        "1742"
+      ],
+      [
+        "8",
+        "1699"
+      ],
+      [
+        "19",
+        "1614"
+      ]
+    ]
+  },
+
+  "code": [
+    {
+      "id": "c1",
+      "key": "HomepageService",
+      "name": "HomepageService.java",
+      "language": "java",
+      "contentHtml": "<span class=\"kw\">public class</span> <span class=\"ty\">HomepageService</span> {<br><br>&nbsp;&nbsp;<span class=\"kw\">public</span> HomePage <span class=\"ty\">load</span>() {<br>&nbsp;&nbsp;&nbsp;&nbsp;HomePage cached = redis.get(<span class=\"str\">&quot;homepage:v1&quot;</span>);<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class=\"kw\">if</span> (cached != <span class=\"kw\">null</span>) {<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=\"kw\">return</span> cached;<br>&nbsp;&nbsp;&nbsp;&nbsp;}<br><br>&nbsp;&nbsp;&nbsp;&nbsp;<span class=\"cm\">// Every request rebuilds the cache independently</span><br>&nbsp;&nbsp;&nbsp;&nbsp;HomePage page = repository.buildHomepage();<br>&nbsp;&nbsp;&nbsp;&nbsp;redis.set(<span class=\"str\">&quot;homepage:v1&quot;</span>, page, 300);<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class=\"kw\">return</span> page;<br>&nbsp;&nbsp;}<br>}"
+    },
+    {
+      "id": "c2",
+      "key": "RedisConfig",
+      "name": "RedisConfig.java",
+      "language": "java",
+      "contentHtml": "<span class=\"kw\">public class</span> <span class=\"ty\">RedisConfig</span> {<br>&nbsp;&nbsp;<span class=\"kw\">private static final int</span> TTL_SECONDS = <span class=\"str\">300</span>;<br>}"
+    }
+  ],
+    "docs": [
+    {
+      "title": "Caching strategy",
+      "body": "Homepage responses are cached in Redis for five minutes to reduce database load. When the cache expires, the first request should ideally rebuild the cache while other requests wait or receive stale data."
+    },
+    {
+      "title": "Recent deployment",
+      "body": "No caching logic was modified in the latest deployment. Traffic increased by approximately 3x due to a marketing campaign."
+    },
+    {
+      "title": "Known limitation",
+      "body": "The current cache implementation does not use distributed locking or request coalescing. Multiple application instances can regenerate the same key simultaneously."
+    }
+  ],
+
+  "deployments": [
+    {
+      "id": "d1",
+      "version": "v4.8.2",
+      "status": "rolled",
+      "message": "Homepage recommendation improvements",
+      "time": "Today 08:15 UTC"
+    },
+    {
+      "id": "d2",
+      "version": "v4.8.1",
+      "status": "ok",
+      "message": "Redis client upgrade",
+      "time": "Yesterday 14:10 UTC"
+    }
+  ],
+
+  "investigation": {
+    "objective": "Determine why latency spikes occur only when the cache expires.",
+
+    "expectedFindings": [
+      "Many requests miss the same cache key simultaneously.",
+      "Every request independently executes the expensive database query.",
+      "Database connections spike because identical work is duplicated.",
+      "Latency returns to normal after one request finally repopulates Redis."
+    ],
+
+    "rootCause": "The application suffers from a cache stampede. When the cache entry expires, every concurrent request rebuilds it instead of allowing a single request to regenerate the value.",
+
+    "recommendedFixes": [
+      "Use a distributed lock so only one request rebuilds the cache.",
+      "Serve stale data while asynchronously refreshing the cache.",
+      "Add request coalescing (single-flight).",
+      "Introduce randomized TTL (TTL jitter) so keys do not expire simultaneously.",
+      "Monitor cache hit ratio and regeneration frequency."
+    ]
+  },
+
+  "questions": [
+    {
+      "id": "q1",
+      "question": "What evidence suggests this is a cache stampede rather than a slow database?"
+    },
+    {
+      "id": "q2",
+      "question": "Why does the latency disappear after a few seconds?"
+    },
+    {
+      "id": "q3",
+      "question": "How would you fix this in a distributed system running multiple application instances?"
+    },
+    {
+      "id": "q4",
+      "question": "Would increasing the database connection pool solve the root problem? Why or why not?"
+    }
+  ]
+}

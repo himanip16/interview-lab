@@ -1,5 +1,5 @@
 import { Prisma, EvaluationStatus } from "@prisma/client";
-import { prisma } from "@/shared/prisma/client";
+import { prisma } from "shared/prisma/client";
 import logger from "@/shared/logger/logger";
 import { AIService } from "@/shared/ai";
 import { EvaluationService } from "./EvaluationService";

@@ -1,4 +1,4 @@
-import { prisma } from "@/shared/prisma/client";
+import { prisma } from "shared/prisma/client";
 
 import {
   InterviewPhaseDefinition,

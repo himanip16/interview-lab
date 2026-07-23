@@ -1,6 +1,6 @@
 import { DeepDiveArticle } from '@/features/deep-dive/types';
 
-export const dynamodbData: DeepDiveArticle = {
+export const DynamodbData: DeepDiveArticle = {
   slug: 'dynamodb',
   name: 'DynamoDB',
   eyebrow: 'MANAGED · KEY-VALUE',

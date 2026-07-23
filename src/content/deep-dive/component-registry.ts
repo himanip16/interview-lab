@@ -1,7 +1,9 @@
 import { ModuloIllustration } from "./illustrations/ModuloIllustration";
 import { ConsistentHashingIllustration } from "./illustrations/ConsistentHashing";
 
-export const contentComponents = {
+import type { ComponentType } from "react";
+
+export const contentComponents: Record<string, ComponentType> = {
   ModuloIllustration,
   ConsistentHashingIllustration,
 };

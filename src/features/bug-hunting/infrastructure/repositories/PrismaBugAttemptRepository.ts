@@ -1,5 +1,5 @@
 // src/modules/bug-hunting/infrastructure/repositories/PrismaBugAttemptRepository.ts
-import { prisma } from "@/shared/prisma/client";
+import { prisma } from "shared/prisma/client";
 import { BugAttempt, BugAttemptProps } from "../../domain/entities/BugAttempt";
 import { BugSubmission, BugSubmissionProps } from "../../domain/entities/BugSubmission";
 import { Finding, FindingProps } from "../../domain/entities/Finding";
