@@ -1,3 +1,5 @@
+// src/content/transcripts/index.ts
+
 import {
   TranscriptEntry,
   TranscriptCategory,

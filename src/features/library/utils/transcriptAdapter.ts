@@ -1,3 +1,5 @@
+// src/features/library/utils/transcriptAdapter.ts
+
 import type { TranscriptEntry } from "@/content/transcripts/types";
 
 export function adaptTranscript(transcript: any): TranscriptEntry {

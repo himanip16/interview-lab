@@ -7,7 +7,6 @@ import {
   type TranscriptData,
 } from "../types/transcript";
 
-import { TranscriptSummary } from "@/content/transcripts/types";
 
 import Card from "@/shared/ui/Card";
 import Text from "@/shared/ui/Text";

@@ -1,7 +1,7 @@
 import { readdirSync, writeFileSync } from "fs";
 import { join } from "path";
 
-const ROOT = join(process.cwd(), "content/transcripts");
+const ROOT = join(process.cwd(), "src/content/transcripts");
 const OUT = join(
   process.cwd(),
   "src/features/library/data/generated.ts"

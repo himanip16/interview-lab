@@ -2,6 +2,8 @@ import { DeepDiveArticle } from '@/features/deep-dive/types';
 
 export const cassandraData: DeepDiveArticle = {
   slug: 'cassandra',
+  category: 'db',
+  readTime: '12 min',
   name: 'Cassandra',
   eyebrow: 'WIDE-COLUMN · NoSQL',
   description: [

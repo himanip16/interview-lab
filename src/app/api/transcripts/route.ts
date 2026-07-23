@@ -1,6 +1,6 @@
+import { getAllTranscripts } from "@/content/transcript/index";
 import { NextResponse } from "next/server";
 
-import { getAllTranscripts } from "@/content/transcripts";
 
 export async function GET() {
   try {

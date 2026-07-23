@@ -5,6 +5,7 @@
 import customerObsession from "@/content/transcripts/behavioral/customer-obsession";
 import carPooling from "@/content/transcripts/dsa/car-pooling";
 import cuttingPolesToCollectMin from "@/content/transcripts/dsa/cutting-poles-to-collect-min";
+import resourceCachingLru from "@/content/transcripts/dsa/resource-caching-lru";
 import amazonLockers from "@/content/transcripts/hld/amazon-lockers";
 import autocomplete from "@/content/transcripts/hld/autocomplete";
 import configSync from "@/content/transcripts/hld/config-sync";
@@ -20,6 +21,7 @@ export const TRANSCRIPTS = [
   customerObsession,
   carPooling,
   cuttingPolesToCollectMin,
+  resourceCachingLru,
   amazonLockers,
   autocomplete,
   configSync,

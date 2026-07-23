@@ -1,9 +1,13 @@
+
+
 export interface DeepDiveSummary {
   slug: string;
   name: string;
   eyebrow: string;
-  description: string[];
+  description: Paragraph[];
   tags: string[];
+  category: 'db' | 'msg' | 'concept';
+  readTime: string;
   credit: string;
   creditOrg: string;
   docsUrl?: string;

@@ -10,9 +10,13 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
+
     "generate:transcripts": "tsx scripts/generate-transcripts.ts",
-    "predev": "npm run generate:transcripts",
-    "prebuild": "npm run generate:transcripts",
+    "generate:deep-dives": "tsx scripts/generate-deep-dives.ts",
+
+    "predev": "npm run generate:transcripts && npm run generate:deep-dives",
+    "prebuild": "npm run generate:transcripts && npm run generate:deep-dives",
+
     "postinstall": "prisma generate"
   },
   "dependencies": {

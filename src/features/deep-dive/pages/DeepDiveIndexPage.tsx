@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import styles from '@/features/deep-dive/components/DeepDiveIndex.module.css';
-import { deepDiveData } from '@/content/deep-dive';
+import { deepDiveRegistry } from '@/features/deep-dive/data/generated';
 
 interface Topic {
   slug: string;
@@ -15,18 +15,19 @@ interface Topic {
   mark: React.ReactNode;
 }
 
-const TOPICS: Topic[] = deepDiveData.map((item) => {
-  const descText = Array.isArray(item.description) 
+const TOPICS: Topic[] = deepDiveRegistry.map((item) => {
+  const descText = Array.isArray(item.description)
     ? item.description.join(' ')
     : item.description;
+
   return {
     slug: item.slug,
     name: item.name,
-    description: descText.replace(/<[^>]*>/g, ''), // Strip HTML tags for card display
+    description: descText.replace(/<[^>]*>/g, ''),
     tags: item.tags,
-    category: 'db', // Default category since it's not in the data structure
-    readTime: '10 min', // Default read time since it's not in the data structure
-    mark: null, // Will be replaced with illustrations
+    category: 'db',
+    readTime: '10 min',
+    mark: null,
   };
 });
 

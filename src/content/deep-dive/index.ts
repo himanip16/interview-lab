@@ -1,0 +1,1 @@
+export type { DeepDiveArticle } from "@/features/deep-dive/types";

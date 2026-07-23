@@ -1,23 +1,32 @@
 PROJECT STRUCTURE
 =================
-content/deep-dive/illustrations
-├── Cassandra.tsx
-├── CassandraReadPathIllustration.tsx
-├── CassandraRingIllustration.tsx
-├── CassandraWritePathIllustration.tsx
-├── ConsistentHashing.tsx
-├── ConsistentHashingHero.tsx
-├── DynamoConsistencyIllustration.tsx
-├── DynamoDB.tsx
-├── DynamoManagedLayerIllustration.tsx
-├── Kafka.tsx
-├── ModuloIllustration.tsx
-├── MongoDB.tsx
-├── Postgres.tsx
-├── Redis.tsx
-└── primitives.tsx
+content/deep-dive
+├── cassandra.ts
+├── consistent-hashing.ts
+├── dynamodb.ts
+├── illustrations
+│   ├── Cassandra.tsx
+│   ├── CassandraReadPathIllustration.tsx
+│   ├── CassandraRingIllustration.tsx
+│   ├── CassandraWritePathIllustration.tsx
+│   ├── ConsistentHashing.tsx
+│   ├── ConsistentHashingHero.tsx
+│   ├── DynamoConsistencyIllustration.tsx
+│   ├── DynamoDB.tsx
+│   ├── DynamoManagedLayerIllustration.tsx
+│   ├── Kafka.tsx
+│   ├── ModuloIllustration.tsx
+│   ├── MongoDB.tsx
+│   ├── Postgres.tsx
+│   ├── Redis.tsx
+│   └── primitives.tsx
+├── index.ts
+├── kafka.ts
+├── mongodb.ts
+├── postgres.ts
+└── redis.ts
 
-1 directory, 15 files
+2 directories, 23 files
 
 FILE CONTENTS
 
@@ -698,3 +707,904 @@ export function CassandraWritePathIllustration() {
     </IllustrationCanvas>
   );
 }
+
+================================================
+FILE: content/deep-dive/postgres.ts
+================================================
+import { DeepDiveArticle } from '@/features/deep-dive/types';
+
+export const postgresData: DeepDiveArticle = {
+  slug: 'postgres',
+  name: 'Postgres',
+  eyebrow: 'RELATIONAL · SQL',
+  description: [
+    '<b style="color:var(--ink)">PostgreSQL</b> is a powerful, open-source relational database. It emphasizes extensibility and SQL compliance.',
+    'It supports complex queries, transactions, and a wide range of data types. Postgres is often the default choice for applications requiring strong consistency.'
+  ],
+  tags: ['Relational', 'ACID', 'Extensible'],
+  credit: 'Maintained by',
+  creditOrg: 'PostgreSQL Global Development Group',
+  docsUrl: 'https://www.postgresql.org/docs/',
+  title: 'Postgres, and why it\'s still relevant',
+  lede: 'Postgres is the workhorse of the database world — reliable, feature-rich, and battle-tested. Understanding its MVCC architecture explains why it handles concurrency so well while maintaining ACID guarantees.',
+  sections: [
+    {
+      number: 1,
+      title: 'MVCC for concurrency',
+      content: [
+        'Postgres uses Multi-Version Concurrency Control (MVCC) to handle concurrent reads and writes without locking.',
+        'Each transaction sees a snapshot of the database as of when it started. This means readers never block writers, and writers never block readers.'
+      ]
+    },
+    {
+      number: 2,
+      title: 'Write-ahead logging',
+      content: [
+        'Changes are first written to a write-ahead log (WAL) before being applied to data files. This ensures durability and enables point-in-time recovery.',
+        'The WAL is also used for replication, making it easy to set up streaming replicas.'
+      ]
+    },
+    {
+      number: 3,
+      title: 'Extensibility',
+      content: [
+        'Postgres supports custom data types, functions, and extensions. You can add JSONB, PostGIS for geospatial data, or even write your own extensions.',
+        'This extensibility makes Postgres adaptable to a wide range of use cases beyond traditional relational data.'
+      ]
+    },
+    {
+      number: 4,
+      title: 'When to use it — and when not to',
+      content: []
+    }
+  ],
+  tradeoffs: {
+    strengths: [
+      'Strong ACID guarantees',
+      'Rich SQL feature set',
+      'Extensible architecture'
+    ],
+    weaknesses: [
+      'Vertical scaling limits',
+      'Write performance can bottleneck',
+      'Not ideal for massive write-heavy workloads'
+    ]
+  },
+  related: [
+    {
+      name: 'Cassandra',
+      description: 'Distributed NoSQL for write-heavy workloads',
+      slug: 'cassandra'
+    },
+    {
+      name: 'DynamoDB',
+      description: 'Managed NoSQL with different scaling characteristics',
+      slug: 'dynamodb'
+    }
+  ]
+};
+
+================================================
+FILE: content/deep-dive/kafka.ts
+================================================
+import { DeepDiveArticle } from '@/features/deep-dive/types';
+
+export const kafkaData: DeepDiveArticle = {
+  slug: 'kafka',
+  name: 'Kafka',
+  eyebrow: 'STREAMING · EVENT LOG',
+  description: [
+    '<b style="color:var(--ink)">Kafka</b> is a distributed event streaming platform. It treats data as an append-only log of events.',
+    'Producers write to topics, consumers read from topics, and everything is durable and replayable. This makes it ideal for event-driven architectures.'
+  ],
+  tags: ['Streaming', 'Distributed log', 'Event-driven'],
+  credit: 'Maintained by',
+  creditOrg: 'Apache Software Foundation',
+  docsUrl: 'https://kafka.apache.org/documentation/',
+  title: 'Kafka, and why logs are powerful',
+  lede: 'Kafka is the backbone of modern data pipelines — event sourcing, real-time analytics, and microservices communication. Its log-based architecture provides durability, scalability, and replayability that traditional queues cannot match.',
+  sections: [
+    {
+      number: 1,
+      title: 'Everything is a log',
+      content: [
+        'Kafka stores data in topics, which are partitioned logs. Each message has an offset, and consumers track their position in the log.',
+        'This append-only design means writes are always fast (sequential I/O), and consumers can replay events from any point in time.'
+      ]
+    },
+    {
+      number: 2,
+      title: 'Partitions for parallelism',
+      content: [
+        'Topics are split into partitions, which can be distributed across brokers. This allows parallel consumption and horizontal scaling.',
+        'The number of partitions determines maximum parallelism — too few and you\'re bottlenecked, too many and you add overhead.'
+      ]
+    },
+    {
+      number: 3,
+      title: 'Consumer groups',
+      content: [
+        'Consumers join consumer groups to divide partition ownership. Each partition is consumed by exactly one consumer in the group.',
+        'This enables load balancing while ensuring each message is processed exactly once per consumer group.'
+      ]
+    },
+    {
+      number: 4,
+      title: 'When to use it — and when not to',
+      content: []
+    }
+  ],
+  tradeoffs: {
+    strengths: [
+      'High throughput for streaming data',
+      'Durable, replayable event log',
+      'Scales horizontally with partitions'
+    ],
+    weaknesses: [
+      'Higher latency than in-memory systems',
+      'Complex operational Requirements',
+      'Overkill for simple queue use cases'
+    ]
+  },
+  related: [
+    {
+      name: 'Cassandra',
+      description: 'Also append-only, but for database storage',
+      slug: 'cassandra'
+    },
+    {
+      name: 'Redis',
+      description: 'In-memory pub/sub, not durable streaming',
+      slug: 'redis'
+    }
+  ]
+};
+
+================================================
+FILE: content/deep-dive/redis.ts
+================================================
+import { DeepDiveArticle } from '@/features/deep-dive/types';
+
+export const redisData: DeepDiveArticle = {
+  slug: 'redis',
+  name: 'Redis',
+  eyebrow: 'IN-MEMORY · KEY-VALUE',
+  description: [
+    '<b style="color:var(--ink)">Redis</b> is an in-memory data structure store. It keeps everything in RAM, which makes it incredibly fast for reads and writes.',
+    'It supports data structures like strings, hashes, lists, sets, and more. Redis is often used for caching, session management, and real-time analytics.'
+  ],
+  tags: ['In-memory', 'Key-value', 'Single-threaded'],
+  credit: 'Maintained by',
+  creditOrg: 'Redis Ltd',
+  docsUrl: 'https://redis.io/docs/',
+  title: 'Redis, and why it\'s faster than you think',
+  lede: 'Redis is the Swiss Army knife of data stores — caching, queues, pub/sub, leaderboards, and more. Understanding its single-threaded architecture explains both its speed and its limitations.',
+  sections: [
+    {
+      number: 1,
+      title: 'Single-threaded by design',
+      content: [
+        'Redis runs a single event loop that processes commands one at a time. This sounds limiting, but it eliminates context switching and lock contention.',
+        'Because everything is in memory and there are no locks, Redis can process millions of operations per second on modest hardware.'
+      ]
+    },
+    {
+      number: 2,
+      title: 'Data structures, not just strings',
+      content: [
+        'Redis isn\'t just a key-value store for strings. It supports hashes, lists, sets, sorted sets, bitmaps, hyperloglogs, and more.',
+        'These data structures are implemented efficiently in memory, making operations like ZRANGE (get top N from a sorted set) extremely fast.'
+      ]
+    },
+    {
+      number: 3,
+      title: 'Persistence tradeoffs',
+      content: [
+        'Redis can persist to disk via RDB snapshots or AOF logs, but this adds latency. Many deployments use Redis as a pure cache, accepting that data loss is possible.',
+        'The choice between RDB (fast, point-in-time) and AOF (durable, append-only) depends on your durability Requirements.'
+      ]
+    },
+    {
+      number: 4,
+      title: 'When to use it — and when not to',
+      content: []
+    }
+  ],
+  tradeoffs: {
+    strengths: [
+      'Sub-millisecond latency for most operations',
+      'Rich data structures beyond simple key-value',
+      'Simple to set up and operate'
+    ],
+    weaknesses: [
+      'Limited by available RAM',
+      'Single-threaded core (though I/O can be parallelized)',
+      'Not suitable as primary data store for critical data'
+    ]
+  },
+  related: [
+    {
+      name: 'Cassandra',
+      description: 'Distributed, disk-based, different durability guarantees',
+      slug: 'cassandra'
+    },
+    {
+      name: 'Kafka',
+      description: 'Event streaming instead of in-memory caching',
+      slug: 'kafka'
+    }
+  ]
+};
+
+================================================
+FILE: content/deep-dive/mongodb.ts
+================================================
+import { DeepDiveArticle } from '@/features/deep-dive/types';
+
+export const mongodbData: DeepDiveArticle = {
+  slug: 'mongodb',
+  name: 'MongoDB',
+  eyebrow: 'DOCUMENT · NoSQL',
+  description: [
+    '<b style="color:var(--ink)">MongoDB</b> stores data as documents, not rows — and that one decision changes how writes land on disk, how reads get consistent, and what "transaction" even means here.',
+    'It is not "no consistency." It is consistency you dial in, per operation, and pay for exactly what you ask for.'
+  ],
+  tags: ['Document store', 'WiredTiger', 'Replica sets', 'Sharded'],
+  credit: 'Maintained by',
+  creditOrg: 'MongoDB Inc.',
+  docsUrl: 'https://www.mongodb.com/docs/',
+  title: 'What actually happens when you write to MongoDB',
+  lede: 'Say you call insertOne() and it returns success. Has your document survived a crash yet? Maybe not. That gap — between "acknowledged" and "durable" — is where most of MongoDB\'s design decisions live, and once you see it, everything else about the system starts making sense.',
+  sections: [
+    {
+      number: 1,
+      title: 'The write that returns before it\'s safe',
+      content: [
+        'When you insert a document, MongoDB updates it in memory and hands your client a success response almost instantly. But the document hasn\'t hit disk yet — not really. It\'s sitting in a cache, and separately, a note of the operation is queued to be written to a journal (a write-ahead log) on disk.',
+        'Here\'s the part people miss: that journal write doesn\'t happen immediately either. By default, MongoDB batches journal writes and flushes them every 100ms. Why not just flush instantly, every time? Because an fsync — the disk operation that actually guarantees "this is safe" — costs a few milliseconds. Do that on every single write and your throughput collapses to a few hundred writes per second. Batch 100ms worth of writes into one fsync, and you can push tens of thousands. It\'s the same trade every log-structured system makes — Kafka does it with a batching delay, Postgres does it with its WAL writer.',
+        'So the honest answer to "is my write safe" is: it depends what you asked for when you wrote it. That\'s the next section.'
+      ],
+      callout: {
+        label: 'Worth remembering',
+        content: 'If your server crashes 50ms after an insert returns "success," and you used the default write settings, that document can be gone. The client already moved on, believing it worked.'
+      }
+    },
+    {
+      number: 2,
+      title: 'You get to choose how much you trust the write',
+      content: [
+        'MongoDB doesn\'t force one answer to "how durable should this write be" — it lets you pick, per operation, through <b>write concern</b>.',
+        'Ask for <b>w:1</b> and you get an acknowledgment as soon as the primary has it in memory — fast, but as we just saw, vulnerable to a crash before the next journal flush. Ask for <b>w:majority</b> and MongoDB waits until most of the replica set has the write too — slower, but now the write survives even if the primary dies the next second, because a majority already has it.',
+        'This is the actual design philosophy of MongoDB, in one sentence: nothing is durable or consistent by default, everything is durable or consistent if you ask for it, and you pay in latency for what you ask for.'
+      ]
+    },
+    {
+      number: 3,
+      title: 'What a secondary actually sees, and when',
+      content: [
+        'Every write to the primary gets recorded, in order, into a special collection called the <b>oplog</b>. Secondaries don\'t get pushed writes — they continuously pull the oplog and replay it themselves. Which means a secondary is always slightly behind. How far behind is not a theoretical question — it\'s a number you can watch:'
+      ],
+      callout: {
+        label: 'A real timeline',
+        content: '10:00:00.000 — primary receives the write and applies it in memory.<br/>10:00:00.004 — client gets a success response (w:1).<br/>10:00:00.022 — secondary pulls the oplog entry.<br/>10:00:00.026 — secondary applies it and is now caught up.<br/><br/>For 22 milliseconds, a read on the secondary would have returned the old value. Route your reads there for scale, and that gap is the price.'
+      }
+    },
+    {
+      number: 4,
+      title: 'When the primary dies, who decides what happened?',
+      content: [
+        'If the primary goes down mid-write, two things could have happened: the write reached a majority of the replica set before the crash, or it didn\'t. MongoDB has to figure out which, and it does this through <b>read concern</b> at read time rather than guessing at write time.',
+        'Read with <b>local</b> concern and you might see a value that later gets rolled back — data the old primary had but never replicated anywhere else. Read with <b>majority</b> concern and you only ever see writes that a majority of nodes already agreed on, which means they can never disappear, even across a failover.',
+        'The remaining nodes then hold an election to pick a new primary — this is not instant. Default election timeout is around 10 seconds, and during that window, the replica set has no primary at all. Writes simply fail. This is the real cost of automatic failover: not data loss, usually, but a window of unavailability you have to design your application to tolerate.'
+      ]
+    },
+    {
+      number: 5,
+      title: 'Can two documents be changed atomically together?',
+      content: [
+        'A single document write is always atomic in MongoDB — even if that document has ten nested fields changing at once, it\'s all-or-nothing. This covers more than people expect, because a document is often already scoped to one logical thing: one order, one user profile, one cart.',
+        'But what if you need to move money between two documents — debit one account, credit another, and guarantee both happen or neither does? That\'s a multi-document transaction, and MongoDB has supported this since version 4.0. Under the hood it uses snapshot isolation: the transaction sees a frozen, consistent view of the data, and commits across every document involved at once, or rolls all of it back.',
+        'The catch is cost. A transaction that stays open under heavy concurrent writes can hit conflicts and get retried, and there\'s a hard 60-second default limit before it\'s killed. MongoDB\'s own guidance is telling: keep transactions short, and prefer designing your documents so you rarely need one. The transaction is a safety net for the exception, not the pattern you build around.'
+      ]
+    },
+    {
+      number: 6,
+      title: 'What happens when one machine isn\'t enough',
+      content: [
+        'Once a collection outgrows a single replica set, MongoDB splits it across many, by <b>sharding</b> on a key you choose — say, user ID. Data is broken into ranges of that key called chunks, and a background process called the balancer moves chunks between shards to keep the load even.',
+        'The shard key choice is where most sharding pain comes from. Pick something that increases monotonically — like a timestamp — and every new write lands on whichever shard holds the newest range. One shard takes all the traffic, the rest sit idle, and you\'ve built a distributed system that behaves like a single machine anyway.',
+        'This is why the shard key decision matters as much as picking a primary key in a relational schema — get it wrong on a large, live collection, and fixing it later is a genuinely expensive operation, not a config change.'
+      ]
+    },
+    {
+      number: 7,
+      title: 'When to reach for it — and when not to',
+      content: []
+    }
+  ],
+  tradeoffs: {
+    strengths: [
+      'Data has a natural document shape — one order, one profile, one cart — that you\'d otherwise split across many joined tables',
+      'You want to choose durability and consistency per operation, not accept one fixed guarantee for everything',
+      'Write-heavy workloads that need horizontal scale via sharding',
+      'Schema changes often, and migrations on every change are a real cost you want to avoid'
+    ],
+    weaknesses: [
+      'Your queries constantly cut across many collections in ways you didn\'t design the documents for',
+      'You want strong consistency by default, without remembering to ask for it on every read and write',
+      'Multi-document transactions are your main pattern, not the occasional exception',
+      'The team needs schema enforced by the database, not by application code'
+    ]
+  },
+  related: [
+    {
+      name: 'DynamoDB',
+      description: 'Also document-capable, but partition-key first — a different scaling model entirely',
+      slug: 'dynamodb'
+    },
+    {
+      name: 'Postgres',
+      description: 'JSONB gives you document flexibility with full ACID and real joins — worth comparing head to head',
+      slug: 'postgres'
+    }
+  ]
+};
+================================================
+FILE: content/deep-dive/consistent-hashing.ts
+================================================
+import { DeepDiveArticle } from '@/features/deep-dive/types';
+
+export const consistentHashingData: DeepDiveArticle = {
+  slug: 'consistent-hashing',
+  name: 'Consistent hashing',
+  eyebrow: 'DISTRIBUTED SYSTEMS · Data distribution',
+  description: [
+    '<b style="color:var(--text)">Consistent hashing</b> is a technique for spreading data across servers while keeping movement of data small when the system changes.',
+    'It is widely used in distributed caches and databases because servers can join or leave without forcing the entire dataset to move.'
+  ],
+  tags: ['Distributed systems', 'Caching', '8 min read'],
+  credit: 'Concept introduced in',
+  creditOrg: 'Amazon Dynamo paper',
+  docsUrl: 'https://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf',
+  title: 'Consistent hashing: how distributed systems scale without moving everything',
+  lede: 'Adding a server sounds simple, but naive hashing can move almost every key to a new location. Consistent hashing solves this by making servers and keys live on the same hash space.',
+
+  sections: [
+    {
+      number: 1,
+      title: 'The scaling problem',
+      content: [
+        [
+          { type: 'text', text: 'Imagine a cache with 3 servers. Every request needs to know which server stores a particular key, like ' },
+          { type: 'text', text: 'user:123' },
+          { type: 'text', text: '.' }
+        ],
+        [
+          { type: 'text', text: 'A common approach is to calculate ' },
+          { type: 'text', text: 'hash(key) % number_of_servers' },
+          { type: 'text', text: '. It works well until the number of servers changes.' }
+        ],
+        [
+          { type: 'text', text: 'When traffic grows and you add a new server, the calculation changes for almost every key. Suddenly, most cached data appears to be missing and the system has to rebuild its state.' }
+        ]
+      ],
+      illustration: {
+        component: 'ModuloIllustration',
+        caption: 'Changing the number of servers changes almost every key assignment',
+        width: 'half'
+      }
+    },
+
+    {
+      number: 2,
+      title: 'The key idea: stop depending on server count',
+      content: [
+        [
+          { type: 'text', text: 'The problem is not hashing itself. The problem is that the hash result is directly tied to the number of servers.' }
+        ],
+        [
+          { type: 'text', text: 'Consistent hashing creates a fixed circular hash space called a ring. Both servers and keys are placed on this same ring.' }
+        ],
+        [
+          { type: 'text', text: 'A key belongs to the first server found while moving clockwise around the ring.' }
+        ]
+      ],
+      illustration: {
+        component: 'ConsistentHashingIllustration',
+        caption: 'Servers and keys mapped onto the same hash ring',
+        width: 'full'
+      }
+    },
+
+    {
+      number: 3,
+      title: 'What happens when a server joins?',
+      content: [
+        [
+          { type: 'text', text: 'A new server does not require moving everything. It only takes ownership of keys between its position and the previous server on the ring.' }
+        ],
+        [
+          { type: 'text', text: 'This means adding capacity affects only a small portion of the dataset instead of forcing a complete reshuffle.' }
+        ]
+      ],
+      video: {
+        caption: 'Adding a server to a consistent hashing ring',
+        duration: '0:45'
+      }
+    },
+
+    {
+      number: 4,
+      title: 'Finding the right server',
+      content: [
+        [
+          { type: 'text', text: 'In practice, servers are stored by their hash positions in sorted order.' }
+        ],
+        [
+          { type: 'text', text: 'To find where a key belongs, hash the key and perform a ' },
+          {
+            type: 'link',
+            text: 'binary search',
+            href: { type: 'deep-dive', target: 'binary-search', preview: 'How binary search narrows a sorted range in O(log n)' }
+          },
+          { type: 'text', text: ' for the first server position greater than or equal to that value.' }
+        ],
+        [
+          { type: 'text', text: 'If the search reaches the end of the ring, the lookup wraps back to the first server.' }
+        ]
+      ],
+      code: `function getNode(key) {
+  const hash = hash(key);
+
+  // Find the first server clockwise from the key
+  const index = binarySearchCeil(ring, hash);
+
+  // Wrap around when reaching the end
+  return ring[index % ring.length];
+}`,
+
+      callout: {
+        label: 'Production detail',
+        content: [
+          [
+            { type: 'text', text: 'A single hash position per server can create uneven distribution. Real systems use ' },
+            {
+              type: 'link',
+              text: 'virtual nodes',
+              bold: true,
+              href: { type: 'deep-dive', target: 'virtual-nodes', preview: 'Why one physical server owns many ring positions' }
+            },
+            { type: 'text', text: ', where each physical server owns many positions on the ring.' }
+          ]
+        ]
+      }
+    },
+
+    {
+      number: 5,
+      title: 'Where this appears in real systems',
+      content: [],
+      resources: [
+        {
+          icon: 'book',
+          title: 'Amazon Dynamo paper',
+          subtitle: 'The distributed database paper that popularized this technique',
+          chips: [
+            { label: 'Accessible', variant: 'ok' },
+            { label: 'Public', variant: 'ok' }
+          ]
+        },
+        {
+          icon: 'code',
+          title: 'Virtual nodes and load distribution',
+          subtitle: 'Understanding why production systems use multiple positions per server',
+          chips: [
+            { label: 'Accessible', variant: 'ok' },
+            { label: 'Public', variant: 'ok' }
+          ]
+        }
+      ]
+    }
+  ],
+
+  related: [
+    {
+      name: 'Cassandra',
+      description: 'Uses consistent hashing to distribute data across nodes',
+      slug: 'cassandra'
+    },
+    {
+      name: 'Redis Cluster',
+      description: 'Uses hash slots to distribute keys across nodes',
+      slug: 'redis'
+    }
+  ]
+};
+
+================================================
+FILE: content/deep-dive/index.ts
+================================================
+// content/deep-dive/index.ts
+//
+// NOTE: page.tsx already imports `getDeepDiveBySlug` and `getPreviousAndNext`
+// from '@/content/deep-dive'. I haven't seen your existing version of this
+// file, so this is a best-guess reconstruction of that shape — if your real
+// one has more fields or logic, merge rather than overwrite wholesale.
+
+import { DeepDiveArticle } from '@/features/deep-dive/types';
+import { cassandraData } from './cassandra';
+import { dynamodbData } from './dynamodb';
+import { consistentHashingData } from './consistent-hashing';
+
+export const deepDiveRegistry: DeepDiveArticle[] = [
+  cassandraData,
+  dynamodbData,
+  consistentHashingData,
+];
+
+export function getAllDeepDives(): DeepDiveArticle[] {
+  return deepDiveRegistry;
+}
+
+export function getDeepDiveBySlug(slug: string): DeepDiveArticle | undefined {
+  return deepDiveRegistry.find((article) => article.slug === slug);
+}
+
+export function getPreviousAndNext(slug: string): {
+  previous: DeepDiveArticle | null;
+  next: DeepDiveArticle | null;
+} {
+  const index = deepDiveRegistry.findIndex((article) => article.slug === slug);
+  if (index === -1) return { previous: null, next: null };
+
+  return {
+    previous: index > 0 ? deepDiveRegistry[index - 1] : null,
+    next: index < deepDiveRegistry.length - 1 ? deepDiveRegistry[index + 1] : null,
+  };
+}
+
+================================================
+FILE: content/deep-dive/dynamodb.ts
+================================================
+import { DeepDiveArticle } from '@/features/deep-dive/types';
+
+export const dynamodbData: DeepDiveArticle = {
+  slug: 'dynamodb',
+  name: 'DynamoDB',
+  eyebrow: 'MANAGED · KEY-VALUE',
+  description: [
+    '<b style="color:var(--ink)">DynamoDB</b> is a fully managed NoSQL database from AWS, directly descended from the same Dynamo paper that popularized consistent hashing. It offers predictable, single-digit-millisecond latency at any scale.',
+    'The trade is real, though: "fully managed" means AWS is making decisions on your behalf that a self-hosted database would leave to you — and those decisions show up as constraints on how you\'re allowed to model and query your data.'
+  ],
+  tags: ['Managed', 'Serverless', 'Key-value'],
+  credit: 'Provided by',
+  creditOrg: 'Amazon Web Services',
+  docsUrl: 'https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/',
+  title: 'DynamoDB, and the price of "fully managed"',
+  lede: 'DynamoDB is what happens when you take a distributed database and remove all operational complexity. You never shard, never rebalance, never diagnose a hot node at 3am — AWS does that. What it can\'t remove is the modeling discipline that scaling requires; it just moves that work earlier, into how you design your keys.',
+
+  sections: [
+    {
+      number: 1,
+      title: 'What "managed" actually removes',
+      content: [
+        [
+          { type: 'text', text: 'In a self-hosted distributed database like ' },
+          {
+            type: 'link',
+            text: 'Cassandra',
+            href: { type: 'deep-dive', target: 'cassandra', preview: 'Peer-to-peer NoSQL where you own the ring, the compaction, the rebalancing' }
+          },
+          { type: 'text', text: ', you own the ring: adding a node, rebalancing partitions, watching for a node that\'s taking disproportionate traffic. DynamoDB removes all of that from your job. You never see a node, never run a rebalance, never patch an OS.' }
+        ],
+        [
+          { type: 'text', text: 'What\'s left is capacity and schema. You either provision read/write capacity units up front or use on-demand pricing, and AWS scales the underlying partitions to match — invisibly, automatically, without you shard-planning anything.' }
+        ]
+      ],
+      illustration: {
+        component: 'DynamoManagedLayerIllustration',
+        caption: 'AWS owns the partition/node layer entirely; you only see the table',
+        width: 'full'
+      }
+    },
+
+    {
+      number: 2,
+      title: 'Partition key design is the one thing left to you',
+      content: [
+        [
+          { type: 'text', text: 'DynamoDB places items using the same core idea as ' },
+          {
+            type: 'link',
+            text: 'consistent hashing',
+            href: { type: 'deep-dive', target: 'consistent-hashing', preview: 'How keys and nodes share one hash ring so scaling moves only a slice of data' }
+          },
+          { type: 'text', text: ': your partition key is hashed, and the hash determines which physical partition holds the item. Every item with the same partition key value always lands on the same partition.' }
+        ],
+        [
+          { type: 'text', text: 'That last sentence is the whole game. AWS decides the partition; you decide the key. Pick a key with high cardinality and even access, and load spreads naturally. Pick one badly, and you\'ve built a hot partition — a problem no amount of "managed" fixes for you.' }
+        ]
+      ],
+      code: `// A chat app storing messages by conversation
+
+// BAD: one hot value dominates traffic
+partitionKey = "global-announcements"
+// every write to this popular channel hits the same partition —
+// AWS can't split a single key across partitions to help you
+
+// BETTER: high-cardinality key, spread naturally
+partitionKey = conversationId  // e.g. "conv_9f21a"
+sortKey      = messageTimestamp`,
+      callout: {
+        label: 'Worth remembering',
+        content: [
+          [
+            { type: 'text', text: 'A hot partition isn\'t a DynamoDB bug — it\'s the ' },
+            { type: 'text', text: 'inevitable result', bold: true },
+            { type: 'text', text: ' of one key value getting disproportionate traffic. Managed infrastructure changes who operates the database. It doesn\'t change the math of how hashing distributes load.' }
+          ]
+        ]
+      }
+    },
+
+    {
+      number: 3,
+      title: 'Consistency: choosing per read, not globally',
+      content: [
+        [
+          { type: 'text', text: 'DynamoDB replicates every item to multiple storage nodes. By default, reads are ' },
+          { type: 'text', text: 'eventually consistent', bold: true },
+          { type: 'text', text: ': they may hit a replica that hasn\'t received the latest write yet, and return stale data for a short window — usually well under a second. In exchange, eventually consistent reads cost half as many read capacity units and can be served from the nearest replica.' }
+        ],
+        [
+          { type: 'text', text: 'You can request ' },
+          { type: 'text', text: 'strongly consistent', bold: true },
+          { type: 'text', text: ' reads instead, per-request, which always reflect the most recent successful write — at roughly double the read cost and slightly higher latency, since DynamoDB has to confirm it\'s reading the current value rather than whichever replica answered first.' }
+        ]
+      ],
+      code: `await ddb.putItem({ TableName: "Orders", Item: order });
+
+// Right after the write — eventual consistency can still show the old value
+const stale = await ddb.getItem({
+  TableName: "Orders",
+  Key: { orderId },
+  ConsistentRead: false  // default
+});
+
+// Strong consistency guarantees you see the write you just made
+const fresh = await ddb.getItem({
+  TableName: "Orders",
+  Key: { orderId },
+  ConsistentRead: true
+});`,
+      illustration: {
+        component: 'DynamoConsistencyIllustration',
+        caption: 'A write lands on one replica first — eventual reads may hit a different one before it catches up',
+        width: 'full'
+      }
+    },
+
+    {
+      number: 4,
+      title: 'When to use it — and when not to',
+      content: [
+        [
+          { type: 'text', text: 'DynamoDB earns its keep when your access patterns are known ahead of time and expressible as key lookups — user sessions, shopping carts, IoT device state, anything read and written by an ID you already have. It stops paying off the moment you need ad-hoc queries across attributes you didn\'t index for; at that point you\'re either bolting on a Global Secondary Index for every new access pattern, or you\'ve picked the wrong database for the job.' }
+        ]
+      ]
+    }
+  ],
+
+  tradeoffs: {
+    strengths: [
+      'Zero operational overhead — no nodes, no patching, no rebalancing',
+      'Predictable single-digit-millisecond latency at any scale',
+      'Per-request consistency choice (eventual vs strong)'
+    ],
+    weaknesses: [
+      'Expensive at scale compared to self-managed alternatives',
+      'Query flexibility limited to what your keys and indexes anticipate',
+      'Vendor lock-in to AWS'
+    ]
+  },
+
+  related: [
+    {
+      name: 'Cassandra',
+      description: 'Same lineage, self-managed — you own the ring instead of AWS',
+      slug: 'cassandra'
+    },
+    {
+      name: 'Postgres',
+      description: 'Relational database with different tradeoffs',
+      slug: 'postgres'
+    }
+  ]
+};
+
+================================================
+FILE: content/deep-dive/cassandra.ts
+================================================
+import { DeepDiveArticle } from '@/features/deep-dive/types';
+
+export const cassandraData: DeepDiveArticle = {
+  slug: 'cassandra',
+  name: 'Cassandra',
+  eyebrow: 'WIDE-COLUMN · NoSQL',
+  description: [
+    '<b style="color:var(--ink)">Cassandra</b> is a distributed, wide-column NoSQL database built on one uncompromising priority: writes must never fail. Every node in the ring is an equal peer — there\'s no leader to bottleneck writes or become a single point of failure.',
+    'That priority has a cost. Writes go straight to disk and memory with almost no work done up front — which is why they\'re so fast. Reads pay for that laziness later, by doing the reconciliation work writes skipped.'
+  ],
+  tags: ['Distributed', 'High write throughput', 'Eventually consistent'],
+  credit: 'Maintained by',
+  creditOrg: 'Apache Software Foundation',
+  docsUrl: 'https://cassandra.apache.org/doc/latest/',
+  title: 'Cassandra, and why writes are cheap but reads aren\'t',
+  lede: 'Most databases treat a write as work: find the row, lock it, update it in place. Cassandra treats a write as a fact you\'re recording — never edited, only added to. That one decision explains almost everything else about how it behaves, including why it\'s the database people reach for when writes can never fall over: sensor data, event logs, anything append-heavy at massive scale.',
+
+  sections: [
+    {
+      number: 1,
+      title: 'No leader, no bottleneck',
+      content: [
+        [
+          { type: 'text', text: 'In a primary-replica database, every write eventually funnels through one node. That node is safe, but it\'s also a ceiling — you can\'t out-write it no matter how many replicas you add.' }
+        ],
+        [
+          { type: 'text', text: 'Cassandra has no such node. Every peer in the ring can accept a write for any key, using the same ' },
+          {
+            type: 'link',
+            text: 'consistent hashing',
+            href: { type: 'deep-dive', target: 'consistent-hashing', preview: 'How keys and nodes share one ring so only a slice moves on scale-up' }
+          },
+          { type: 'text', text: ' scheme to know which nodes actually own that partition.' }
+        ],
+        [
+          { type: 'text', text: 'Add a node, and you add write capacity, close to linearly. There\'s no primary to protect, which is also why there\'s no primary to lose.' }
+        ]
+      ],
+      illustration: {
+        component: 'CassandraRingIllustration',
+        caption: 'Every node is a peer — a write for any key can land on any node',
+        width: 'full'
+      }
+    },
+
+    {
+      number: 2,
+      title: 'Anatomy of a write',
+      content: [
+        [
+          { type: 'text', text: 'If there\'s no locking and no primary coordinating things, what actually happens when data arrives? Two things, in a fixed order, and both are done before the client ever hears back:' }
+        ]
+      ],
+      illustration: {
+        component: 'CassandraWritePathIllustration',
+        caption: 'Every write does exactly two things before it is acknowledged',
+        width: 'full'
+      },
+      code: `// 1. Append to the commit log — pure sequential disk I/O,
+//    write-ahead so a crash can't lose the write
+commitLog.append(key, column, value, timestamp);
+
+// 2. Insert into the memtable — an in-memory, sorted structure
+memtable.put(key, column, value, timestamp);
+
+// Acknowledge the client the instant both are done.
+// No lookup of the existing row. No lock. No merge — yet.
+return ACK;`,
+      callout: {
+        label: 'Worth remembering',
+        content: [
+          [
+            { type: 'text', text: 'Cassandra never edits a row in place — not once, ever. An "update" is really just a ', bold: false },
+            { type: 'text', text: 'newer fact appended alongside the old one', bold: true },
+            { type: 'text', text: ', and later processes figure out which fact wins. That single refusal to edit in place is where almost all of Cassandra\'s write speed comes from.' }
+          ]
+        ]
+      }
+    },
+
+    {
+      number: 3,
+      title: 'Why reads are slower',
+      content: [
+        [
+          { type: 'text', text: '"Never edit in place" has to catch up with you somewhere — and it catches up at read time. Once a memtable fills up, it\'s flushed to disk as an immutable file called an ' },
+          { type: 'text', text: 'SSTable', bold: true },
+          { type: 'text', text: '. If a row has been written to five times across its life, those five versions can be scattered across the current memtable and several old SSTables. A read can\'t just fetch the row; it has to find every version of it and merge them, keeping only the most recent value for each column.' }
+        ]
+      ],
+      illustration: {
+        component: 'CassandraReadPathIllustration',
+        caption: 'A read gathers every version of a key, then merges by timestamp',
+        width: 'full'
+      }
+    },
+
+    {
+      number: 4,
+      title: 'Walking through one key',
+      content: [
+        [
+          { type: 'text', text: 'Concretely: you write to ' },
+          { type: 'text', text: 'user:42', bold: true },
+          { type: 'text', text: ' three times.' }
+        ]
+      ],
+      code: `10:00:00  write user:42.status = "active"    → memtable
+10:00:04  write user:42.status = "away"      → SSTable_1 (memtable flushed)
+10:00:09  write user:42.status = "offline"   → memtable
+
+// Read at 10:00:10:
+// 1. Check the memtable            → finds "offline" @ 10:00:09
+// 2. Check SSTable_1               → finds "away"    @ 10:00:04
+// 3. Bloom filter rules out other SSTables that can't hold this key
+// 4. Reconcile by timestamp        → "offline" wins, discard the rest
+
+return { status: "offline" };  // newest timestamp, nothing else`
+    },
+
+    {
+      number: 5,
+      title: 'Compaction: paying down the read cost',
+      content: [
+        [
+          { type: 'text', text: 'Left alone, the number of SSTables a read has to check only grows. ' },
+          { type: 'text', text: 'Compaction', bold: true },
+          { type: 'text', text: ' runs in the background, merging several SSTables into one, dropping every version of a key except the newest, and permanently discarding rows marked for deletion (called ' },
+          { type: 'text', text: 'tombstones', bold: true },
+          { type: 'text', text: '). It doesn\'t make an individual read faster than the moment it happened — it keeps reads from getting slower over time.' }
+        ]
+      ],
+      callout: {
+        label: 'Trade being made',
+        content: [
+          [
+            { type: 'text', text: 'Compaction trades ' },
+            { type: 'text', text: 'disk and CPU now', bold: true },
+            { type: 'text', text: ' for ' },
+            { type: 'text', text: 'fewer SSTables to reconcile later', bold: true },
+            { type: 'text', text: '. It\'s the same lazy-write, pay-later idea as the write path, just running one step downstream.' }
+          ]
+        ]
+      }
+    },
+
+    {
+      number: 6,
+      title: 'When to reach for it — and when not to',
+      content: [
+        [
+          { type: 'text', text: 'All of this makes Cassandra\'s fit obvious once you see the shape of it: it\'s built for data that\'s mostly written, rarely edited, and read by a key you already know — not for data you\'ll want to slice and query in ways you haven\'t planned for. The write path forgives you for scale; the read path doesn\'t forgive you for guessing at your access patterns.' }
+        ]
+      ]
+    }
+  ],
+
+  tradeoffs: {
+    strengths: [
+      'Write-heavy, append-only data (logs, events, metrics)',
+      'Data naturally partitioned by a key you know in advance',
+      'Can tolerate eventual consistency'
+    ],
+    weaknesses: [
+      'Complex queries across many columns you didn\'t model for',
+      'Strong consistency requirements (financial transactions)',
+      'Small datasets where a single Postgres instance is simpler'
+    ]
+  },
+
+  related: [
+    {
+      name: 'Redis',
+      description: 'In-memory, single-threaded, different tradeoffs entirely',
+      slug: 'redis'
+    },
+    {
+      name: 'Kafka',
+      description: 'Also append-only — but a log, not a database',
+      slug: 'kafka'
+    }
+  ]
+};

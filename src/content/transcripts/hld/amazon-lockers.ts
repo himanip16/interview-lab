@@ -21,7 +21,7 @@ const transcript: TranscriptData = {
         {
           type: "text",
           value:
-            "Let's design the system behind Amazon Lockers — the physical pickup points where drivers drop off packages and customers pick them up later.",
+            "Design the system behind Amazon Lockers. Drivers drop packages off, customers pick them up later.",
         },
       ],
     },
@@ -29,12 +29,12 @@ const transcript: TranscriptData = {
     {
       id: "2",
       role: "candidate",
-      elapsedSeconds: 16,
+      elapsedSeconds: 14,
       content: [
         {
           type: "text",
           value:
-            "Before designing anything, I want to understand what decisions this system is actually responsible for.",
+            "Okay. Before I draw anything — can I ask what this thing is actually responsible for? Like where the edges are.",
         },
       ],
     },
@@ -42,11 +42,11 @@ const transcript: TranscriptData = {
     {
       id: "3",
       role: "interviewer",
-      elapsedSeconds: 28,
+      elapsedSeconds: 24,
       content: [
         {
           type: "text",
-          value: "Fair. Go ahead.",
+          value: "Go ahead.",
         },
       ],
     },
@@ -54,12 +54,12 @@ const transcript: TranscriptData = {
     {
       id: "4",
       role: "candidate",
-      elapsedSeconds: 45,
+      elapsedSeconds: 40,
       content: [
         {
           type: "text",
           value:
-            "Is the scope just reserving and tracking locker slots, or does it also include deciding which locker a driver should be routed to in the first place?",
+            "Is it just reserving and tracking slots, or does it also decide which locker a driver gets routed to?",
         },
       ],
     },
@@ -67,12 +67,11 @@ const transcript: TranscriptData = {
     {
       id: "5",
       role: "interviewer",
-      elapsedSeconds: 63,
+      elapsedSeconds: 52,
       content: [
         {
           type: "text",
-          value:
-            "Both. The system should pick a locker for a package and manage the physical slot lifecycle end to end.",
+          value: "Both.",
         },
       ],
     },
@@ -80,12 +79,12 @@ const transcript: TranscriptData = {
     {
       id: "6",
       role: "candidate",
-      elapsedSeconds: 82,
+      elapsedSeconds: 70,
       content: [
         {
           type: "text",
           value:
-            "Okay. So functionally: assign a package to a locker, reserve a physical slot sized for that package, let the driver deposit it, notify the customer, and release the slot once picked up or expired.",
+            "Got it. So — assign a package to a locker, reserve a slot that actually fits it, let the driver drop it, tell the customer, then free the slot once it's picked up. Or times out.",
         },
       ],
     },
@@ -93,11 +92,11 @@ const transcript: TranscriptData = {
     {
       id: "7",
       role: "interviewer",
-      elapsedSeconds: 108,
+      elapsedSeconds: 92,
       content: [
         {
           type: "text",
-          value: "Right. What about non-functional concerns?",
+          value: "Non-functional concerns?",
         },
       ],
     },
@@ -105,12 +104,12 @@ const transcript: TranscriptData = {
     {
       id: "8",
       role: "candidate",
-      elapsedSeconds: 130,
+      elapsedSeconds: 118,
       content: [
         {
           type: "text",
           value:
-            "The big one is correctness of slot state — we can never tell two drivers the same slot is free. I'd also guess these kiosks sit in places like mall basements or apartment lobbies, so I shouldn't assume reliable connectivity at the kiosk itself.",
+            "Biggest one — two drivers can never be told the same slot is free. That's a correctness thing, not a nice-to-have. And I'm guessing these kiosks are in places like mall basements, so I probably shouldn't assume the kiosk itself is always online.",
         },
       ],
     },
@@ -118,12 +117,11 @@ const transcript: TranscriptData = {
     {
       id: "9",
       role: "interviewer",
-      elapsedSeconds: 158,
+      elapsedSeconds: 142,
       content: [
         {
           type: "text",
-          value:
-            "Good instinct, we'll come back to that. Let's start simple. Sketch the first version.",
+          value: "We'll get to that. Sketch v1.",
         },
       ],
     },
@@ -131,12 +129,12 @@ const transcript: TranscriptData = {
     {
       id: "10",
       role: "candidate",
-      elapsedSeconds: 182,
+      elapsedSeconds: 168,
       content: [
         {
           type: "text",
           value:
-            "Simplest version: a driver's handheld app calls a Locker Service, which checks a database for a free slot near the delivery address, marks it reserved, and returns an access code. Driver walks up, enters the code, door opens.",
+            "Simplest thing — driver's app hits a Locker Service, that checks a database for a free slot near the address, marks it reserved, hands back an access code. Driver walks up, types the code, door opens.",
         },
       ],
     },
@@ -144,12 +142,12 @@ const transcript: TranscriptData = {
     {
       id: "11",
       role: "interviewer",
-      elapsedSeconds: 215,
+      elapsedSeconds: 196,
       content: [
         {
           type: "text",
           value:
-            "Two drivers, delivering to nearby addresses, both query the same locker bank within a second of each other for the last free small slot. Walk me through what happens.",
+            "Two drivers, nearby addresses, both hit the same locker bank a second apart. Last small slot. Go.",
         },
       ],
     },
@@ -157,12 +155,12 @@ const transcript: TranscriptData = {
     {
       id: "12",
       role: "candidate",
-      elapsedSeconds: 244,
+      elapsedSeconds: 214,
       content: [
         {
           type: "text",
           value:
-            "Both requests hit different API servers. Both read the slot as free. Both write a reservation. Let me think... whichever write happens last wins, but both drivers already got back a success response and an access code for the same physical door.",
+            "Different API servers, both read it as free, both—",
         },
       ],
     },
@@ -170,11 +168,11 @@ const transcript: TranscriptData = {
     {
       id: "13",
       role: "interviewer",
-      elapsedSeconds: 275,
+      elapsedSeconds: 218,
       content: [
         {
           type: "text",
-          value: "So how do you stop that?",
+          value: "Both write.",
         },
       ],
     },
@@ -182,11 +180,36 @@ const transcript: TranscriptData = {
     {
       id: "14",
       role: "candidate",
-      elapsedSeconds: 298,
+      elapsedSeconds: 232,
       content: [
         {
           type: "text",
-          value: "I'd just wrap the read and the write in a database transaction.",
+          value:
+            "Right — both write a reservation. Whoever's write lands last technically wins in the DB, but both drivers already got a success response and a code for the same door. So that's broken.",
+        },
+      ],
+    },
+
+    {
+      id: "15",
+      role: "interviewer",
+      elapsedSeconds: 250,
+      content: [
+        {
+          type: "text",
+          value: "So fix it.",
+        },
+      ],
+    },
+
+    {
+      id: "16",
+      role: "candidate",
+      elapsedSeconds: 268,
+      content: [
+        {
+          type: "text",
+          value: "Wrap the read and the write in a transaction.",
         },
         {
           id: "highlight-naive-transaction",
@@ -200,39 +223,13 @@ const transcript: TranscriptData = {
     },
 
     {
-      id: "15",
-      role: "interviewer",
-      elapsedSeconds: 322,
-      content: [
-        {
-          type: "text",
-          value:
-            "Both transactions still read the row before either commits. Does wrapping it in a transaction change that?",
-        },
-      ],
-    },
-
-    {
-      id: "16",
-      role: "candidate",
-      elapsedSeconds: 348,
-      content: [
-        {
-          type: "text",
-          value:
-            "No, you're right, that doesn't fix it by itself. The reservation has to be a single atomic operation, not a read followed by a write.",
-        },
-      ],
-    },
-
-    {
       id: "17",
       role: "interviewer",
-      elapsedSeconds: 368,
+      elapsedSeconds: 284,
       content: [
         {
           type: "text",
-          value: "How would you make it atomic?",
+          value: "Both transactions still read before either commits. Does the transaction change that?",
         },
       ],
     },
@@ -240,7 +237,32 @@ const transcript: TranscriptData = {
     {
       id: "18",
       role: "candidate",
-      elapsedSeconds: 392,
+      elapsedSeconds: 302,
+      content: [
+        {
+          type: "text",
+          value:
+            "...No. No, it doesn't. Okay — so the read and the write can't be two steps at all. It has to be one operation.",
+        },
+      ],
+    },
+
+    {
+      id: "19",
+      role: "interviewer",
+      elapsedSeconds: 316,
+      content: [
+        {
+          type: "text",
+          value: "How.",
+        },
+      ],
+    },
+
+    {
+      id: "20",
+      role: "candidate",
+      elapsedSeconds: 336,
       content: [
         {
           type: "text",
@@ -257,32 +279,7 @@ const transcript: TranscriptData = {
         {
           type: "text",
           value:
-            " — an UPDATE against the slot row that only succeeds if its current status is still 'free'. Whichever request's update actually flips the row wins, and the other gets zero rows affected and knows to try a different slot.",
-        },
-      ],
-    },
-
-    {
-      id: "19",
-      role: "interviewer",
-      elapsedSeconds: 425,
-      content: [
-        {
-          type: "text",
-          value: "Good. Now — packages aren't all the same size. Does that change anything?",
-        },
-      ],
-    },
-
-    {
-      id: "20",
-      role: "candidate",
-      elapsedSeconds: 452,
-      content: [
-        {
-          type: "text",
-          value:
-            "It does. A slot isn't interchangeable capacity like a generic counter — it's a specific physical compartment of a specific size. So 'is there a free slot' isn't a single number, it's really 'is there a free slot in the size tier this package needs.'",
+            " — an UPDATE that only succeeds if the row's still marked free. Whichever request actually flips it wins. The loser gets zero rows affected and knows to go try somewhere else.",
         },
       ],
     },
@@ -290,12 +287,11 @@ const transcript: TranscriptData = {
     {
       id: "21",
       role: "interviewer",
-      elapsedSeconds: 480,
+      elapsedSeconds: 358,
       content: [
         {
           type: "text",
-          value:
-            "Say a locker bank has plenty of large slots free but zero small ones, and a small package shows up. What do you do?",
+          value: "Packages aren't all the same size. Matter?",
         },
       ],
     },
@@ -303,12 +299,37 @@ const transcript: TranscriptData = {
     {
       id: "22",
       role: "candidate",
-      elapsedSeconds: 508,
+      elapsedSeconds: 380,
       content: [
         {
           type: "text",
           value:
-            "You could put the small package in a large slot, but if you always do that you'll burn through large capacity fast with tiny packages and then have nowhere for actual large ones. I'd want a ",
+            "It does, yeah — a slot's not interchangeable capacity like a counter, it's a specific physical box of a specific size. So \"is there a free slot\" is really \"is there a free slot in the tier this package needs.\"",
+        },
+      ],
+    },
+
+    {
+      id: "23",
+      role: "interviewer",
+      elapsedSeconds: 404,
+      content: [
+        {
+          type: "text",
+          value: "Bank's got plenty of large slots, zero small ones. Small package shows up.",
+        },
+      ],
+    },
+
+    {
+      id: "24",
+      role: "candidate",
+      elapsedSeconds: 428,
+      content: [
+        {
+          type: "text",
+          value:
+            "First thought — just drop it in a large slot. But if I always do that I'll burn through large capacity on tiny packages, and then there's nowhere for the packages that actually need a large slot. So more like ",
         },
         {
           id: "highlight-best-fit",
@@ -321,33 +342,7 @@ const transcript: TranscriptData = {
         {
           type: "text",
           value:
-            " — try the smallest tier that fits first, and only fall back to the next size up when that tier is exhausted, so large slots stay reserved for packages that actually need them.",
-        },
-      ],
-    },
-
-    {
-      id: "23",
-      role: "interviewer",
-      elapsedSeconds: 545,
-      content: [
-        {
-          type: "text",
-          value:
-            "What if every tier at this specific locker bank is full for this package's size?",
-        },
-      ],
-    },
-
-    {
-      id: "24",
-      role: "candidate",
-      elapsedSeconds: 570,
-      content: [
-        {
-          type: "text",
-          value:
-            "Then this locker bank just isn't a valid candidate for this package, and it shouldn't have been offered in the first place. Which makes me think slot allocation and locker selection aren't really two separate steps — the selection step needs live visibility into per-tier capacity, not just 'is this locker open.'",
+            " — try the smallest tier that fits, and only fall back a size when that tier's actually exhausted.",
         },
       ],
     },
@@ -355,11 +350,11 @@ const transcript: TranscriptData = {
     {
       id: "25",
       role: "interviewer",
-      elapsedSeconds: 600,
+      elapsedSeconds: 452,
       content: [
         {
           type: "text",
-          value: "Good, hold that thought. Let's talk about the kiosk itself now. Where does it live in this picture?",
+          value: "Every tier's full for this size. Now what?",
         },
       ],
     },
@@ -367,12 +362,12 @@ const transcript: TranscriptData = {
     {
       id: "26",
       role: "candidate",
-      elapsedSeconds: 625,
+      elapsedSeconds: 476,
       content: [
         {
           type: "text",
           value:
-            "So far I've been treating the kiosk as a dumb terminal — driver enters a code, kiosk asks the central Locker Service 'is this code valid,' service says yes, door opens.",
+            "Then this bank was never a valid candidate and shouldn't have been offered. Which — actually, that makes me think allocation and locker selection aren't really separate steps. Selection needs live per-tier capacity, not just \"is this locker open.\"",
         },
       ],
     },
@@ -380,12 +375,11 @@ const transcript: TranscriptData = {
     {
       id: "27",
       role: "interviewer",
-      elapsedSeconds: 650,
+      elapsedSeconds: 500,
       content: [
         {
           type: "text",
-          value:
-            "This kiosk is in a basement with unreliable cellular signal. The driver walks up with a valid code, but the kiosk's connection to the central service has been down for the last ten minutes. What happens?",
+          value: "Hold that. The kiosk itself — where does it sit in this?",
         },
       ],
     },
@@ -393,12 +387,12 @@ const transcript: TranscriptData = {
     {
       id: "28",
       role: "candidate",
-      elapsedSeconds: 680,
+      elapsedSeconds: 522,
       content: [
         {
           type: "text",
           value:
-            "Hmm. If opening the door requires a live round trip to the central service, the door just... doesn't open. The driver's standing there with a package and a valid reservation and the kiosk can't confirm it.",
+            "So far I've had it as basically dumb — driver enters a code, kiosk asks the central service \"is this valid,\" service says yes, door opens.",
         },
       ],
     },
@@ -406,11 +400,12 @@ const transcript: TranscriptData = {
     {
       id: "29",
       role: "interviewer",
-      elapsedSeconds: 705,
+      elapsedSeconds: 546,
       content: [
         {
           type: "text",
-          value: "So how do you avoid that?",
+          value:
+            "That kiosk's in a basement, connection's been down ten minutes. Driver walks up with a valid code.",
         },
       ],
     },
@@ -418,12 +413,12 @@ const transcript: TranscriptData = {
     {
       id: "30",
       role: "candidate",
-      elapsedSeconds: 730,
+      elapsedSeconds: 568,
       content: [
         {
           type: "text",
           value:
-            "The kiosk needs to be able to make the open-or-not decision on its own. I'd push the reservation — slot ID and access code — down to the kiosk at the moment it's created, so the kiosk already knows locally which codes are valid for which doors, before the driver ever arrives.",
+            "Hmm. If opening the door means a round trip to the central service... the door just doesn't open. Guy's standing there with a package and a good reservation and the kiosk can't confirm anything.",
         },
       ],
     },
@@ -431,12 +426,11 @@ const transcript: TranscriptData = {
     {
       id: "31",
       role: "interviewer",
-      elapsedSeconds: 758,
+      elapsedSeconds: 586,
       content: [
         {
           type: "text",
-          value:
-            "Okay, but that push has to reach the kiosk somehow. What if the kiosk was already offline when the reservation was made?",
+          value: "So?",
         },
       ],
     },
@@ -444,12 +438,12 @@ const transcript: TranscriptData = {
     {
       id: "32",
       role: "candidate",
-      elapsedSeconds: 785,
+      elapsedSeconds: 612,
       content: [
         {
           type: "text",
           value:
-            "Then it queues, and the kiosk picks it up once it reconnects. That's fine for a package that hasn't arrived yet. It's only a real problem if the driver shows up before the reservation ever made it down.",
+            "The kiosk needs to make that call on its own, without asking. I'd push the reservation down when it's created — slot, code — so it's already sitting on the kiosk before the driver even shows up.",
         },
       ],
     },
@@ -457,11 +451,11 @@ const transcript: TranscriptData = {
     {
       id: "33",
       role: "interviewer",
-      elapsedSeconds: 812,
+      elapsedSeconds: 634,
       content: [
         {
           type: "text",
-          value: "So does that change how you pick lockers for packages heading to a flaky kiosk?",
+          value: "That push has to reach the kiosk somehow. What if it was already offline when you made the reservation?",
         },
       ],
     },
@@ -469,12 +463,37 @@ const transcript: TranscriptData = {
     {
       id: "34",
       role: "candidate",
-      elapsedSeconds: 838,
+      elapsedSeconds: 656,
       content: [
         {
           type: "text",
           value:
-            "It should. Going back to what you said earlier — locker selection needs live capacity, and I'd extend that to needing live connectivity health too. If a kiosk's been unreachable, I'd treat its capacity as ",
+            "Queue it. Kiosk picks it up on reconnect. Fine for a package that hasn't arrived yet — only actually breaks if the driver gets there before the reservation ever made it down.",
+        },
+      ],
+    },
+
+    {
+      id: "35",
+      role: "interviewer",
+      elapsedSeconds: 680,
+      content: [
+        {
+          type: "text",
+          value: "Does that change how you pick lockers heading toward a flaky kiosk?",
+        },
+      ],
+    },
+
+    {
+      id: "36",
+      role: "candidate",
+      elapsedSeconds: 704,
+      content: [
+        {
+          type: "text",
+          value:
+            "It should — you said selection needs live capacity, I'd fold connectivity in too. Kiosk's been unreachable, I wouldn't call its capacity unavailable, more like ",
         },
         {
           id: "highlight-degraded-capacity",
@@ -486,34 +505,7 @@ const transcript: TranscriptData = {
         },
         {
           type: "text",
-          value:
-            ", and deprioritize it in selection until it's confirmed synced again, rather than fully excluding it or fully trusting it.",
-        },
-      ],
-    },
-
-    {
-      id: "35",
-      role: "interviewer",
-      elapsedSeconds: 872,
-      content: [
-        {
-          type: "text",
-          value:
-            "Now flip it around. The kiosk was offline, a driver dropped off a package using its locally cached reservation, and the door opened and closed. When the kiosk reconnects, what does it tell the central service, and what if the central service had, in the meantime, decided to give that slot away as expired?",
-        },
-      ],
-    },
-
-    {
-      id: "36",
-      role: "candidate",
-      elapsedSeconds: 905,
-      content: [
-        {
-          type: "text",
-          value:
-            "That's a real conflict. The kiosk thinks the slot is occupied because it physically watched the door close. The central service thinks it's free because it never heard otherwise and the reservation timed out.",
+          value: ". Deprioritize it until it syncs, don't fully exclude it and don't fully trust it either.",
         },
       ],
     },
@@ -521,7 +513,33 @@ const transcript: TranscriptData = {
     {
       id: "37",
       role: "interviewer",
-      elapsedSeconds: 930,
+      elapsedSeconds: 730,
+      content: [
+        {
+          type: "text",
+          value:
+            "Flip it. Kiosk was offline, driver used the cached reservation, door opened and closed. Meanwhile central service decided that slot expired and handed it to someone else. Kiosk reconnects. Now what.",
+        },
+      ],
+    },
+
+    {
+      id: "38",
+      role: "candidate",
+      elapsedSeconds: 758,
+      content: [
+        {
+          type: "text",
+          value:
+            "That's a real conflict, not just a stale-cache thing. Kiosk thinks it's occupied — it watched the door close. Central service thinks it's free, it never heard otherwise and the timer ran out.",
+        },
+      ],
+    },
+
+    {
+      id: "39",
+      role: "interviewer",
+      elapsedSeconds: 780,
       content: [
         {
           type: "text",
@@ -531,38 +549,38 @@ const transcript: TranscriptData = {
     },
 
     {
-      id: "38",
+      id: "40",
       role: "candidate",
-      elapsedSeconds: 955,
+      elapsedSeconds: 802,
       content: [
         {
           type: "text",
           value:
-            "The kiosk is, physically. It has a door sensor, it knows a package is actually sitting in that compartment. I think the mistake is letting the central service treat itself as the source of truth for physical slot occupancy when it isn't physically present.",
+            "The kiosk. It's the one with a sensor on the actual door. I think the real bug is letting the central service act like it owns physical truth when it was never in the room.",
         },
       ],
     },
 
     {
-      id: "39",
+      id: "41",
       role: "interviewer",
-      elapsedSeconds: 985,
+      elapsedSeconds: 822,
       content: [
         {
           type: "text",
-          value: "So how do you restructure that?",
+          value: "So restructure it.",
         },
       ],
     },
 
     {
-      id: "40",
+      id: "42",
       role: "candidate",
-      elapsedSeconds: 1015,
+      elapsedSeconds: 848,
       content: [
         {
           type: "text",
-          value: "The kiosk should be the ",
+          value: "The kiosk becomes the ",
         },
         {
           id: "highlight-kiosk-authority",
@@ -575,32 +593,7 @@ const transcript: TranscriptData = {
         {
           type: "text",
           value:
-            ", logging every door-open and door-close event locally as it happens, with its own timestamps. The central service is downstream of that — it reconciles its view against the kiosk's event log once connectivity returns, not the other way around.",
-        },
-      ],
-    },
-
-    {
-      id: "41",
-      role: "interviewer",
-      elapsedSeconds: 1050,
-      content: [
-        {
-          type: "text",
-          value: "Walk me through that sync happening.",
-        },
-      ],
-    },
-
-    {
-      id: "42",
-      role: "candidate",
-      elapsedSeconds: 1080,
-      content: [
-        {
-          type: "text",
-          value:
-            "The kiosk keeps an append-only local log of door events with sequence numbers. On reconnect, a relay process on the kiosk pushes any events the central service hasn't acknowledged yet. If the central service had marked that slot expired and free, it now sees a door-close event after the expiry and corrects itself — flags the slot occupied, and separately raises an alert that a reservation was fulfilled after its expiry window so someone can check whether that customer still needs notifying.",
+            " — logs every door-open, door-close locally, its own timestamps. Central service is downstream. It reconciles against the kiosk's log when it reconnects, not the other way around.",
         },
       ],
     },
@@ -608,11 +601,11 @@ const transcript: TranscriptData = {
     {
       id: "43",
       role: "interviewer",
-      elapsedSeconds: 1120,
+      elapsedSeconds: 868,
       content: [
         {
           type: "text",
-          value: "Good. Now, once a package is actually placed, how does the customer find out?",
+          value: "Walk me through that sync.",
         },
       ],
     },
@@ -620,12 +613,12 @@ const transcript: TranscriptData = {
     {
       id: "44",
       role: "candidate",
-      elapsedSeconds: 1148,
+      elapsedSeconds: 896,
       content: [
         {
           type: "text",
           value:
-            "The kiosk's door-close event, once it reaches the central service, should trigger a notification — push notification with a pickup code, falling back to SMS.",
+            "Kiosk keeps an append-only log, sequence numbers on everything. Reconnects, a relay process pushes whatever the central service hasn't acked yet. If the service had marked that slot expired-and-free, it now sees a door-close after the expiry — corrects itself, flips the slot to occupied, and separately raises a flag: reservation fulfilled after expiry, someone should check whether that customer still needs a notification.",
         },
       ],
     },
@@ -633,12 +626,11 @@ const transcript: TranscriptData = {
     {
       id: "45",
       role: "interviewer",
-      elapsedSeconds: 1172,
+      elapsedSeconds: 924,
       content: [
         {
           type: "text",
-          value:
-            "Given everything we just discussed about the kiosk being offline and syncing late, what happens if that same door-close event gets delivered to the notification step twice?",
+          value: "How does the customer even find out a package is there?",
         },
       ],
     },
@@ -646,12 +638,37 @@ const transcript: TranscriptData = {
     {
       id: "46",
       role: "candidate",
-      elapsedSeconds: 1198,
+      elapsedSeconds: 946,
       content: [
         {
           type: "text",
           value:
-            "Right, because the kiosk might retry pushing an event it's not sure was acknowledged. I'd carry the kiosk's event ID all the way through to the notification, so the notification step can recognize ",
+            "Door-close event hits the central service, that triggers a notification. Push, falling back to SMS.",
+        },
+      ],
+    },
+
+    {
+      id: "47",
+      role: "interviewer",
+      elapsedSeconds: 966,
+      content: [
+        {
+          type: "text",
+          value: "Given the offline-and-retry thing we just covered — same event gets delivered twice?",
+        },
+      ],
+    },
+
+    {
+      id: "48",
+      role: "candidate",
+      elapsedSeconds: 990,
+      content: [
+        {
+          type: "text",
+          value:
+            "Yeah, because the kiosk might retry a push it wasn't sure landed. I'd carry its event ID all the way through, so the notification step can go, ",
         },
         {
           id: "highlight-idempotent-notification",
@@ -663,34 +680,7 @@ const transcript: TranscriptData = {
         },
         {
           type: "text",
-          value:
-            " and skip it, rather than treating every incoming event as a brand new notification to send.",
-        },
-      ],
-    },
-
-    {
-      id: "47",
-      role: "interviewer",
-      elapsedSeconds: 1230,
-      content: [
-        {
-          type: "text",
-          value:
-            "Let's go back to locker selection. You mentioned it needs live capacity and connectivity health. What about cost — does the system just pick the nearest locker with room?",
-        },
-      ],
-    },
-
-    {
-      id: "48",
-      role: "candidate",
-      elapsedSeconds: 1260,
-      content: [
-        {
-          type: "text",
-          value:
-            "Nearest-to-the-customer isn't quite right either, because the thing we're actually optimizing is the driver's route, not straight-line distance. A locker slightly farther from the customer but directly on the driver's existing route costs less than a 'closer' one that's a detour.",
+          value: ", skip it — instead of treating every incoming event as a fresh one to send.",
         },
       ],
     },
@@ -698,11 +688,11 @@ const transcript: TranscriptData = {
     {
       id: "49",
       role: "interviewer",
-      elapsedSeconds: 1292,
+      elapsedSeconds: 1012,
       content: [
         {
           type: "text",
-          value: "So what are you actually scoring on?",
+          value: "Back to selection. Just nearest locker with room?",
         },
       ],
     },
@@ -710,12 +700,12 @@ const transcript: TranscriptData = {
     {
       id: "50",
       role: "candidate",
-      elapsedSeconds: 1320,
+      elapsedSeconds: 1036,
       content: [
         {
           type: "text",
           value:
-            "A few signals together: detour cost added to the driver's planned route, whether the right size tier is actually free, and now, from what we just covered, the kiosk's connectivity confidence. I'd score candidate lockers on those and pick the best, not just the nearest.",
+            "Nearest-to-the-customer isn't really it — what we're optimizing is the driver's route, not straight-line distance. A locker a bit farther from the customer but on the driver's existing path can beat a \"closer\" one that's a detour.",
         },
       ],
     },
@@ -723,12 +713,11 @@ const transcript: TranscriptData = {
     {
       id: "51",
       role: "interviewer",
-      elapsedSeconds: 1352,
+      elapsedSeconds: 1058,
       content: [
         {
           type: "text",
-          value:
-            "The locker looked free when the route was planned that morning, but by the time the driver actually gets there hours later, someone else's package has filled it. What now?",
+          value: "So what are you actually scoring?",
         },
       ],
     },
@@ -736,12 +725,12 @@ const transcript: TranscriptData = {
     {
       id: "52",
       role: "candidate",
-      elapsedSeconds: 1382,
+      elapsedSeconds: 1080,
       content: [
         {
           type: "text",
           value:
-            "That's the gap between planning-time capacity and arrival-time capacity. A locker that shows one free slot in the morning might have several drivers all planning routes around that same slot before any of them arrive.",
+            "Detour cost against the driver's planned route. Whether the right size tier is actually free. And now — connectivity confidence from the kiosk, since we just established that matters too. Score candidates on those, take the best, not the closest.",
         },
       ],
     },
@@ -749,11 +738,12 @@ const transcript: TranscriptData = {
     {
       id: "53",
       role: "interviewer",
-      elapsedSeconds: 1408,
+      elapsedSeconds: 1108,
       content: [
         {
           type: "text",
-          value: "So how do you protect against that?",
+          value:
+            "Locker looked free that morning when the route got planned. By the time the driver gets there, someone else filled it.",
         },
       ],
     },
@@ -761,11 +751,36 @@ const transcript: TranscriptData = {
     {
       id: "54",
       role: "candidate",
-      elapsedSeconds: 1435,
+      elapsedSeconds: 1132,
       content: [
         {
           type: "text",
-          value: "I'd put a ",
+          value:
+            "That's the gap between planning-time and arrival-time state. One free slot in the morning, multiple drivers planning routes around it before anyone actually shows up.",
+        },
+      ],
+    },
+
+    {
+      id: "55",
+      role: "interviewer",
+      elapsedSeconds: 1150,
+      content: [
+        {
+          type: "text",
+          value: "Protect against that how?",
+        },
+      ],
+    },
+
+    {
+      id: "56",
+      role: "candidate",
+      elapsedSeconds: 1174,
+      content: [
+        {
+          type: "text",
+          value: "Put a ",
         },
         {
           id: "highlight-soft-hold",
@@ -778,32 +793,7 @@ const transcript: TranscriptData = {
         {
           type: "text",
           value:
-            " as soon as a route plan assigns a package to it — not a full reservation yet, but enough that other route plans see it as spoken for. If the driver doesn't actually arrive and confirm within some window, the hold expires and the slot goes back into the pool.",
-        },
-      ],
-    },
-
-    {
-      id: "55",
-      role: "interviewer",
-      elapsedSeconds: 1470,
-      content: [
-        {
-          type: "text",
-          value: "Good. Last one — days later, does anything check that the software's view of locker state matches physical reality?",
-        },
-      ],
-    },
-
-    {
-      id: "56",
-      role: "candidate",
-      elapsedSeconds: 1500,
-      content: [
-        {
-          type: "text",
-          value:
-            "It should. Even with the kiosk as source of truth, hardware fails — a door sensor can stick, a kiosk can lose its local log. I'd run a periodic reconciliation between each kiosk's reported slot state and whatever physical audit signal is available, like a technician sweep or a weight sensor, and flag mismatches for manual review rather than assume software state is always correct.",
+            " — not a full reservation, just enough that other route plans see it as spoken for. Driver doesn't show and confirm in time, it expires, goes back in the pool.",
         },
       ],
     },
@@ -811,11 +801,11 @@ const transcript: TranscriptData = {
     {
       id: "57",
       role: "interviewer",
-      elapsedSeconds: 1535,
+      elapsedSeconds: 1198,
       content: [
         {
           type: "text",
-          value: "Last question — how does this scale to thousands of locker banks?",
+          value: "Last one on this thread — does anything check the software's view against physical reality?",
         },
       ],
     },
@@ -823,25 +813,50 @@ const transcript: TranscriptData = {
     {
       id: "58",
       role: "candidate",
-      elapsedSeconds: 1565,
+      elapsedSeconds: 1224,
       content: [
         {
           type: "text",
           value:
-            "The locker selection and route-scoring services scale horizontally and shard capacity data by region, since a package only ever competes with lockers near its own delivery area. Each kiosk only ever talks about its own slots, so kiosk sync fans out naturally without any kiosk needing to know about any other. The soft-hold and reservation state can live in a per-region store keyed by locker, and reconciliation jobs run per region on their own schedule so a backlog in one area doesn't block another.",
+            "It should. Kiosk being source of truth doesn't help if the sensor's stuck or the local log gets lost. I'd run periodic reconciliation between what each kiosk reports and some outside signal — technician sweep, weight sensor, whatever's available — and flag mismatches for a human instead of assuming the software's always right.",
         },
       ],
     },
 
     {
       id: "59",
-      role: "takeaway",
-      elapsedSeconds: 1600,
+      role: "interviewer",
+      elapsedSeconds: 1250,
+      content: [
+        {
+          type: "text",
+          value: "Scale this to thousands of locker banks.",
+        },
+      ],
+    },
+
+    {
+      id: "60",
+      role: "candidate",
+      elapsedSeconds: 1280,
       content: [
         {
           type: "text",
           value:
-            "Takeaway: treat physical slot state as owned by the device that can actually observe it, not the central service. Atomic conditional updates prevent double-booking, tiered best-fit allocation respects scarce capacity, soft holds bridge the gap between planning-time and arrival-time state, and reconciliation — at the kiosk-sync level and the physical-audit level — catches everything the rest of the design didn't anticipate.",
+            "Selection and route-scoring shard by region — a package only ever competes with lockers near its own delivery area. Each kiosk only ever talks about its own slots, so sync fans out naturally, no kiosk needs to know about any other. Soft-hold and reservation state live in a per-region store keyed by locker, and reconciliation runs per region on its own schedule, so a backlog in one area doesn't stall another.",
+        },
+      ],
+    },
+
+    {
+      id: "61",
+      role: "takeaway",
+      elapsedSeconds: 1310,
+      content: [
+        {
+          type: "text",
+          value:
+            "Takeaway: treat physical slot state as owned by the device that can actually observe it, not the central service. Atomic conditional updates prevent double-booking, tiered best-fit allocation respects scarce capacity, soft holds bridge the gap between planning-time and arrival-time state, and reconciliation — at the kiosk-sync level and the physical-audit level — catches everything else the design didn't anticipate.",
         },
       ],
     },

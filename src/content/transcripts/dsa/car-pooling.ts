@@ -30,12 +30,12 @@ const transcript: TranscriptData = {
     {
       id: "2",
       role: "candidate",
-      elapsedSeconds: 18,
+      elapsedSeconds: 15,
       content: [
         {
           type: "text",
           value:
-            "So passengers board at the 'from' location, and we drop them off at the 'to' location. I need to check if at any point between any two stops, the occupancy goes over C?",
+            "Okay. So at any location, occupancy is passengers currently in the car, and I fail as soon as that goes above C at any point along the route.",
         },
       ],
     },
@@ -43,11 +43,11 @@ const transcript: TranscriptData = {
     {
       id: "3",
       role: "interviewer",
-      elapsedSeconds: 35,
+      elapsedSeconds: 28,
       content: [
         {
           type: "text",
-          value: "Exactly. What if two trips have the same 'from' or 'to' location?",
+          value: "Right. What about ties — two trips sharing the same 'from' or 'to'?",
         },
       ],
     },
@@ -55,12 +55,12 @@ const transcript: TranscriptData = {
     {
       id: "4",
       role: "candidate",
-      elapsedSeconds: 50,
+      elapsedSeconds: 45,
       content: [
         {
           type: "text",
           value:
-            "I assume boarding happens before drop-off at the same location, right? So if one trip ends at 5 and another starts at 5, we drop off first, then pick up the new passengers?",
+            "Hm. I think it matters which order you process board vs drop at the same stop — if I do the pickup first I might report a false failure that wouldn't really happen. So... drop-offs before pickups at a shared location?",
         },
       ],
     },
@@ -68,12 +68,11 @@ const transcript: TranscriptData = {
     {
       id: "5",
       role: "interviewer",
-      elapsedSeconds: 65,
+      elapsedSeconds: 58,
       content: [
         {
           type: "text",
-          value:
-            "Good instinct — for this version, treat them as simultaneous events. If one trip ends and another begins at the same location, handle the drop-off before the pickup to minimize peak occupancy.",
+          value: "Why does the order matter — walk me through a case where it breaks.",
         },
       ],
     },
@@ -81,11 +80,12 @@ const transcript: TranscriptData = {
     {
       id: "6",
       role: "candidate",
-      elapsedSeconds: 80,
+      elapsedSeconds: 78,
       content: [
         {
           type: "text",
-          value: "What are the constraints on the number of trips, the capacity, and the location range?",
+          value:
+            "Say capacity is 4. One trip drops 2 passengers at location 5, another trip picks up 3 at location 5. If I add the 3 before removing the 2, occupancy briefly reads higher than what's physically true. So for this problem let's just say: at a shared location, process the drop first, then the pickup.",
         },
       ],
     },
@@ -93,12 +93,11 @@ const transcript: TranscriptData = {
     {
       id: "7",
       role: "interviewer",
-      elapsedSeconds: 98,
+      elapsedSeconds: 95,
       content: [
         {
           type: "text",
-          value:
-            "Assume up to 1000 trips, capacity up to 100, and locations are integers from 1 to 1000.",
+          value: "Fine, let's go with that. Constraints?",
         },
       ],
     },
@@ -106,12 +105,11 @@ const transcript: TranscriptData = {
     {
       id: "8",
       role: "candidate",
-      elapsedSeconds: 115,
+      elapsedSeconds: 105,
       content: [
         {
           type: "text",
-          value:
-            "Okay. The straightforward approach would be to simulate the journey — sort all unique locations, then for each location between the start and end of all trips, count how many passengers are in the car and check against C.",
+          value: "How many trips are we talking, what's the range on capacity and locations?",
         },
       ],
     },
@@ -119,11 +117,11 @@ const transcript: TranscriptData = {
     {
       id: "9",
       role: "interviewer",
-      elapsedSeconds: 140,
+      elapsedSeconds: 115,
       content: [
         {
           type: "text",
-          value: "Walk me through that.",
+          value: "Up to 1000 trips, capacity up to 100, locations are integers 1 to 1000.",
         },
       ],
     },
@@ -131,12 +129,12 @@ const transcript: TranscriptData = {
     {
       id: "10",
       role: "candidate",
-      elapsedSeconds: 158,
+      elapsedSeconds: 132,
       content: [
         {
           type: "text",
           value:
-            "I'd use a TreeMap or sorted map keyed by location. For each trip, I insert numPassengers at the 'from' location and insert negative numPassengers at the 'to' location — positive for boarding, negative for drop-off. Then I iterate through the map in order, maintaining a running occupancy count. At each location, I apply all the events at that location and check if occupancy exceeds C.",
+            "My first instinct is just simulate it directly — for each location from 1 to 1000, sum up who's currently on board. But that's basically checking every trip against every location, which feels like it could be O(N times L). Let me think if there's a cleaner way to sweep through this instead of re-scanning trips at every point.",
         },
       ],
     },
@@ -144,11 +142,11 @@ const transcript: TranscriptData = {
     {
       id: "11",
       role: "interviewer",
-      elapsedSeconds: 185,
+      elapsedSeconds: 158,
       content: [
         {
           type: "text",
-          value: "What's the cost of that?",
+          value: "Go on.",
         },
       ],
     },
@@ -156,12 +154,50 @@ const transcript: TranscriptData = {
     {
       id: "12",
       role: "candidate",
-      elapsedSeconds: 205,
+      elapsedSeconds: 175,
       content: [
         {
           type: "text",
           value:
-            "Building the TreeMap is O(N log N) because I'm inserting up to 2N events into a sorted structure, and then iterating through them is O(N). So overall ",
+            "Right — instead of re-checking every trip at every location, I only care about the points where occupancy actually changes: someone boards or someone leaves. So I can record events at those specific locations instead of scanning the whole range for each trip.",
+        },
+      ],
+    },
+
+    {
+      id: "13",
+      role: "candidate",
+      elapsedSeconds: 195,
+      content: [
+        {
+          type: "text",
+          value:
+            "I'd use a sorted map keyed by location. For each trip, add +numPassengers at 'from' and -numPassengers at 'to'. Then walk the map in order, keeping a running total, and check it against C at each key.",
+        },
+      ],
+    },
+
+    {
+      id: "14",
+      role: "interviewer",
+      elapsedSeconds: 218,
+      content: [
+        {
+          type: "text",
+          value: "What's that cost you, in total?",
+        },
+      ],
+    },
+
+    {
+      id: "15",
+      role: "candidate",
+      elapsedSeconds: 235,
+      content: [
+        {
+          type: "text",
+          value:
+            "Up to 2N insertions into the sorted map, each log N, so building it is O(N log N). Walking it after is O(N). So overall it's dominated by the ",
         },
         {
           id: "highlight-treemap-cost",
@@ -169,74 +205,36 @@ const transcript: TranscriptData = {
           status: "strong",
           value: "O(N log N)",
           explanation:
-            "Correctly identifies that the TreeMap approach is O(N log N) because insertions and lookups in a sorted map are logarithmic in the number of unique locations.",
+            "Correctly isolates the sorted-map insertions as the dominant cost, rather than treating the walk-through as equally expensive.",
         },
         {
           type: "text",
-          value: ".",
-        },
-      ],
-    },
-
-    {
-      id: "13",
-      role: "interviewer",
-      elapsedSeconds: 225,
-      content: [
-        {
-          type: "text",
-          value:
-            "That works, but can you do better? Locations are constrained to a fixed range.",
-        },
-      ],
-    },
-
-    {
-      id: "14",
-      role: "candidate",
-      elapsedSeconds: 250,
-      content: [
-        {
-          type: "text",
-          value:
-            "Oh — if the location range is 1 to 1000, I could use a fixed-size array instead of a TreeMap. Create an array of size 1001, mark the deltas at each location, then sweep through the array once accumulating the running occupancy.",
-        },
-      ],
-    },
-
-    {
-      id: "15",
-      role: "interviewer",
-      elapsedSeconds: 270,
-      content: [
-        {
-          type: "text",
-          value: "Exactly — a difference array. Set it up.",
+          value: " insertion step.",
         },
       ],
     },
 
     {
       id: "16",
-      role: "candidate",
-      elapsedSeconds: 290,
+      role: "interviewer",
+      elapsedSeconds: 255,
       content: [
         {
           type: "text",
-          value:
-            "I create an array 'delta' of size 1001, initialized to 0. For each trip, I do delta[from] += numPassengers and delta[to] -= numPassengers. This captures the net change in occupancy at each location. Then I iterate from location 1 to 1000, maintaining a running sum of occupancy, and if it ever exceeds C, I return false. If I make it through without exceeding, I return true.",
+          value: "You said locations are bounded, 1 to 1000. Does that change anything for you?",
         },
       ],
     },
 
     {
       id: "17",
-      role: "interviewer",
-      elapsedSeconds: 320,
+      role: "candidate",
+      elapsedSeconds: 272,
       content: [
         {
           type: "text",
-          value: "Walk me through an example. Capacity 4, trips are [2, 1, 5], [3, 3, 7].",
+          value:
+            "...Give me a second. I keep wanting to reach for the sorted map because that's the general-purpose tool, but you're right, I don't need a map at all if the key space is small and known ahead of time.",
         },
       ],
     },
@@ -244,70 +242,62 @@ const transcript: TranscriptData = {
     {
       id: "18",
       role: "candidate",
-      elapsedSeconds: 345,
+      elapsedSeconds: 292,
       content: [
         {
           type: "text",
           value:
-            "First trip: delta[1] += 2, delta[5] -= 2. Second trip: delta[3] += 3, delta[7] -= 3. So the delta array has values at positions 1, 3, 5, 7.",
+            "I can just use a plain array of size 1001 as a difference array — index directly by location instead of paying log N per lookup.",
         },
       ],
     },
 
     {
       id: "19",
-      role: "candidate",
-      elapsedSeconds: 368,
+      role: "interviewer",
+      elapsedSeconds: 305,
       content: [
         {
           type: "text",
-          value:
-            "Sweep through: at 1, occupancy becomes 0 + 2 = 2. At 2, 3, 4, no change. At 3, occupancy becomes 2 + 3 = 5. That's already over 4, so return false.",
+          value: "Set it up.",
         },
       ],
     },
 
     {
       id: "20",
-      role: "interviewer",
-      elapsedSeconds: 385,
+      role: "candidate",
+      elapsedSeconds: 322,
       content: [
         {
           type: "text",
-          value: "Good. What's the time complexity now?",
+          value:
+            "delta array, size 1001, all zero. For each trip: delta[from] += numPassengers, delta[to] -= numPassengers. Then sweep index 1 through 1000, keep a running sum, and if it ever crosses C, fail.",
         },
       ],
     },
 
     {
       id: "21",
-      role: "candidate",
-      elapsedSeconds: 405,
+      role: "interviewer",
+      elapsedSeconds: 340,
       content: [
         {
           type: "text",
-          value:
-            "Building the delta array is O(N) — one pass through the trips. The sweep is O(L) where L is the location range, 1000 in this case. So it's O(N + L), which is better than O(N log N) when N is large, and since both N and L are bounded by constants here, it's effectively O(1) for the problem constraints.",
-        },
-        {
-          id: "highlight-linear-complexity",
-          type: "highlight",
-          status: "strong",
-          value: "O(N + L)",
-          explanation:
-            "Recognizes that the difference array approach is linear in both trips and location range, strictly better than the TreeMap's O(N log N) when dealing with bounded, fixed ranges.",
+          value: "Trace it. Capacity 4, trips [2,1,5] and [3,3,7].",
         },
       ],
     },
 
     {
       id: "22",
-      role: "interviewer",
-      elapsedSeconds: 435,
+      role: "candidate",
+      elapsedSeconds: 360,
       content: [
         {
           type: "text",
-          value: "Write the code.",
+          value:
+            "delta[1] += 2, delta[5] -= 2 for the first trip. delta[3] += 3, delta[7] -= 3 for the second.",
         },
       ],
     },
@@ -315,7 +305,90 @@ const transcript: TranscriptData = {
     {
       id: "23",
       role: "candidate",
-      elapsedSeconds: 460,
+      elapsedSeconds: 380,
+      content: [
+        {
+          type: "text",
+          value:
+            "Sweeping — position 1, running total 2. Position 2, still 2, no event there. Position 3, add 3, total is... wait, let me redo that. 2 plus 3 is 5. Yeah, 5, that's already above capacity 4. So this fails at location 3.",
+        },
+      ],
+    },
+
+    {
+      id: "24",
+      role: "interviewer",
+      elapsedSeconds: 398,
+      content: [
+        {
+          type: "text",
+          value: "Good, you caught yourself. What's the complexity now, and is it actually better?",
+        },
+      ],
+    },
+
+    {
+      id: "25",
+      role: "candidate",
+      elapsedSeconds: 418,
+      content: [
+        {
+          type: "text",
+          value:
+            "Building the delta array is O(N) — one pass over trips. Sweeping it is O(L), the location range. So O(N + L) total, no log factor. Given N and L are both bounded here, that's strictly better than the sorted-map version.",
+        },
+        {
+          id: "highlight-linear-complexity",
+          type: "highlight",
+          status: "strong",
+          value: "O(N + L)",
+          explanation:
+            "Identifies that the difference-array approach removes the log factor entirely, and correctly frames why that's a real improvement rather than just a constant-factor win.",
+        },
+      ],
+    },
+
+    {
+      id: "26",
+      role: "interviewer",
+      elapsedSeconds: 438,
+      content: [
+        {
+          type: "text",
+          value: "What if L were 10^9 instead of 1000? Still like this approach?",
+        },
+      ],
+    },
+
+    {
+      id: "27",
+      role: "candidate",
+      elapsedSeconds: 458,
+      content: [
+        {
+          type: "text",
+          value:
+            "No — then the array itself becomes the bottleneck, both in memory and in sweep time, and I'd be back to the sorted-map approach, or I'd coordinate-compress the locations down to just the ones that actually appear in trips. So the array trick only wins because L happens to be small here, it's not a universally better algorithm.",
+        },
+      ],
+    },
+
+    {
+      id: "28",
+      role: "interviewer",
+      elapsedSeconds: 478,
+      content: [
+        {
+          type: "text",
+          value: "Good — write the code for the version we have.",
+        },
+      ],
+    },
+
+    {
+      id: "29",
+      role: "candidate",
+      elapsedSeconds: 505,
       content: [
         {
           type: "code",
@@ -327,104 +400,14 @@ const transcript: TranscriptData = {
     },
 
     {
-      id: "24",
-      role: "interviewer",
-      elapsedSeconds: 490,
-      content: [
-        {
-          type: "text",
-          value:
-            "Now for the harder part. Suppose this system scales up — instead of a single in-memory array of trips, the trip data is distributed across a database that's being updated in real-time. Drivers query this system throughout the day. How would you rethink this?",
-        },
-      ],
-    },
-
-    {
-      id: "25",
-      role: "candidate",
-      elapsedSeconds: 525,
-      content: [
-        {
-          type: "text",
-          value:
-            "If the trips data is in a DB and gets updated during the day, fetching all trips every time a driver queries is expensive. Also, if there are thousands or millions of trips, building the full delta array becomes memory-intensive.",
-        },
-      ],
-    },
-
-    {
-      id: "26",
-      role: "interviewer",
-      elapsedSeconds: 550,
-      content: [
-        {
-          type: "text",
-          value: "Right. So what changes?",
-        },
-      ],
-    },
-
-    {
-      id: "27",
-      role: "candidate",
-      elapsedSeconds: 572,
-      content: [
-        {
-          type: "text",
-          value:
-            "I'd keep the delta-array logic, but instead of querying all trips at once, I'd structure the DB to index trips by their 'start' and 'end' locations. When a driver queries for capacity feasibility, I query the DB for trips that overlap with the route they're planning. If the route is a specific segment, say locations 1 to 50, I fetch only trips that have start or end within or overlapping that range, rather than the entire trip table.",
-        },
-      ],
-    },
-
-    {
-      id: "28",
-      role: "interviewer",
-      elapsedSeconds: 605,
-      content: [
-        {
-          type: "text",
-          value:
-            "Good direction. But what if the DB is sharded, or trips are spread across multiple partitions? How do you handle that?",
-        },
-      ],
-    },
-
-    {
-      id: "29",
-      role: "candidate",
-      elapsedSeconds: 635,
-      content: [
-        {
-          type: "text",
-          value:
-            "If trips are sharded by location range or by trip ID, I'd still need to query across all shards to get the full picture for a capacity check. That could be expensive if shards are remote. I'd probably use a ",
-        },
-        {
-          id: "highlight-distributed-strategy",
-          type: "highlight",
-          status: "strong",
-          value: "fan-out to all shards in parallel",
-          explanation:
-            "Correctly identifies that querying distributed data requires parallel requests to multiple shards, and mentions the need for aggregation across results — the standard approach for distributed query execution.",
-        },
-        {
-          type: "text",
-          value:
-            " — the query service hits all the relevant shards in parallel, collects the trip subsets from each, merges them locally in-memory, then applies the same delta-array logic. Depending on the shard size and query frequency, I might also cache the merged delta arrays for recent time windows to avoid repeated fan-outs.",
-        },
-      ],
-    },
-
-    {
       id: "30",
       role: "interviewer",
-      elapsedSeconds: 675,
+      elapsedSeconds: 530,
       content: [
         {
           type: "text",
           value:
-            "What if a new trip is inserted into the database right in the middle of your query execution? Does your result become stale?",
+            "Okay, now let's change the setup. Trips live in a database, updated in real time, and drivers are querying this system all day. Your array-in-memory trick — does it still hold up?",
         },
       ],
     },
@@ -432,76 +415,220 @@ const transcript: TranscriptData = {
     {
       id: "31",
       role: "candidate",
-      elapsedSeconds: 705,
+      elapsedSeconds: 555,
       content: [
         {
           type: "text",
           value:
-            "Yes, if a trip is inserted after I've started the fan-out but before I've read all shards, I might miss it. That's a consistency issue. I'd need to either:",
+            "Not really as-is. Rebuilding a full delta array on every query means re-reading every trip from the DB every time, which doesn't scale if there are millions of rows and drivers are querying constantly.",
         },
       ],
     },
 
     {
       id: "32",
-      role: "candidate",
-      elapsedSeconds: 730,
+      role: "interviewer",
+      elapsedSeconds: 570,
       content: [
         {
           type: "text",
-          value:
-            "One, use a snapshot isolation level — start the query against a consistent view of the DB at a specific timestamp, so all shards return data from that point in time, ignoring writes after that snapshot was taken. Or two, if near-real-time is acceptable, accept the lag — query for 'all trips as of 10 seconds ago' and live with the fact that very recent insertions might not be included yet.",
+          value: "So what do you actually fetch?",
         },
       ],
     },
 
     {
       id: "33",
-      role: "interviewer",
-      elapsedSeconds: 765,
+      role: "candidate",
+      elapsedSeconds: 592,
       content: [
         {
           type: "text",
           value:
-            "Which trade-off would you pick, and why?",
+            "I'd index trips by start and end location, and only pull the ones overlapping the route a driver's actually asking about, instead of the full table. That should cut down what I'm scanning per query quite a bit.",
         },
       ],
     },
 
     {
       id: "34",
-      role: "candidate",
-      elapsedSeconds: 792,
+      role: "interviewer",
+      elapsedSeconds: 610,
       content: [
         {
           type: "text",
-          value:
-            "For a ride-sharing system, you want to be conservative — you don't want to overbook a car because you missed a recent trip. I'd go with snapshot isolation. It costs a bit more in terms of DB overhead — maintaining snapshots — but the guarantee that the result is correct as of a known point in time is worth it. If the snapshot is recent enough, say sub-second latency, the staleness is barely noticeable to the driver.",
+          value: "Say the table's sharded across multiple nodes. Does your index-and-filter idea still work cleanly?",
         },
       ],
     },
 
     {
       id: "35",
-      role: "interviewer",
-      elapsedSeconds: 825,
+      role: "candidate",
+      elapsedSeconds: 635,
       content: [
         {
           type: "text",
-          value: "What about cache invalidation? Trips change constantly.",
+          value:
+            "Hmm, not cleanly — a single shard only has part of the picture. I think I'd need to fan out the query to every shard that could hold relevant trips, in parallel, then merge what comes back before running the delta-array check locally.",
         },
       ],
     },
 
     {
       id: "36",
+      role: "interviewer",
+      elapsedSeconds: 655,
+      content: [
+        {
+          type: "text",
+          value: "Are you sure you need every shard, every time?",
+        },
+      ],
+    },
+
+    {
+      id: "37",
       role: "candidate",
-      elapsedSeconds: 850,
+      elapsedSeconds: 678,
       content: [
         {
           type: "text",
           value:
-            "Yeah, caching delta arrays per route or time window becomes tricky. If a trip is inserted or cancelled, I need to invalidate any cached result that includes that trip. I could use event-driven invalidation — when a trip is inserted into the DB, publish an event, and cache listeners drop their cached arrays for affected routes. Or I could just use short TTLs on the cache, like 5 or 10 seconds, and live with a small amount of recalculation. For this problem, the queries are probably simple and fast enough that the recalculation cost is lower than managing a complex cache coherence system.",
+            "...No, actually — if trips are sharded by location range, and the driver's route only spans a couple of ranges, I only need to hit the shards that own those ranges. That's not a full fan-out, that's a targeted one, so it's much cheaper than what I first said.",
+        },
+        {
+          id: "highlight-distributed-strategy",
+          type: "highlight",
+          status: "strong",
+          value: "targeted fan-out",
+          explanation:
+            "Self-corrects an over-broad 'query every shard' answer into a routing-aware fan-out once pushed — recognizes that shard key design should determine which nodes actually need to be hit.",
+        },
+      ],
+    },
+
+    {
+      id: "38",
+      role: "interviewer",
+      elapsedSeconds: 705,
+      content: [
+        {
+          type: "text",
+          value: "Better. Now — a new trip gets inserted mid-query. Does your answer become wrong?",
+        },
+      ],
+    },
+
+    {
+      id: "39",
+      role: "candidate",
+      elapsedSeconds: 725,
+      content: [
+        {
+          type: "text",
+          value:
+            "It could — if the insert lands after I've already read that shard, I'd miss it and possibly approve a route that's actually over capacity. Honestly for a lot of systems I'd just say that's fine, eventual consistency, but for this one, missing a trip means overbooking a car, which feels like an actual bad outcome, not just a stale read.",
+        },
+      ],
+    },
+
+    {
+      id: "40",
+      role: "interviewer",
+      elapsedSeconds: 748,
+      content: [
+        {
+          type: "text",
+          value: "So what do you do about it?",
+        },
+      ],
+    },
+
+    {
+      id: "41",
+      role: "candidate",
+      elapsedSeconds: 768,
+      content: [
+        {
+          type: "text",
+          value:
+            "Two options I can think of. One, snapshot isolation — pin the query to a fixed point in time across all shards, so I get a consistent view even mid-write. Two, accept some lag — query 'as of a few seconds ago' and live with the risk.",
+        },
+      ],
+    },
+
+    {
+      id: "42",
+      role: "interviewer",
+      elapsedSeconds: 788,
+      content: [
+        {
+          type: "text",
+          value: "Which one, and why — not just 'it depends'.",
+        },
+      ],
+    },
+
+    {
+      id: "43",
+      role: "candidate",
+      elapsedSeconds: 812,
+      content: [
+        {
+          type: "text",
+          value:
+            "Snapshot isolation. Given what I just said about overbooking being the bad outcome here, I'd rather pay the extra DB overhead for a consistent read than risk approving a trip that pushes a car over capacity. If snapshots are sub-second, the driver won't notice the cost anyway.",
+        },
+      ],
+    },
+
+    {
+      id: "44",
+      role: "interviewer",
+      elapsedSeconds: 838,
+      content: [
+        {
+          type: "text",
+          value: "You mentioned caching the merged result earlier — how do you keep that from going stale?",
+        },
+      ],
+    },
+
+    {
+      id: "45",
+      role: "candidate",
+      elapsedSeconds: 862,
+      content: [
+        {
+          type: "text",
+          value:
+            "Right, that's a real problem — if I cache a merged delta array per route and a trip gets inserted or cancelled after, that cache entry is now wrong. Simplest fix is a short TTL, five or ten seconds, and just eat the recompute cost.",
+        },
+      ],
+    },
+
+    {
+      id: "46",
+      role: "interviewer",
+      elapsedSeconds: 880,
+      content: [
+        {
+          type: "text",
+          value: "And if a short TTL isn't tight enough for this use case?",
+        },
+      ],
+    },
+
+    {
+      id: "47",
+      role: "candidate",
+      elapsedSeconds: 902,
+      content: [
+        {
+          type: "text",
+          value:
+            "Then I'd go event-driven — publish an event on trip insert or cancel, and have cache entries for the affected route invalidated immediately instead of waiting out a TTL. More moving parts, but it closes the staleness window properly. I'd only reach for that if the TTL approach was actually causing bad approvals in practice, not by default.",
         },
         {
           id: "highlight-cache-tradeoff",
@@ -509,32 +636,32 @@ const transcript: TranscriptData = {
           status: "strong",
           value: "",
           explanation:
-            "Shows judgment about when caching is worth the complexity — recognizes that event-driven invalidation is the 'correct' answer but also identifies that a simpler short-TTL approach might be the practical choice depending on query volume and latency Requirements.",
+            "Doesn't default to the more sophisticated event-driven design — explicitly ties the choice to whether the simpler TTL approach is causing real problems first, showing pragmatic judgment about complexity cost.",
         },
       ],
     },
 
     {
-      id: "37",
+      id: "48",
       role: "interviewer",
-      elapsedSeconds: 895,
+      elapsedSeconds: 920,
       content: [
         {
           type: "text",
-          value: "Good trade-off thinking. That's what I wanted to explore.",
+          value: "Okay, that's what I wanted to dig into. Let's stop there.",
         },
       ],
     },
 
     {
-      id: "38",
+      id: "49",
       role: "takeaway",
-      elapsedSeconds: 925,
+      elapsedSeconds: 940,
       content: [
         {
           type: "text",
           value:
-            "Takeaway: the core optimization is recognizing that with a bounded location range, you can trade the TreeMap's O(N log N) sorting cost for a linear sweep with a difference array — O(N + L) and much simpler code. The distributed version adds layers: querying across shards in parallel, handling consistency via snapshot isolation, and making pragmatic trade-offs on caching. The fundamental algorithm stays the same, but the system design conversation reveals how a seemingly simple DSA problem escalates when data moves from memory to a distributed database.",
+            "Takeaway: the core algorithmic move is trading a sorted-map's O(N log N) for a difference array's O(N + L) once the location range is known to be bounded — but that trade only holds because L is small; it isn't a universal upgrade. The distributed follow-up rewards noticing when an answer is over-broad (fan-out to every shard vs. a targeted fan-out based on shard key), reasoning about consistency from the actual cost of being wrong (overbooking) rather than reflexively picking eventual consistency, and choosing cache invalidation strategy based on whether the simpler option is actually failing, not by default reaching for the more complex one.",
         },
       ],
     },
