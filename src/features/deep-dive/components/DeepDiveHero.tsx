@@ -1,47 +1,71 @@
-// src/features/deep-dive/components/DeepDiveHero.tsx
-
-import { ReactNode } from 'react';
-import Link from 'next/link';
+import { ReactNode } from "react";
+import Link from "next/link";
 
 interface DeepDiveHeroProps {
+  systemName: string;
+  systemSlug: string;
+  category: string;
   eyebrow: string;
-  title: string;
-  slug: string;
-  description: string[];
+
+  description: ReactNode[];
+
   tags: string[];
-  credit: string;
+
   creditOrg: string;
-  illustration: ReactNode;
+
+  diagramSvg: ReactNode;
+
   docsUrl?: string;
 }
 
 export function DeepDiveHero({
+  systemName,
+  systemSlug,
+  category,
   eyebrow,
-  title,
-  slug,
   description,
   tags,
-  credit,
   creditOrg,
-  illustration,
-  docsUrl
+  diagramSvg,
+  docsUrl,
 }: DeepDiveHeroProps) {
   return (
     <>
       <div className="left-col">
         <div className="eyebrow">{eyebrow}</div>
-        <h1>{title}</h1>
+
+        <h1>{systemName}</h1>
+
+        <p className="category">{category}</p>
+
         <div className="actions">
-          <Link href={`/deep-dive/${slug}`} className="read-more">
+          <Link
+            href={`/deep-dive/${systemSlug}`}
+            className="read-more"
+          >
             <div className="ic">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3"
+              >
                 <path d="M5 12h14M13 6l6 6-6 6" />
               </svg>
             </div>
+
             READ MORE
           </Link>
+
           {docsUrl && (
-            <a href={docsUrl} target="_blank" rel="noopener noreferrer" className="docs-link">
+            <a
+              href={docsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="docs-link"
+            >
               Official docs
             </a>
           )}
@@ -49,20 +73,29 @@ export function DeepDiveHero({
       </div>
 
       <div className="mark-col">
-        {illustration}
+        {diagramSvg}
       </div>
 
       <div className="desc-col">
         {description.map((paragraph, index) => (
-          <p key={index} style={index > 0 ? { marginTop: '12px' } : undefined} dangerouslySetInnerHTML={{ __html: paragraph }} />
+          <p
+            key={index}
+            style={index > 0 ? { marginTop: "12px" } : undefined}
+          >
+            {paragraph}
+          </p>
         ))}
+
         <div className="tags">
           {tags.map((tag) => (
-            <span key={tag} className="tag">{tag}</span>
+            <span key={tag} className="tag">
+              {tag}
+            </span>
           ))}
         </div>
+
         <div className="credit">
-          {credit} <b>{creditOrg}</b>
+          Maintained by <b>{creditOrg}</b>
         </div>
       </div>
     </>

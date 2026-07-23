@@ -1,19 +1,19 @@
 // src/app/learn/diagrams/[slug]/page.tsx
-// FIXED: Consistent slug parameter throughout
 
-import { DeepDiveHero } from "@/features/learning/components/DeepDiveHero";
+import Link from "next/link";
+
+import { DeepDiveHero } from "@/features/deep-dive/components/DeepDiveHero";
 import { CassandraDiagram } from "@/features/learning/components/diagrams/CassandraDiagram";
 import { RedisDiagram } from "@/features/learning/components/diagrams/Redis";
 import { KafkaDiagram } from "@/features/learning/components/diagrams/Kafka";
+
 import {
   getDeepDiveSystem,
   getPrevSystem,
   getNextSystem,
   DEEP_DIVE_SYSTEMS,
 } from "@/features/learning/data/deepDives";
-import Link from "next/link";
 
-// ✅ FIX: Inline diagram map (no require)
 const DIAGRAM_COMPONENTS: Record<string, React.ComponentType> = {
   cassandra: CassandraDiagram,
   redis: RedisDiagram,
@@ -22,33 +22,32 @@ const DIAGRAM_COMPONENTS: Record<string, React.ComponentType> = {
 
 interface PageProps {
   params: Promise<{
-    slug: string;  // ✅ Must match folder name [slug]
+    slug: string;
   }>;
 }
 
 export default async function DeepDivePage({ params }: PageProps) {
   const { slug } = await params;
 
-  // Normalize slug to lowercase for consistent lookup
   const normalizedSlug = slug.toLowerCase();
 
   const system = getDeepDiveSystem(normalizedSlug);
-  const prevSystem = getPrevSystem(normalizedSlug);
-  const nextSystem = getNextSystem(normalizedSlug);
 
   if (!system) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[var(--paper)]">
         <div className="text-center">
-          <h1 className="text-3xl font-bold mb-4 text-[var(--ink)]">
+          <h1 className="mb-4 text-3xl font-bold text-[var(--ink)]">
             Deep Dive Not Found
           </h1>
-          <p className="text-lg mb-6 text-[var(--ink-soft)]">
+
+          <p className="mb-6 text-lg text-[var(--ink-soft)]">
             The system "{slug}" doesn't have a deep dive yet.
           </p>
+
           <Link
             href="/learn/diagrams"
-            className="px-6 py-2 bg-[var(--ink)] text-white rounded-full font-semibold hover:bg-[var(--ink-soft)]"
+            className="rounded-full bg-[var(--ink)] px-6 py-2 font-semibold text-white hover:bg-[var(--ink-soft)]"
           >
             Back to Diagrams
           </Link>
@@ -57,47 +56,34 @@ export default async function DeepDivePage({ params }: PageProps) {
     );
   }
 
-  // ✅ Get diagram component (undefined is ok, component checks)
   const DiagramComponent = DIAGRAM_COMPONENTS[normalizedSlug];
 
   return (
     <DeepDiveHero
       systemName={system.name}
+      systemSlug={system.slug}
       category={system.category}
       eyebrow={system.eyebrow}
       description={system.description}
       tags={system.tags}
-      credit={system.credit}
       creditOrg={system.creditOrg}
-      diagramSvg={DiagramComponent ? <DiagramComponent /> : <div />}
-      prevSystem={
-        prevSystem
-          ? { name: prevSystem.name, slug: prevSystem.slug }
-          : undefined
-      }
-      nextSystem={
-        nextSystem
-          ? { name: nextSystem.name, slug: nextSystem.slug }
-          : undefined
-      }
-      readMoreHref={system.scenarioSlug ? `/learn/scenarios/${system.scenarioSlug}` : undefined}
+      diagramSvg={DiagramComponent ? <DiagramComponent /> : null}
       docsUrl={system.docsUrl}
     />
   );
 }
 
-// ✅ Generate static params for all systems (optional but recommended)
 export async function generateStaticParams() {
   return DEEP_DIVE_SYSTEMS.map((system) => ({
     slug: system.slug,
   }));
 }
 
-// ✅ Metadata for each page
 export async function generateMetadata({ params }: PageProps) {
   const { slug } = await params;
-  const system = getDeepDiveSystem(slug);
-  
+
+  const system = getDeepDiveSystem(slug.toLowerCase());
+
   if (!system) {
     return {
       title: "Deep Dive Not Found",
@@ -106,6 +92,9 @@ export async function generateMetadata({ params }: PageProps) {
 
   return {
     title: `${system.name} - Deep Dive | Learn`,
-    description: system.description[0]?.replace(/<b>|<\/b>/g, ""),
+    description:
+      typeof system.description[0] === "string"
+        ? system.description[0].replace(/<[^>]+>/g, "")
+        : `${system.name} deep dive`,
   };
 }

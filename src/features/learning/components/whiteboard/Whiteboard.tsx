@@ -154,17 +154,16 @@ export default function Whiteboard({
         <div className="relative rounded-[22px] bg-[#FAF9F6] p-5 border border-[rgba(21,22,28,0.04)] min-h-[380px] overflow-hidden">
 
           <svg
-            ref={svgRef}
-            viewBox={`${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`}
-            className="w-full h-[380px] touch-none select-none"
-            draggable={false}
-            onDragStart={handleDragStart}
-            onWheel={handleWheel}
-            onPointerDown={handlePointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={handlePointerUp}
-            onPointerLeave={handlePointerUp}
-          >
+  ref={svgRef}
+  viewBox={`${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`}
+  className="w-full h-[380px] touch-none select-none"
+  onDragStart={handleDragStart}
+  onWheel={handleWheel}
+  onPointerDown={handlePointerDown}
+  onPointerMove={handlePointerMove}
+  onPointerUp={handlePointerUp}
+  onPointerLeave={handlePointerUp}
+>
             <DiagramEdges edges={frame.edges} />
 
             {frame.nodes.map((node) => (
