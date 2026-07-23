@@ -1,3 +1,5 @@
+// src/features/learning/index.ts
+
 // Public API for learning feature
 
 // Pages

@@ -1,3 +1,5 @@
+// src/features/interview/types/legacy-types.ts
+
 export enum InterviewStatus {
   SETUP = "SETUP",
   IN_PROGRESS = "IN_PROGRESS",

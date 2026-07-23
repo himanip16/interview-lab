@@ -1,3 +1,5 @@
+// src/content/deep-dive/articles/redis.ts
+
 import { DeepDiveArticle, Paragraph } from "@/features/deep-dive/types";
 
 const p = (text: string): Paragraph => [

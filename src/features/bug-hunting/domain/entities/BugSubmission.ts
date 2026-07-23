@@ -1,3 +1,5 @@
+// src/features/bug-hunting/domain/entities/BugSubmission.ts
+
 // src/modules/bug-hunting/domain/entities/BugSubmission.ts
 export interface BugSubmissionProps {
   id: string;

@@ -1,3 +1,5 @@
+-- prisma/migrations/20260722135129_add_user_xp/migration.sql
+
 -- CreateTable
 CREATE TABLE "SavedTranscript" (
     "id" TEXT NOT NULL,

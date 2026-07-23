@@ -1,3 +1,5 @@
+// src/features/interview/application/reverse/CandidatePersonas.ts
+
 import { Difficulty } from "@prisma/client";
 
 export interface CandidatePersona {

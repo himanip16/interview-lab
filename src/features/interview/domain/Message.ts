@@ -1,3 +1,5 @@
+// src/features/interview/domain/Message.ts
+
 import { MessageRole } from "@prisma/client";
 
 export interface Message {

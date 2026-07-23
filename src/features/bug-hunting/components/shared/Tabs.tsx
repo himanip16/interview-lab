@@ -1,3 +1,5 @@
+// src/features/bug-hunting/components/shared/Tabs.tsx
+
 "use client";
 import type { TabId } from "../../hooks/useInvestigation";
 

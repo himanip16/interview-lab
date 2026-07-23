@@ -1,3 +1,5 @@
+// src/shared/layout/PageContainer.tsx
+
 type Props = {
   children: React.ReactNode;
 };

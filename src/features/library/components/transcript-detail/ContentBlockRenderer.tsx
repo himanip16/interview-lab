@@ -1,3 +1,5 @@
+// src/features/library/components/transcript-detail/ContentBlockRenderer.tsx
+
 "use client";
 
 import { useState } from "react";

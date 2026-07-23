@@ -1,3 +1,5 @@
+// src/content/deep-dive/articles/kafka.ts
+
 import { DeepDiveArticle } from '@/features/deep-dive/types';
 
 export const KafkaData: DeepDiveArticle = {

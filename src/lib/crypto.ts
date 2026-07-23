@@ -1,3 +1,5 @@
+// src/lib/crypto.ts
+
 import crypto from "crypto";
 
 const algorithm = "aes-256-gcm";

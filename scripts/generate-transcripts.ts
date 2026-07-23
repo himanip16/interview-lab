@@ -1,3 +1,5 @@
+// scripts/generate-transcripts.ts
+
 import { readdirSync, writeFileSync } from "fs";
 import { join } from "path";
 

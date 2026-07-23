@@ -1,3 +1,5 @@
+// src/features/learning/hooks/useScenario.ts
+
 import { useState, useEffect } from "react";
 
 import { Scenario, ScenarioListItem } from "../types/learning";

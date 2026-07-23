@@ -1,3 +1,5 @@
+// src/shared/ai/parsers/StructuredOutputParser.ts
+
 import { ZodSchema } from "zod";
 
 export class StructuredOutputParser {

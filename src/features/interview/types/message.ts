@@ -1,3 +1,5 @@
+// src/features/interview/types/message.ts
+
 // types/message.ts
 export interface Message {
   id?: string;

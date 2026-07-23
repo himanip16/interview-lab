@@ -1,3 +1,5 @@
+// src/content/deep-dive/illustration-registry.ts
+
 import type { ComponentType } from "react";
 
 import { CassandraIllustration } from "./illustrations/Cassandra";

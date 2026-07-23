@@ -1,3 +1,5 @@
+// src/shared/layout/Breadcrumb.tsx
+
 import React from 'react';
 import { ChevronRight } from 'lucide-react';
 import { cn } from '@/shared/utils/utils';

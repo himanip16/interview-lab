@@ -1,3 +1,5 @@
+// src/features/bug-hunting/domain/entities/InvestigationArtifact.ts
+
 import { ArtifactType } from "../value-objects/ArtifactType";
 
 export class InvestigationArtifact {

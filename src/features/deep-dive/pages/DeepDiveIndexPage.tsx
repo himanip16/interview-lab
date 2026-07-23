@@ -1,3 +1,5 @@
+// src/features/deep-dive/pages/DeepDiveIndexPage.tsx
+
 'use client';
 
 import Link from 'next/link';

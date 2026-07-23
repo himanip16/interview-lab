@@ -1,3 +1,5 @@
+// src/features/bug-hunting/infrastructure/repositories/BugAttemptRepository.ts
+
 // src/modules/bug-hunting/repositories/BugAttemptRepository.ts
 import { BugAttempt } from "@/features/bug-hunting/domain/entities/BugAttempt";
 import { BugSubmission } from "@/features/bug-hunting/domain/entities/BugSubmission";

@@ -1,3 +1,5 @@
+// src/features/deep-dive/components/ProgressBar.tsx
+
 "use client";
 
 import { useEffect, useState } from 'react';

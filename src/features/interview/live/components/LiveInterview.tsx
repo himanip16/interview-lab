@@ -1,3 +1,5 @@
+// src/features/interview/live/components/LiveInterview.tsx
+
 'use client';
 
 import { useCallback, useEffect } from 'react';

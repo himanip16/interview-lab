@@ -1,3 +1,5 @@
+// src/features/interview/application/services/whiteboard/WhiteboardInterpreter.ts
+
 /**
  * WhiteboardInterpreter converts structured whiteboard JSON into a concise
  * textual description that can be consumed by the AI interview engine.

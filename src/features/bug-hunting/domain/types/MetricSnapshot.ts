@@ -1,3 +1,5 @@
+// src/features/bug-hunting/domain/types/MetricSnapshot.ts
+
 export interface MetricSnapshot {
   name: string;
 

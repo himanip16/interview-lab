@@ -1,3 +1,5 @@
+// src/app/learn/transcript/[slug]/page.tsx
+
 "use client";
 
 import { useParams } from "next/navigation";

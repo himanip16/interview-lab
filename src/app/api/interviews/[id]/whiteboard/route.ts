@@ -1,3 +1,5 @@
+// src/app/api/interviews/[id]/whiteboard/route.ts
+
 import { NextResponse } from "next/server";
 
 import { InterviewRepository } from "@/features/interview/infrastructure/repositories/InterviewRepository";

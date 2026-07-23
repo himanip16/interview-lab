@@ -1,3 +1,5 @@
+// src/features/bug-hunting/domain/types/IncidentReport.ts
+
 export interface IncidentReport {
   title: string;
 

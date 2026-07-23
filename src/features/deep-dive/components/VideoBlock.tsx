@@ -1,3 +1,5 @@
+// src/features/deep-dive/components/VideoBlock.tsx
+
 interface VideoBlockProps {
   caption: string;
   duration?: string;

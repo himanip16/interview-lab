@@ -1,3 +1,5 @@
+// src/features/interview/live/index.ts
+
 export { LiveInterview } from './components/LiveInterview';
 export { default as Chat } from './components/Chat';
 export { ChatInput } from './components/ChatInput';

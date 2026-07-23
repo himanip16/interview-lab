@@ -1,3 +1,5 @@
+// src/shared/errors/ApplicationErrors.ts
+
 // src/modules/common/errors/ApplicationErrors.ts
 
 export class ApplicationError extends Error {

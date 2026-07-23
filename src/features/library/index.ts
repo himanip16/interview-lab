@@ -1,3 +1,5 @@
+// src/features/library/index.ts
+
 // Public API for library feature
 
 // Pages

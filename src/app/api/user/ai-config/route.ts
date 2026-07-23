@@ -1,3 +1,5 @@
+// src/app/api/user/ai-config/route.ts
+
 import { NextResponse } from "next/server";
 import { z } from "zod";
 

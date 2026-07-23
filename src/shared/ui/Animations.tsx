@@ -1,3 +1,5 @@
+// src/shared/ui/Animations.tsx
+
 import { type ReactNode, type ElementType } from "react";
 import { cn } from "@/shared/utils/utils";
 

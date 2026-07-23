@@ -1,3 +1,5 @@
+// src/features/whiteboard/config.ts
+
 export type WhiteboardConfig = {
   canvasWidth: number;
   canvasHeight: number;

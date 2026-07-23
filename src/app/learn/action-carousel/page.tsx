@@ -1,3 +1,5 @@
+// src/app/learn/action-carousel/page.tsx
+
 "use client";
 
 import React, { useRef } from 'react';

@@ -1,3 +1,5 @@
+// src/features/bug-hunting/components/BugHuntingShell.tsx
+
 "use client";
 
 import { useState, type ReactNode } from "react";

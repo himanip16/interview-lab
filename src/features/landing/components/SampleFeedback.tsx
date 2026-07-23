@@ -1,3 +1,5 @@
+// src/features/landing/components/SampleFeedback.tsx
+
 "use client";
 
 import { useState } from "react";

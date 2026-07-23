@@ -1,3 +1,5 @@
+// src/features/interview/types/InterviewState.ts
+
 import type { TranscriptMessage } from './TranscriptMessage';
 
 export interface InterviewProblem {

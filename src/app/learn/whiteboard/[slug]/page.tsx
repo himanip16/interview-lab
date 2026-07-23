@@ -1,3 +1,5 @@
+// src/app/learn/whiteboard/[slug]/page.tsx
+
 import WhiteboardWorkspace from "@/features/learning/components/WhiteboardWorkspace";
 
 export default async function WhiteboardPage({ params }: { params: Promise<{ slug: string }> }) {

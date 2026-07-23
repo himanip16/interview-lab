@@ -1,3 +1,5 @@
+// src/features/bug-hunting/domain/entities/BugScenario.ts
+
 import { z } from "zod";
 
 import { Severity } from "../value-objects";

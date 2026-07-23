@@ -1,3 +1,5 @@
+// src/features/learning/components/ActionCarousel.tsx
+
 "use client";
 
 import { useRef } from "react";

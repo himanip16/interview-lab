@@ -1,3 +1,5 @@
+// src/features/bug-hunting/domain/types/Environment.ts
+
 export interface Environment {
   service: string;
   version: string;

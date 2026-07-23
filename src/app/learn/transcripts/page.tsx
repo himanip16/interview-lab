@@ -1,3 +1,5 @@
+// src/app/learn/transcripts/page.tsx
+
 "use client";
 
 import TranscriptBrowser from "@/features/library/components/transcript-browser/TranscriptBrowser";

@@ -1,3 +1,5 @@
+// src/features/learning/components/StaticConversationBubble.tsx
+
 interface ConversationMessage {
   role: "interviewer" | "candidate" | "assistant" | "user";
   content: string;

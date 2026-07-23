@@ -1,3 +1,5 @@
+// src/features/bug-hunting/components/Tabs/NetworkPanel.tsx
+
 
 
 type NetworkRequest = {

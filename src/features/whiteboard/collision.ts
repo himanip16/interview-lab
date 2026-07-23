@@ -1,3 +1,5 @@
+// src/features/whiteboard/collision.ts
+
 import { PositionedNode } from "@/features/whiteboard/types/whiteboard";
 
 function toCorners(node: PositionedNode) {

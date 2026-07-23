@@ -1,3 +1,5 @@
+// src/features/bug-hunting/domain/value-objects/ScenarioCategory.ts
+
 export enum ScenarioCategory {
   CHECKOUT = "CHECKOUT",
   DATABASE = "DATABASE",

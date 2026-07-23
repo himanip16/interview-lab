@@ -1,3 +1,5 @@
+// src/features/pr-review/domain/entities/ReviewAttempt.ts
+
 // src/modules/pr-review/domain/entities/ReviewAttempt.ts
 
 import { ReviewDecision, ReviewStatus } from "@prisma/client";

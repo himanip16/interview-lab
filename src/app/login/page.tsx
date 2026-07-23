@@ -1,3 +1,5 @@
+// src/app/login/page.tsx
+
 import { signIn } from "@/features/auth/auth";
 
 import { AuthError } from "next-auth";

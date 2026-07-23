@@ -1,3 +1,5 @@
+-- prisma/migrations/20260716194607_add_transcripts/migration.sql
+
 -- CreateTable
 CREATE TABLE "Transcript" (
     "id" TEXT NOT NULL,

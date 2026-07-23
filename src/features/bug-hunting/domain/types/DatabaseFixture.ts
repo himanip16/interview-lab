@@ -1,3 +1,5 @@
+// src/features/bug-hunting/domain/types/DatabaseFixture.ts
+
 export interface DatabaseFixture {
   engine: string;
   tables: DatabaseTable[];

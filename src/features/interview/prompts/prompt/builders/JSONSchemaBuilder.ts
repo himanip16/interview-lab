@@ -1,3 +1,5 @@
+// src/features/interview/prompts/prompt/builders/JSONSchemaBuilder.ts
+
 export class JSONSchemaBuilder {
   build(
     prompt: string,

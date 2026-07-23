@@ -1,3 +1,5 @@
+// src/features/bug-hunting/components/Header/Header.tsx
+
 "use client";
 
 import { useRouter } from "next/navigation";

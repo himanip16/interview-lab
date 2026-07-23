@@ -1,3 +1,5 @@
+// src/features/interview/domain/Evaluation.ts
+
 export interface Evaluation {
   id: string;
 

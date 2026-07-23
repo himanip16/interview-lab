@@ -1,3 +1,5 @@
+// src/app/api/problems/route.ts
+
 import { NextResponse } from "next/server";
 import { prisma } from "shared/prisma/client";
 import { Difficulty, InterviewStatus } from "@prisma/client";

@@ -1,3 +1,5 @@
+// src/features/landing/components/LandingPage.tsx
+
 'use client';
 
 import Link from 'next/link';

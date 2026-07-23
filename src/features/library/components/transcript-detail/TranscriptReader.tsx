@@ -1,3 +1,5 @@
+// src/features/library/components/transcript-detail/TranscriptReader.tsx
+
 "use client";
 
 import { useMemo, useRef, useState } from "react";

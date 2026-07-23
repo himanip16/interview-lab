@@ -1,3 +1,5 @@
+// src/shared/ai/getUserAIConfig.ts
+
 import { prisma } from "shared/prisma/client";
 import type { UserAIConfig } from "./config/modelRouting";
 

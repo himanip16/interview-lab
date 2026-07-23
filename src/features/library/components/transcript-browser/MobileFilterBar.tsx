@@ -1,3 +1,5 @@
+// src/features/library/components/transcript-browser/MobileFilterBar.tsx
+
 "use client";
 
 type Category = keyof typeof CATS | 'all';

@@ -1,3 +1,5 @@
+// src/features/deep-dive/components/RelatedTechnologyCard.tsx
+
 interface RelatedTechnologyCardProps {
   name: string;
   description: string;

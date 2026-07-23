@@ -1,3 +1,5 @@
+// src/features/learning/data/whiteboardSystems.ts
+
 export interface WhiteboardNode {
   id: string;
   title: string;

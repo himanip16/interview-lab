@@ -1,3 +1,5 @@
+// src/content/deep-dive/illustrations/Kafka.tsx
+
 export function KafkaIllustration() {
   return (
     <svg className="mark" viewBox="0 0 220 220" fill="none">

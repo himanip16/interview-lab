@@ -1,3 +1,5 @@
+// src/features/whiteboard/validation.ts
+
 import { NodeLayout, SystemDesign } from "@/features/whiteboard/types/whiteboard";
 import { WhiteboardConfig } from "./config";
 import { WhiteboardError } from "./errors";

@@ -1,3 +1,5 @@
+// src/features/deep-dive/components/ReadMoreButton.tsx
+
 export function ReadMoreButton() {
   return (
     <button className="read-more">

@@ -1,3 +1,5 @@
+// src/content/deep-dive/illustrations/ConsistentHashing.tsx
+
 'use client';
 
 import { useState, useRef, useEffect } from 'react';

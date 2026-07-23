@@ -1,3 +1,5 @@
+// src/features/interview/report/components/FeedbackCard.tsx
+
 interface FeedbackCardProps {
   strengths: string[];
   weaknesses: string[];

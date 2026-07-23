@@ -1,3 +1,5 @@
+// src/features/interview/transcript/domain/TranscriptNode.ts
+
 export type NodeRole = 'interviewer' | 'candidate' | 'takeaway';
 
 export interface TranscriptPart {

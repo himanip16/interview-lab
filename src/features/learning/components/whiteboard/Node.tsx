@@ -1,3 +1,5 @@
+// src/features/learning/components/whiteboard/Node.tsx
+
 import { cn } from "@/shared/utils/utils";
 import { Point } from "@/features/whiteboard/geometry";
 

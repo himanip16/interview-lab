@@ -1,3 +1,5 @@
+-- prisma/migrations/20260712100000_dynamic_interview_templates/migration.sql
+
 -- Reference migration for moving InterviewType (enum) -> InterviewTemplate (data).
 --
 -- IMPORTANT: generate the real migration with

@@ -1,3 +1,5 @@
+// src/features/bug-hunting/application/mappers/BugScenarioMapper.ts
+
 // src/modules/bug-hunting/application/mappers/BugScenarioMapper.ts
 
 import { BugScenario } from "../../domain/entities/BugScenario";

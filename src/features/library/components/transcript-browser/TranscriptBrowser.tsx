@@ -1,3 +1,5 @@
+// src/features/library/components/transcript-browser/TranscriptBrowser.tsx
+
 "use client";
 
 import { useState, useMemo, useEffect } from "react";

@@ -1,3 +1,5 @@
+// src/shared/providers/MainProvider.tsx
+
 "use client";
 
 import { ThemeProvider } from "next-themes";

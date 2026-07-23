@@ -1,3 +1,5 @@
+// src/features/interview/data/profiles/InterviewProfile.ts
+
 import { PhaseId, Goal, EvaluationDimension } from "../constants";
 
 export interface PhasePrompt {

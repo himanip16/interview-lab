@@ -1,3 +1,5 @@
+// src/features/bug-hunting/domain/types/index.ts
+
 export type { LogEntry } from "./LogEntry";
 export type { CodeFile } from "./CodeFile";
 export type { Deployment } from "./Deployment";

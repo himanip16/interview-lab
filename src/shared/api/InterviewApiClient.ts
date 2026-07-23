@@ -1,3 +1,5 @@
+// src/shared/api/InterviewApiClient.ts
+
 
 import type { InterviewState } from '@/features/interview/types/InterviewState'
 export class InterviewApiClient {

@@ -1,3 +1,5 @@
+// src/features/deep-dive/components/Breadcrumb.tsx
+
 interface BreadcrumbProps {
   current: string;
 }

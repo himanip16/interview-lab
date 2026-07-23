@@ -1,3 +1,5 @@
+// src/features/learning/components/WhiteboardCatalogue.tsx
+
 "use client";
 
 import { WHITEBOARD_SYSTEMS } from "../data/whiteboardSystems";

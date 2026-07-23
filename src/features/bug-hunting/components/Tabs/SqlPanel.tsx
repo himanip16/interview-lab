@@ -1,3 +1,5 @@
+// src/features/bug-hunting/components/Tabs/SqlPanel.tsx
+
 "use client";
 
 import { useState } from "react";

@@ -1,3 +1,5 @@
+// src/content/deep-dive/illustrations/ModuloIllustration.tsx
+
 export function ModuloIllustration() {
   return (
     <svg viewBox="0 0 160 100" width="100%">

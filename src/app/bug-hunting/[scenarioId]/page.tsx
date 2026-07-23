@@ -1,3 +1,5 @@
+// src/app/bug-hunting/[scenarioId]/page.tsx
+
 import { notFound } from "next/navigation";
 
 import { getBugHuntingService } from "@/features/bug-hunting";

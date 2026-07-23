@@ -1,3 +1,5 @@
+// src/features/bug-hunting/index.ts
+
 // Public API for bug-hunting feature
 
 import { BugHuntingService } from "./services/BugHuntingService";

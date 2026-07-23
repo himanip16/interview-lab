@@ -1,3 +1,5 @@
+// src/lib/api.ts
+
 /**
  * Unified API client — wraps fetch with typed request/response shapes so
  * components never construct raw fetch('/api/...') calls with string paths

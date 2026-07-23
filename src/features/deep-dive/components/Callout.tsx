@@ -1,3 +1,5 @@
+// src/features/deep-dive/components/Callout.tsx
+
 import { Paragraph } from '@/features/deep-dive/types';
 import { ContentRenderer } from '@/features/deep-dive/components/ContentRenderer';
 

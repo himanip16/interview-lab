@@ -1,3 +1,5 @@
+// src/features/deep-dive/components/SectionHeading.tsx
+
 interface SectionHeadingProps {
   number: number;
   children: React.ReactNode;

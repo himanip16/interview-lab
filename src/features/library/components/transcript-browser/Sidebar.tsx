@@ -1,3 +1,5 @@
+// src/features/library/components/transcript-browser/Sidebar.tsx
+
 "use client";
 
 import type { TranscriptEntry } from "./types";

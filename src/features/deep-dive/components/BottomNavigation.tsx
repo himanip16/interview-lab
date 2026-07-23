@@ -1,3 +1,5 @@
+// src/features/deep-dive/components/BottomNavigation.tsx
+
 import Link from 'next/link';
 
 interface BottomNavigationProps {

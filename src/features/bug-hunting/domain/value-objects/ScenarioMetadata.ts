@@ -1,3 +1,5 @@
+// src/features/bug-hunting/domain/value-objects/ScenarioMetadata.ts
+
 import { Difficulty } from "@prisma/client";
 import { Severity } from "./Severity";
 import { ScenarioCategory } from "./ScenarioCategory";

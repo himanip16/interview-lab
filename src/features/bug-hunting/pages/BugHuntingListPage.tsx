@@ -1,3 +1,5 @@
+// src/features/bug-hunting/pages/BugHuntingListPage.tsx
+
 import { Panel } from "@/shared/ui/Panel";
 import { getBugHuntingService } from "@/features/bug-hunting";
 

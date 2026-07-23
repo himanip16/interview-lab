@@ -1,3 +1,5 @@
+// src/features/bug-hunting/domain/value-objects/ArtifactType.ts
+
 export enum ArtifactType {
   LOG = "LOG",
   METRIC = "METRIC",

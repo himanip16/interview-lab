@@ -1,3 +1,5 @@
+// src/features/library/components/TranscriptDetail.tsx
+
 "use client";
 
 import { useState } from "react";

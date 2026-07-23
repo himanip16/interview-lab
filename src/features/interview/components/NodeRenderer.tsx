@@ -1,3 +1,5 @@
+// src/features/interview/components/NodeRenderer.tsx
+
 import { DialogueNode } from '../types/dialogue';
 
 export function NodeRenderer({ node }: { node: DialogueNode; isLast: boolean }) {

@@ -1,3 +1,5 @@
+-- prisma/migrations/20260717091443_add_bug_hunting_models/migration.sql
+
 -- CreateEnum
 CREATE TYPE "BugAttemptStatus" AS ENUM ('STARTED', 'INVESTIGATING', 'SUBMITTED', 'COMPLETED', 'ABANDONED');
 

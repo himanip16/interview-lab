@@ -1,3 +1,5 @@
+// src/features/landing/components/SmartMentor.tsx
+
 "use client";
 
 import { useEffect, useState } from "react";

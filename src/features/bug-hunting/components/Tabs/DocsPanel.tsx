@@ -1,3 +1,5 @@
+// src/features/bug-hunting/components/Tabs/DocsPanel.tsx
+
 import type { DocumentationSection } from "@/features/bug-hunting/domain/types/DocumentationSection";
 
 type Props = {

@@ -1,3 +1,5 @@
+// src/app/api/auth/signout/route.ts
+
 import { NextResponse } from "next/server";
 import { signOut } from "@/features/auth/auth";
 

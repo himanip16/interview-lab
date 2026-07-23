@@ -1,3 +1,5 @@
+// src/shared/layout/Inspector.tsx
+
 import React from 'react';
 import { cn } from '@/shared/utils/utils';
 

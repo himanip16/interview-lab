@@ -1,3 +1,5 @@
+// src/shared/ui/patterns/Stepper.tsx
+
 import React from 'react';
 import { cn } from '@/shared/utils/utils';
 

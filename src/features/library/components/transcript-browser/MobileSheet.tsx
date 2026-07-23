@@ -1,3 +1,5 @@
+// src/features/library/components/transcript-browser/MobileSheet.tsx
+
 "use client";
 
 import { useState } from "react";

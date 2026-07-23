@@ -1,3 +1,5 @@
+// src/content/deep-dive/articles/consistent-hashing.ts
+
 import { DeepDiveArticle } from '@/features/deep-dive/types';
 
 export const ConsistentHashingData: DeepDiveArticle = {

@@ -1,3 +1,5 @@
+// src/features/interview/domain/InterviewAggregate.ts
+
 import {
   InterviewStatus,
   MessageRole,

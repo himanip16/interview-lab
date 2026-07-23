@@ -1,3 +1,5 @@
+// src/features/landing/components/FeatureCard.tsx
+
 import type { FC } from "react";
 import Card from "@/shared/ui/Card";
 import Heading from "@/shared/ui/Heading";

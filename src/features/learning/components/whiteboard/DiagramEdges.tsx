@@ -1,3 +1,5 @@
+// src/features/learning/components/whiteboard/DiagramEdges.tsx
+
 import { PositionedEdge } from "@/features/whiteboard/types/whiteboard";
 
 interface DiagramEdgesProps {

@@ -1,3 +1,5 @@
+// src/features/dashboard/components/NextRecommendedInterview.tsx
+
 import Link from "next/link";
 import { Button } from "@/shared/ui/Button";
 

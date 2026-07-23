@@ -1,3 +1,5 @@
+// src/content/deep-dive/illustrations/primitives.tsx
+
 // src/features/deep-dive/illustrations/primitives.tsx
 //
 // Small, composable SVG building blocks shared by every illustration in this

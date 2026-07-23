@@ -1,3 +1,5 @@
+// src/app/learn/scenarios/[slug]/page.tsx
+
 "use client";
 
 import { use } from "react";

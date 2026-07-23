@@ -1,3 +1,5 @@
+// src/features/interview/application/services/studyplan/StudyResources.ts
+
 /**
  * Static mapping of concepts to study resources and advice.
  * This is deliberately maintained as a static map rather than LLM-generated

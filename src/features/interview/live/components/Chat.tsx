@@ -1,3 +1,5 @@
+// src/features/interview/live/components/Chat.tsx
+
 'use client';
 
 import { useRef, useEffect } from 'react';

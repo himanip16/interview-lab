@@ -1,3 +1,5 @@
+// src/features/learning/config/branding.ts
+
 /**
  * Shared branding configuration for learning pages.
  * Centralizes navigation, social links, and branding elements

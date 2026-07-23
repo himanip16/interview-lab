@@ -1,3 +1,5 @@
+// src/features/bug-hunting/domain/types/InvestigationPath.ts
+
 // InvestigationPath.ts
 
 export interface InvestigationPath {

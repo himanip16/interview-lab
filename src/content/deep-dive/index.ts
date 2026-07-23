@@ -1,3 +1,5 @@
+// src/content/deep-dive/index.ts
+
 import type { DeepDiveArticle } from "@/features/deep-dive/types";
 
 import { CassandraData } from "./articles/cassandra";

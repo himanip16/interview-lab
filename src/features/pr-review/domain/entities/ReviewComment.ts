@@ -1,3 +1,5 @@
+// src/features/pr-review/domain/entities/ReviewComment.ts
+
 // src/modules/pr-review/domain/entities/ReviewComment.ts
 
 export interface ReviewCommentProps {

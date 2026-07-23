@@ -1,3 +1,5 @@
+// src/content/transcripts/types.ts
+
 import { Difficulty } from "@prisma/client";
 import { TranscriptData } from "@/features/library/types/transcript";
 

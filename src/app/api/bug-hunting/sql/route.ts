@@ -1,3 +1,5 @@
+// src/app/api/bug-hunting/sql/route.ts
+
 import { NextResponse } from "next/server";
 import { getBugHuntingService } from "@/features/bug-hunting";
 

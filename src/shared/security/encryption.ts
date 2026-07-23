@@ -1,3 +1,5 @@
+// src/shared/security/encryption.ts
+
 import crypto from "crypto";
 
 const ALGORITHM = "aes-256-gcm";

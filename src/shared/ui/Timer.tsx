@@ -1,3 +1,5 @@
+// src/shared/ui/Timer.tsx
+
 import React, { useState, useEffect, useRef } from 'react';
 import { cn } from '@/shared/utils/utils';
 

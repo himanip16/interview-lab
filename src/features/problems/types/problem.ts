@@ -1,3 +1,5 @@
+// src/features/problems/types/problem.ts
+
 import { z } from "zod";
 import { Difficulty, ProblemCategory } from "@prisma/client";
 

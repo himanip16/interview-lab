@@ -1,3 +1,5 @@
+// src/features/learning/components/whiteboard/Whiteboard.tsx
+
 "use client";
 
 import { useMemo, useRef, useState, useCallback, WheelEvent, PointerEvent, DragEvent } from "react";

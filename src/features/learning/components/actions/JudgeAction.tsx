@@ -1,3 +1,5 @@
+// src/features/learning/components/actions/JudgeAction.tsx
+
 import { useState } from "react";
 
 import { Action, JudgeActionContent } from "../../types/learning";

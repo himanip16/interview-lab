@@ -1,3 +1,5 @@
+// src/features/interview/report/components/OverallScoreCard.tsx
+
 import Card from "@/shared/ui/Card";
 import Text from "@/shared/ui/Text";
 

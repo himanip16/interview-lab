@@ -1,3 +1,5 @@
+// src/content/deep-dive/illustrations/ConsistentHashingHero.tsx
+
 export function ConsistentHashingHero() {
   return (
     <svg viewBox="0 0 56 56" fill="none">

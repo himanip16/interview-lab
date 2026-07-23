@@ -1,3 +1,5 @@
+// src/features/whiteboard/errors.ts
+
 export class WhiteboardError extends Error {
   constructor(
     message: string,

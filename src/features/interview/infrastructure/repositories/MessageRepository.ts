@@ -1,3 +1,5 @@
+// src/features/interview/infrastructure/repositories/MessageRepository.ts
+
 import { MessageRole } from "@prisma/client";
 import { prisma } from "shared/prisma/client";
 

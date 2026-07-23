@@ -1,3 +1,5 @@
+// src/features/bug-hunting/services/BugHuntingService.ts
+
 // src/modules/bug-hunting/services/BugHuntingService.ts
 
 import { BugScenarioRepository } from "@/features/bug-hunting/infrastructure/repositories/BugScenarioRepository";

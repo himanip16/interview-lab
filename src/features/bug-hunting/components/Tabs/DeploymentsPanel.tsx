@@ -1,3 +1,5 @@
+// src/features/bug-hunting/components/Tabs/DeploymentsPanel.tsx
+
 import type { Deployment } from "../../domain/types/Deployment";
 
 interface Props {

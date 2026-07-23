@@ -1,3 +1,5 @@
+// src/content/deep-dive/registry.ts
+
 import { CassandraData } from "./articles/cassandra";
 import { KafkaData } from "./articles/kafka";
 import { PostgresData } from "./articles/postgres";

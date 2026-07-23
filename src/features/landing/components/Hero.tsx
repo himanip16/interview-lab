@@ -1,3 +1,5 @@
+// src/features/landing/components/Hero.tsx
+
 "use client";
 import { ROUTES } from "@/shared/constants/routes";
 

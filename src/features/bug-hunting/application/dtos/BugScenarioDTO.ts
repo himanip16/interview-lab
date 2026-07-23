@@ -1,3 +1,5 @@
+// src/features/bug-hunting/application/dtos/BugScenarioDTO.ts
+
 // src/modules/bug-hunting/application/dtos/BugScenarioDTO.ts
 
 import { DatabaseFixture, CodeFile, DocumentationSection, Deployment, LogEntry } from "@/features/bug-hunting/domain/types/"

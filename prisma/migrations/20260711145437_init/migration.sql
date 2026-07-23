@@ -1,3 +1,5 @@
+-- prisma/migrations/20260711145437_init/migration.sql
+
 -- CreateEnum
 CREATE TYPE "InterviewStatus" AS ENUM ('SETUP', 'IN_PROGRESS', 'COMPLETED');
 

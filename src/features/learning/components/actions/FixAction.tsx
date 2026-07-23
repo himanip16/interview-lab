@@ -1,3 +1,5 @@
+// src/features/learning/components/actions/FixAction.tsx
+
 import { useState } from "react";
 
 import { Action, FixActionContent } from "../../types/learning";

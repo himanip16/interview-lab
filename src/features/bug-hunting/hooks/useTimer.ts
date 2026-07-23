@@ -1,3 +1,5 @@
+// src/features/bug-hunting/hooks/useTimer.ts
+
 "use client";
 import { useEffect, useState, useRef } from "react";
 

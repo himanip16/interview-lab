@@ -1,3 +1,5 @@
+// src/features/learning/services/WhiteboardService.ts
+
 import {
   SystemDesign,
   NodeLayout,

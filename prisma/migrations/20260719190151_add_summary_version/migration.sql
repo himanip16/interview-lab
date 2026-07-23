@@ -1,3 +1,5 @@
+-- prisma/migrations/20260719190151_add_summary_version/migration.sql
+
 /*
   Warnings:
 

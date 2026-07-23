@@ -1,3 +1,5 @@
+// src/shared/config/constants.ts
+
 import { env } from "./env";
 
 export const TEMPERATURE =

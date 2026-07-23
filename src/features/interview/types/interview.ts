@@ -1,3 +1,5 @@
+// src/features/interview/types/interview.ts
+
 // types/interview.ts
 export interface Interview {
   id: string;

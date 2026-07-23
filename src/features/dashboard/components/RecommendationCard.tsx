@@ -1,3 +1,5 @@
+// src/features/dashboard/components/RecommendationCard.tsx
+
 import Link from "next/link";
 import Card from "@/shared/ui/Card";
 import { Button } from "@/shared/ui/Button";

@@ -1,3 +1,5 @@
+// src/features/interview/types/CreateInterviewInput.ts
+
 import { Difficulty, InterviewMode } from "@prisma/client";
 
 export interface CreateInterviewInput {

@@ -1,3 +1,5 @@
+// src/features/deep-dive/components/TradeoffComparison.tsx
+
 import { TradeoffCard } from './TradeoffCard';
 
 interface TradeoffComparisonProps {

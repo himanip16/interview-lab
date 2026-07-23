@@ -1,3 +1,5 @@
+// src/features/bug-hunting/components/Tabs/CodePanel.tsx
+
 import CodeBlock from "../shared/CodeBlock";
 import type { CodeFile } from "@/features/bug-hunting/domain/types/CodeFile";
 

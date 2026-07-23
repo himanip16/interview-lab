@@ -1,3 +1,5 @@
+// src/features/whiteboard/types/whiteboard.ts
+
 import { Point, Rect } from "@/features/whiteboard/geometry";
 
 export type NodeId = string & {

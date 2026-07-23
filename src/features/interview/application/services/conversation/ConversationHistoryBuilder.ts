@@ -1,3 +1,5 @@
+// src/features/interview/application/services/conversation/ConversationHistoryBuilder.ts
+
 import { MessageRole } from "@prisma/client";
 
 import type { ChatMessage } from "@/shared/ai";

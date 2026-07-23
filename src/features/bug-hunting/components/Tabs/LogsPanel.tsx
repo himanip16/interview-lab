@@ -1,3 +1,5 @@
+// src/features/bug-hunting/components/Tabs/LogsPanel.tsx
+
 "use client";
 
 import type { BugScenarioDetailDTO } from "../../application/dtos/BugScenarioDTO";

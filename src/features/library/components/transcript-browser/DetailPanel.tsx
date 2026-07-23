@@ -1,3 +1,5 @@
+// src/features/library/components/transcript-browser/DetailPanel.tsx
+
 "use client";
 
 import { useState } from "react";

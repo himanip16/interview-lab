@@ -1,3 +1,5 @@
+// prisma/seed.ts
+
 import {
   Difficulty,
   Prisma,

@@ -1,3 +1,5 @@
+// src/features/interview/report/components/ConversationCard.tsx
+
 import Card from "@/shared/ui/Card";
 import Text from "@/shared/ui/Text";
 import type { EvidenceItem } from "@/features/interview/domain/evaluation/types";

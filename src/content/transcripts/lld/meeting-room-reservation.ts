@@ -1,3 +1,5 @@
+// src/content/transcripts/lld/meeting-room-reservation.ts
+
 import { Difficulty } from "@prisma/client";
 
 import { TranscriptEntry } from "../types";

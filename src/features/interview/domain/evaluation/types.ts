@@ -1,3 +1,5 @@
+// src/features/interview/domain/evaluation/types.ts
+
 import { EvidenceType } from "@prisma/client";
 
 export interface EvidenceItem {

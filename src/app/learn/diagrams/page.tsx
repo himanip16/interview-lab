@@ -1,3 +1,5 @@
+// src/app/learn/diagrams/page.tsx
+
 "use client";
 
 import Link from "next/link";

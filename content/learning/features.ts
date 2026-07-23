@@ -1,3 +1,5 @@
+// content/learning/features.ts
+
 export const features = [
   {
     title: "Structured Interview Flow",

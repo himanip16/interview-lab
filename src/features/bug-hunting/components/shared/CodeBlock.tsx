@@ -1,3 +1,5 @@
+// src/features/bug-hunting/components/shared/CodeBlock.tsx
+
 const KEYWORDS = new Set([
   "public",
   "private",

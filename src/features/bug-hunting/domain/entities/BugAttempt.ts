@@ -1,3 +1,5 @@
+// src/features/bug-hunting/domain/entities/BugAttempt.ts
+
 // src/modules/bug-hunting/domain/entities/BugAttempt.ts
 import { BugAttemptStatus } from "@prisma/client";
 import { z } from "zod";

@@ -1,3 +1,5 @@
+// src/content/deep-dive/illustrations/Cassandra.tsx
+
 export function CassandraIllustration() {
   return (
     <svg className="mark" viewBox="0 0 220 220" fill="none">

@@ -1,3 +1,5 @@
+// src/features/learning/components/actions/PredictAction.tsx
+
 import { useState } from "react";
 
 import { Action, PredictActionContent } from "../../types/learning";

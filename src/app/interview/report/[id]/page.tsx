@@ -1,3 +1,5 @@
+// src/app/interview/report/[id]/page.tsx
+
 import { prisma } from "shared/prisma/client";
 import ConversationCard from "@/features/interview/report/components/ConversationCard";
 import OverallScoreCard from "@/features/interview/report/components/OverallScoreCard";

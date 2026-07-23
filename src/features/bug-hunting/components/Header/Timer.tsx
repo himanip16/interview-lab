@@ -1,3 +1,5 @@
+// src/features/bug-hunting/components/Header/Timer.tsx
+
 "use client";
 
 import { useEffect, useState } from "react";

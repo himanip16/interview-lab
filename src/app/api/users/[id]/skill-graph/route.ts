@@ -1,3 +1,5 @@
+// src/app/api/users/[id]/skill-graph/route.ts
+
 import { NextResponse } from "next/server";
 
 import { SkillGraphService } from "@/features/interview/application/services/mastery/SkillGraphService";

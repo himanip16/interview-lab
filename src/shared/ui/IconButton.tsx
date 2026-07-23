@@ -1,3 +1,5 @@
+// src/shared/ui/IconButton.tsx
+
 import React from 'react';
 import { cn } from '@/shared/utils/utils';
 

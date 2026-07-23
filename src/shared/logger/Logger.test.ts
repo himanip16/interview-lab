@@ -1,3 +1,5 @@
+// src/shared/logger/Logger.test.ts
+
 import { describe, it, expect, vi } from "vitest";
 
 import { Logger } from "./logger";

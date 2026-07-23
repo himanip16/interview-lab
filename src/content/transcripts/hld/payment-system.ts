@@ -1,3 +1,5 @@
+// src/content/transcripts/hld/payment-system.ts
+
 import { Difficulty } from "@prisma/client";
 
 import { TranscriptEntry } from "../types";

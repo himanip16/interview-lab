@@ -1,3 +1,5 @@
+// src/features/landing/components/ActionCards.tsx
+
 "use client";
 
 import Link from "next/link";

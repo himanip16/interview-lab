@@ -1,3 +1,5 @@
+// src/features/library/components/transcript/TranscriptLegend.tsx
+
 export default function TranscriptLegend() {
   return (
     <div className="mb-6 flex flex-wrap items-center gap-4 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-xs text-gray-600">

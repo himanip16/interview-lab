@@ -1,3 +1,5 @@
+// src/content/transcripts/dsa/cutting-poles-to-collect-min.ts
+
 import { Difficulty } from "@prisma/client";
 
 import { TranscriptEntry } from "../types";

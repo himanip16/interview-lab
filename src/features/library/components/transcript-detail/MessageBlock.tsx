@@ -1,3 +1,5 @@
+// src/features/library/components/transcript-detail/MessageBlock.tsx
+
 "use client";
 
 import { useState } from "react";

@@ -1,3 +1,5 @@
+// src/features/learning/components/LearnFooter.tsx
+
 "use client";
 
 import { getSocialLinks } from "../config/branding";

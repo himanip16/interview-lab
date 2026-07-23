@@ -1,3 +1,5 @@
+// src/features/bug-hunting/components/BugHuntingWorkspace.tsx
+
 "use client";
 
 import { useMemo, useState } from "react";

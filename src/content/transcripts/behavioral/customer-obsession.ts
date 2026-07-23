@@ -1,3 +1,5 @@
+// src/content/transcripts/behavioral/customer-obsession.ts
+
 import { Difficulty } from "@prisma/client";
 
 import { TranscriptEntry } from "../types";

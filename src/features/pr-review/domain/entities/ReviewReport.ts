@@ -1,3 +1,5 @@
+// src/features/pr-review/domain/entities/ReviewReport.ts
+
 // src/modules/pr-review/domain/entities/ReviewReport.ts
 
 export interface ReviewReportProps {

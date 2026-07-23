@@ -1,3 +1,5 @@
+// src/features/deep-dive/components/TradeoffCard.tsx
+
 interface TradeoffCardProps {
   type: 'good' | 'bad';
   label: string;

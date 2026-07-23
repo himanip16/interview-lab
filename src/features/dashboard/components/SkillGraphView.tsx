@@ -1,3 +1,5 @@
+// src/features/dashboard/components/SkillGraphView.tsx
+
 import type { SkillGraph } from "@/features/interview/application/services/mastery/SkillGraphService";
 
 function scoreColor(score: number | null): string {

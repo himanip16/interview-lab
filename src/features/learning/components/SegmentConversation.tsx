@@ -1,3 +1,5 @@
+// src/features/learning/components/SegmentConversation.tsx
+
 import { Segment } from "../types/learning";
 
 interface SegmentConversationProps {

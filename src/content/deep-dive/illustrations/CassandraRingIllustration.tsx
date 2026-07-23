@@ -1,3 +1,5 @@
+// src/content/deep-dive/illustrations/CassandraRingIllustration.tsx
+
 import { IllustrationCanvas, Label, RingPath, Node, Arrow, ringPositions } from './primitives';
 
 export function CassandraRingIllustration() {

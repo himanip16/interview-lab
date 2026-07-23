@@ -1,3 +1,5 @@
+// src/content/transcripts/hld/amazon-lockers.ts
+
 import { Difficulty } from "@prisma/client";
 
 import { TranscriptEntry } from "../types";

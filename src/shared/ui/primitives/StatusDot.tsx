@@ -1,3 +1,5 @@
+// src/shared/ui/primitives/StatusDot.tsx
+
 import React from 'react';
 import { cn } from '@/shared/utils/utils';
 

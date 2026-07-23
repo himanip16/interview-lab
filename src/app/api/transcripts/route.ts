@@ -1,3 +1,5 @@
+// src/app/api/transcripts/route.ts
+
 import { getAllTranscripts } from "@/content/transcripts/index";
 import { NextResponse } from "next/server";
 

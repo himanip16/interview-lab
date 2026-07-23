@@ -1,3 +1,5 @@
+// src/features/bug-hunting/hooks/useScenario.ts
+
 "use client";
 import { useEffect, useState } from "react";
 import type { BugScenario } from "../types/Scenario";

@@ -1,3 +1,5 @@
+// src/features/interview/live/components/Message.tsx
+
 'use client';
 
 import React from 'react';

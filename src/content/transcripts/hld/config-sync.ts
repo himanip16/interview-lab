@@ -1,3 +1,5 @@
+// src/content/transcripts/hld/config-sync.ts
+
 import { Difficulty } from "@prisma/client";
 
 import { TranscriptEntry } from "../types";

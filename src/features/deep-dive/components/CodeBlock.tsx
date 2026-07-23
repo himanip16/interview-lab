@@ -1,3 +1,5 @@
+// src/features/deep-dive/components/CodeBlock.tsx
+
 interface CodeBlockProps {
   children: string;
 }

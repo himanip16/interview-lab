@@ -1,3 +1,5 @@
+// src/app/interview-setup/page.tsx
+
 'use client';
 
 import { useEffect, useState } from 'react';

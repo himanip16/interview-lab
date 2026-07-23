@@ -1,3 +1,5 @@
+-- prisma/migrations/20260713102447_add_learning_scenarios/migration.sql
+
 -- CreateEnum
 CREATE TYPE "LearningAttemptStatus" AS ENUM ('STARTED', 'COMPLETED', 'ABANDONED');
 

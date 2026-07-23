@@ -1,3 +1,5 @@
+// src/features/bug-hunting/components/Sidebar/ReportSidebar.tsx
+
 import type { BugScenarioDetailDTO } from "../../application/dtos/BugScenarioDTO";
 
 type Props = {

@@ -1,3 +1,5 @@
+// src/shared/config/common-constants.ts
+
 // Common constants used across the application
 
 // ---------------------------------------------------------------------------

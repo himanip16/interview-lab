@@ -1,3 +1,5 @@
+// src/features/library/components/transcript/TakeawayCard.tsx
+
 import { type ContentBlock } from "../../types/transcript";
 
 type Props = {

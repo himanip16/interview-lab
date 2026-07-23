@@ -1,3 +1,5 @@
+// src/features/deep-dive/components/ContentRenderer.tsx
+
 'use client';
 
 import Link from 'next/link';

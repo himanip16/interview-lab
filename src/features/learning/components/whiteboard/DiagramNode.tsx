@@ -1,3 +1,5 @@
+// src/features/learning/components/whiteboard/DiagramNode.tsx
+
 import { DiagramNode as NodeType } from "@/features/whiteboard/types/whiteboard";
 
 const CATEGORY_COLORS: Record<string, string> = {

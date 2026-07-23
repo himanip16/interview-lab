@@ -1,3 +1,5 @@
+// src/content/deep-dive/articles/cassandra.ts
+
 import { DeepDiveArticle } from '@/features/deep-dive/types';
 
 export const CassandraData: DeepDiveArticle = {

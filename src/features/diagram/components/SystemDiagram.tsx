@@ -1,3 +1,5 @@
+// src/features/diagram/components/SystemDiagram.tsx
+
 "use client";
 
 import { useState } from "react";

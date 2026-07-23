@@ -1,3 +1,5 @@
+// src/shared/ui/Badge.tsx
+
 import React from "react";
 
 type BadgeProps = {

@@ -1,3 +1,5 @@
+// src/shared/ai/providers/OllamaProvider.ts
+
 import { env } from "@/shared/config/env";
 import type { ChatMessage, GenerateOptions, AIProvider } from "../types";
 

@@ -1,3 +1,5 @@
+// src/content/deep-dive/component-registry.ts
+
 import { ModuloIllustration } from "./illustrations/ModuloIllustration";
 import { ConsistentHashingIllustration } from "./illustrations/ConsistentHashing";
 

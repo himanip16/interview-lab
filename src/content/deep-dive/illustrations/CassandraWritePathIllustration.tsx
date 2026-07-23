@@ -1,3 +1,5 @@
+// src/content/deep-dive/illustrations/CassandraWritePathIllustration.tsx
+
 import { IllustrationCanvas, Label, Box, Arrow } from './primitives';
 
 export function CassandraWritePathIllustration() {

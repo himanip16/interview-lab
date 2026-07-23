@@ -1,3 +1,5 @@
+// src/features/interview/types/dialogue.ts
+
 export type NodeType = 'interviewer' | 'candidate' | 'takeaway';
 
 export interface DialogueNode {

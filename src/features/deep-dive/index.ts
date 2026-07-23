@@ -1,3 +1,5 @@
+// src/features/deep-dive/index.ts
+
 // Public API for deep-dive feature
 
 // Pages

@@ -1,3 +1,5 @@
+// src/features/learning/components/actions/CompareAction.tsx
+
 import { useState } from "react";
 
 import { Action, CompareActionContent } from "../../types/learning";

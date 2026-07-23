@@ -1,3 +1,5 @@
+// src/app/api/interviews/[id]/finish/route.ts
+
 import { NextResponse } from "next/server";
 import { InterviewService } from "@/features/interview";
 import logger from "@/shared/logger/logger";

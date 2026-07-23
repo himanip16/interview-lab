@@ -1,3 +1,5 @@
+// src/features/landing/components/Features.tsx
+
 import { features } from "content/learning/features";
 import FeatureCard from "./FeatureCard";
 

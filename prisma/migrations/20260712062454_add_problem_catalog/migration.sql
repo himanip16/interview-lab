@@ -1,3 +1,5 @@
+-- prisma/migrations/20260712062454_add_problem_catalog/migration.sql
+
 /*
   Warnings:
 

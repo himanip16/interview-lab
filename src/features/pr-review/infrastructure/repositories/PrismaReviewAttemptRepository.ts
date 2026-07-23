@@ -1,3 +1,5 @@
+// src/features/pr-review/infrastructure/repositories/PrismaReviewAttemptRepository.ts
+
 // src/modules/pr-review/infrastructure/repositories/PrismaReviewAttemptRepository.ts
 import { prisma } from "shared/prisma/client";
 import { ReviewAttempt, ReviewAttemptProps } from "../../domain/entities/ReviewAttempt";

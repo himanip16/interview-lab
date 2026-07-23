@@ -1,3 +1,5 @@
+// src/features/library/components/transcript-browser/ListPanel.tsx
+
 "use client";
 
 import { ChevronRight } from "lucide-react";

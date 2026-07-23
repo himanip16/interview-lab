@@ -1,3 +1,5 @@
+// src/features/bug-hunting/hooks/useInvestigation.ts
+
 "use client";
 
 import { useEffect, useState } from "react";

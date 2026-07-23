@@ -1,3 +1,5 @@
+// src/shared/ui/patterns/index.ts
+
 export { AnimatedRing } from './AnimatedRing';
 export { FilterBar } from './FilterBar';
 export { Stepper } from './Stepper';

@@ -1,3 +1,5 @@
+// src/features/deep-dive/components/IllustrationBlock.tsx
+
 type IllustrationWidth = 'full' | 'half' | 'third' | 'quarter' | 'fixed' | 'auto';
 
 interface IllustrationBlockProps {

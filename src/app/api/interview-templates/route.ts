@@ -1,3 +1,5 @@
+// src/app/api/interview-templates/route.ts
+
 import { NextResponse } from "next/server";
 
 import { InterviewProfileService } from "@/features/interview/data/profiles/InterviewProfileService";

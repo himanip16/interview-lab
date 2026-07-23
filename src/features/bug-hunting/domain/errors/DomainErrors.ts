@@ -1,3 +1,5 @@
+// src/features/bug-hunting/domain/errors/DomainErrors.ts
+
 export class ArtifactNotFoundError extends Error {
   constructor(id: string) {
     super(`Artifact not found: ${id}`);

@@ -1,3 +1,5 @@
+// src/shared/ui/patterns/FilterBar.tsx
+
 import React from 'react';
 import { cn } from '@/shared/utils/utils';
 import { Pill } from '../primitives/Pill';

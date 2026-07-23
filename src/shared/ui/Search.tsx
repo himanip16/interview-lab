@@ -1,3 +1,5 @@
+// src/shared/ui/Search.tsx
+
 import React from 'react';
 import { Search as SearchIcon } from 'lucide-react';
 import { cn } from '@/shared/utils/utils';

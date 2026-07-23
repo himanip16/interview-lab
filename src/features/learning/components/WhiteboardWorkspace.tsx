@@ -1,3 +1,5 @@
+// src/features/learning/components/WhiteboardWorkspace.tsx
+
 "use client";
 
 import React, { useState, useMemo } from 'react';

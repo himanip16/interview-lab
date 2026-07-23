@@ -1,3 +1,5 @@
+// src/features/auth/getCurrentUserId.ts
+
 import { cookies, headers } from "next/headers";
 
 import { prisma } from "shared/prisma/client";

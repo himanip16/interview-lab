@@ -1,3 +1,5 @@
+// src/features/learning/data/whiteboardAdapter.ts
+
 import { WHITEBOARD_SYSTEMS, WhiteboardSystem as LegacySystem } from './whiteboardSystems';
 import { SystemDesign, NodeLayout, NodeId } from "@/features/whiteboard/types/whiteboard";
 import { DEFAULT_WHITEBOARD_CONFIG, WhiteboardConfig } from "@/features/whiteboard/config";

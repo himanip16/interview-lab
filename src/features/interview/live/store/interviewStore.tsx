@@ -1,3 +1,5 @@
+// src/features/interview/live/store/interviewStore.tsx
+
 import { createContext, useContext, useState, ReactNode } from 'react';
 import { TranscriptMessage } from '../../types/TranscriptMessage';
 

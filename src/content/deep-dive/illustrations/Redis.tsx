@@ -1,3 +1,5 @@
+// src/content/deep-dive/illustrations/Redis.tsx
+
 export function RedisIllustration() {
   return (
     <svg className="mark" viewBox="0 0 220 220" fill="none">

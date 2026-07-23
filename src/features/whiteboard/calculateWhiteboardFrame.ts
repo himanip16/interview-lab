@@ -1,3 +1,5 @@
+// src/features/whiteboard/calculateWhiteboardFrame.ts
+
 import {
   SystemDesign,
   NodeLayout,

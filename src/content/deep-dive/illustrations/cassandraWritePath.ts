@@ -1,3 +1,5 @@
+// src/content/deep-dive/illustrations/cassandraWritePath.ts
+
 // src/content/deep-dive/diagrams/cassandraWritePath.ts
 //
 // This is what used to be `<CassandraIllustration />` / a bespoke JSX

@@ -1,3 +1,5 @@
+-- prisma/migrations/20260712213737_add_reverse_mode_support/migration.sql
+
 -- CreateEnum
 CREATE TYPE "InterviewMode" AS ENUM ('CANDIDATE', 'REVERSE');
 

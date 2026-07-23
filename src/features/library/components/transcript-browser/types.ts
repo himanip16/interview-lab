@@ -1,3 +1,5 @@
+// src/features/library/components/transcript-browser/types.ts
+
 export type TranscriptEntry = {
   id: string;
   slug: string;

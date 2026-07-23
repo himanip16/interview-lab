@@ -1,3 +1,5 @@
+// src/features/learning/components/diagrams/Redis.tsx
+
 export function RedisDiagram() {
   return (
     <svg viewBox="0 0 220 220" fill="none">

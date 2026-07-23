@@ -1,3 +1,5 @@
+// src/content/deep-dive/illustrations/DynamoManagedLayerIllustration.tsx
+
 import { IllustrationCanvas, Label, Box } from './primitives';
 
 export function DynamoManagedLayerIllustration() {

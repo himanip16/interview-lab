@@ -1,3 +1,5 @@
+// src/features/deep-dive/components/SplitBackground.tsx
+
 export function SplitBackground() {
   return (
     <div className="split">

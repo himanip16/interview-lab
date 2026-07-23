@@ -1,3 +1,5 @@
+// src/features/learning/components/actions/ObserveAction.tsx
+
 import { useState } from "react";
 
 import { Action, ObserveActionContent } from "../../types/learning";

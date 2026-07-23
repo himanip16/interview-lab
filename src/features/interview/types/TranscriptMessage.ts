@@ -1,3 +1,5 @@
+// src/features/interview/types/TranscriptMessage.ts
+
 import { MessageRole } from "@prisma/client";
 
 export interface TranscriptMessage {

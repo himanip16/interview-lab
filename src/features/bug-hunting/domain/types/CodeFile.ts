@@ -1,3 +1,5 @@
+// src/features/bug-hunting/domain/types/CodeFile.ts
+
 export interface CodeFile {
   id: string;
   key: string;

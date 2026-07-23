@@ -1,3 +1,5 @@
+// src/shared/ai/providers/OpenAIProvider.ts
+
 import { env } from "@/shared/config/env";
 import OpenAI from "openai";
 import type { ChatMessage, GenerateOptions, AIProvider } from "../types";

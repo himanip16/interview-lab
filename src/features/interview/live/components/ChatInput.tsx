@@ -1,3 +1,5 @@
+// src/features/interview/live/components/ChatInput.tsx
+
 'use client';
 
 import React, { useState } from 'react';

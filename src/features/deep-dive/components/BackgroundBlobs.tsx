@@ -1,3 +1,5 @@
+// src/features/deep-dive/components/BackgroundBlobs.tsx
+
 export function BackgroundBlobs() {
   return (
     <>

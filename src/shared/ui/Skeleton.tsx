@@ -1,3 +1,5 @@
+// src/shared/ui/Skeleton.tsx
+
 import { cn } from "@/shared/utils/utils";
 
 export function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {

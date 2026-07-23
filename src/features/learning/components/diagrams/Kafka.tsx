@@ -1,3 +1,5 @@
+// src/features/learning/components/diagrams/Kafka.tsx
+
 export function KafkaDiagram() {
   return (
     <svg viewBox="0 0 220 220" fill="none">

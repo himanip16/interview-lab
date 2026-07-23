@@ -1,3 +1,5 @@
+// src/shared/constants/routes.ts
+
 export const ROUTES = {
   HOME: "/",
   LEARN: "/learn",

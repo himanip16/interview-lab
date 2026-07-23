@@ -1,3 +1,5 @@
+// src/features/interview/live/components/MessageList.tsx
+
 'use client';
 
 import React, { useEffect, useRef } from 'react';

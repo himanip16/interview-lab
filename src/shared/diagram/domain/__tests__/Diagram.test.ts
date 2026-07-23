@@ -1,3 +1,5 @@
+// src/shared/diagram/domain/__tests__/Diagram.test.ts
+
 // src/modules/diagram/domain/__tests__/Diagram.test.ts
 
 import { describe, it, expect } from "vitest";

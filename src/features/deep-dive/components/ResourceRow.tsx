@@ -1,3 +1,5 @@
+// src/features/deep-dive/components/ResourceRow.tsx
+
 interface ResourceRowProps {
   icon: React.ReactNode;
   title: string;

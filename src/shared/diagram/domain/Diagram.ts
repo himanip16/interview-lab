@@ -1,3 +1,5 @@
+// src/shared/diagram/domain/Diagram.ts
+
 // src/modules/diagram/domain/Diagram.ts
 
 /**

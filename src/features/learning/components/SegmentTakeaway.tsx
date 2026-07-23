@@ -1,3 +1,5 @@
+// src/features/learning/components/SegmentTakeaway.tsx
+
 interface SegmentTakeawayProps {
   takeaway: string | undefined;
 }

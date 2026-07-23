@@ -1,3 +1,5 @@
+// src/features/interview/report/components/ScoreCard.tsx
+
 // components/interview/report/ScoreCard.tsx
 export default function ScoreCard({ score, label = "Overall Score" }: { score: number, label?: string }) {
   const getColor = (s: number) => {

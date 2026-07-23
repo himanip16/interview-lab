@@ -1,3 +1,5 @@
+// src/shared/layout/Header.tsx
+
 import React from 'react';
 import { cn } from '@/shared/utils/utils';
 

@@ -1,3 +1,5 @@
+// src/content/transcripts/lld/vending-machine.ts
+
 import { Difficulty } from "@prisma/client";
 
 import { TranscriptEntry } from "../types";

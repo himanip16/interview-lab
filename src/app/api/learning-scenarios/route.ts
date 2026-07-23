@@ -1,3 +1,5 @@
+// src/app/api/learning-scenarios/route.ts
+
 import { NextResponse } from "next/server";
 
 import { prisma } from "shared/prisma/client";

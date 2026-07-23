@@ -1,3 +1,5 @@
+// src/features/learning/components/LearningScenarioReader.tsx
+
 import { useState } from "react";
 
 import { Scenario, Segment } from "../types/learning";

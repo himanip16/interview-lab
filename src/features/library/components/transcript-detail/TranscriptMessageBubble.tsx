@@ -1,3 +1,5 @@
+// src/features/library/components/transcript-detail/TranscriptMessageBubble.tsx
+
 import type { TranscriptMessage } from "@/features/library/types/transcript";
 import { ContentBlockRenderer } from "./ContentBlockRenderer";
 

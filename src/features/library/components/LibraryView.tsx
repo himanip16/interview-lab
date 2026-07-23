@@ -1,3 +1,5 @@
+// src/features/library/components/LibraryView.tsx
+
 "use client";
 
 import { useState, useEffect } from "react";

@@ -1,3 +1,5 @@
+// src/features/interview/prompts/prompt/PromptRenderer.ts
+
 export interface PromptVariables {
   [key: string]: string | number | boolean | undefined;
 }

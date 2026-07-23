@@ -1,3 +1,5 @@
+// src/features/bug-hunting/domain/types/Hint.ts
+
 export interface Hint {
   id: string;
 

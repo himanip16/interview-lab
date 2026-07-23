@@ -1,3 +1,5 @@
+// src/shared/ui/Tag.tsx
+
 import React from 'react';
 import { cn } from '@/shared/utils/utils';
 import { X } from 'lucide-react';

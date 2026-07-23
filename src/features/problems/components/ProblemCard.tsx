@@ -1,3 +1,5 @@
+// src/features/problems/components/ProblemCard.tsx
+
 "use client";
 
 import { cn } from "@/shared/utils/utils";

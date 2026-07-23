@@ -1,3 +1,5 @@
+// src/features/interview/application/context/SessionContext.ts
+
 import { Interview, MessageRole } from "@prisma/client";
 
 import { InterviewProfile } from "@/features/interview/data/profiles/InterviewProfile";

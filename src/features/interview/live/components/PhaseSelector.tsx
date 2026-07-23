@@ -1,3 +1,5 @@
+// src/features/interview/live/components/PhaseSelector.tsx
+
 'use client';
 
 import React from 'react';

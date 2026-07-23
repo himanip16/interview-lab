@@ -1,3 +1,5 @@
+// src/features/dashboard/components/AIConfigSettings.tsx
+
 "use client";
 
 import { useState, useEffect } from "react";

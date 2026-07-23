@@ -1,3 +1,5 @@
+// src/features/bug-hunting/components/Tabs/ConsolePanel.tsx
+
 
 
 type ConsoleEntry = {

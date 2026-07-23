@@ -1,3 +1,5 @@
+// src/app/learn/card-detail/page.tsx
+
 "use client";
 
 import React from 'react';
