@@ -2,7 +2,6 @@
 
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import DOMPurify from "isomorphic-dompurify";
 
 import { SectionHeading } from "@/features/deep-dive/components/SectionHeading";
 import { Callout } from "@/features/deep-dive/components/Callout";
@@ -34,7 +33,6 @@ import {
   Code2,
   ChevronLeft,
 } from "lucide-react";
-
 type PageProps = {
   params: Promise<{
     slug: string;
@@ -66,13 +64,10 @@ const iconMap: Record<string, ReactNode> = {
  * so we strip anything that isn't plain formatting markup.
  */
 function sanitize(html: string): string {
-  return DOMPurify.sanitize(html, {
-    ALLOWED_TAGS: [
-      "b", "strong", "i", "em", "u", "a", "br", "span",
-      "code", "sub", "sup",
-    ],
-    ALLOWED_ATTR: ["href", "target", "rel", "class"],
-  });
+  return html
+    .replace(/<script.*?>.*?<\/script>/gi, "")
+    .replace(/on\w+=".*?"/gi, "")
+    .replace(/javascript:/gi, "");
 }
 
 export default async function DeepDiveArticlePage({
