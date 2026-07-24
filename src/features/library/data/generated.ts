@@ -3,15 +3,21 @@
 // Run: npm run generate-transcripts
 
 import customerObsession from "@/content/transcripts/behavioral/customer-obsession";
+import anagramIndices from "@/content/transcripts/dsa/anagram-indices";
 import carPooling from "@/content/transcripts/dsa/car-pooling";
 import cuttingPolesToCollectMin from "@/content/transcripts/dsa/cutting-poles-to-collect-min";
+import externalSortLimitedMemory from "@/content/transcripts/dsa/external-sort-limited-memory";
+import numOfIslands from "@/content/transcripts/dsa/num-of-islands";
 import resourceCachingLru from "@/content/transcripts/dsa/resource-caching-lru";
 import amazonLockers from "@/content/transcripts/hld/amazon-lockers";
 import autocomplete from "@/content/transcripts/hld/autocomplete";
 import configSync from "@/content/transcripts/hld/config-sync";
+import distributedSessionManagement from "@/content/transcripts/hld/distributed-session-management";
 import paymentSystem from "@/content/transcripts/hld/payment-system";
+import inMemoryFilesystem from "@/content/transcripts/lld/in-memory-filesystem";
 import meetingRoomReservation from "@/content/transcripts/lld/meeting-room-reservation";
 import readReceipts from "@/content/transcripts/lld/read-receipts";
+import tokenBucket from "@/content/transcripts/lld/token-bucket";
 import vendingMachine from "@/content/transcripts/lld/vending-machine";
 import inMemoryDatabase from "@/content/transcripts/machine-coding/in-memory-database";
 import matrixWinning from "@/content/transcripts/machine-coding/matrix-winning";
@@ -19,15 +25,21 @@ import webhookDeliveryPlatform from "@/content/transcripts/machine-coding/webhoo
 
 export const TRANSCRIPTS = [
   customerObsession,
+  anagramIndices,
   carPooling,
   cuttingPolesToCollectMin,
+  externalSortLimitedMemory,
+  numOfIslands,
   resourceCachingLru,
   amazonLockers,
   autocomplete,
   configSync,
+  distributedSessionManagement,
   paymentSystem,
+  inMemoryFilesystem,
   meetingRoomReservation,
   readReceipts,
+  tokenBucket,
   vendingMachine,
   inMemoryDatabase,
   matrixWinning,

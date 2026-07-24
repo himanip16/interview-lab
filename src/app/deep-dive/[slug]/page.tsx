@@ -11,7 +11,6 @@ import { RelatedTechnologyCard } from "@/features/deep-dive/components/RelatedTe
 import { Tag } from "@/features/deep-dive/components/Tag";
 import { ThemeToggle } from "@/features/deep-dive/components/ThemeToggle";
 import { VideoBlock } from "@/features/deep-dive/components/VideoBlock";
-import { CodeBlock } from "@/features/deep-dive/components/CodeBlock";
 import { IllustrationBlock } from "@/features/deep-dive/components/IllustrationBlock";
 import { ResourceRow } from "@/features/deep-dive/components/ResourceRow";
 
@@ -33,6 +32,7 @@ import {
   Code2,
   ChevronLeft,
 } from "lucide-react";
+import CodeBlock from "@/shared/code/CodeBlock";
 type PageProps = {
   params: Promise<{
     slug: string;
@@ -173,7 +173,7 @@ export default async function DeepDiveArticlePage({
           )}
 
           {section.code && (
-            <CodeBlock>{section.code}</CodeBlock>
+            <CodeBlock code={section.code} />
           )}
 
           {section.callout && (
