@@ -63,7 +63,9 @@ export const article: DeepDiveArticle = {
         caption: 'Every write does exactly two things before it is acknowledged',
         width: 'full'
       },
-      code: `// 1. Append to the commit log — pure sequential disk I/O,
+      code: {
+        language: "typescript",
+        code: `// 1. Append to the commit log — pure sequential disk I/O,
 //    write-ahead so a crash can't lose the write
 commitLog.append(key, column, value, timestamp);
 
@@ -72,7 +74,8 @@ memtable.put(key, column, value, timestamp);
 
 // Acknowledge the client the instant both are done.
 // No lookup of the existing row. No lock. No merge — yet.
-return ACK;`,
+return ACK;`
+      },
       callout: {
         label: 'Worth remembering',
         content: [
@@ -112,7 +115,9 @@ return ACK;`,
           { type: 'text', text: ' three times.' }
         ]
       ],
-      code: `10:00:00  write user:42.status = "active"    → memtable
+      code: {
+        language: "typescript",
+        code: `10:00:00  write user:42.status = "active"    → memtable
 10:00:04  write user:42.status = "away"      → SSTable_1 (memtable flushed)
 10:00:09  write user:42.status = "offline"   → memtable
 
@@ -123,6 +128,7 @@ return ACK;`,
 // 4. Reconcile by timestamp        → "offline" wins, discard the rest
 
 return { status: "offline" };  // newest timestamp, nothing else`
+      }
     },
 
     {

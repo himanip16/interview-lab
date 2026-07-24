@@ -4,7 +4,7 @@ import { DeepDiveArticle } from '@/features/deep-dive/types';
 import { FlinkIllustration } from '@/content/deep-dive/illustrations/Flink';
 
 export const article: DeepDiveArticle = {
-    heroIllustration: FlinkIllustration,
+  heroIllustration: FlinkIllustration,
   slug: 'flink',
   category: 'streaming',
   readTime: '13 min',
@@ -63,7 +63,9 @@ export const article: DeepDiveArticle = {
           { type: 'text', text: ' first, and get flushed to immutable, sorted files on disk once that buffer fills up.' }
         ]
       ],
-      code: `// Conceptually, updating keyed state under the RocksDB backend
+      code: {
+        language: "javascript",
+        code: `// Conceptually, updating keyed state under the RocksDB backend
 // is the same fast path a memtable gives any LSM-tree write:
 
 function updateState(key, newValue) {
@@ -72,7 +74,8 @@ function updateState(key, newValue) {
 }
 
 // A checkpoint doesn't have to freeze the whole job to snapshot this —
-// it can lean on the state backend's own on-disk files.`,
+// it can lean on the state backend's own on-disk files.`
+      },
       callout: {
         label: 'Worth remembering',
         content: [
@@ -115,7 +118,9 @@ function updateState(key, newValue) {
           { type: 'text', text: 'A job that runs forever will eventually crash — a machine dies, a deploy restarts things, a network partition happens. Recovering means restoring every operator\'s state to a consistent point and replaying only what came after it. Flink does this with periodic checkpoints, using an algorithm derived from Chandy-Lamport distributed snapshots: special markers flow through the job alongside normal data, and each operator snapshots its own state exactly when a marker passes through it.' }
         ]
       ],
-      code: `// Simplified checkpoint barrier flow
+      code: {
+        language: "javascript",
+        code: `// Simplified checkpoint barrier flow
 1. Job manager injects a checkpoint barrier at each source
 2. Barrier flows downstream, interleaved with regular events
 3. Each operator, on receiving the barrier:
@@ -125,6 +130,7 @@ function updateState(key, newValue) {
 
 // On recovery: restore every operator's state from the last
 // completed checkpoint, then replay source data from that point`
+      }
     },
 
     {

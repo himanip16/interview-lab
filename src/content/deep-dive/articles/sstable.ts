@@ -1,5 +1,3 @@
-// src/content/deep-dive/articles/sstable.ts
-
 import { DeepDiveArticle } from '@/features/deep-dive/types';
 import { SSTableIllustration } from '@/content/deep-dive/illustrations/SSTable';
 
@@ -52,7 +50,9 @@ export const article: DeepDiveArticle = {
           { type: 'text', text: 'An SSTable is more than a flat list of key-value pairs. Most implementations split it into a few components on disk, each solving a different part of "find this key fast without reading the whole file":' }
         ]
       ],
-      code: `// Rough shape of an SSTable's components on disk
+      code: {
+        language: "typescript",
+        code: `// Rough shape of an SSTable's components on disk
 
 Data file      → sorted key/value pairs, written sequentially
 Index file     → sparse map: key → byte offset in the data file
@@ -63,7 +63,8 @@ Summary/footer → metadata: key range, file size, checksums
 // A point read for a key:
 if (!bloomFilter.mightContain(key)) return NOT_FOUND; // skip the file entirely
 const offset = index.findNearest(key);                // narrow to a small range
-return dataFile.scanFrom(offset, key);                // one small disk read`,
+return dataFile.scanFrom(offset, key);                // one small disk read`
+      },
       callout: {
         label: 'Worth remembering',
         content: [
@@ -104,13 +105,16 @@ return dataFile.scanFrom(offset, key);                // one small disk read`,
           { type: 'text', text: ' for that key, which flows through the exact same write path as any other value.' }
         ]
       ],
-      code: `10:00:00  write  user:42.status = "active"
+      code: {
+        language: "typescript",
+        code: `10:00:00  write  user:42.status = "active"
 10:00:05  delete user:42            → tombstone written, not a removal
 10:00:06  read   user:42
 
 // Read merges across the memtable and SSTables as usual,
 // finds the tombstone has the newest timestamp, and returns:
 return NOT_FOUND; // the tombstone "wins" the reconciliation`
+      }
     },
 
     {

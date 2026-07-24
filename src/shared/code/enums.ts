@@ -1,0 +1,27 @@
+export const CODE_LANGUAGES = [
+  "text",
+  "java",
+  "kotlin",
+  "typescript",
+  "javascript",
+  "tsx",
+  "jsx",
+  "python",
+  "go",
+  "rust",
+  "c",
+  "cpp",
+  "csharp",
+  "sql",
+  "bash",
+  "json",
+  "yaml",
+  "xml",
+  "html",
+  "css",
+  "scss",
+  "dockerfile",
+  "cql",
+] as const;
+
+export type CodeLanguage = typeof CODE_LANGUAGES[number];

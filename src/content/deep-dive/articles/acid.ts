@@ -4,7 +4,7 @@ import { DeepDiveArticle } from '@/features/deep-dive/types';
 import { AcidIllustration } from '@/content/deep-dive/illustrations/Acid';
 
 export const article: DeepDiveArticle = {
-    heroIllustration: AcidIllustration,
+  heroIllustration: AcidIllustration,
   slug: 'acid',
   category: 'db',
   readTime: '10 min',
@@ -45,7 +45,9 @@ export const article: DeepDiveArticle = {
           { type: 'text', text: 'Consistency here means something narrower than the everyday word: every transaction must take the database from one state that obeys its declared rules — constraints, foreign keys, uniqueness — to another state that also obeys them. It says nothing about what those rules are; it just says a committed transaction can never leave one broken.' }
         ]
       ],
-      code: `// A constraint the database enforces at commit time
+      code: {
+        language: "sql",
+        code: `// A constraint the database enforces at commit time
 ALTER TABLE accounts ADD CONSTRAINT no_negative_balance
   CHECK (balance >= 0);
 
@@ -53,7 +55,8 @@ BEGIN;
   UPDATE accounts SET balance = balance - 100 WHERE id = 'A'; -- balance would go to -20
 COMMIT;
 -- ERROR: new row for relation "accounts" violates check constraint
--- The whole transaction is rejected — the rule was never actually broken`,
+-- The whole transaction is rejected — the rule was never actually broken`
+      },
       callout: {
         label: 'Worth remembering',
         content: [
@@ -98,7 +101,9 @@ COMMIT;
           { type: 'text', text: 'The moment a database tells a client "committed," durability is the promise that the change will still be there after a power loss, a crash, a kernel panic — anything short of the storage medium itself being destroyed. This is usually the most literal of the four: it means the change has actually been forced to durable storage, not just handed to an operating system write buffer that might still be sitting in RAM.' }
         ]
       ],
-      code: `// What "committed" actually requires under durability
+      code: {
+        language: "typescript",
+        code: `// What "committed" actually requires under durability
 function commit(transaction) {
   writeAheadLog.append(transaction.changes);
   writeAheadLog.fsync();        // force to disk — not just to OS cache
@@ -107,6 +112,7 @@ function commit(transaction) {
 
 // Skipping fsync makes commits faster and durability a lie:
 // a crash before the OS flushes its buffer loses the "committed" write`
+      }
     },
 
     {
@@ -117,7 +123,9 @@ function commit(transaction) {
           { type: 'text', text: 'Concretely: transferring 100 from account A to account B.' }
         ]
       ],
-      code: `BEGIN;
+      code: {
+        language: "sql",
+        code: `BEGIN;
   UPDATE accounts SET balance = balance - 100 WHERE id = 'A'; -- Atomicity: paired with the next line
   UPDATE accounts SET balance = balance + 100 WHERE id = 'B'; -- or neither happens
 COMMIT;                                                       -- Durability: now survives a crash
@@ -127,6 +135,7 @@ COMMIT;                                                       -- Durability: now
 // - Isolation:   another transaction reading A or B mid-transfer sees
 //                either the state before, or the state after — never
 //                a moment where only one side of the transfer happened`
+      }
     },
 
     {

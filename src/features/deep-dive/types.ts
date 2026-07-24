@@ -1,6 +1,26 @@
 // src/features/deep-dive/types.ts
 
 import type { ComponentType } from "react";
+import type { CodeLanguage } from "@/shared/code/enums";
+
+export type DeepDiveCategory =
+  | "db"
+  | "msg"
+  | "concept"
+  | "streaming";
+
+export type LinkType =
+  | "deep-dive"
+  | "transcript"
+  | "external";
+
+export type IllustrationWidth =
+  | "full"
+  | "half"
+  | "third"
+  | "quarter"
+  | "fixed"
+  | "auto";
 
 export interface DeepDiveSummary {
   slug: string;
@@ -8,7 +28,7 @@ export interface DeepDiveSummary {
   eyebrow: string;
   description: string;
   tags: string[];
-  category: 'db' | 'msg' | 'concept' | 'streaming';
+  category: DeepDiveCategory;
   readTime: string;
   credit: string;
   creditOrg: string;
@@ -16,53 +36,63 @@ export interface DeepDiveSummary {
 }
 
 export interface ContentBlock {
-  // 'text': plain or bold inline text. 'link': hoverable phrase that navigates
-  // to another deep-dive/transcript covering the same concept or tool.
-  type: 'text' | 'link';
+  type: "text" | "link";
   text: string;
-  bold?: boolean; // only meaningful when type === 'text'
-  // Only present when type === 'link'
+  bold?: boolean;
   href?: {
-    type: 'deep-dive' | 'transcript' | 'external';
-    // slug for 'deep-dive' / 'transcript', full URL for 'external'
+    type: LinkType;
     target: string;
-    // Optional short blurb shown in the hover preview card before navigation
     preview?: string;
   };
 }
 
-// One paragraph = one array of inline spans (text/bold/link mixed freely)
 export type Paragraph = ContentBlock[];
+
+export interface CodeSnippet {
+  code: string;
+  language: CodeLanguage;
+  title?: string;
+}
+
+export interface ResourceChip {
+  label: string;
+  variant?: "ok";
+}
+
+export interface ResourceCard {
+  icon: string;
+  title: string;
+  subtitle: string;
+  chips?: ResourceChip[];
+}
+
+export interface Illustration {
+  component: string;
+  caption: string;
+  text?: string;
+  width?: IllustrationWidth;
+}
+
+export interface VideoBlock {
+  caption: string;
+  duration?: string;
+}
+
+export interface Callout {
+  label: string;
+  content: Paragraph[];
+}
 
 export interface Section {
   number: number;
   title: string;
   content: Paragraph[];
 
-  callout?: {
-    label: string;
-    content: Paragraph[];
-  };
-
-  illustration?: {
-    component: string;
-    caption: string;
-    text?: string;
-    width?: 'full' | 'half' | 'third' | 'quarter' | 'fixed' | 'auto';
-  };
-
-  video?: {
-    caption: string;
-    duration?: string;
-  };
-
-  code?: string;
-  resources?: Array<{
-    icon: string; // SVG icon name or path
-    title: string;
-    subtitle: string;
-    chips?: Array<{ label: string; variant?: 'ok' }>;
-  }>;
+  callout?: Callout;
+  illustration?: Illustration;
+  video?: VideoBlock;
+  code?: CodeSnippet;
+  resources?: ResourceCard[];
 }
 
 export interface TradeoffData {
@@ -76,14 +106,11 @@ export interface RelatedTechnology {
   slug: string;
 }
 
-
 export interface DeepDiveArticle extends DeepDiveSummary {
   title: string;
   lede: string;
-  sections: Section[];
-
   heroIllustration: ComponentType;
-
+  sections: Section[];
   tradeoffs?: TradeoffData;
   related: RelatedTechnology[];
 }

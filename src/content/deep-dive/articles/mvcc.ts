@@ -1,10 +1,8 @@
-// src/content/deep-dive/articles/mvcc.ts
-
 import { DeepDiveArticle } from '@/features/deep-dive/types';
 import { MVCCIllustration } from '@/content/deep-dive/illustrations/MVCC';
 
 export const article: DeepDiveArticle = {
-    heroIllustration: MVCCIllustration,
+  heroIllustration: MVCCIllustration,
   slug: 'mvcc',
   category: 'db',
   readTime: '11 min',
@@ -49,7 +47,9 @@ export const article: DeepDiveArticle = {
           { type: 'text', text: ' (the transaction that made it obsolete, if any).' }
         ]
       ],
-      code: `// A row's life as a chain of versions (Postgres-style xmin/xmax)
+      code: {
+        language: "typescript",
+        code: `// A row's life as a chain of versions (Postgres-style xmin/xmax)
 
 // Insert by transaction 100
 { id: 42, status: "active", xmin: 100, xmax: null }
@@ -60,7 +60,8 @@ export const article: DeepDiveArticle = {
 { id: 42, status: "away",   xmin: 105, xmax: null }  // now current
 
 // A transaction that started before 105 still sees "active".
-// A transaction that starts after 105 sees "away".`,
+// A transaction that starts after 105 sees "away".`
+      },
       callout: {
         label: 'Worth remembering',
         content: [
@@ -99,7 +100,9 @@ export const article: DeepDiveArticle = {
           { type: 'text', text: 'Concretely: transaction A starts a long read, then transaction B updates the same row and commits, all before A finishes.' }
         ]
       ],
-      code: `T1  Transaction A starts, snapshot taken (sees only committed data up to T1)
+      code: {
+        language: "typescript",
+        code: `T1  Transaction A starts, snapshot taken (sees only committed data up to T1)
 T2  Transaction B updates row 42: "active" → "away", commits at T2
 T3  Transaction A reads row 42
 
@@ -108,6 +111,7 @@ T3  Transaction A reads row 42
 // wasn't committed yet as of A's snapshot — so it's invisible to A.
 
 return { status: "active" }; // A sees the pre-update value, consistently`
+      }
     },
 
     {
@@ -120,7 +124,7 @@ return { status: "active" }; // A sees the pre-update value, consistently`
         [
           { type: 'text', text: 'Postgres calls the process that reclaims this space ' },
           { type: 'text', text: 'vacuum', bold: true },
-          { type: 'text', text: ': a background job that finds row versions no snapshot can see anymore and physically removes them, freeing the space for reuse.' }
+          { type: 'text', text: ' : a background job that finds row versions no snapshot can see anymore and physically removes them, freeing the space for reuse.' }
         ]
       ],
       callout: {

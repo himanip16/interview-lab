@@ -56,7 +56,9 @@ export const article: DeepDiveArticle = {
           { type: 'text', text: 'Items that share a partition key are physically stored together, sorted by sort key. That single fact is what makes range queries possible: "give me every order for this user" is really "give me every item under this partition key," which DynamoDB can serve as one fast, contiguous read.' }
         ]
       ],
-      code: `Table: Orders
+      code: {
+        language: "typescript",
+        code: `Table: Orders
 PK (partition key): userId
 SK (sort key):      orderId
 
@@ -66,6 +68,7 @@ SK (sort key):      orderId
 
 // One partition-key query returns both, already in order
 Query: userId = "u_42"`
+      }
     },
 
     {
@@ -85,7 +88,9 @@ Query: userId = "u_42"`
           { type: 'text', text: 'That last sentence is the whole game. AWS decides the partition; you decide the key. Pick a key with high cardinality and even access, and load spreads naturally. Pick one badly, and you\'ve built a hot partition — a problem no amount of "managed" fixes for you.' }
         ]
       ],
-      code: `// A chat app storing messages by conversation
+      code: {
+        language: "typescript",
+        code: `// A chat app storing messages by conversation
 
 // BAD: one hot value dominates traffic
 partitionKey = "global-announcements"
@@ -94,7 +99,8 @@ partitionKey = "global-announcements"
 
 // BETTER: high-cardinality key, spread naturally
 partitionKey = conversationId  // e.g. "conv_9f21a"
-sortKey      = messageTimestamp`,
+sortKey      = messageTimestamp`
+      },
       callout: {
         label: 'Worth remembering',
         content: [
@@ -125,7 +131,9 @@ sortKey      = messageTimestamp`,
           { type: 'text', text: 'The payoff is that "get this user\'s profile and their last 20 orders" becomes one query against one partition key, instead of a join across tables you don\'t have.' }
         ]
       ],
-      code: `PK              SK
+      code: {
+        language: "typescript",
+        code: `PK              SK
 USER#123        PROFILE
 USER#123        ORDER#456
 ORDER#456       ITEM#789
@@ -133,6 +141,7 @@ ORDER#456       ITEM#789
 // One query, one partition key, gets the user's profile
 // and every order they've placed — no join required
 Query: PK = "USER#123"`
+      }
     },
 
     {
@@ -148,13 +157,16 @@ Query: PK = "USER#123"`
           { type: 'text', text: 'The tradeoff is that every GSI is another maintained access path. It consumes its own write capacity to stay current with the base table, and it exists because you planned for that query ahead of time — not because DynamoDB can improvise one later. Flexibility here comes from anticipation, not from the database.' }
         ]
       ],
-      code: `Base table primary key:
+      code: {
+        language: "typescript",
+        code: `Base table primary key:
 PK = userId
 
 New requirement: find a user by email
 
 GSI:
 PK = email  →  projects userId`
+      }
     },
 
     {
@@ -172,13 +184,15 @@ PK = email  →  projects userId`
           { type: 'text', text: ' reads instead, per-request, which always reflect the most recent successful write — at roughly double the read cost and slightly higher latency, since DynamoDB has to confirm it\'s reading the current value rather than whichever replica answered first.' }
         ]
       ],
-      code: `await ddb.putItem({ TableName: "Orders", Item: order });
+      code: {
+        language: "javascript",
+        code: `await ddb.putItem({ TableName: "Orders", Item: order });
 
 // Right after the write — eventual consistency can still show the old value
 const stale = await ddb.getItem({
   TableName: "Orders",
   Key: { orderId },
-  ConsistentRead: false  // default
+  ConsistentRead: false
 });
 
 // Strong consistency guarantees you see the write you just made
@@ -186,7 +200,8 @@ const fresh = await ddb.getItem({
   TableName: "Orders",
   Key: { orderId },
   ConsistentRead: true
-});`,
+});`
+      },
       illustration: {
         component: 'DynamoConsistencyIllustration',
         caption: 'A write lands on one replica first — eventual reads may hit a different one before it catches up',

@@ -1,10 +1,8 @@
-// src/content/deep-dive/articles/memtable.ts
-
 import { DeepDiveArticle } from '@/features/deep-dive/types';
 import { MemtableIllustration } from '@/content/deep-dive/illustrations/MemTable';
 
 export const article: DeepDiveArticle = {
-    heroIllustration: MemtableIllustration,
+  heroIllustration: MemtableIllustration,
   slug: 'memtable',
   category: 'db',
   readTime: '9 min',
@@ -46,7 +44,9 @@ export const article: DeepDiveArticle = {
           { type: 'text', text: 'A memtable is usually backed by a structure like a skip list or a red-black tree — something that keeps keys sorted while supporting fast inserts. Because it lives in RAM, insertion is just pointer manipulation, not disk seeks.' }
         ]
       ],
-      code: `// Simplified shape of a write hitting the memtable
+      code: {
+        language: "javascript",
+        code: `// Simplified shape of a write hitting the memtable
 function write(key, column, value, timestamp) {
   commitLog.append(key, column, value, timestamp); // durability
   memtable.put(key, column, value, timestamp);      // sorted, in-memory
@@ -57,7 +57,8 @@ function write(key, column, value, timestamp) {
 // it's just another sorted entry with a newer timestamp.
 write("user:42", "status", "active", t0);
 write("user:42", "status", "away", t1);   // both entries live in the memtable
-write("user:42", "status", "offline", t2); // until it's flushed`,
+write("user:42", "status", "offline", t2); // until it's flushed`
+      },
       callout: {
         label: 'Worth remembering',
         content: [
@@ -98,7 +99,9 @@ write("user:42", "status", "offline", t2); // until it's flushed`,
           { type: 'text', text: 'This is where the memtable\'s cost shows up. A row\'s most recent value might be sitting in the active memtable, or it might already be flushed into one or more SSTables on disk. A read has to check the memtable first, then check the relevant SSTables, and merge whatever it finds by timestamp.' }
         ]
       ],
-      code: `// Read for "user:42" arriving right after the writes above,
+      code: {
+        language: "javascript",
+        code: `// Read for "user:42" arriving right after the writes above,
 // but after a flush has already happened once:
 
 // 1. Check the active memtable      → may or may not have this key
@@ -106,6 +109,7 @@ write("user:42", "status", "offline", t2); // until it's flushed`,
 // 3. Merge everything by timestamp  → newest write wins
 
 return { status: "offline" }; // whichever version has the latest timestamp`
+      }
     },
 
     {

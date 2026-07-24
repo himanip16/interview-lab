@@ -38,7 +38,9 @@ export const article: DeepDiveArticle = {
           { type: 'text', text: 'When traffic grows and you add a new server, the calculation changes for almost every key. Suddenly, most cached data appears to be missing and the system has to rebuild its state.' }
         ]
       ],
-      code: `3 servers:
+      code: {
+        language: "typescript",
+        code: `3 servers:
 hash(user1) % 3 = 1  →  Server B
 hash(user2) % 3 = 2  →  Server C
 
@@ -46,7 +48,8 @@ Add a 4th server:
 hash(user1) % 4 = 0  →  Server A
 hash(user2) % 4 = 3  →  Server D
 
-Almost every key now points to a different server.`,
+Almost every key now points to a different server.`
+      },
       illustration: {
         component: 'ModuloIllustration',
         caption: 'Changing the number of servers changes almost every key assignment',
@@ -117,7 +120,9 @@ Almost every key now points to a different server.`,
           { type: 'text', text: 'If the search reaches the end of the ring, the lookup wraps back to the first server.' }
         ]
       ],
-      code: `function getNode(key) {
+      code: {
+        language: "javascript",
+        code: `function getNode(key) {
   const hash = hash(key);
 
   // Find the first server clockwise from the key
@@ -125,7 +130,8 @@ Almost every key now points to a different server.`,
 
   // Wrap around when reaching the end
   return ring[index % ring.length];
-}`,
+}`
+      },
 
       callout: {
         label: 'Production detail',
@@ -158,7 +164,9 @@ Almost every key now points to a different server.`,
           { type: 'text', text: 'Distributed databases layer replication on top of the ring to answer that second question. Cassandra, for example, walks clockwise from a key\'s ring position, assigns the first node it finds as the primary, and continues walking to assign the next distinct nodes as replicas.' }
         ]
       ],
-      code: `User123
+      code: {
+        language: "typescript",
+        code: `User123
 
 Node A  →  primary
 Node B  →  replica
@@ -166,6 +174,7 @@ Node C  →  replica
 
 The ring decides ownership.
 Replication decides what survives a node going down.`
+      }
     },
 
     {
@@ -194,13 +203,16 @@ Replication decides what survives a node going down.`
           { type: 'text', text: 'Both approaches keep resharding cheap; they just disagree on whether the address space is continuous, like a ring, or a fixed, enumerable set, like slots.' }
         ]
       ],
-      code: `Redis Cluster:
+      code: {
+        language: "typescript",
+        code: `Redis Cluster:
 16384 hash slots
 key → hash slot → node
 
 Cassandra / DynamoDB:
 key → hash → position on ring
 position → first node clockwise`
+      }
     },
 
     {
