@@ -1,28 +1,17 @@
 // src/content/deep-dive/articles/mongodb.ts
 
 import { DeepDiveArticle } from '@/features/deep-dive/types';
+import { MongoDBIllustration } from '@/content/deep-dive/illustrations/MongoDB';
 
-export const MongodbData: DeepDiveArticle = {
+export const article: DeepDiveArticle = {
+  heroIllustration: MongoDBIllustration,
   slug: 'mongodb',
   name: 'MongoDB',
   eyebrow: 'DOCUMENT · NoSQL',
   category: 'db',
   readTime: '12 min',
-  description: [
-    [
-      { type: 'text', text: 'MongoDB', bold: true },
-      {
-        type: 'text',
-        text: ' stores data as documents, not rows — and that one decision changes how writes land on disk, how reads get consistent, and what "transaction" even means here.'
-      }
-    ],
-    [
-      {
-        type: 'text',
-        text: 'It is not "no consistency." It is consistency you dial in, per operation, and pay for exactly what you ask for.'
-      }
-    ]
-  ],
+  description: 'MongoDB is a document store that stores data as documents, not rows. That one decision changes how writes land on disk, how reads get consistent, and what "transaction" even means here. It is not "no consistency." It is consistency you dial in, per operation, and pay for exactly what you ask for.',
+  
   tags: ['Document store', 'WiredTiger', 'Replica sets', 'Sharded'],
   credit: 'Maintained by',
   creditOrg: 'MongoDB Inc.',

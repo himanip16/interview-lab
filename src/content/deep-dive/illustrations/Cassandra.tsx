@@ -1,18 +1,46 @@
-// src/content/deep-dive/illustrations/Cassandra.tsx
+// src/shared/illustrations/Cassandra.tsx
+
+import { IllustrationCanvas, Node, Arrow, RingPath, ringPositions } from '@/shared/diagram/primitives';
 
 export function CassandraIllustration() {
+  const center = { cx: 110, cy: 110 };
+  const ringR = 80;
+  const nodeFills = ['mint', 'mintDeep', 'ink', 'mintDeep', 'mint', 'ink'] as const;
+  const positions = ringPositions(center.cx, center.cy, ringR, 6);
+
   return (
-    <svg className="mark" viewBox="0 0 220 220" fill="none">
-      <circle cx="110" cy="110" r="88" stroke="#15161C" strokeWidth="2" strokeDasharray="4 7" opacity=".25"/>
-      <circle cx="110" cy="30" r="11" fill="#00D9A3"/>
-      <circle cx="182" cy="70" r="11" fill="#00A87E"/>
-      <circle cx="182" cy="150" r="11" fill="#15161C"/>
-      <circle cx="110" cy="190" r="11" fill="#00A87E"/>
-      <circle cx="38" cy="150" r="11" fill="#00D9A3"/>
-      <circle cx="38" cy="70" r="11" fill="#15161C"/>
-      <circle cx="110" cy="110" r="16" fill="#FF5A3C"/>
-      <path d="M110 30L182 70M182 70L182 150M182 150L110 190M110 190L38 150M38 150L38 70M38 70L110 30" stroke="#15161C" strokeWidth="1.5" opacity=".3"/>
-      <path d="M110 110L110 30M110 110L182 70M110 110L182 150M110 110L110 190M110 110L38 150M110 110L38 70" stroke="#FF5A3C" strokeWidth="1.5" opacity=".35"/>
-    </svg>
+    <IllustrationCanvas viewBox="0 0 220 220">
+      <RingPath cx={center.cx} cy={center.cy} r={88} dashed opacity={0.25} />
+
+      {positions.map((p, i) => (
+        <Arrow
+          key={`perimeter-${i}`}
+          x1={p.x}
+          y1={p.y}
+          x2={positions[(i + 1) % positions.length].x}
+          y2={positions[(i + 1) % positions.length].y}
+          color="ink"
+          opacity={0.3}
+        />
+      ))}
+
+      {positions.map((p, i) => (
+        <Arrow
+          key={`spoke-${i}`}
+          x1={center.cx}
+          y1={center.cy}
+          x2={p.x}
+          y2={p.y}
+          color="coral"
+          opacity={0.35}
+        />
+      ))}
+
+      {positions.map((p, i) => (
+        <Node key={`node-${i}`} cx={p.x} cy={p.y} r={11} fill={nodeFills[i]} />
+      ))}
+
+      <Node cx={center.cx} cy={center.cy} r={16} fill="coral" />
+    </IllustrationCanvas>
   );
 }

@@ -1,0 +1,88 @@
+.code-block {
+  margin: 32px 0;
+  border-radius: 16px;
+  overflow: hidden;
+
+  border: 1px solid rgba(0,0,0,.08);
+
+  box-shadow:
+    0 8px 24px rgba(0,0,0,.08);
+
+  background: #24292e;
+}
+
+.code-block-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 12px 18px;
+
+  background: #1d2126;
+
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+.code-language {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  color: rgba(255,255,255,.72);
+}
+
+.code-block-body {
+  overflow-x: auto;
+}
+
+.code-block-body pre {
+  margin: 0 !important;
+
+  padding: 22px 24px !important;
+
+  background: transparent !important;
+
+  font-size: 14px;
+
+  line-height: 1.75;
+
+  overflow-x: auto;
+}
+
+.code-block-body code {
+  font-family:
+    SFMono-Regular,
+    SF Mono,
+    Menlo,
+    Monaco,
+    Consolas,
+    monospace;
+}
+
+/* Scrollbar */
+
+.code-block-body::-webkit-scrollbar {
+  height: 10px;
+}
+
+.code-block-body::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,.18);
+  border-radius: 999px;
+}
+
+.code-block-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Shiki */
+
+.code-block-body .shiki {
+  margin: 0 !important;
+
+  padding: 0 !important;
+
+  background: transparent !important;
+}
+
+.code-block-body .line {
+  min-height: 1.75em;
+}

@@ -1,28 +1,17 @@
-// src/content/deep-dive/articles/consistent-hashing.ts
+// src/content/deep-dive/articles/consistentHashing.ts
 
 import { DeepDiveArticle } from '@/features/deep-dive/types';
+import { ConsistentHashingIllustration } from '@/content/deep-dive/illustrations/ConsistentHashing';
 
-export const ConsistentHashingData: DeepDiveArticle = {
+export const article: DeepDiveArticle = {
+  heroIllustration: ConsistentHashingIllustration,
   slug: 'consistent-hashing',
   name: 'Consistent hashing',
   eyebrow: 'DISTRIBUTED SYSTEMS · Data distribution',
   category: 'concept',
   readTime: '13 min',
-  description: [
-    [
-      { type: 'text', text: 'Consistent hashing', bold: true },
-      {
-        type: 'text',
-        text: ' is a technique for spreading data across servers while keeping movement of data small when the system changes.'
-      }
-    ],
-    [
-      {
-        type: 'text',
-        text: 'It is widely used in distributed caches and databases because servers can join or leave without forcing a complete reshuffling of key ownership.'
-      }
-    ]
-  ],
+  description: 'Consistent hashing is a technique for spreading data across servers while keeping movement of data small when the system changes. It is widely used in distributed caches and databases because servers can join or leave without forcing a complete reshuffling of key ownership.',
+
   tags: ['Distributed systems', 'Caching', 'Hash ring'],
   credit: 'Concept introduced in',
   creditOrg: 'Amazon Dynamo paper',

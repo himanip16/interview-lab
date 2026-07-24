@@ -1,18 +1,108 @@
 // src/content/deep-dive/illustrations/Kafka.tsx
 
+
 export function KafkaIllustration() {
   return (
-    <svg className="mark" viewBox="0 0 220 220" fill="none">
-      <circle cx="110" cy="110" r="88" stroke="#15161C" strokeWidth="2" strokeDasharray="4 7" opacity=".25"/>
-      <circle cx="110" cy="30" r="11" fill="#00D9A3"/>
-      <circle cx="182" cy="70" r="11" fill="#00A87E"/>
-      <circle cx="182" cy="150" r="11" fill="#15161C"/>
-      <circle cx="110" cy="190" r="11" fill="#00A87E"/>
-      <circle cx="38" cy="150" r="11" fill="#00D9A3"/>
-      <circle cx="38" cy="70" r="11" fill="#15161C"/>
-      <circle cx="110" cy="110" r="16" fill="#FF5A3C"/>
-      <path d="M110 30L182 70M182 70L182 150M182 150L110 190M110 190L38 150M38 150L38 70M38 70L110 30" stroke="#15161C" strokeWidth="1.5" opacity=".3"/>
-      <path d="M110 110L110 30M110 110L182 70M110 110L182 150M110 110L110 190M110 110L38 150M110 110L38 70" stroke="#FF5A3C" strokeWidth="1.5" opacity=".35"/>
+    <svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* broker stack */}
+      <rect
+        x="10"
+        y="10"
+        width="36"
+        height="8"
+        rx="2"
+        fill="#E8940A"
+      />
+      <rect
+        x="10"
+        y="24"
+        width="36"
+        height="8"
+        rx="2"
+        fill="#E8940A"
+        opacity=".75"
+      />
+      <rect
+        x="10"
+        y="38"
+        width="36"
+        height="8"
+        rx="2"
+        fill="#E8940A"
+        opacity=".45"
+      />
+
+      {/* partitions */}
+      <line
+        x1="22"
+        y1="10"
+        x2="22"
+        y2="18"
+        stroke="#15161C"
+        strokeWidth="1"
+        opacity=".25"
+      />
+      <line
+        x1="34"
+        y1="10"
+        x2="34"
+        y2="18"
+        stroke="#15161C"
+        strokeWidth="1"
+        opacity=".25"
+      />
+
+      <line
+        x1="22"
+        y1="24"
+        x2="22"
+        y2="32"
+        stroke="#15161C"
+        strokeWidth="1"
+        opacity=".25"
+      />
+      <line
+        x1="34"
+        y1="24"
+        x2="34"
+        y2="32"
+        stroke="#15161C"
+        strokeWidth="1"
+        opacity=".25"
+      />
+
+      <line
+        x1="22"
+        y1="38"
+        x2="22"
+        y2="46"
+        stroke="#15161C"
+        strokeWidth="1"
+        opacity=".25"
+      />
+      <line
+        x1="34"
+        y1="38"
+        x2="34"
+        y2="46"
+        stroke="#15161C"
+        strokeWidth="1"
+        opacity=".25"
+      />
+
+      {/* messages moving through partitions */}
+      <circle cx="16" cy="14" r="2" fill="#15161C" />
+      <circle cx="28" cy="28" r="2" fill="#15161C" />
+      <circle cx="40" cy="42" r="2" fill="#15161C" />
+
+      {/* flow indicator */}
+      <path
+        d="M16 14L28 28L40 42"
+        stroke="#00D9A3"
+        strokeWidth="2"
+        strokeLinecap="round"
+        opacity=".8"
+      />
     </svg>
   );
 }

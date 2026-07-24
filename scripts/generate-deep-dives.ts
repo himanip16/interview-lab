@@ -1,5 +1,6 @@
 // scripts/generate-deep-dives.ts
 
+
 import fs from "node:fs";
 import path from "node:path";
 
@@ -10,48 +11,29 @@ const articlesDir = path.join(
 
 const output = path.join(
   process.cwd(),
-  "src/features/deep-dive/data/generated.ts"
+  "src/content/deep-dive/generated.ts"
 );
 
 const files = fs
   .readdirSync(articlesDir)
-  .filter((file) => file.endsWith(".ts"));
-
+  .filter((file) => file.endsWith(".ts"))
+  .sort();
 
 const imports = files.map((file) => {
   const name = path.basename(file, ".ts");
 
-  const exportName =
-    name
-      .split("-")
-      .map(
-        part =>
-          part[0].toUpperCase() + part.slice(1)
-      )
-      .join("") + "Data";
-
-  return {
-    import:
-      `import { ${exportName} } from "@/content/deep-dive/articles/${name}";`,
-    exportName
-  };
+  return `import { article as ${name} } from "./articles/${name}";`;
 });
 
-
-const content = `
-${imports.map(i => i.import).join("\n")}
+const content = `${imports.join("\n")}
 
 export const deepDiveRegistry = [
-${imports.map(i => `  ${i.exportName}`).join(",\n")}
+${files
+  .map((file) => `  ${path.basename(file, ".ts")},`)
+  .join("\n")}
 ];
 `;
 
+fs.writeFileSync(output, content);
 
-fs.writeFileSync(
-  output,
-  content.trim()
-);
-
-console.log(
-  `Generated ${files.length} deep dives`
-);
+console.log(`Generated ${files.length} deep dives.`);

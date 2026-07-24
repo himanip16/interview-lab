@@ -1,28 +1,17 @@
 // src/content/deep-dive/articles/kafka.ts
 
 import { DeepDiveArticle } from '@/features/deep-dive/types';
+import { KafkaIllustration } from '@/content/deep-dive/illustrations/Kafka';
 
-export const KafkaData: DeepDiveArticle = {
+export const article: DeepDiveArticle = {
+  heroIllustration: KafkaIllustration,
   slug: 'kafka',
   name: 'Kafka',
   eyebrow: 'STREAMING · EVENT LOG',
   category: 'db',
   readTime: '12 min',
-  description: [
-    [
-      { type: 'text', text: 'Kafka', bold: true },
-      {
-        type: 'text',
-        text: ' is a distributed event streaming platform. It treats data as an append-only log of events.'
-      }
-    ],
-    [
-      {
-        type: 'text',
-        text: 'Producers write to topics, consumers read from topics, and everything is durable and replayable. This makes it ideal for event-driven architectures.'
-      }
-    ]
-  ],
+  description: 'Kafka is a distributed event streaming platform. It treats data as an append-only log of events. Producers write to topics, consumers read from topics, and everything is durable and replayable. This makes it ideal for event-driven architectures.'
+    ,
   tags: ['Streaming', 'Distributed log', 'Event-driven'],
   credit: 'Maintained by',
   creditOrg: 'Apache Software Foundation',

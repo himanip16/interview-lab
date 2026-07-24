@@ -1,6 +1,6 @@
 // src/content/deep-dive/illustrations/CassandraRingIllustration.tsx
 
-import { IllustrationCanvas, Label, RingPath, Node, Arrow, ringPositions } from './primitives';
+import { IllustrationCanvas, Label, RingPath, Node, Arrow, ringPositions } from '../../../shared/diagram/primitives';
 
 export function CassandraRingIllustration() {
   const positions = ringPositions(80, 65, 38, 6);

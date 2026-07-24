@@ -1,3 +1,5 @@
+import "./CodeBlock.css";
+
 import { highlightSnippet } from "./shiki";
 
 type Props = {
@@ -12,9 +14,17 @@ export default async function CodeBlock({
   const html = await highlightSnippet(code, language);
 
   return (
-    <div
-      className="overflow-hidden rounded-lg"
-      dangerouslySetInnerHTML={{ __html: html }}
-    />
+    <figure className="code-block">
+      <div className="code-block-header">
+        <span className="code-language">
+          {language.toUpperCase()}
+        </span>
+      </div>
+
+      <div
+        className="code-block-body"
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
+    </figure>
   );
 }

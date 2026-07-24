@@ -19,7 +19,6 @@ import {
   getPreviousAndNext,
 } from "@/content/deep-dive";
 
-import { heroIllustrations } from "@/content/deep-dive/illustration-registry";
 import { contentComponents } from "@/content/deep-dive/component-registry";
 
 import "@/features/deep-dive/styles/deep-dive.css";
@@ -83,7 +82,7 @@ export default async function DeepDiveArticlePage({
 
   const { previous, next } = getPreviousAndNext(slug);
 
-  const HeroIllustration = heroIllustrations[slug];
+  const HeroIllustration = article.heroIllustration;
 
   return (
     <div className="wrap">

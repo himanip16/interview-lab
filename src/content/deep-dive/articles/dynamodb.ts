@@ -1,28 +1,16 @@
 // src/content/deep-dive/articles/dynamodb.ts
 
 import { DeepDiveArticle } from '@/features/deep-dive/types';
+import { DynamoDBIllustration } from "@/content/deep-dive/illustrations/DynamoDB";
 
-export const DynamodbData: DeepDiveArticle = {
+export const article: DeepDiveArticle = {
+  heroIllustration: DynamoDBIllustration,
   slug: 'dynamodb',
   name: 'DynamoDB',
   eyebrow: 'MANAGED · KEY-VALUE',
   category: 'db',
   readTime: '14 min',
-  description: [
-    [
-      { type: 'text', text: 'DynamoDB', bold: true },
-      {
-        type: 'text',
-        text: ' is a fully managed NoSQL database from AWS, directly descended from the same Dynamo paper that popularized consistent hashing. It offers predictable, single-digit-millisecond latency at any scale.'
-      }
-    ],
-    [
-      {
-        type: 'text',
-        text: 'The trade is real, though: "fully managed" means AWS is making decisions on your behalf that a self-hosted database would leave to you — and those decisions show up as constraints on how you\'re allowed to model and query your data.'
-      }
-    ]
-  ],
+  description: 'DynamoDB is a fully managed NoSQL database from AWS. Directly descended from the same Dynamo paper that popularized consistent hashing. It offers predictable, single-digit-millisecond latency at any scale. The trade is real, though: "fully managed" means AWS is making decisions on your behalf that a self-hosted database would leave to you — and those decisions show up as constraints on how you\'re allowed to model and query your data.',
   tags: ['Managed', 'Serverless', 'Key-value'],
   credit: 'Provided by',
   creditOrg: 'Amazon Web Services',

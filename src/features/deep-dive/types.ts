@@ -1,14 +1,14 @@
 // src/features/deep-dive/types.ts
 
-
+import type { ComponentType } from "react";
 
 export interface DeepDiveSummary {
   slug: string;
   name: string;
   eyebrow: string;
-  description: Paragraph[];
+  description: string;
   tags: string[];
-  category: 'db' | 'msg' | 'concept';
+  category: 'db' | 'msg' | 'concept' | 'streaming';
   readTime: string;
   credit: string;
   creditOrg: string;
@@ -76,10 +76,14 @@ export interface RelatedTechnology {
   slug: string;
 }
 
+
 export interface DeepDiveArticle extends DeepDiveSummary {
   title: string;
   lede: string;
   sections: Section[];
+
+  heroIllustration: ComponentType;
+
   tradeoffs?: TradeoffData;
   related: RelatedTechnology[];
 }

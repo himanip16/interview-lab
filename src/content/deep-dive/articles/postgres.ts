@@ -1,6 +1,7 @@
 // src/content/deep-dive/articles/postgres.ts
 
 import { DeepDiveArticle, Paragraph } from "@/features/deep-dive/types";
+import { PostgresIllustration } from "@/content/deep-dive/illustrations/Postgres";
 
 const p = (text: string): Paragraph => [
   {
@@ -9,19 +10,13 @@ const p = (text: string): Paragraph => [
   },
 ];
 
-export const PostgresData: DeepDiveArticle = {
+export const article: DeepDiveArticle = {
+  heroIllustration: PostgresIllustration,
   slug: "postgres",
   name: "Postgres",
   eyebrow: "RELATIONAL · SQL",
 
-  description: [
-    p(
-      "PostgreSQL is a powerful, open-source relational database. It emphasizes extensibility and SQL compliance."
-    ),
-    p(
-      "It supports complex queries, transactions, and a wide range of data types. Postgres is often the default choice for applications requiring strong consistency."
-    ),
-  ],
+  description: 'PostgreSQL is a powerful, open-source relational database. It emphasizes extensibility and SQL compliance. It supports complex queries, transactions, and a wide range of data types. Postgres is often the default choice for applications requiring strong consistency.',
 
   tags: ["Relational", "ACID", "Extensible"],
   category: "db",

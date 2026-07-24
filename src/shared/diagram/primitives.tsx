@@ -1,7 +1,6 @@
-// src/content/deep-dive/illustrations/primitives.tsx
 
-// src/features/deep-dive/illustrations/primitives.tsx
-//
+// src/shared/diagram/primitives.tsx
+
 // Small, composable SVG building blocks shared by every illustration in this
 // folder. An illustration should almost never need a raw <circle>/<rect>/<line>
 // — reach for Node / Box / Arrow / Label instead, and only drop to raw SVG for
@@ -107,12 +106,7 @@ export function Box({
   );
 }
 
-function resolveColor(color?: keyof typeof palette | string): string {
-  if (!color) return 'var(--text-soft)';
-  return color in palette ? palette[color as keyof typeof palette] : color;
-}
 
-/** A straight or dashed connector, optionally with an arrowhead and label. */
 export function Arrow({
   x1,
   y1,
@@ -121,6 +115,7 @@ export function Arrow({
   color = 'var(--text-soft)',
   dashed = false,
   head = false,
+  opacity,
   label,
   labelColor,
 }: {
@@ -131,6 +126,7 @@ export function Arrow({
   color?: keyof typeof palette | string;
   dashed?: boolean;
   head?: boolean;
+  opacity?: number;
   label?: string;
   labelColor?: string;
 }) {
@@ -143,7 +139,7 @@ export function Arrow({
   const hy2 = y2 - headSize * Math.sin(angle + Math.PI / 7);
 
   return (
-    <g>
+    <g opacity={opacity}>
       <line
         x1={x1}
         y1={y1}
@@ -170,9 +166,40 @@ export function Arrow({
   );
 }
 
+function resolveColor(color?: keyof typeof palette | string): string {
+  if (!color) return 'var(--text-soft)';
+  return color in palette ? palette[color as keyof typeof palette] : color;
+}
+
+/** A straight or dashed connector, optionally with an arrowhead and label. */
+
+
 /** A ring path (unfilled circle) for peer-to-peer / hash-ring diagrams. */
-export function RingPath({ cx, cy, r }: { cx: number; cy: number; r: number }) {
-  return <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--border)" strokeWidth={1.5} />;
+export function RingPath({
+  cx,
+  cy,
+  r,
+  dashed = false,
+  opacity,
+}: {
+  cx: number;
+  cy: number;
+  r: number;
+  dashed?: boolean;
+  opacity?: number;
+}) {
+  return (
+    <circle
+      cx={cx}
+      cy={cy}
+      r={r}
+      fill="none"
+      stroke="var(--border)"
+      strokeWidth={1.5}
+      strokeDasharray={dashed ? '4,7' : undefined}
+      opacity={opacity}
+    />
+  );
 }
 
 /** Places n items evenly around a circle. Returns {x, y} for each index. */

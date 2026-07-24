@@ -1,6 +1,6 @@
 // src/content/deep-dive/illustrations/DynamoConsistencyIllustration.tsx
 
-import { IllustrationCanvas, Label, Node, Box, Arrow } from './primitives';
+import { IllustrationCanvas, Label, Node, Box, Arrow } from '../../../shared/diagram/primitives';
 
 export function DynamoConsistencyIllustration() {
   return (

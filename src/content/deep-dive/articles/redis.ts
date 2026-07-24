@@ -1,6 +1,8 @@
 // src/content/deep-dive/articles/redis.ts
 
 import { DeepDiveArticle, Paragraph } from "@/features/deep-dive/types";
+import { RedisIllustration } from "@/content/deep-dive/illustrations/Redis";
+
 
 const p = (text: string): Paragraph => [
   {
@@ -9,19 +11,14 @@ const p = (text: string): Paragraph => [
   },
 ];
 
-export const RedisData: DeepDiveArticle = {
+export const article: DeepDiveArticle = {
+  heroIllustration: RedisIllustration,
   slug: "redis",
   name: "Redis",
   eyebrow: "IN-MEMORY · KEY-VALUE",
 
-  description: [
-    p(
-      "Redis is an in-memory data structure store. It keeps everything in RAM, which makes it incredibly fast for reads and writes."
-    ),
-    p(
-      "It supports data structures like strings, hashes, lists, sets, and more. Redis is often used for caching, session management, and real-time analytics."
-    ),
-  ],
+  description:'Redis is an in-memory data structure store. It keeps everything in RAM, which makes it incredibly fast for reads and writes. It supports data structures like strings, hashes, lists, sets, and more. Redis is often used for caching, session management, and real-time analytics.',
+    
 
   tags: ["In-memory", "Key-value", "Single-threaded"],
   category: "db",
