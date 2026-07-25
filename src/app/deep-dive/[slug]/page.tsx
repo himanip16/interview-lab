@@ -171,9 +171,13 @@ export default async function DeepDiveArticlePage({
             />
           )}
 
+          
           {section.code && (
-            <CodeBlock code={section.code} />
-          )}
+  <CodeBlock
+    code={section.code.code}
+    language={section.code.language}
+  />
+)}
 
           {section.callout && (
             <Callout

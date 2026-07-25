@@ -3,31 +3,54 @@
   border-radius: 16px;
   overflow: hidden;
 
-  border: 1px solid rgba(0,0,0,.08);
+  border: 1px solid rgba(16, 185, 129, 0.15);
 
   box-shadow:
-    0 8px 24px rgba(0,0,0,.08);
+    0 1px 2px rgba(0,0,0,.04),
+    0 12px 32px rgba(0,0,0,.18),
+    0 0 0 1px rgba(16, 185, 129, 0.04);
 
-  background: #24292e;
+  background: #1a1d23;
 }
 
 .code-block-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
 
-  padding: 12px 18px;
+  padding: 12px 20px;
 
-  background: #1d2126;
+  background: linear-gradient(180deg, #20242b 0%, #1a1d23 100%);
 
-  border-bottom: 1px solid rgba(255,255,255,.08);
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+
+.code-block-header::before {
+  content: "";
+  display: none; /* placeholder if you want traffic-light dots later */
 }
 
 .code-language {
-  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: .08em;
-  color: rgba(255,255,255,.72);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+
+  color: #34d399; /* mint accent, matches sidebar */
+}
+
+.code-language::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 8px rgba(52, 211, 153, 0.7);
 }
 
 .code-block-body {
@@ -37,36 +60,42 @@
 .code-block-body pre {
   margin: 0 !important;
 
-  padding: 22px 24px !important;
+  padding: 24px !important;
 
   background: transparent !important;
 
-  font-size: 14px;
+  font-size: 13.5px;
 
-  line-height: 1.75;
+  line-height: 1.8;
 
-  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .code-block-body code {
   font-family:
+    "SF Mono",
     SFMono-Regular,
-    SF Mono,
     Menlo,
     Monaco,
     Consolas,
     monospace;
 }
 
-/* Scrollbar */
+/* Scrollbar (only matters now for extreme cases, since text wraps) */
 
 .code-block-body::-webkit-scrollbar {
-  height: 10px;
+  height: 8px;
 }
 
 .code-block-body::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,.18);
+  background: rgba(52, 211, 153, 0.25);
   border-radius: 999px;
+}
+
+.code-block-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(52, 211, 153, 0.45);
 }
 
 .code-block-body::-webkit-scrollbar-track {
@@ -77,12 +106,10 @@
 
 .code-block-body .shiki {
   margin: 0 !important;
-
   padding: 0 !important;
-
   background: transparent !important;
 }
 
 .code-block-body .line {
-  min-height: 1.75em;
+  min-height: 1.8em;
 }
