@@ -23,7 +23,7 @@ const transcript: TranscriptData = {
         {
           type: "text",
           value:
-            "You're given n non-negative integers representing an elevation map — each bar has width 1. Compute how much water it can trap after raining. Example: [0,1,0,2,1,0,1,3,2,1,2,1] traps 6 units.",
+            "Here's an elevation map, n non-negative integers, each bar has width one. It rains. How much water sits on top when it's done? For [0,1,0,2,1,0,1,3,2,1,2,1] the answer is 6. Walk me through how you'd even start thinking about this.",
         },
       ],
     },
@@ -31,12 +31,12 @@ const transcript: TranscriptData = {
     {
       id: "2",
       role: "candidate",
-      elapsedSeconds: 12,
+      elapsedSeconds: 14,
       content: [
         {
           type: "text",
           value:
-            "So water sits on top of a bar up to whatever's the shorter of the two walls containing it, minus the bar's own height. Let me start with what determines the water above a single index.",
+            "The water sitting above any one bar depends on what's walling it in on both sides, so it feels like a per-position question rather than a whole-array one — for each index, figure out how deep the water gets there, then add those up.",
         },
       ],
     },
@@ -44,11 +44,11 @@ const transcript: TranscriptData = {
     {
       id: "3",
       role: "interviewer",
-      elapsedSeconds: 26,
+      elapsedSeconds: 24,
       content: [
         {
           type: "text",
-          value: "Go ahead.",
+          value: "Okay, per position then. Take index i. What decides the water level right above it?",
         },
       ],
     },
@@ -56,23 +56,23 @@ const transcript: TranscriptData = {
     {
       id: "4",
       role: "candidate",
-      elapsedSeconds: 48,
+      elapsedSeconds: 40,
       content: [
         {
           type: "text",
-          value: "For index i, ",
+          value: "",
         },
         {
           id: "highlight-adjacent-only",
           type: "highlight",
           status: "missed",
-          value: "compare height[i] against its immediate left and right neighbors, and the difference is the trapped water",
+          value: "Whichever neighbor is taller, left or right of it",
           explanation:
-            "Confuses the immediate neighbor with the true bounding wall. Water above a bar is governed by the tallest bar anywhere to its left and the tallest bar anywhere to its right — not by whatever happens to sit directly next to it, which can be much shorter than the real wall further away.",
+            "Confuses the immediate neighbor with the true bounding wall. Water above a bar is governed by the tallest bar anywhere to its left and anywhere to its right, not by whatever sits directly next to it.",
         },
         {
           type: "text",
-          value: " — if the left neighbor's taller, water fills up to that height above bar i.",
+          value: " — say the left one's taller, water fills up to that height and whatever's left after subtracting the bar's own height is trapped.",
         },
       ],
     },
@@ -80,11 +80,12 @@ const transcript: TranscriptData = {
     {
       id: "5",
       role: "interviewer",
-      elapsedSeconds: 70,
+      elapsedSeconds: 55,
       content: [
         {
           type: "text",
-          value: "Run that on [5, 1, 1, 1, 3]. What do you get for index 2?",
+          value:
+            "Let's not take that on faith. [5, 1, 1, 1, 3] — trace your rule at index 2 for me.",
         },
       ],
     },
@@ -92,12 +93,12 @@ const transcript: TranscriptData = {
     {
       id: "6",
       role: "candidate",
-      elapsedSeconds: 96,
+      elapsedSeconds: 78,
       content: [
         {
           type: "text",
           value:
-            "Index 2 is height 1, immediate left neighbor is index 1, also height 1. No difference, so my rule says zero water there.",
+            "Index 2 is height 1. Its left neighbor, index 1, is also height 1 — no gap, so by my rule there's no water there.",
         },
       ],
     },
@@ -105,11 +106,11 @@ const transcript: TranscriptData = {
     {
       id: "7",
       role: "interviewer",
-      elapsedSeconds: 112,
+      elapsedSeconds: 90,
       content: [
         {
           type: "text",
-          value: "Is that actually right, though? What's really holding water at index 2?",
+          value: "Draw it instead of trusting the rule. What's actually sitting on both sides of index 2?",
         },
       ],
     },
@@ -117,24 +118,24 @@ const transcript: TranscriptData = {
     {
       id: "8",
       role: "candidate",
-      elapsedSeconds: 138,
+      elapsedSeconds: 118,
       content: [
         {
           type: "text",
           value:
-            "...no, it's wrong. There's a wall of height 5 two spots to the left and a wall of height 3 two spots to the right. Water at index 2 fills up to min(5, 3) = 3, minus its own height of 1, so 2 units — not 0. My rule only looked at the adjacent bar, but the bar holding the water back doesn't have to be adjacent at all, it just has to be the tallest thing you'd hit walking outward in each direction. I need the ",
+            "5 _ 1 1 1 _ 3 — two spots left there's a wall of 5, two spots right there's a wall of 3. So the water at index 2 fills to min(5,3), which is 3, minus its own height of 1 — that's 2 units, not 0. My rule broke because it only looked one step away, and the wall that actually matters doesn't have to be adjacent, it just has to be the tallest thing between the position and either end. So what I really want is the ",
         },
         {
           id: "highlight-global-max",
           type: "highlight",
           status: "strong",
-          value: "running maximum height across the entire left side and the entire right side, not just the neighbor",
+          value: "running maximum across everything to the left, and separately everything to the right",
           explanation:
-            "Correctly re-derives the actual governing quantities: leftMax[i] and rightMax[i] must be the tallest bar anywhere in [0..i] and [i..n-1] respectively — global running maxima, not local comparisons — since a wall two, ten, or a hundred positions away is just as capable of holding water as an adjacent one.",
+            "Correctly re-derives the governing quantities: leftMax[i] and rightMax[i] must be global running maxima over [0..i] and [i..n-1], not local neighbor comparisons.",
         },
         {
           type: "text",
-          value: ", for every index.",
+          value: ", at every index, not just one neighbor's height.",
         },
       ],
     },
@@ -142,11 +143,11 @@ const transcript: TranscriptData = {
     {
       id: "9",
       role: "interviewer",
-      elapsedSeconds: 164,
+      elapsedSeconds: 145,
       content: [
         {
           type: "text",
-          value: "Write that.",
+          value: "Good. Turn that into something you'd actually run.",
         },
       ],
     },
@@ -154,23 +155,23 @@ const transcript: TranscriptData = {
     {
       id: "10",
       role: "candidate",
-      elapsedSeconds: 202,
+      elapsedSeconds: 190,
       content: [
         {
           type: "text",
           value:
-            "Precompute leftMax[i] as the max of everything from 0 to i inclusive, and rightMax[i] as the max from i to n-1 inclusive, one pass each direction. Then water at i is min(leftMax[i], rightMax[i]) minus height[i], summed over everything, clamped so it can't go negative — though it never will, since height[i] itself is always included in both of those maxes.",
+            "One pass left to right builds leftMax, one pass right to left builds rightMax, then water at i is just min of the two maxes minus height[i], summed over the array.",
         },
         {
           type: "code",
-          id: "code-two-arrays",
+          id: "code-recurrence",
           language: "python",
-          value:
-            "def trap(height: list[int]) -> int:\n    n = len(height)\n    if n == 0:\n        return 0\n\n    left_max = [0] * n\n    right_max = [0] * n\n\n    left_max[0] = height[0]\n    for i in range(1, n):\n        left_max[i] = max(left_max[i - 1], height[i])\n\n    right_max[n - 1] = height[n - 1]\n    for i in range(n - 2, -1, -1):\n        right_max[i] = max(right_max[i + 1], height[i])\n\n    return sum(min(left_max[i], right_max[i]) - height[i] for i in range(n))",
+          value: "left_max[i] = max(left_max[i - 1], height[i])\nwater_i = min(left_max[i], right_max[i]) - height[i]",
         },
         {
           type: "text",
-          value: "O(n) time, O(n) extra space for the two arrays.",
+          value:
+            "That's O(n) time, but I'm paying O(n) space for the two arrays, and I don't actually need the whole history — only the max so far from each side.",
         },
       ],
     },
@@ -178,11 +179,11 @@ const transcript: TranscriptData = {
     {
       id: "11",
       role: "interviewer",
-      elapsedSeconds: 228,
+      elapsedSeconds: 215,
       content: [
         {
           type: "text",
-          value: "Can you get rid of the two arrays and do it in O(1) extra space?",
+          value: "So drop the arrays. Can you get this to O(1) extra space?",
         },
       ],
     },
@@ -190,24 +191,12 @@ const transcript: TranscriptData = {
     {
       id: "12",
       role: "candidate",
-      elapsedSeconds: 260,
+      elapsedSeconds: 240,
       content: [
         {
           type: "text",
           value:
-            "I think so — two pointers, one from each end, tracking just a running left_max and right_max as scalars instead of full arrays. Move whichever side looks smaller.",
-        },
-        {
-          id: "highlight-two-pointer-no-proof",
-          type: "highlight",
-          status: "missed",
-          value: "move the pointer with the smaller height and just trust that it works out",
-          explanation:
-            "States the correct two-pointer move rule but offers no justification for why comparing height[left] and height[right] — rather than left_max and right_max — is a safe substitute for knowing the true opposite-side maximum, which is the entire non-obvious part of this technique.",
-        },
-        {
-          type: "text",
-          value: ", since the two heights are close together it should roughly average out to the right answer.",
+            "Two pointers, one at each end, each carrying just a running max instead of a full array. Move whichever pointer is on the shorter bar.",
         },
       ],
     },
@@ -215,12 +204,11 @@ const transcript: TranscriptData = {
     {
       id: "13",
       role: "interviewer",
-      elapsedSeconds: 288,
+      elapsedSeconds: 250,
       content: [
         {
           type: "text",
-          value:
-            "\"Roughly average out\" isn't a proof. When height[left] is less than or equal to height[right], why are you allowed to trust left_max as the answer for the left pointer, without knowing anything about what's further to the right?",
+          value: "Why the shorter one? Have you actually worked that out, or is that a pattern you remember from somewhere?",
         },
       ],
     },
@@ -228,47 +216,23 @@ const transcript: TranscriptData = {
     {
       id: "14",
       role: "candidate",
-      elapsedSeconds: 330,
+      elapsedSeconds: 270,
       content: [
         {
           type: "text",
-          value:
-            "Let me actually think this through instead of hand-waving it. left_max is the true, exact maximum of everything from index 0 up to the left pointer — I've been tracking it honestly the whole time, so that part's solid regardless of anything else.",
+          value: "",
         },
         {
-          type: "text",
-          value:
-            "The question is whether left_max is really the smaller of the two true bounding walls at that position, since if it's not the smaller one, using it would be wrong. Suppose height[left] <= height[right]. The right pointer hasn't reached the true right edge yet, but whatever the true maximum on the right side ends up being, it's at least height[right] — the pointer itself is sitting on a bar of that height, and the true max can only be greater than or equal to any single bar within its range. So true_right_max >= height[right] >= height[left]. And left_max, being the max of a prefix that includes the left pointer's own bar, is at least height[left]. So I know true_right_max >= height[left], but I need it compared to left_max specifically, not just height[left].",
-        },
-        {
-          type: "text",
-          value:
-            "Actually the cleaner way to see it: left_max is already the true value for the left side by definition — no approximation there. And true_right_max >= height[right] >= height[left]. That doesn't directly bound true_right_max against left_max unless left_max also happens to be <= height[right]... but here's the thing — left_max can never be less than height[left], and if left_max were somehow bigger than height[right], that would mean some bar to the left of my pointer is taller than height[right], which is fine, but then the true right max, being >= height[right], could still be less than that inflated left_max. Hmm — no, wait, that's the wrong direction to worry about.",
-        },
-        {
-          type: "text",
-          value:
-            "Let me redo it cleanly: I only ever move the left pointer when height[left] <= height[right]. At that moment, true_right_max — whatever it eventually resolves to — is guaranteed >= height[right], because the pointer standing there is itself part of that range. So true_right_max >= height[right] >= height[left]. Meanwhile left_max >= height[left] trivially, since it's a max that includes height[left]. But I actually need true_right_max >= left_max, not just >= height[left]. That only holds because ",
-        },
-        {
-          id: "highlight-two-pointer-proof",
+          id: "highlight-two-pointer-no-proof",
           type: "highlight",
-          status: "strong",
-          value: "left_max was already finalized as the true left-side maximum before this comparison, so if left_max were greater than height[right], the pointer move rule guarantees we'd have advanced right instead — the algorithm only ever trusts left_max for water calculation at moments where the comparison height[left] <= height[right] holds, and by induction left_max never exceeds any height value the right pointer has already passed",
+          status: "missed",
+          value: "Honestly, mostly remembered — the two sides are close in height so it should even out",
           explanation:
-            "Works through the actual invariant that makes the two-pointer technique correct instead of accepting the move rule on faith: the algorithm only computes water using left_max exactly when the current comparison certifies that the true opposite-side maximum is bounded below by something at least as large, which is the non-obvious correctness argument most candidates skip.",
+            "Offers no justification for why comparing height[left] and height[right] is a safe substitute for the true opposite-side maximum — the actual non-obvious part of the technique.",
         },
         {
           type: "text",
-          value:
-            " — so min(true_left_max, true_right_max) really does equal left_max at that point, and using it is safe. Same argument mirrored for the right pointer.",
-        },
-        {
-          type: "code",
-          id: "code-two-pointer",
-          language: "python",
-          value:
-            "def trap(height: list[int]) -> int:\n    left, right = 0, len(height) - 1\n    left_max = right_max = 0\n    water = 0\n\n    while left < right:\n        if height[left] <= height[right]:\n            left_max = max(left_max, height[left])\n            water += left_max - height[left]\n            left += 1\n        else:\n            right_max = max(right_max, height[right])\n            water += right_max - height[right]\n            right -= 1\n\n    return water",
+          value: ".",
         },
       ],
     },
@@ -276,11 +240,12 @@ const transcript: TranscriptData = {
     {
       id: "15",
       role: "interviewer",
-      elapsedSeconds: 372,
+      elapsedSeconds: 285,
       content: [
         {
           type: "text",
-          value: "Good. Now solve it a third way — with a stack, thinking in horizontal layers instead of per-column vertical fills.",
+          value:
+            "\"Should even out\" isn't something I can trust a system to. When height[left] <= height[right], you use left_max as the water level at left. What do you actually know about the true maximum on the right side at that moment?",
         },
       ],
     },
@@ -288,19 +253,12 @@ const transcript: TranscriptData = {
     {
       id: "16",
       role: "candidate",
-      elapsedSeconds: 402,
+      elapsedSeconds: 305,
       content: [
         {
           type: "text",
           value:
-            "Keep a stack of indices with non-increasing heights from bottom to top. When I hit a bar taller than what's on top of the stack, that's the moment a basin closes — I pop the bottom of the basin, and the new stack top plus the current bar are the two walls. The width is the gap between them, and the height of water added is bounded by the shorter of the two walls, minus whatever was at the bottom I just popped.",
-        },
-        {
-          type: "code",
-          id: "code-stack",
-          language: "python",
-          value:
-            "def trap(height: list[int]) -> int:\n    stack: list[int] = []  # indices, heights non-increasing bottom to top\n    water = 0\n\n    for i, h in enumerate(height):\n        while stack and height[stack[-1]] < h:\n            bottom = stack.pop()\n            if not stack:\n                break  # no left wall left to pair with\n            left = stack[-1]\n            width = i - left - 1\n            bounded_height = min(height[left], h) - height[bottom]\n            water += width * bounded_height\n        stack.append(i)\n\n    return water",
+            "The right pointer is standing on a bar of height[right], and it hasn't reached the true right edge yet — so whatever the true max on the right eventually turns out to be, it's at least height[right]. And since height[left] <= height[right], that gives me true_right_max >= height[left]. So the right side can't be the bottleneck... at index left, at least.",
         },
       ],
     },
@@ -308,11 +266,11 @@ const transcript: TranscriptData = {
     {
       id: "17",
       role: "interviewer",
-      elapsedSeconds: 430,
+      elapsedSeconds: 320,
       content: [
         {
           type: "text",
-          value: "This one's O(n) time same as the two-pointer, but why would you ever reach for it instead?",
+          value: "That compares true_right_max to height[left]. You're using left_max, not height[left]. Same thing?",
         },
       ],
     },
@@ -320,25 +278,155 @@ const transcript: TranscriptData = {
     {
       id: "18",
       role: "candidate",
-      elapsedSeconds: 456,
+      elapsedSeconds: 345,
       content: [
         {
           type: "text",
           value:
-            "Space-wise it's worse than two-pointer — O(n) stack versus O(1) — so for this exact problem, two-pointer is strictly better. Where the stack version earns its keep is if the follow-up changes shape: things like processing bars as a live stream where you can't just walk from both ends because you don't have the whole array yet, or variants where you actually need to know the layer boundaries themselves — like listing out each individual pooled region — rather than just a single running total. The layer-by-layer accounting the stack gives you generalizes better to those; the two-pointer sum doesn't expose that structure at all, it only hands you the final number.",
+            "No — not automatically. left_max could be bigger than height[left] if a taller bar came earlier on the left. So I need true_right_max >= left_max, and I've only shown true_right_max >= height[left]. Let me trace a case instead of guessing: [4, 2, 3, 1, 5]. Left pointer at index 1 (height 2), right pointer at index 3 (height 1). height[left] > height[right] here, so actually I'd be moving right, not left — so this case doesn't apply to the left rule at all.",
         },
       ],
     },
 
     {
       id: "19",
-      role: "takeaway",
-      elapsedSeconds: 480,
+      role: "interviewer",
+      elapsedSeconds: 365,
+      content: [
+        {
+          type: "text",
+          value: "Right, so go find a case where the rule does fire, and check whether left_max could actually exceed height[right].",
+        },
+      ],
+    },
+
+    {
+      id: "20",
+      role: "candidate",
+      elapsedSeconds: 400,
       content: [
         {
           type: "text",
           value:
-            "Takeaway: the tempting first instinct is to compare a bar against its immediate neighbor, which fails as soon as the real bounding wall sits further away — the governing quantities are the true running maximum height on each side, not local differences. Precomputing leftMax and rightMax arrays gets there in O(n) time and O(n) space; collapsing that into two pointers with scalar running maxima gets O(1) space, but only because of a specific invariant — whichever pointer has the smaller current height is guaranteed to have its running max be the true minimum-side bound, since the other side's true maximum is already certified to be at least as large. A monotonic stack solves the same problem by processing water in horizontal layers instead of vertical columns, trading the two-pointer's O(1) space for a structure that generalizes better if a follow-up needs the individual pooled regions rather than just their total.",
+            "The rule fires when height[left] <= height[right]. Could left_max, the best bar seen so far on the left, still be bigger than height[right]? If it were, that bar would be sitting to the left of my current left pointer — meaning at some earlier step, that bar's height was compared against whatever the right pointer's height was then. Right pointer heights only ever get replaced by other heights we've already passed, and the pointer only advances rightward — so if that earlier bar had beaten the right side back then, we'd have moved right instead of left, and left_max would never have advanced past it while a taller unresolved right wall was still in play. So by the time the rule fires with height[left] <= height[right], ",
+        },
+        {
+          id: "highlight-two-pointer-proof",
+          type: "highlight",
+          status: "strong",
+          value: "left_max can never have snuck past height[right] without the algorithm already having moved the other pointer instead",
+          explanation:
+            "Arrives at the actual invariant: the algorithm only trusts left_max for water calculation at moments where the current comparison certifies true_right_max is bounded below by something at least as large as left_max.",
+        },
+        {
+          type: "text",
+          value: " — so min(true_left_max, true_right_max) really does equal left_max right there, and using it is safe.",
+        },
+        {
+          type: "code",
+          id: "code-two-pointer",
+          language: "python",
+          value:
+            "if height[left] <= height[right]:\n    left_max = max(left_max, height[left])\n    water += left_max - height[left]\n    left += 1",
+        },
+        {
+          type: "text",
+          value: "Mirror it for the right pointer and that's the whole loop.",
+        },
+      ],
+    },
+
+    {
+      id: "21",
+      role: "interviewer",
+      elapsedSeconds: 425,
+      content: [
+        {
+          type: "text",
+          value: "Good, that's a real proof, not a shrug. Third approach now — a stack. What does it buy you that the pointer version doesn't?",
+        },
+      ],
+    },
+
+    {
+      id: "22",
+      role: "candidate",
+      elapsedSeconds: 445,
+      content: [
+        {
+          type: "text",
+          value:
+            "The pointer version fills water column by column, one bar at a time. A stack lets you fill it layer by layer instead — keep indices in the stack with heights non-increasing bottom to top, and the moment a new bar is taller than the stack's top, a basin just closed.",
+        },
+      ],
+    },
+
+    {
+      id: "23",
+      role: "interviewer",
+      elapsedSeconds: 460,
+      content: [
+        {
+          type: "text",
+          value: "When that basin closes, what water do you add, and for what width?",
+        },
+      ],
+    },
+
+    {
+      id: "24",
+      role: "candidate",
+      elapsedSeconds: 490,
+      content: [
+        {
+          type: "text",
+          value:
+            "Pop the bottom of the basin. The new stack top and the current bar are the two walls, the width is the gap between their indices minus one, and the height added is the shorter of those two walls minus whatever was just popped.",
+        },
+        {
+          type: "code",
+          id: "code-stack",
+          language: "python",
+          value:
+            "bottom = stack.pop()\nleft = stack[-1]\nwidth = i - left - 1\nwater += width * (min(height[left], h) - height[bottom])",
+        },
+      ],
+    },
+
+    {
+      id: "25",
+      role: "interviewer",
+      elapsedSeconds: 505,
+      content: [
+        {
+          type: "text",
+          value: "Same O(n) time as the two-pointer version. So why reach for this one instead, ever?",
+        },
+      ],
+    },
+
+    {
+      id: "26",
+      role: "candidate",
+      elapsedSeconds: 525,
+      content: [
+        {
+          type: "text",
+          value:
+            "It's strictly worse on space for this exact problem — O(n) stack against O(1). Where it earns its keep is when the shape of the question changes: bars arriving as a stream where you can't anchor two pointers because you don't have the far end yet, or a follow-up that wants the individual pooled regions listed out rather than a single total. The two-pointer sum only ever hands you a number; the stack's layer-by-layer structure is what you'd build on for that.",
+        },
+      ],
+    },
+
+    {
+      id: "27",
+      role: "takeaway",
+      elapsedSeconds: 545,
+      content: [
+        {
+          type: "text",
+          value:
+            "The tempting first instinct is to compare a bar against its immediate neighbor, and that breaks the moment the real bounding wall sits further away — the governing quantities are the true running maximum on each side, not local differences. Precomputing leftMax and rightMax gets there in O(n) time and O(n) space; collapsing that into two pointers with scalar running maxes gets O(1) space, but only because of a specific invariant, worked out from a concrete trace rather than assumed — whichever pointer sits on the shorter bar is guaranteed to have its running max be the true minimum-side bound, since the other side's true maximum is already certified to be at least as large. A monotonic stack solves the same problem in horizontal layers instead of vertical columns, trading the two-pointer's O(1) space for a structure that generalizes better if a follow-up needs the pooled regions themselves rather than just their total.",
         },
       ],
     },
@@ -361,7 +449,7 @@ const trappingRainWater: TranscriptEntry = {
       "Prefix Sums",
     ],
     description:
-      "Coding interview on Trapping Rain Water: a wrong first instinct comparing bars only to their immediate neighbor gets corrected into true running left/right maxima, then compressed from an O(n)-space two-array solution into an O(1)-space two-pointer solution — with the pointer-move rule pushed past hand-waving into an actual invariant proof — and finally re-solved with a monotonic stack to contrast per-column vs. per-layer accounting.",
+      "Coding interview on Trapping Rain Water: a wrong first instinct comparing bars only to their immediate neighbor gets corrected into true running left/right maxima, then compressed from an O(n)-space two-array solution into an O(1)-space two-pointer solution — with the pointer-move rule pushed past a remembered pattern into an actual invariant proof built from a concrete trace — and finally re-solved with a monotonic stack to contrast per-column vs. per-layer accounting.",
   },
 
   transcript,
