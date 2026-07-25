@@ -63,11 +63,13 @@ const output = `// AUTO-GENERATED FILE.
 // DO NOT EDIT.
 // Run: npm run generate-transcripts
 
+import type { TranscriptEntry } from "@/content/transcripts/types";
+
 ${imports}
 
-export const TRANSCRIPTS = [
+export const TRANSCRIPTS: readonly TranscriptEntry[] = [
 ${array}
-] as const;
+];
 `;
 
 writeFileSync(OUT, output);

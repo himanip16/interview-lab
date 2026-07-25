@@ -2,6 +2,7 @@
 
 import { TranscriptData } from "@/features/library/types/transcript";
 import { Difficulty } from "@prisma/client";
+import type { TranscriptEntry } from "../types";
 
 const transcript: TranscriptData = {
   metadata: {
@@ -344,27 +345,17 @@ const transcript: TranscriptData = {
     },
   ],
 };
-
-const biasForActionCertificateExpiration = {
+const biasForActionCertificateExpiration: TranscriptEntry = {
   summary: {
     slug: "bias-for-action-certificate-expiration",
-    title: "Bias for Action + Ownership — Certificate Expiration Incident Response at Uber",
+    title:
+      "Bias for Action + Ownership — Certificate Expiration Incident Response at Uber",
     category: "behavioral",
-    lps: ["Bias for Action", "Ownership", "Learn and Be Curious", "Earn Trust"],
+    difficulty: Difficulty.HARD,
     duration: 32,
-    company: "Uber",
-    context: "Compliance Data Integration — Government Regulatory Portal Authentication",
+    company: "Amazon",
     description:
       "Oncall page: government integration stopped working. Root cause: client certificate expiring in 24 hours. Compliance data transmission is critical—missing regulatory deadlines triggers audits and legal consequences. Problem: no playbook (certificate only renewed every several years), original engineer left, nobody on team had done renewal before. Candidate didn't immediately escalate. Instead: (1) read government documentation to understand what regulator expects, (2) searched internal tickets and found old notes from 5 years ago (incomplete, author left), (3) asked teammates who had context (most had moved to other teams), (4) realized credential generation requires Uber's internal security process (can't be done locally). Called IAM on-call with specific questions: 'What's Uber's process for generating this certificate? Does it require your secure workflow?' Coordinated end-to-end: IAM generated certificate per requirements, candidate uploaded to secrets platform, tested with government sandbox, deployed to production. Integration recovered in 4 hours. Prevented recurrence: (1) documented renewal procedure for team wiki, (2) configured 30-day expiry alerts instead of post-expiry alerts. Reflection: would have involved IAM slightly earlier, but the approach of investigating independently before escalating was sound.",
-    eval_dimensions: [
-      "eval-initial-diagnosis: quickly identified root cause from monitoring data",
-      "eval-knowledge-gap: recognized lack of expertise and tribal knowledge",
-      "eval-action-sequencing: investigated independently before escalating (good judgment on pacing)",
-      "eval-tribal-knowledge: reconstructed forgotten process from docs, old tickets, team memory",
-      "eval-expert-coordination: asked targeted questions of IAM instead of handoff",
-      "eval-end-to-end-ownership: owned the full resolution despite needing help",
-      "eval-prevention: documented and added monitoring to prevent recurrence",
-    ],
     tags: [
       "Leadership Principles",
       "Bias for Action",

@@ -32,11 +32,11 @@ export type TranscriptSummary = {
   slug: string;
 
   title: string;
-
+  context?: string;
   category: TranscriptCategory;
-
+  lps?: string[];
   difficulty: Difficulty;
-
+  eval_dimensions?: string[];
   duration: number;
 
   company?: string;

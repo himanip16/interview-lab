@@ -1,5 +1,6 @@
 // src/content/transcripts/behavioral/are-right-a-lot-labelling-deduplication.ts
 
+import type { TranscriptEntry } from "../types";
 import { TranscriptData } from "@/features/library/types/transcript";
 import { Difficulty } from "@prisma/client";
 
@@ -10,6 +11,7 @@ const transcript: TranscriptData = {
     duration: 34,
     template: "Amazon LP",
     category: "Leadership Principles",
+    
   },
 
   messages: [
@@ -373,26 +375,15 @@ const transcript: TranscriptData = {
   ],
 };
 
-const areRightALotLabellingDeduplication = {
+const areRightALotLabellingDeduplication: TranscriptEntry = {
   summary: {
     slug: "are-right-a-lot-labelling-deduplication",
-    title: "Are Right, A Lot — Deduplication vs. Scaling Decision at Deliveroo",
+    title:
+      "Are Right, A Lot — Deduplication vs. Scaling Decision at Deliveroo",
     category: "behavioral",
-    lp: "Are Right, A Lot",
+    difficulty: Difficulty.HARD,
     duration: 34,
     company: "Deliveroo",
-    context: "Campaign Labelling Pipeline — Bulk Menu Update Throughput Problem",
-    description:
-      "Faced decision about how to handle queue buildup during bulk menu updates. Three competing hypotheses: (1) insufficient compute—scale horizontally, (2) redundant work—defer and deduplicate, (3) upstream batching—change event schema. Candidate investigated production data and discovered that bulk menu updates trigger hundreds of events for the same restaurant, but partner eligibility depends only on item count. Realized redundant evaluation was the actual root cause. Simulated deduplication: 50K+ evaluations/hour → <5K evaluations/hour (90% reduction). Validated business impact: median 45-minute order booking time makes 5-minute delay negligible. Deployed but discovered deduplication key needed mission+market+restaurant (not just restaurant_id). Also discovered secondary bottleneck in rule engine caching. Results validated original hypothesis: downstream writes dropped dramatically, system stopped requiring oncall during bulk updates, cost reduced. Proof that addressing the correct root cause is fundamentally different from scaling.",
-    eval_dimensions: [
-      "eval-problem-ambiguity: multiple plausible solutions; candidate not initially certain",
-      "eval-investigation-discipline: analyzes production data to distinguish hypotheses",
-      "eval-reasoning: articulates why redundancy is different from insufficient compute",
-      "eval-validation: simulation and data de-risk major architecture decision",
-      "eval-implementation-reality: adjusts when reality reveals missed details",
-      "eval-proof: multiple independent signals confirm decision was correct",
-      "eval-lessons: articulates what was learned about decision-making under uncertainty",
-    ],
     tags: [
       "Leadership Principles",
       "Are Right, A Lot",
@@ -406,6 +397,8 @@ const areRightALotLabellingDeduplication = {
       "STAR Method",
       "Behavioral Interview",
     ],
+    description:
+      "Faced decision about how to handle queue buildup during bulk menu updates. Three competing hypotheses: (1) insufficient compute—scale horizontally, (2) redundant work—defer and deduplicate, (3) upstream batching—change event schema. Candidate investigated production data and discovered that bulk menu updates trigger hundreds of events for the same restaurant, but partner eligibility depends only on item count. Realized redundant evaluation was the actual root cause. Simulated deduplication: 50K+ evaluations/hour → <5K evaluations/hour (90% reduction). Validated business impact: median 45-minute order booking time makes 5-minute delay negligible. Deployed but discovered deduplication key needed mission+market+restaurant (not just restaurant_id). Also discovered secondary bottleneck in rule engine caching. Results validated original hypothesis: downstream writes dropped dramatically, system stopped requiring oncall during bulk updates, cost reduced. Proof that addressing the correct root cause is fundamentally different from scaling.",
   },
 
   transcript,
