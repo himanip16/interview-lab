@@ -18,6 +18,7 @@ import learnAndBeCuriousJit from "@/content/transcripts/behavioral/learn-and-be-
 import ownershipEmoney from "@/content/transcripts/behavioral/ownership-emoney";
 import kubernetes from "@/content/transcripts/devops/kubernetes";
 import anagramIndices from "@/content/transcripts/dsa/anagram-indices";
+import burstBalloon from "@/content/transcripts/dsa/burst-balloon";
 import busRoutes from "@/content/transcripts/dsa/bus-routes";
 import carPooling from "@/content/transcripts/dsa/car-pooling";
 import coinChange2 from "@/content/transcripts/dsa/coin-change2";
@@ -28,6 +29,7 @@ import mostFreqWordScrollable from "@/content/transcripts/dsa/most-freq-word-scr
 import nAryTreeLevel from "@/content/transcripts/dsa/n-ary-tree-level";
 import numOfIslands from "@/content/transcripts/dsa/num-of-islands";
 import numOfIslandsDynamicConnectivity from "@/content/transcripts/dsa/num-of-islands-dynamic-connectivity";
+import pattern132 from "@/content/transcripts/dsa/pattern132";
 import postfix from "@/content/transcripts/dsa/postfix";
 import resourceCachingLru from "@/content/transcripts/dsa/resource-caching-lru";
 import trappingRainWater from "@/content/transcripts/dsa/trapping-rain-water";
@@ -64,6 +66,7 @@ export const TRANSCRIPTS: readonly TranscriptEntry[] = [
   ownershipEmoney,
   kubernetes,
   anagramIndices,
+  burstBalloon,
   busRoutes,
   carPooling,
   coinChange2,
@@ -74,6 +77,7 @@ export const TRANSCRIPTS: readonly TranscriptEntry[] = [
   nAryTreeLevel,
   numOfIslands,
   numOfIslandsDynamicConnectivity,
+  pattern132,
   postfix,
   resourceCachingLru,
   trappingRainWater,
