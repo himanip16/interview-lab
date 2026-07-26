@@ -7,9 +7,9 @@ import { TranscriptData } from "@/features/library/types/transcript";
 
 const transcript: TranscriptData = {
   metadata: {
-    title: "Burst Balloons: Interval DP With Reversal of Order",
+    title: "Burst Balloons: Reversing Order to Enable Interval DP",
     difficulty: Difficulty.HARD,
-    duration: 48,
+    duration: 46,
     template: "Coding",
     category: "DSA",
   },
@@ -23,7 +23,7 @@ const transcript: TranscriptData = {
         {
           type: "text",
           value:
-            "You have an array of balloons. Burst them in any order. When you burst balloon i, you get nums[i-1] * nums[i] * nums[i+1] coins. Out-of-bounds indices count as 1. Maximize total coins.",
+            "You have an array of balloons. Burst them in any order. When you burst balloon i, you get nums[i-1] * nums[i] * nums[i+1] coins. Out-of-bounds is treated as 1. Maximize total coins. What's your first instinct?",
         },
       ],
     },
@@ -31,12 +31,12 @@ const transcript: TranscriptData = {
     {
       id: "2",
       role: "candidate",
-      elapsedSeconds: 18,
+      elapsedSeconds: 20,
       content: [
         {
           type: "text",
           value:
-            "So once I burst a balloon, its neighbors become adjacent. The score depends on the neighbors at the moment of bursting, not their original positions. This feels like I'd try every possible ordering and track state as balloons disappear.",
+            "Seems like I'd try every ordering and track the sum. But there are n! orderings, so brute force is exponential. Dynamic programming somehow.",
         },
       ],
     },
@@ -44,11 +44,12 @@ const transcript: TranscriptData = {
     {
       id: "3",
       role: "interviewer",
-      elapsedSeconds: 35,
+      elapsedSeconds: 38,
       content: [
         {
           type: "text",
-          value: "How many orderings are there?",
+          value:
+            "Right, n! is dead on arrival. Let's think about structure. When I burst a balloon, what happens to the array?",
         },
       ],
     },
@@ -56,12 +57,12 @@ const transcript: TranscriptData = {
     {
       id: "4",
       role: "candidate",
-      elapsedSeconds: 48,
+      elapsedSeconds: 58,
       content: [
         {
           type: "text",
           value:
-            "n! — permutations of which balloon to burst at each step. With n up to 300, that's not even close to feasible. Brute force is dead. This has to be dynamic programming, but the state space isn't obvious because the array structure changes as balloons pop.",
+            "The balloon disappears, and its neighbors become adjacent. So the array shrinks and structure changes.",
         },
       ],
     },
@@ -69,12 +70,12 @@ const transcript: TranscriptData = {
     {
       id: "5",
       role: "interviewer",
-      elapsedSeconds: 62,
+      elapsedSeconds: 75,
       content: [
         {
           type: "text",
           value:
-            "What if you stop thinking about 'which balloon to burst first' and think about which to burst last?",
+            "Exactly. The problem is that bursting one balloon changes the context for the rest. What if, instead of thinking 'which balloon to burst first,' you flipped it to 'which balloon to burst last'?",
         },
       ],
     },
@@ -82,24 +83,24 @@ const transcript: TranscriptData = {
     {
       id: "6",
       role: "candidate",
-      elapsedSeconds: 85,
+      elapsedSeconds: 100,
       content: [
         {
           type: "text",
           value: "",
         },
         {
-          id: "highlight-reversal-of-order",
+          id: "highlight-reversal-insight",
           type: "highlight",
           status: "strong",
-          value: "if I fix the last balloon to burst in a range, then when it bursts, its neighbors are known — they're the boundaries of the range",
+          value: "if I fix the last balloon to burst in a range, its neighbors at burst time are always the boundaries of the range",
           explanation:
-            "Reversing the order of thinking transforms the problem from 'which balloon to pop first' (destroys adjacencies) to 'which balloon to pop last' (preserves boundary knowledge). When the last balloon in range [left, right] pops, all middle balloons are already gone, so its neighbors are definitely the balloons at left and right.",
+            "Reversing the order of thinking transforms the problem from 'which balloon to pop first' (destroys adjacencies) to 'which balloon to pop last' (preserves boundary knowledge). When the last balloon in range [left, right] pops, all middle balloons are already gone, so its neighbors are definitely the balloons at left and right boundaries.",
         },
         {
           type: "text",
           value:
-            " I can define dp[left][right] as the max coins from bursting everything between left and right, leaving left and right untouched. Then I try each position as the last to burst and recurse on the left and right halves.",
+            " When I burst balloon k last in some range, I know exactly what its neighbors are — they're the interval boundaries. Everything inside the interval is already gone.",
         },
       ],
     },
@@ -107,11 +108,11 @@ const transcript: TranscriptData = {
     {
       id: "7",
       role: "interviewer",
-      elapsedSeconds: 108,
+      elapsedSeconds: 125,
       content: [
         {
           type: "text",
-          value: "Walk through the example nums = [3, 1, 5, 8]. Show the recursion.",
+          value: "So what does that let you do?",
         },
       ],
     },
@@ -119,12 +120,12 @@ const transcript: TranscriptData = {
     {
       id: "8",
       role: "candidate",
-      elapsedSeconds: 145,
+      elapsedSeconds: 150,
       content: [
         {
           type: "text",
           value:
-            "I want dp[0][3] — max coins from bursting all four. But wait, that doesn't match the definition. Let me redefine: dp[left][right] is max coins from bursting all balloons strictly between left and right indices, not including left and right themselves.",
+            "Define dp[left][right] = max coins from bursting all interior balloons strictly between left and right, leaving left and right themselves intact. Then I try each interior balloon k as the last to burst, and the score is nums[left] * nums[k] * nums[right] plus the coins from the left and right subproblems.",
         },
       ],
     },
@@ -132,11 +133,12 @@ const transcript: TranscriptData = {
     {
       id: "9",
       role: "interviewer",
-      elapsedSeconds: 165,
+      elapsedSeconds: 172,
       content: [
         {
           type: "text",
-          value: "But the boundaries need to exist to define neighbors. Add padding.",
+          value:
+            "Good definition. Write the recurrence.",
         },
       ],
     },
@@ -144,12 +146,12 @@ const transcript: TranscriptData = {
     {
       id: "10",
       role: "candidate",
-      elapsedSeconds: 185,
+      elapsedSeconds: 200,
       content: [
         {
           type: "text",
           value:
-            "Prepend and append 1 to the array. So [3, 1, 5, 8] becomes [1, 3, 1, 5, 8, 1]. Now dp[0][5] is the answer — max coins from bursting everything between the two 1's, which is everything except the padding. The padding never bursts, they're just boundary anchors.",
+            "dp[left][right] = max over all k in (left, right) of: nums[left] * nums[k] * nums[right] + dp[left][k] + dp[k][right]",
         },
       ],
     },
@@ -157,12 +159,11 @@ const transcript: TranscriptData = {
     {
       id: "11",
       role: "interviewer",
-      elapsedSeconds: 205,
+      elapsedSeconds: 218,
       content: [
         {
           type: "text",
-          value:
-            "Now set up the recursion. For dp[left][right], which balloon between left and right do you choose as the last to burst?",
+          value: "Now, your recurrence depends on neighbors existing. The first and last balloons in the original array are edge cases. How are you handling that?",
         },
       ],
     },
@@ -170,12 +171,12 @@ const transcript: TranscriptData = {
     {
       id: "12",
       role: "candidate",
-      elapsedSeconds: 235,
+      elapsedSeconds: 245,
       content: [
         {
           type: "text",
           value:
-            "Try all positions k where left < k < right. If k is the last to burst in this range, when it pops, its left neighbor is nums[left] and its right neighbor is nums[right]. So the score is nums[left] * nums[k] * nums[right] plus dp[left][k] plus dp[k][right].",
+            "I could hard-code a check — if left is -1, treat it as 1; if right is out of bounds, same. But that's messy. Or... I could pad the array.",
         },
       ],
     },
@@ -183,11 +184,11 @@ const transcript: TranscriptData = {
     {
       id: "13",
       role: "interviewer",
-      elapsedSeconds: 258,
+      elapsedSeconds: 263,
       content: [
         {
           type: "text",
-          value: "Why does that work? When you burst k, haven't the balloons in [left, k] and [k, right] already been assigned coins?",
+          value: "How would you pad it?",
         },
       ],
     },
@@ -195,12 +196,12 @@ const transcript: TranscriptData = {
     {
       id: "14",
       role: "candidate",
-      elapsedSeconds: 280,
+      elapsedSeconds: 285,
       content: [
         {
           type: "text",
           value:
-            "Yes, dp[left][k] is the coins from bursting everything strictly between left and k. dp[k][right] is coins from between k and right. They've already earned their coins before k gets burst. When k finally pops, the only remaining neighbors are left and right, so it adds nums[left] * nums[k] * nums[right]. No double-counting because k bursts last in this subproblem.",
+            "Add a 1 on both sides. [3, 1, 5, 8] becomes [1, 3, 1, 5, 8, 1]. Now the original balloons are interior, and the padding serves as permanent neighbors.",
         },
       ],
     },
@@ -208,7 +209,31 @@ const transcript: TranscriptData = {
     {
       id: "15",
       role: "interviewer",
-      elapsedSeconds: 302,
+      elapsedSeconds: 305,
+      content: [
+        {
+          type: "text",
+          value: "And your answer?",
+        },
+      ],
+    },
+
+    {
+      id: "16",
+      role: "candidate",
+      elapsedSeconds: 320,
+      content: [
+        {
+          type: "text",
+          value: "dp[0][len(padded)-1] — all interior balloons between the two padding 1s.",
+        },
+      ],
+    },
+
+    {
+      id: "17",
+      role: "interviewer",
+      elapsedSeconds: 335,
       content: [
         {
           type: "text",
@@ -218,28 +243,149 @@ const transcript: TranscriptData = {
     },
 
     {
-      id: "16",
+      id: "18",
       role: "candidate",
-      elapsedSeconds: 360,
+      elapsedSeconds: 385,
       content: [
         {
           type: "text",
-          value: "Top-down memoization with the range recursion.",
+          value: "Top-down with memoization.",
         },
         {
           type: "code",
-          id: "code-burst-memoization",
+          id: "code-memoization",
           language: "python",
           value:
-            "def max_coins(nums):\n    nums = [1] + nums + [1]\n    memo = {}\n\n    def dp(left, right):\n        if left + 1 == right:\n            return 0\n        if (left, right) in memo:\n            return memo[(left, right)]\n\n        res = 0\n        for k in range(left + 1, right):\n            coins = nums[left] * nums[k] * nums[right]\n            coins += dp(left, k) + dp(k, right)\n            res = max(res, coins)\n\n        memo[(left, right)] = res\n        return res\n\n    return dp(0, len(nums) - 1)",
+            "def max_coins(nums):\n    nums = [1] + nums + [1]\n    memo = {}\n\n    def dp(left, right):\n        if left + 1 == right:\n            return 0  # No interior balloons\n        if (left, right) in memo:\n            return memo[(left, right)]\n\n        res = 0\n        for k in range(left + 1, right):\n            coins = nums[left] * nums[k] * nums[right]\n            coins += dp(left, k) + dp(k, right)\n            res = max(res, coins)\n\n        memo[(left, right)] = res\n        return res\n\n    return dp(0, len(nums) - 1)",
         },
       ],
     },
 
     {
-      id: "17",
+      id: "19",
       role: "interviewer",
-      elapsedSeconds: 388,
+      elapsedSeconds: 410,
+      content: [
+        {
+          type: "text",
+          value:
+            "Walk me through a small example. nums = [3, 1, 5], padded = [1, 3, 1, 5, 1]. Compute dp(0, 4) and show the recursion tree.",
+        },
+      ],
+    },
+
+    {
+      id: "20",
+      role: "candidate",
+      elapsedSeconds: 470,
+      content: [
+        {
+          type: "text",
+          value:
+            "dp(0, 4) tries k = 1, 2, 3 (the interior balloons at padded indices 1, 2, 3 with values 3, 1, 5). If k=1 (balloon 3): 1*3*1=3 + dp(0,1) + dp(1,4). If k=2 (balloon 1): 1*1*5=5 + dp(0,2) + dp(2,4). If k=3 (balloon 5): 1*5*1=5 + dp(0,3) + dp(3,4). Base cases are all 0 since length <= 2 has no interior. dp(0,1) = 0, dp(1,4): interior are k=2,3. If k=2: 3*1*1=3 + 0 + dp(2,4). dp(2,4) = 0. So dp(1,4)=3. If k=3: 3*5*1=15 + dp(1,3) + 0. dp(1,3) interior is k=2: 3*1*5=15 + 0 + 0 = 15. So dp(1,4) = max(3, 15) = 15. Back to k=1: 3 + 0 + 15 = 18. For k=2: dp(0,2) interior is k=1: 1*3*1=3, so 3. dp(2,4) = 0. So k=2 gives 5 + 3 + 0 = 8. For k=3: dp(0,3) interior k=1,2. k=1: 1*3*1=3 + 0 + dp(1,3)=15, gives 18. k=2: 1*1*5=5 + dp(0,2)=3 + 0 = 8. dp(0,3)=18. k=3: 5 + 18 + 0 = 23. Final answer is max(18, 8, 23) = 23.",
+        },
+      ],
+    },
+
+    {
+      id: "21",
+      role: "interviewer",
+      elapsedSeconds: 540,
+      content: [
+        {
+          type: "text",
+          value:
+            "Correct. Now I want to probe the core idea. Why did choosing the last balloon work, but choosing the first wouldn't?",
+        },
+      ],
+    },
+
+    {
+      id: "22",
+      role: "candidate",
+      elapsedSeconds: 575,
+      content: [
+        {
+          type: "text",
+          value: "",
+        },
+        {
+          id: "highlight-why-first-fails",
+          type: "highlight",
+          status: "strong",
+          value: "if you burst the first balloon first, the second balloon suddenly gets a new left neighbor from outside the interval, destroying the interval structure",
+          explanation:
+            "Bursting the first balloon changes the neighbors of what was the second balloon, making it impossible to split the remaining problem into independent left and right subproblems. By choosing the last balloon, left and right are always fixed boundaries regardless of which interior balloons have been burst.",
+        },
+        {
+          type: "text",
+          value:
+            " If I burst the first balloon k, the second balloon's left neighbor is suddenly nums[left-1], not the first balloon anymore. Now the subproblem from the second balloon onward depends on something outside my interval. I can't cleanly recurse.",
+        },
+      ],
+    },
+
+    {
+      id: "23",
+      role: "interviewer",
+      elapsedSeconds: 605,
+      content: [
+        {
+          type: "text",
+          value:
+            "Exactly. So the choice of order isn't arbitrary — it's the difference between a solvable and unsolvable subproblem structure. Good. Now your recurrence has dependencies: dp[left][right] depends on dp[left][k] and dp[k][right]. Smaller intervals. How does that affect computing the answer bottom-up?",
+        },
+      ],
+    },
+
+    {
+      id: "24",
+      role: "candidate",
+      elapsedSeconds: 640,
+      content: [
+        {
+          type: "text",
+          value:
+            "I need to compute smaller intervals first. If I iterate by interval length — start with length 2, then 3, then 4 — I guarantee that when I compute length L, all subproblems of length L-1 are already filled in.",
+        },
+      ],
+    },
+
+    {
+      id: "25",
+      role: "interviewer",
+      elapsedSeconds: 660,
+      content: [
+        {
+          type: "text",
+          value: "Code the bottom-up version.",
+        },
+      ],
+    },
+
+    {
+      id: "26",
+      role: "candidate",
+      elapsedSeconds: 715,
+      content: [
+        {
+          type: "text",
+          value: "Iterate by length, fill the table.",
+        },
+        {
+          type: "code",
+          id: "code-bottom-up",
+          language: "python",
+          value:
+            "def max_coins(nums):\n    nums = [1] + nums + [1]\n    n = len(nums)\n    dp = [[0] * n for _ in range(n)]\n\n    for length in range(3, n + 1):\n        for left in range(n - length):\n            right = left + length - 1\n            for k in range(left + 1, right):\n                coins = nums[left] * nums[k] * nums[right]\n                coins += dp[left][k] + dp[k][right]\n                dp[left][right] = max(dp[left][right], coins)\n\n    return dp[0][n - 1]",
+        },
+      ],
+    },
+
+    {
+      id: "27",
+      role: "interviewer",
+      elapsedSeconds: 740,
       content: [
         {
           type: "text",
@@ -249,150 +395,14 @@ const transcript: TranscriptData = {
     },
 
     {
-      id: "18",
-      role: "candidate",
-      elapsedSeconds: 410,
-      content: [
-        {
-          type: "text",
-          value:
-            "The state space is O(n²) — all pairs (left, right). For each state, I iterate through k from left+1 to right, which is O(n). So overall O(n³) time. Space is O(n²) for the memo, plus O(n) call stack depth.",
-        },
-      ],
-    },
-
-    {
-      id: "19",
-      role: "interviewer",
-      elapsedSeconds: 428,
-      content: [
-        {
-          type: "text",
-          value:
-            "Walk through [3, 1, 5, 8] with padding [1, 3, 1, 5, 8, 1]. What's dp[0][5]?",
-        },
-      ],
-    },
-
-    {
-      id: "20",
-      role: "candidate",
-      elapsedSeconds: 475,
-      content: [
-        {
-          type: "text",
-          value:
-            "Try k = 1 (balloon 3): coins = 1*3*1 = 3, plus dp[0][1]=0 and dp[1][5]. Then k = 2 (balloon 1): coins = 1*1*1 = 1, plus dp[0][2] and dp[2][5]. Then k = 3 (balloon 5): coins = 1*5*1 = 5, plus dp[0][3] and dp[3][5]. Then k = 4 (balloon 8): coins = 1*8*1 = 8, plus dp[0][4] and dp[4][5]. Take the max of all these options.",
-        },
-      ],
-    },
-
-    {
-      id: "21",
-      role: "interviewer",
-      elapsedSeconds: 510,
-      content: [
-        {
-          type: "text",
-          value:
-            "Let's compute dp[1][4] — balloons 3, 1, 5. If 1 is the last to burst there, what score?",
-        },
-      ],
-    },
-
-    {
-      id: "22",
-      role: "candidate",
-      elapsedSeconds: 535,
-      content: [
-        {
-          type: "text",
-          value:
-            "nums[1] * nums[2] * nums[4] = 3 * 1 * 5 = 15. Plus dp[1][2] which is 0, and dp[2][4].",
-        },
-      ],
-    },
-
-    {
-      id: "23",
-      role: "interviewer",
-      elapsedSeconds: 550,
-      content: [
-        {
-          type: "text",
-          value: "And dp[2][4] — balloons 1, 5. If 5 is the last there?",
-        },
-      ],
-    },
-
-    {
-      id: "24",
-      role: "candidate",
-      elapsedSeconds: 568,
-      content: [
-        {
-          type: "text",
-          value:
-            "nums[2] * nums[3] * nums[4] = 1 * 5 * 5 = 25. Plus dp[2][3] which is 0. So dp[2][4] = 25 when 5 is last. If 1 is last: 1*1*5 = 5 plus dp[2][3]=0 and dp[3][4]=0, gives 5. Max is 25.",
-        },
-      ],
-    },
-
-    {
-      id: "25",
-      role: "interviewer",
-      elapsedSeconds: 585,
-      content: [
-        {
-          type: "text",
-          value:
-            "So dp[1][4] = 15 + 25 = 40 when 1 is last. Does that match the example trace?",
-        },
-      ],
-    },
-
-    {
-      id: "26",
-      role: "candidate",
-      elapsedSeconds: 610,
-      content: [
-        {
-          type: "text",
-          value:
-            "In the example trace, at one step we had [3, 5, 8] and burst 5 to get 3*5*8 = 120. That corresponds to... hmm, let me recount. Original [3, 1, 5, 8]. The trace shows 3*1*5 = 15, then 3*5*8 = 120, then 1*3*8 = 24, then 1*8*1 = 8, total = 167. So when 1 is last in [1..4] and we burst 5 second-to-last in [2..4], we get their contributions sequenced correctly.",
-        },
-      ],
-    },
-
-    {
-      id: "27",
-      role: "interviewer",
-      elapsedSeconds: 635,
-      content: [
-        {
-          type: "text",
-          value:
-            "Exactly. The recursion handles the ordering implicitly — by deciding which balloon is last, you're deciding which contributions happen before it. Let's move on. Code it bottom-up.",
-        },
-      ],
-    },
-
-    {
       id: "28",
       role: "candidate",
-      elapsedSeconds: 680,
+      elapsedSeconds: 760,
       content: [
         {
           type: "text",
           value:
-            "Build the DP table by increasing interval length. Base case is intervals of length 2 or less, which contribute 0. Then for each larger interval, try all possible last balloons.",
-        },
-        {
-          type: "code",
-          id: "code-burst-bottom-up",
-          language: "python",
-          value:
-            "def max_coins(nums):\n    nums = [1] + nums + [1]\n    n = len(nums)\n    dp = [[0] * n for _ in range(n)]\n\n    for length in range(3, n + 1):\n        for left in range(n - length):\n            right = left + length - 1\n            for k in range(left + 1, right):\n                coins = nums[left] * nums[k] * nums[right]\n                coins += dp[left][k] + dp[k][right]\n                dp[left][right] = max(dp[left][right], coins)\n\n    return dp[0][n - 1]",
+            "Three nested loops: length (O(n)), left (O(n)), k (O(n)). So O(n³) time. Space is O(n²) for the DP table.",
         },
       ],
     },
@@ -400,11 +410,12 @@ const transcript: TranscriptData = {
     {
       id: "29",
       role: "interviewer",
-      elapsedSeconds: 710,
+      elapsedSeconds: 778,
       content: [
         {
           type: "text",
-          value: "Why iterate by length and not by left/right directly?",
+          value:
+            "Follow-up: some balloons are frozen and never burst. How does the recurrence change?",
         },
       ],
     },
@@ -412,24 +423,12 @@ const transcript: TranscriptData = {
     {
       id: "30",
       role: "candidate",
-      elapsedSeconds: 730,
+      elapsedSeconds: 805,
       content: [
         {
           type: "text",
-          value: "",
-        },
-        {
-          id: "highlight-bottom-up-dependency-order",
-          type: "highlight",
-          status: "strong",
-          value: "dp[left][right] depends on dp[left][k] and dp[k][right], which are both strictly smaller intervals, so you must compute smaller lengths before larger ones",
-          explanation:
-            "The bottom-up order ensures all subproblems are solved before being used. Iterating by length guarantees that when you compute dp[left][right], all intervals within it have already been computed.",
-        },
-        {
-          type: "text",
           value:
-            " When I compute dp[left][right], I need dp[left][k] and dp[k][right] to already be known. Those are smaller intervals, so iterating by increasing length ensures dependencies are met.",
+            "When k is frozen, skip it. Only try non-frozen balloons as candidates for bursting last.",
         },
       ],
     },
@@ -437,12 +436,12 @@ const transcript: TranscriptData = {
     {
       id: "31",
       role: "interviewer",
-      elapsedSeconds: 750,
+      elapsedSeconds: 820,
       content: [
         {
           type: "text",
           value:
-            "One more thing — you're padding with 1 on both sides. What if you only added padding where needed?",
+            "Just skip it? Let me give you a case: [A (frozen), B, C (frozen)]. You want dp[A][C]. When you burst B, what are its neighbors?",
         },
       ],
     },
@@ -450,12 +449,12 @@ const transcript: TranscriptData = {
     {
       id: "32",
       role: "candidate",
-      elapsedSeconds: 775,
+      elapsedSeconds: 845,
       content: [
         {
           type: "text",
           value:
-            "The padding at both ends exists specifically so that the first and last balloons have defined neighbors. Without it, nums[0] and nums[n-1] are edge cases — their left and right neighbors don't exist in the original array, so we'd have to handle them separately. The padding unifies the logic.",
+            "Its neighbors are A and C, not the interval boundaries... wait, they are the boundaries. A is at left and C is at right.",
         },
       ],
     },
@@ -463,12 +462,12 @@ const transcript: TranscriptData = {
     {
       id: "33",
       role: "interviewer",
-      elapsedSeconds: 795,
+      elapsedSeconds: 862,
       content: [
         {
           type: "text",
           value:
-            "Follow-up: some balloons are frozen and can't burst. How does the solution change?",
+            "Right. So skipping frozen balloons in the loop works. But now consider [A, B (frozen), C, B (frozen), D]. You want dp[A][D]. If you burst C last, what are its neighbors?",
         },
       ],
     },
@@ -476,12 +475,12 @@ const transcript: TranscriptData = {
     {
       id: "34",
       role: "candidate",
-      elapsedSeconds: 820,
+      elapsedSeconds: 895,
       content: [
         {
           type: "text",
           value:
-            "Frozen balloons never get bursted, so they're always there as neighbors. You'd skip them during recursion — only iterate k over non-frozen balloons, and dp[left][right] only bursts non-frozen balloons between left and right. Frozen ones stay in place and affect scores but never pop.",
+            "C's neighbors are... the nearest non-frozen balloons on each side, which are B on the left and B on the right. But they're at different positions, not just 'left' and 'right' indices.",
         },
       ],
     },
@@ -489,38 +488,25 @@ const transcript: TranscriptData = {
     {
       id: "35",
       role: "interviewer",
-      elapsedSeconds: 845,
+      elapsedSeconds: 918,
       content: [
         {
           type: "text",
           value:
-            "What about memoization? If you have a lot of frozen balloons, does the state space change?",
+            "Exactly. The recurrence depends on the actual neighbors at burst time, not just the interval boundaries. Frozen balloons that persist change the definition of neighbors. Your DP state might need to track something more complex than just (left, right). The problem structure itself has changed.",
         },
       ],
     },
 
     {
       id: "36",
-      role: "candidate",
-      elapsedSeconds: 865,
-      content: [
-        {
-          type: "text",
-          value:
-            "The state is still dp[left][right], which depends on array indices, not the count of frozen balloons. So the state space is still O(n²). But the pruning from skipping frozen balloons reduces the work inside each state — you don't try them as candidates for last-to-burst. If many balloons are frozen, the inner loop is smaller and the algorithm runs faster in practice.",
-        },
-      ],
-    },
-
-    {
-      id: "37",
       role: "takeaway",
-      elapsedSeconds: 885,
+      elapsedSeconds: 945,
       content: [
         {
           type: "text",
           value:
-            "Takeaway: Burst Balloons is a classic interval DP problem that's deceptively hard because the naive approach — 'which balloon to burst first' — destroys the array structure, making it exponential. The critical insight is reversing the order of thinking to 'which balloon to burst last in a range', which preserves boundary knowledge and enables memoization. By padding the array with 1s on both sides, you turn the first and last balloons from edge cases into regular recursive calls. The DP state dp[left][right] represents max coins from bursting all balloons strictly between left and right, leaving the boundaries intact. When you choose balloon k as the last to burst in [left, right], its score is nums[left] * nums[k] * nums[right], plus the coins from subproblems [left, k] and [k, right], since those happen before k pops. The solution is O(n³) time and O(n²) space, with the n in the third dimension coming from trying all k positions as the final balloon. Bottom-up DP requires iterating by increasing interval length to ensure all dependencies are satisfied before use.",
+            "Takeaway: Burst Balloons is fundamentally hard because the greedy and forward-thinking approaches destroy the problem structure. The breakthrough is reversing the order: instead of thinking 'which balloon to burst first,' ask 'which to burst last in this range.' This single flip converts an intractable exponential problem into interval DP. When balloon k is the last to burst in [left, right], its neighbors are guaranteed to be nums[left] and nums[right], since all interior balloons are gone. This enables a clean recurrence: dp[left][right] = max over interior k of (nums[left] * nums[k] * nums[right] + dp[left][k] + dp[k][right]). Padding eliminates boundary special cases. Computing bottom-up requires iterating by interval length to respect dependencies. The core insight — that the order of processing affects which subproblems are independent — is crucial and appears in other problems. Frozen balloons illustrate why constraints matter: they change which balloons are 'neighbors,' potentially invalidating the recurrence unless the state space is redefined.",
         },
       ],
     },
@@ -530,10 +516,10 @@ const transcript: TranscriptData = {
 const burstBalloonsIntervalDP: TranscriptEntry = {
   summary: {
     slug: "burst-balloons-interval-dp",
-    title: "Burst Balloons: Interval DP With Reversal of Order",
+    title: "Burst Balloons: Reversing Order to Enable Interval DP",
     category: "dsa",
     difficulty: Difficulty.HARD,
-    duration: 48,
+    duration: 46,
     company: "Generic",
     tags: [
       "Dynamic Programming",
@@ -541,10 +527,10 @@ const burstBalloonsIntervalDP: TranscriptEntry = {
       "Memoization",
       "Bottom-Up DP",
       "Array",
-      "Optimization",
+      "Problem Transformation",
     ],
     description:
-      "Coding interview on LeetCode's Burst Balloons: recognizing that the greedy/brute-force approach is exponential, understanding the critical insight of reversing order — bursting last instead of first — to make the subproblem structure tractable, implementing interval DP with padding to handle boundaries, walking through examples to verify correctness, and discussing the O(n³) time and O(n²) space complexity. Includes a follow-up on handling frozen balloons.",
+      "Coding interview on LeetCode's Burst Balloons: recognizing why forward-thinking ('burst first') fails, understanding the order-reversal insight ('burst last') and why it enables interval DP, correctly implementing both top-down and bottom-up solutions, walking through a complete recursion tree with correct arithmetic, and probing deeper into why the choice of order matters fundamentally. Includes a challenging frozen balloons variant that exposes how constraints change the recurrence structure.",
   },
 
   transcript,
