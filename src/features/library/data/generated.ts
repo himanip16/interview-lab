@@ -21,10 +21,12 @@ import anagramIndices from "@/content/transcripts/dsa/anagram-indices";
 import burstBalloon from "@/content/transcripts/dsa/burst-balloon";
 import busRoutes from "@/content/transcripts/dsa/bus-routes";
 import carPooling from "@/content/transcripts/dsa/car-pooling";
+import cheapestFlightKStop from "@/content/transcripts/dsa/cheapest-flight-k-stop";
 import coinChange2 from "@/content/transcripts/dsa/coin-change2";
 import cuttingPolesToCollectMin from "@/content/transcripts/dsa/cutting-poles-to-collect-min";
 import externalSortLimitedMemory from "@/content/transcripts/dsa/external-sort-limited-memory";
 import kthLexiographicalHappyString from "@/content/transcripts/dsa/kth-lexiographical-happy-string";
+import longestRepeatingReplacement from "@/content/transcripts/dsa/longest-repeating-replacement";
 import mostFreqWordScrollable from "@/content/transcripts/dsa/most-freq-word-scrollable";
 import nAryTreeLevel from "@/content/transcripts/dsa/n-ary-tree-level";
 import numOfIslands from "@/content/transcripts/dsa/num-of-islands";
@@ -69,10 +71,12 @@ export const TRANSCRIPTS: readonly TranscriptEntry[] = [
   burstBalloon,
   busRoutes,
   carPooling,
+  cheapestFlightKStop,
   coinChange2,
   cuttingPolesToCollectMin,
   externalSortLimitedMemory,
   kthLexiographicalHappyString,
+  longestRepeatingReplacement,
   mostFreqWordScrollable,
   nAryTreeLevel,
   numOfIslands,
