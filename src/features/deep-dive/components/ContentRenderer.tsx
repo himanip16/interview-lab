@@ -3,10 +3,10 @@
 'use client';
 
 import Link from 'next/link';
-import { ContentBlock, Paragraph } from '@/features/deep-dive/types';
+import { ParagraphBlock, InlineContent, InlineLink } from '@/features/deep-dive/types';
 
-function resolveHref(href: NonNullable<ContentBlock['href']>): string {
-  switch (href.type) {
+function resolveHref(href: NonNullable<InlineLink['ref']>): string {
+  switch (href.kind) {
     case 'deep-dive':
       return `/deep-dive/${href.target}`;
     case 'transcript':
@@ -16,19 +16,19 @@ function resolveHref(href: NonNullable<ContentBlock['href']>): string {
   }
 }
 
-function ContentSpan({ block, keyPrefix }: { block: ContentBlock; keyPrefix: string }) {
-  if (block.type === 'link' && block.href) {
-    const isExternal = block.href.type === 'external';
-    const href = resolveHref(block.href);
+function ContentSpan({ block, keyPrefix }: { block: InlineContent; keyPrefix: string }) {
+  if (block.type === 'link') {
+    const isExternal = block.ref.kind === 'external';
+    const href = resolveHref(block.ref);
 
     const linkBody = (
       <>
         {block.text}
-        {block.href.preview && (
+        {block.ref.preview && (
           <span className="content-link-preview">
-            {block.href.preview}
+            {block.ref.preview}
             <span className="cta">
-              {block.href.type === 'external' ? 'Open source' : 'View deep dive'}
+              {block.ref.kind === 'external' ? 'Open source' : 'View deep dive'}
             </span>
           </span>
         )}
@@ -56,18 +56,26 @@ function ContentSpan({ block, keyPrefix }: { block: ContentBlock; keyPrefix: str
     );
   }
 
-  if (block.bold) {
+  if (block.type === 'bold') {
     return <b key={keyPrefix}>{block.text}</b>;
+  }
+
+  if (block.type === 'italic') {
+    return <i key={keyPrefix}>{block.text}</i>;
+  }
+
+  if (block.type === 'code') {
+    return <code key={keyPrefix}>{block.text}</code>;
   }
 
   return <span key={keyPrefix}>{block.text}</span>;
 }
 
 /** Renders a single paragraph's worth of spans inline, without a wrapping <p>. */
-export function InlineContent({ paragraph }: { paragraph: Paragraph }) {
+export function InlineContentRenderer({ content }: { content: InlineContent[] }) {
   return (
     <>
-      {paragraph.map((block, i) => (
+      {content.map((block, i) => (
         <ContentSpan key={i} block={block} keyPrefix={`span-${i}`} />
       ))}
     </>
@@ -75,12 +83,12 @@ export function InlineContent({ paragraph }: { paragraph: Paragraph }) {
 }
 
 /** Renders a full content array (one or more paragraphs) as <p> tags. */
-export function ContentRenderer({ content }: { content: Paragraph[] }) {
+export function ContentRenderer({ content }: { content: ParagraphBlock[] }) {
   return (
     <>
-      {content.map((paragraph, i) => (
+      {content.map((paragraphBlock, i) => (
         <p key={i}>
-          <InlineContent paragraph={paragraph} />
+          <InlineContentRenderer content={paragraphBlock.content} />
         </p>
       ))}
     </>

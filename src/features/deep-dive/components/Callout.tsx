@@ -1,7 +1,7 @@
 // src/features/deep-dive/components/Callout.tsx
 
 import type { ParagraphBlock, CalloutType } from '@/features/deep-dive/types';
-import { ContentRenderer } from '@/features/deep-dive/components/ContentRenderer';
+import { ContentRenderer, InlineContentRenderer } from '@/features/deep-dive/components/ContentRenderer';
 
 interface CalloutProps {
   variant: CalloutType;
@@ -16,6 +16,7 @@ const variantLabel: Record<CalloutType, string> = {
   concept: 'Concept',
   tradeoff: 'Tradeoff',
   note: 'Note',
+  tip: 'Tip',
 };
 
 export function Callout({ variant, label, title, content }: CalloutProps) {

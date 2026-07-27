@@ -35,7 +35,7 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${poppins.variable} ${inter.variable} h-full antialiased`}
     >
-      <body className="h-full">
+      <body className="h-full" suppressHydrationWarning>
         <MainProvider>
           <AppShell>
             {children}

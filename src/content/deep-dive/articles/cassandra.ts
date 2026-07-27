@@ -139,7 +139,7 @@ export const article: DeepDiveArticle = {
   heroDiagram: {
     type: "diagram",
     renderEngine: "component",
-    componentName: "CassandraOverviewIllustration",
+    componentName: "CassandraIllustration",
     caption:
       "Cassandra distributed ring topology with client-coordinator write routing",
     alt: "Diagram showing a client sending requests to a coordinator node on a ring of 6 nodes",

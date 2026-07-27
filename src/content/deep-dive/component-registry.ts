@@ -1,11 +1,95 @@
-// src/content/deep-dive/component-registry.ts
-
-import { ModuloIllustration } from "./illustrations/ModuloIllustration";
-import { ConsistentHashingIllustration } from "./illustrations/ConsistentHashing";
+// AUTO-GENERATED FILE.
+// DO NOT EDIT.
+// Run: npm run generate:component-registry
 
 import type { ComponentType } from "react";
 
+import { ACIDAtomicityIllustration } from "./illustrations/ACIDAtomicityIllustration";
+import { ACIDIsolationIllustration } from "./illustrations/ACIDIsolationIllustration";
+import { AWSLambdaIllustration } from "./illustrations/AWSLambdaIllustration";
+import { AcidIllustration } from "./illustrations/Acid";
+import { AVLTreeIllustration } from "./illustrations/Avl";
+import { BitManipulationIllustration } from "./illustrations/BitManipulationIllustration";
+import { CassandraIllustration } from "./illustrations/Cassandra";
+import { CassandraReadPathIllustration } from "./illustrations/CassandraReadPathIllustration";
+import { CassandraRingIllustration } from "./illustrations/CassandraRingIllustration";
+import { cassandraWritePath } from "./illustrations/CassandraWritePathIllustration";
+import { ConsistentHashingIllustration } from "./illustrations/ConsistentHashing";
+import { ConsistentHashingHero } from "./illustrations/ConsistentHashingHero";
+import { DPIllustration } from "./illustrations/DPIllustration";
+import { DynamoConsistencyIllustration } from "./illustrations/DynamoConsistencyIllustration";
+import { DynamoDBIllustration } from "./illustrations/DynamoDB";
+import { DynamoManagedLayerIllustration } from "./illustrations/DynamoManagedLayerIllustration";
+import { ElasticsearchSearchIllustration } from "./illustrations/ElasticsearchSearchIllustration";
+import { FixedSlidingWindowIllustration } from "./illustrations/FixedSlidingWindowIllustration";
+import { FlinkIllustration } from "./illustrations/Flink";
+import { GameOfLifeIllustration } from "./illustrations/GameOfLifeIllustration";
+import { HashMapIllustration } from "./illustrations/HashMapIllustration";
+import { HashSetIllustration } from "./illustrations/HashSetIllustration";
+import { KafkaIllustration } from "./illustrations/Kafka";
+import { MVCCIllustration } from "./illustrations/MVCC";
+import { MatrixRotationIllustration } from "./illustrations/MatrixRotationIllustration";
+import { MemtableIllustration } from "./illustrations/MemTable";
+import { MemoizationIllustration } from "./illustrations/MemoizationIllustration";
+import { ModuloIllustration } from "./illustrations/ModuloIllustration";
+import { MongoDBIllustration } from "./illustrations/MongoDB";
+import { MonotonicStackIllustration } from "./illustrations/MonotonicStackIllustration";
+import { PostgresIllustration } from "./illustrations/Postgres";
+import { RecursionIllustration } from "./illustrations/RecursionIllustration";
+import { RedisIllustration } from "./illustrations/Redis";
+import { SQSIllustration } from "./illustrations/SQSIllustration";
+import { SSTableIllustration } from "./illustrations/SSTable";
+import { SlidingWindowIllustration } from "./illustrations/SlidingWindowIllustration";
+import { SparkIllustration } from "./illustrations/Spark";
+import { TabulationIllustration } from "./illustrations/TabulationIllustration";
+import { TopologicalSortIllustration } from "./illustrations/TopologicalSortIllustration";
+import { TrieIllustration } from "./illustrations/TrieIllustration";
+import { UnionFindIllustration } from "./illustrations/UnionFindIllustration";
+import { VariableSlidingWindowIllustration } from "./illustrations/VariableSlidingWindowIllustration";
+import { CassandraWritePathIllustration } from "./illustrations/cassandraWritePath";
+
 export const contentComponents: Record<string, ComponentType> = {
-  ModuloIllustration,
+  ACIDAtomicityIllustration,
+  ACIDIsolationIllustration,
+  AWSLambdaIllustration,
+  AcidIllustration,
+  AVLTreeIllustration,
+  BitManipulationIllustration,
+  CassandraIllustration,
+  CassandraReadPathIllustration,
+  CassandraRingIllustration,
+  cassandraWritePath,
   ConsistentHashingIllustration,
+  ConsistentHashingHero,
+  DPIllustration,
+  DynamoConsistencyIllustration,
+  DynamoDBIllustration,
+  DynamoManagedLayerIllustration,
+  ElasticsearchSearchIllustration,
+  FixedSlidingWindowIllustration,
+  FlinkIllustration,
+  GameOfLifeIllustration,
+  HashMapIllustration,
+  HashSetIllustration,
+  KafkaIllustration,
+  MVCCIllustration,
+  MatrixRotationIllustration,
+  MemtableIllustration,
+  MemoizationIllustration,
+  ModuloIllustration,
+  MongoDBIllustration,
+  MonotonicStackIllustration,
+  PostgresIllustration,
+  RecursionIllustration,
+  RedisIllustration,
+  SQSIllustration,
+  SSTableIllustration,
+  SlidingWindowIllustration,
+  SparkIllustration,
+  TabulationIllustration,
+  TopologicalSortIllustration,
+  TrieIllustration,
+  UnionFindIllustration,
+  VariableSlidingWindowIllustration,
+  CassandraWritePathIllustration,
 };
