@@ -8,6 +8,7 @@ interface CalloutProps {
   label?: string;
   title?: string;
   content: ParagraphBlock[];
+  className?: string;
 }
 
 const variantLabel: Record<CalloutType, string> = {
@@ -17,13 +18,35 @@ const variantLabel: Record<CalloutType, string> = {
   tradeoff: 'Tradeoff',
   note: 'Note',
   tip: 'Tip',
+  success: 'Success',
 };
 
-export function Callout({ variant, label, title, content }: CalloutProps) {
+const variantColor: Record<CalloutType, string> = {
+  info: 'var(--mint-deep)',
+  warning: 'var(--coral)',
+  concept: 'var(--violet)',
+  tradeoff: 'var(--amber)',
+  note: 'var(--text-soft)',
+  tip: 'var(--mint)',
+  success: 'var(--mint-deep)',
+};
+
+export function Callout({ variant, label, title, content, className = '' }: CalloutProps) {
+  const color = variantColor[variant];
+  const labelText = label ?? variantLabel[variant];
+
   return (
-    <div className={`callout callout--${variant}`}>
-      <div className="lbl">{label ?? variantLabel[variant]}</div>
-      {title && <div className="callout-title">{title}</div>}
+    <div className={`callout callout--${variant} ${className}`}>
+      <div
+        className="lbl"
+        style={{
+          background: `${color}15`,
+          color,
+        }}
+      >
+        {labelText}
+      </div>
+      {title && <h4 className="callout-title">{title}</h4>}
       <ContentRenderer content={content} />
     </div>
   );

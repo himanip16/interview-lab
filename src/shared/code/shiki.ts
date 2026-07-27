@@ -50,10 +50,10 @@ export async function highlightSnippet(
   return highlighter.codeToHtml(code, {
     lang: language,
     theme: "github-dark",
-    transformers: [
-      transformerNotationHighlight(),
-      transformerNotationDiff(),
-      transformerNotationFocus(),
-    ],
+    // transformers: [
+    //   transformerNotationHighlight(),
+    //   transformerNotationDiff(),
+    //   transformerNotationFocus(),
+    // ],
   });
 }

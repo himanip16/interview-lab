@@ -13,7 +13,6 @@ import { BitManipulationIllustration } from "./illustrations/BitManipulationIllu
 import { CassandraIllustration } from "./illustrations/Cassandra";
 import { CassandraReadPathIllustration } from "./illustrations/CassandraReadPathIllustration";
 import { CassandraRingIllustration } from "./illustrations/CassandraRingIllustration";
-import { cassandraWritePath } from "./illustrations/CassandraWritePathIllustration";
 import { ConsistentHashingIllustration } from "./illustrations/ConsistentHashing";
 import { ConsistentHashingHero } from "./illustrations/ConsistentHashingHero";
 import { DPIllustration } from "./illustrations/DPIllustration";
@@ -44,9 +43,9 @@ import { SparkIllustration } from "./illustrations/Spark";
 import { TabulationIllustration } from "./illustrations/TabulationIllustration";
 import { TopologicalSortIllustration } from "./illustrations/TopologicalSortIllustration";
 import { TrieIllustration } from "./illustrations/TrieIllustration";
+import { TwoPointersIllustration } from "./illustrations/TwoPointers";
 import { UnionFindIllustration } from "./illustrations/UnionFindIllustration";
 import { VariableSlidingWindowIllustration } from "./illustrations/VariableSlidingWindowIllustration";
-import { CassandraWritePathIllustration } from "./illustrations/cassandraWritePath";
 
 export const contentComponents: Record<string, ComponentType> = {
   ACIDAtomicityIllustration,
@@ -58,7 +57,6 @@ export const contentComponents: Record<string, ComponentType> = {
   CassandraIllustration,
   CassandraReadPathIllustration,
   CassandraRingIllustration,
-  cassandraWritePath,
   ConsistentHashingIllustration,
   ConsistentHashingHero,
   DPIllustration,
@@ -89,7 +87,7 @@ export const contentComponents: Record<string, ComponentType> = {
   TabulationIllustration,
   TopologicalSortIllustration,
   TrieIllustration,
+  TwoPointersIllustration,
   UnionFindIllustration,
   VariableSlidingWindowIllustration,
-  CassandraWritePathIllustration,
 };

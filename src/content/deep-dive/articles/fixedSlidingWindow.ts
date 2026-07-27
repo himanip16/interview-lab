@@ -4,7 +4,8 @@ import type { DeepDiveArticle, Concept } from '@/features/deep-dive/types';
 
 /**
  * Top-Level Glossary (Single Source of Truth)
- * Terms are referenced inside sections via ConceptReferenceBlock items.
+ * These are passive reference entries surfaced via ConceptReferenceBlock —
+ * the prose never depends on the reader opening them. Kept short and plain.
  */
 const glossary: Record<string, Concept> = {
   fixedWindowSize: {
@@ -16,14 +17,14 @@ const glossary: Record<string, Concept> = {
         content: [
           {
             type: 'text',
-            text: 'A constraint where the sub-array or sub-string under evaluation maintains a constant length k throughout the entire traversal.'
+            text: 'The window always covers exactly k elements — never more, never fewer — as it moves across the array.'
           }
         ]
       }
     ],
     examples: [
-      'Finding the maximum sum of k consecutive elements in an array',
-      'Calculating moving averages over a fixed period of k days'
+      'Finding the max sum of k consecutive elements',
+      'A moving average over the last k days'
     ],
     relatedConceptIds: ['incrementalUpdate', 'windowOverlap']
   },
@@ -36,7 +37,7 @@ const glossary: Record<string, Concept> = {
         content: [
           {
             type: 'text',
-            text: 'The technique of maintaining window metrics by performing a constant O(1) operation: subtracting the element leaving the left edge and adding the element entering the right edge.'
+            text: 'Instead of recalculating the whole window, keep the running result and update only what changed: subtract the element that left, add the element that entered.'
           }
         ]
       }
@@ -55,32 +56,32 @@ const glossary: Record<string, Concept> = {
         content: [
           {
             type: 'text',
-            text: 'The mathematical property where consecutive windows of size k share k - 1 elements, meaning only two elements change between adjacent states.'
+            text: 'When the window moves by one step, most elements are still there. Only one leaves and one enters.'
           }
         ]
       }
     ],
     examples: [
-      'Window [0..3] and Window [1..4] both contain elements at indices 1, 2, and 3'
+      'Window [0..3] and window [1..4] share indices 1, 2, and 3'
     ],
     relatedConceptIds: ['fixedWindowSize', 'incrementalUpdate']
   },
   timeComplexityOptimization: {
     id: 'timeComplexityOptimization',
-    term: 'Time Complexity Optimization',
+    term: 'Why It Scales',
     definition: [
       {
         type: 'paragraph',
         content: [
           {
             type: 'text',
-            text: 'Reducing operational runtime from O(n × k) in naive brute-force recalculations down to O(n) linear time by eliminating redundant operations.'
+            text: 'Recalculating every window from scratch costs O(n × k). Updating the running total costs O(n) — the window size stops mattering.'
           }
         ]
       }
     ],
     examples: [
-      'Processing a 1,000,000 element array with k=100 takes 1,000,000 operations instead of 100,000,000 operations'
+      '1,000,000 elements, k=100: 1,000,000 operations instead of 100,000,000'
     ],
     relatedConceptIds: ['incrementalUpdate']
   }
@@ -92,23 +93,20 @@ export const article: DeepDiveArticle = {
     name: 'Fixed Sliding Window',
     eyebrow: 'ARRAYS · TWO POINTERS',
     description:
-      'A fixed sliding window replaces redundant calculations with incremental O(1) updates. Instead of recomputing every window from scratch, one element leaves, one enters, and the answer updates in constant time.',
+      "You don't need to recompute a window from scratch every time it moves — one element leaves, one enters, and you update the answer in constant time.",
     category: 'algorithms',
     tags: ['Sliding Window', 'Arrays', 'Two Pointers', 'Algorithms', 'Data Structures'],
 
-    // Publishing & Operations
     published: true,
     draft: false,
-    version: '2.0.0',
+    version: '3.0.0',
     publishedAt: '2024-10-15',
     updatedAt: '2026-07-27',
 
-    // Metrics & Attribution
-    estimatedReadingMinutes: 10,
+    estimatedReadingMinutes: 8,
     credit: 'Provided by',
     creditOrg: 'Algorithm Deep Dives',
 
-    // Discovery & Search Graph
     keywords: [
       'Sliding Window',
       'Fixed Window Algorithm',
@@ -119,10 +117,10 @@ export const article: DeepDiveArticle = {
     ],
     aliases: ['Static Sliding Window', 'K-Length Subarray Pattern'],
     learningObjectives: [
-      'Identify redundant overlap computations in naive array operations',
-      'Apply incremental update mechanics (add entering, remove leaving element)',
-      'Construct linear O(n) solutions for fixed subarray problems',
-      'Distinguish when to use fixed vs. variable sliding window techniques'
+      'Spot when you\'re redoing work you already did',
+      'Update a running result instead of recalculating it',
+      'Write a linear O(n) solution for fixed-length subarray problems',
+      'Tell fixed windows apart from problems that need a variable window'
     ],
     difficulty: {
       level: 1,
@@ -134,7 +132,7 @@ export const article: DeepDiveArticle = {
     type: 'diagram',
     renderEngine: 'component',
     componentName: 'FixedSlidingWindowIllustration',
-    caption: 'Visualizing a fixed-size window sliding sequentially across contiguous array indices',
+    caption: 'A fixed-size window sliding across the array, one step at a time',
     alt: 'Diagram showing a window frame spanning fixed elements across an array',
     width: 'full'
   },
@@ -145,11 +143,11 @@ export const article: DeepDiveArticle = {
       content: [
         {
           type: 'text',
-          text: 'Many array problems ask the same question repeatedly over neighboring groups of elements. The first group might be indices 0–3, the next 1–4, then 2–5. Most elements remain identical between windows, yet a naive solution throws everything away and recalculates from scratch. A fixed sliding window exists because adjacent windows differ by only two elements: '
+          text: "Say you're checking every group of 4 consecutive numbers for something — a sum, an average, a count. The next group only shifts over by one. Most of it is the same numbers you already looked at. If your solution re-adds all four every time, it's "
         },
         {
           type: 'bold',
-          text: 'one leaves, and one arrives.'
+          text: 'redoing work it already did.'
         }
       ]
     }
@@ -159,14 +157,33 @@ export const article: DeepDiveArticle = {
     {
       id: 'repeated-work',
       number: 1,
-      title: 'The Repeated Work Hiding in Plain Sight',
+      title: 'Wait, Haven\'t I Already Added These?',
       blocks: [
         {
           type: 'paragraph',
           content: [
             {
               type: 'text',
-              text: 'Suppose every consecutive block of four numbers needs its sum. A straightforward solution loops through all four elements every time. The issue is that adjacent windows overlap almost completely.'
+              text: "Say you're tracking the highest 3-day temperature total over a week:"
+            }
+          ]
+        },
+        {
+          type: 'code',
+          language: 'text',
+          code: `Day:   Mon Tue Wed Thu Fri
+Temp:   10  20  30  15  25
+
+Window 1 (Mon-Wed): 10 + 20 + 30 = 60
+Window 2 (Tue-Thu): 20 + 30 + 15 = 65
+Window 3 (Wed-Fri): 30 + 15 + 25 = 70`
+        },
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: 'Look at Window 1 and Window 2. Both include Tue (20) and Wed (30). The only thing that actually changed is: Mon dropped out, Thu showed up. Recomputing all three numbers for Window 2 means re-adding two numbers you already added a moment ago.'
             }
           ]
         },
@@ -175,13 +192,9 @@ export const article: DeepDiveArticle = {
           content: [
             {
               type: 'text',
-              text: 'Moving from one window to the next does not create an entirely new window. Three of the four elements are identical. Only one element disappears from the left edge, and one new element appears on the right edge.'
+              text: "This is the same shape in array form — it's just numbers instead of days:"
             }
           ]
-        },
-        {
-          type: 'concept-ref',
-          conceptId: 'windowOverlap'
         },
         {
           type: 'code',
@@ -199,6 +212,10 @@ k = 4
       [1, 8, 2, 9]`
         },
         {
+          type: 'concept-ref',
+          conceptId: 'windowOverlap'
+        },
+        {
           type: 'diagram',
           renderEngine: 'component',
           componentName: 'SlidingWindowShiftIllustration',
@@ -212,14 +229,14 @@ k = 4
     {
       id: 'core-observation',
       number: 2,
-      title: 'The Observation That Changes Everything',
+      title: 'The Trick: Reuse What You Already Know',
       blocks: [
         {
           type: 'paragraph',
           content: [
             {
               type: 'text',
-              text: 'Imagine the current window already has a sum of 16. When the window slides one position to the right, almost nothing changes. Instead of summing four numbers again, subtract the element that fell out of the window and add the new element that entered.'
+              text: "You already know the current window's total. When the window slides over by one, you don't need the whole sum again — you just need to know what left and what arrived."
             }
           ]
         },
@@ -228,13 +245,9 @@ k = 4
           content: [
             {
               type: 'text',
-              text: 'Every shift performs exactly one subtraction and one addition, regardless of the window size k.'
+              text: 'Subtract the element that fell out on the left. Add the element that showed up on the right. That\'s it — one subtraction, one addition, no matter how big the window is.'
             }
           ]
-        },
-        {
-          type: 'concept-ref',
-          conceptId: 'incrementalUpdate'
         },
         {
           type: 'code',
@@ -243,16 +256,20 @@ k = 4
 window_sum += nums[right]  # element entering right boundary`
         },
         {
+          type: 'concept-ref',
+          conceptId: 'incrementalUpdate'
+        },
+        {
           type: 'callout',
           variant: 'info',
-          title: 'Key Insight',
+          title: 'The only expensive step',
           content: [
             {
               type: 'paragraph',
               content: [
                 {
                   type: 'text',
-                  text: 'The only expensive operation is computing the '
+                  text: 'You compute the '
                 },
                 {
                   type: 'bold',
@@ -260,7 +277,7 @@ window_sum += nums[right]  # element entering right boundary`
                 },
                 {
                   type: 'text',
-                  text: ' window. Every window after that requires only a constant O(1) state update.'
+                  text: ' window the normal way. Every window after that is just one swap.'
                 }
               ]
             }
@@ -272,14 +289,14 @@ window_sum += nums[right]  # element entering right boundary`
     {
       id: 'building-the-algorithm',
       number: 3,
-      title: 'Building the Algorithm',
+      title: 'Putting It Into Code',
       blocks: [
         {
           type: 'paragraph',
           content: [
             {
               type: 'text',
-              text: 'The algorithm begins by computing the first window normally. Once that initial sum exists, every subsequent window reuses it by applying constant-time incremental updates.'
+              text: 'Sum the first k elements to get a starting point. Then walk through the rest of the array, swapping one element out and one in at each step.'
             }
           ]
         },
@@ -313,14 +330,14 @@ window_sum += nums[right]  # element entering right boundary`
     {
       id: 'tracing-the-window',
       number: 4,
-      title: 'Watching the Window Move',
+      title: 'Watching It Move',
       blocks: [
         {
           type: 'paragraph',
           content: [
             {
               type: 'text',
-              text: 'Trace how each shift changes only two values while leaving all internal elements untouched.'
+              text: 'Back to the array example — trace it and check that only two numbers change per step.'
             }
           ]
         },
@@ -359,79 +376,30 @@ sum = 20`
     {
       id: 'complexity-analysis',
       number: 5,
-      title: 'Why It Is Significantly Faster',
+      title: 'Why This Is Faster',
       blocks: [
         {
           type: 'paragraph',
           content: [
             {
               type: 'text',
-              text: 'Suppose an array contains one million elements and the window size is one hundred. A naive solution performs 100 additions for every window position. The sliding window performs only 2 arithmetic operations per shift after the initial window.'
+              text: 'Recalculating every window from scratch means k additions per window — for n windows, that adds up fast. Updating a running total means 2 operations per window, period.'
             }
           ]
-        },
-        {
-          type: 'concept-ref',
-          conceptId: 'timeComplexityOptimization'
         },
         {
           type: 'code',
           language: 'text',
-          code: `Naive Approach (Recalculating every window)
-  Window 1: 100 additions
-  Window 2: 100 additions
-  Window 3: 100 additions
-  Total Operations: O(n × k)
+          code: `Naive (recalculate every window):     O(n × k)
+Sliding window (update, don't rebuild): O(n)
 
-Sliding Window Approach (Incremental updates)
-  Window 1: 100 additions
-  Window 2: 1 subtraction, 1 addition
-  Window 3: 1 subtraction, 1 addition
-  Total Operations: O(n)`
+Example: 1,000,000 elements, k = 100
+  Naive:           100,000,000 operations
+  Sliding window:    1,000,000 operations`
         },
         {
-          type: 'callout',
-          variant: 'info',
-          title: 'Time & Space Complexity',
-          content: [
-            {
-              type: 'paragraph',
-              content: [
-                {
-                  type: 'text',
-                  text: 'Naive Complexity: '
-                },
-                {
-                  type: 'bold',
-                  text: 'O(n × k)'
-                },
-                {
-                  type: 'text',
-                  text: ' time, O(1) auxiliary space.\n'
-                },
-                {
-                  type: 'text',
-                  text: 'Fixed Sliding Window Complexity: '
-                },
-                {
-                  type: 'bold',
-                  text: 'O(n)'
-                },
-                {
-                  type: 'text',
-                  text: ' time, '
-                },
-                {
-                  type: 'bold',
-                  text: 'O(1)'
-                },
-                {
-                  type: 'text',
-                  text: ' auxiliary space.'
-                }
-              ]
-            }
-          ]
+          type: 'concept-ref',
+          conceptId: 'timeComplexityOptimization'
         }
       ]
     },
@@ -439,73 +407,55 @@ Sliding Window Approach (Incremental updates)
     {
       id: 'applicable-patterns',
       number: 6,
-      title: 'When This Pattern Applies',
+      title: 'When to Reach for This',
       blocks: [
         {
           type: 'paragraph',
           content: [
             {
               type: 'text',
-              text: 'The fixed sliding window technique applies whenever the subarray length is explicitly specified and remains static throughout the evaluation.'
+              text: 'Use a fixed window whenever the problem hands you an exact window length k that stays constant the whole way through:'
             }
           ]
         },
         {
           type: 'code',
           language: 'text',
-          code: `Common Fixed Window Problems:
-• Maximum/Minimum sum of subarray of size k
-• Average of every contiguous window of size k
+          code: `• Max/min sum of a subarray of size k
+• Average of every window of size k
 • Maximum average subarray of length k
-• Count negative numbers in every window of size k
+• Count negatives in every window of size k
 • Count distinct elements in every window of size k
-• Maximum vowels in a substring of length k
-• Card points maximization (k cards from ends)`
-        }
-      ]
-    },
-
-    {
-      id: 'limitations',
-      number: 7,
-      title: 'When It Does Not Work',
-      blocks: [
-        {
-          type: 'paragraph',
-          content: [
-            {
-              type: 'text',
-              text: 'Some problems do not specify a window size upfront. They ask for the shortest, longest, or optimal window that satisfies a condition (e.g., "smallest subarray with sum ≥ S"). In these cases, the window must expand and shrink dynamically.'
-            }
-          ]
+• Max vowels in a substring of length k
+• Card points from k cards taken off either end`
         },
         {
           type: 'paragraph',
           content: [
             {
               type: 'text',
-              text: 'Dynamic boundary problems require the '
+              text: 'It falls apart when the problem doesn\'t give you a fixed length up front — "smallest subarray with sum ≥ S" doesn\'t tell you how big the window should be, so it has to grow and shrink as you go. That\'s a '
             },
             {
               type: 'bold',
-              text: 'Variable Sliding Window'
+              text: 'variable'
             },
             {
               type: 'text',
-              text: ' pattern, where the left and right pointers move independently.'
+              text: ' window, and it needs both pointers moving independently instead of in lockstep.'
             }
           ]
         },
         {
           type: 'tradeoff',
-          title: 'Fixed vs. Variable Sliding Window',
+          title: 'Fixed vs. Variable Window',
           description: [
             {
               type: 'paragraph',
               content: [
                 {
                   type: 'text',
-                  text: 'Choosing between fixed and variable window strategies depends on whether window bounds are constant or dynamic.'
+                  text: 'The question to ask: does the window length stay fixed, or does it depend on satisfying some condition?'
                 }
               ]
             }
@@ -514,24 +464,24 @@ Sliding Window Approach (Incremental updates)
             {
               name: 'Fixed Window',
               pros: [
-                'Deterministic O(1) step behavior on every iteration',
-                'Simple implementation using synchronized two-pointer movement',
-                'Ideal for contiguous sub-sequence metrics (averages, sums)'
+                'Same O(1) update every single step',
+                'Both pointers move together — simple to implement',
+                'Great fit for fixed-length sums and averages'
               ],
               cons: [
-                'Inflexible—cannot process variable constraints',
-                'Requires prior knowledge of exact window length k'
+                "Only works if you're told the exact window size",
+                "Can't handle a 'find the best length' problem"
               ]
             },
             {
               name: 'Variable Window',
               pros: [
-                'Handles dynamic target conditions (e.g., min length satisfying condition)',
-                'Expands right pointer to find valid states and shrinks left pointer to optimize'
+                'Handles "find the shortest/longest window that works" problems',
+                'Grows right, shrinks left, until the condition is met'
               ],
               cons: [
-                'More complex edge-case handling (empty windows, pointer crossover)',
-                'Requires auxiliary state tracking (hash maps, frequency tables)'
+                'Trickier edge cases (empty windows, pointers crossing)',
+                'Usually needs extra state (hash maps, counters)'
               ]
             }
           ]

@@ -12,6 +12,7 @@ export type DeepDiveCategory =
   | "concept"
   | "tools"
   | "algorithms"
+  | "behavioral"
   | "data-structures"
   | "streaming";
 
@@ -67,7 +68,7 @@ export type DiagramBlock = {
   | { renderEngine: "image"; src: string }
 );
 
-export type CalloutType = "info" | "warning" | "concept" | "tradeoff" | "note" | "tip";
+export type CalloutType = "info" | "warning" | "concept" | "tradeoff" | "note" | "tip" | "success";
 
 export interface CalloutBlock {
   type: "callout";
