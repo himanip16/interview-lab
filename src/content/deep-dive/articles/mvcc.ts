@@ -1,180 +1,543 @@
-import { DeepDiveArticle } from '@/features/deep-dive/types';
-import { MVCCIllustration } from '@/content/deep-dive/illustrations/MVCC';
+// src/content/deep-dive/articles/mvcc.ts
+
+import type { DeepDiveArticle, Concept } from '@/features/deep-dive/types';
+
+/**
+ * Top-Level Glossary (Single Source of Truth)
+ * Terms are referenced inside sections via ConceptReferenceBlock items.
+ */
+const glossary: Record<string, Concept> = {
+  rowVersionStamping: {
+    id: 'rowVersionStamping',
+    term: 'xmin / xmax Row Versioning',
+    definition: [
+      {
+        type: 'paragraph',
+        content: [
+          {
+            type: 'text',
+            text: 'System metadata fields attached to every physical tuple. xmin records the transaction ID that inserted the version, while xmax records the transaction ID that deleted or superseded it.'
+          }
+        ]
+      }
+    ],
+    examples: [
+      'An UPDATE statement populates xmax on the current tuple with the active transaction ID and inserts a new tuple with xmin set to that same ID.'
+    ],
+    relatedConceptIds: ['snapshotIsolation', 'vacuumGC']
+  },
+  snapshotIsolation: {
+    id: 'snapshotIsolation',
+    term: 'Snapshot Isolation',
+    definition: [
+      {
+        type: 'paragraph',
+        content: [
+          {
+            type: 'text',
+            text: 'A concurrency control state where a transaction sees a completely consistent view of the database as of the instant the transaction (or query) began, unaffected by concurrent uncommitted or later-committed writes.'
+          }
+        ]
+      }
+    ],
+    examples: [
+      'A long-running analytical query reading from a snapshot ignores concurrent updates made by online transaction processing (OLTP) workers.'
+    ],
+    relatedConceptIds: ['rowVersionStamping', 'writeSkew']
+  },
+  vacuumGC: {
+    id: 'vacuumGC',
+    term: 'Vacuum / Dead Tuple Garbage Collection',
+    definition: [
+      {
+        type: 'paragraph',
+        content: [
+          {
+            type: 'text',
+            text: 'The process of scanning data pages to identify dead row versions—tuples where xmax is older than the oldest active transaction snapshot—and marking that physical storage as reusable.'
+          }
+        ]
+      }
+    ],
+    examples: [
+      'PostgreSQL autovacuum worker scanning heap pages to reclaim dead tuples and update visibility maps.'
+    ],
+    relatedConceptIds: ['tableBloat', 'rowVersionStamping']
+  },
+  tableBloat: {
+    id: 'tableBloat',
+    term: 'Table & Index Bloat',
+    definition: [
+      {
+        type: 'paragraph',
+        content: [
+          {
+            type: 'text',
+            text: 'The accumulation of obsolete row versions and un-reclaimed dead space inside database heap files and B-tree indexes, leading to degraded sequential scan and index lookup performance.'
+          }
+        ]
+      }
+    ],
+    examples: [
+      'A high-frequency UPDATE table swelling from 1 GB of active data to 10 GB due to delayed autovacuum processing.'
+    ],
+    relatedConceptIds: ['vacuumGC']
+  },
+  writeSkew: {
+    id: 'writeSkew',
+    term: 'Write Skew Anomaly',
+    definition: [
+      {
+        type: 'paragraph',
+        content: [
+          {
+            type: 'text',
+            text: 'A concurrency anomaly under standard Snapshot Isolation where two concurrent transactions read overlapping datasets, satisfy a common domain invariant locally, and execute non-conflicting writes that collectively violate the invariant.'
+          }
+        ]
+      }
+    ],
+    examples: [
+      'Two doctors simultaneously requesting off-call duty when the constraint requires at least one doctor on call; both read the snapshot showing 2 active, and both successfully take off.'
+    ],
+    relatedConceptIds: ['snapshotIsolation']
+  }
+};
 
 export const article: DeepDiveArticle = {
-  heroIllustration: MVCCIllustration,
-  slug: 'mvcc',
-  category: 'db',
-  readTime: '11 min',
-  name: 'MVCC',
-  eyebrow: 'CONCURRENCY CONTROL · SNAPSHOTS',
-  description: 'MVCC (Multi-Version Concurrency Control) is how databases let reads and writes happen at the same time without blocking each other. The trick: never overwrite a row, just keep multiple versions of it around.',
-  tags: ['Snapshot isolation', 'No read locks', 'Row versioning'],
-  credit: 'Core concept in',
-  creditOrg: 'PostgreSQL, MySQL (InnoDB), Oracle, SQL Server',
-  docsUrl: 'https://www.postgresql.org/docs/current/mvcc.html',
-  title: 'MVCC, and why nobody has to wait for anybody',
-  lede: 'The oldest way to keep concurrent transactions from corrupting each other is locking: a reader blocks a writer, a writer blocks a reader, everyone takes turns. MVCC asks a different question — what if a reader and a writer just never needed the same copy of the data in the first place? Keep the old version around long enough for the reader to finish with it, let the writer create a new version alongside it, and neither one ever has to wait.',
+  metadata: {
+    slug: 'mvcc',
+    name: 'MVCC',
+    eyebrow: 'CONCURRENCY CONTROL · SNAPSHOTS',
+    description:
+      'Multi-Version Concurrency Control (MVCC) enables high-throughput concurrent reads and writes without mutual blocking. Learn how tuple versioning, xmin/xmax metadata, snapshot visibility, and background vacuuming work under the hood.',
+    category: 'db',
+    tags: ['Snapshot Isolation', 'No Read Locks', 'Row Versioning', 'Garbage Collection', 'PostgreSQL', 'InnoDB'],
 
-  sections: [
+    // Publishing & Operations
+    published: true,
+    draft: false,
+    version: '2.0.0',
+    publishedAt: '2024-11-10',
+    updatedAt: '2026-07-27',
+
+    // Metrics & Attribution
+    estimatedReadingMinutes: 11,
+    credit: 'Core concept in',
+    creditOrg: 'PostgreSQL, MySQL (InnoDB), Oracle, SQL Server',
+    docsUrl: 'https://www.postgresql.org/docs/current/mvcc.html',
+
+    // Discovery & Search Graph
+    keywords: [
+      'MVCC Architecture',
+      'Multi-Version Concurrency Control',
+      'Snapshot Isolation',
+      'xmin xmax PostgreSQL',
+      'Dead Tuple Vacuuming',
+      'Table Bloat',
+      'Write Skew Anomaly',
+      'InnoDB Undo Logs'
+    ],
+    aliases: ['Multi Version Concurrency Control', 'Snapshot Concurrency'],
+    learningObjectives: [
+      'Evaluate the architectural differences between traditional lock-based concurrency control and MVCC',
+      'Trace how xmin and xmax header stamps determine row tuple visibility across transactions',
+      'Construct transaction snapshot bounds to verify tuple visibility rules during concurrent mutations',
+      'Identify vacuum garbage collection mechanics and diagnose common causes of table bloat'
+    ],
+    difficulty: {
+      level: 2,
+      prerequisites: ['sstable', 'cassandra']
+    }
+  },
+
+  heroDiagram: {
+    type: 'diagram',
+    renderEngine: 'component',
+    componentName: 'MVCCIllustration',
+    caption: 'MVCC decouples concurrent readers and writers by maintaining version chains rather than in-place updates',
+    alt: 'Diagram demonstrating multi-version row pointers separating active readers from active writers',
+    width: 'full'
+  },
+
+  lede: [
     {
-      number: 1,
-      title: 'The problem with locking reads',
+      type: 'paragraph',
       content: [
-        [
-          { type: 'text', text: 'In a lock-based system, a long-running read can hold a shared lock on a row for its entire duration. Any writer that wants to touch that row has to wait — not because the data is actually in danger, but because the locking scheme can\'t tell the difference between "someone is looking at this" and "someone might interfere with this."' }
-        ],
-        [
-          { type: 'text', text: 'MVCC sidesteps the question entirely. Instead of making a writer wait for a reader to finish with the current version of a row, it lets the writer create a new version. The reader keeps seeing the old one, unaware anything happened.' }
-        ]
-      ],
-      illustration: {
-        component: 'MVCCLockVsVersionIllustration',
-        caption: 'Locking makes writers wait on readers — MVCC gives each a version instead',
-        width: 'full'
-      }
-    },
-
-    {
-      number: 2,
-      title: 'Every row is really a chain of rows',
-      content: [
-        [
-          { type: 'text', text: 'A table row under MVCC isn\'t a single mutable slot — it\'s a series of row versions, each tagged with the range of transactions that can see it. Postgres, for example, stamps every row with two hidden columns: ' },
-          { type: 'text', text: 'xmin', bold: true },
-          { type: 'text', text: ' (the transaction that created this version) and ' },
-          { type: 'text', text: 'xmax', bold: true },
-          { type: 'text', text: ' (the transaction that made it obsolete, if any).' }
-        ]
-      ],
-      code: {
-        language: "typescript",
-        code: `// A row's life as a chain of versions (Postgres-style xmin/xmax)
-
-// Insert by transaction 100
-{ id: 42, status: "active", xmin: 100, xmax: null }
-
-// Update by transaction 105 doesn't edit the row —
-// it closes the old version and inserts a new one:
-{ id: 42, status: "active", xmin: 100, xmax: 105 }  // now closed
-{ id: 42, status: "away",   xmin: 105, xmax: null }  // now current
-
-// A transaction that started before 105 still sees "active".
-// A transaction that starts after 105 sees "away".`
-      },
-      callout: {
-        label: 'Worth remembering',
-        content: [
-          [
-            { type: 'text', text: 'An "update" under MVCC is never an edit — it\'s ', bold: false },
-            { type: 'text', text: 'close the old version, insert a new one', bold: true },
-            { type: 'text', text: '. The same append-only instinct that makes an LSM-tree write fast shows up here for a completely different reason: letting readers and writers ignore each other.' }
-          ]
-        ]
-      }
-    },
-
-    {
-      number: 3,
-      title: 'What a snapshot actually is',
-      content: [
-        [
-          { type: 'text', text: 'When a transaction starts, it takes a snapshot: a record of which transaction IDs were already committed at that instant. From then on, every row version it looks at gets checked against that snapshot — visible if its creator had committed in time and its closer either doesn\'t exist yet or hadn\'t committed yet.' }
-        ],
-        [
-          { type: 'text', text: 'This is why a long-running read never blocks a writer and is never blocked by one: it\'s not asking "what is the value right now," it\'s asking "what was the value according to my snapshot," and that answer doesn\'t change no matter what happens after the snapshot was taken.' }
-        ]
-      ],
-      illustration: {
-        component: 'MVCCSnapshotIllustration',
-        caption: 'Each transaction checks row visibility against the snapshot it took at the start',
-        width: 'full'
-      }
-    },
-
-    {
-      number: 4,
-      title: 'Walking through one row',
-      content: [
-        [
-          { type: 'text', text: 'Concretely: transaction A starts a long read, then transaction B updates the same row and commits, all before A finishes.' }
-        ]
-      ],
-      code: {
-        language: "typescript",
-        code: `T1  Transaction A starts, snapshot taken (sees only committed data up to T1)
-T2  Transaction B updates row 42: "active" → "away", commits at T2
-T3  Transaction A reads row 42
-
-// A's snapshot was taken at T1, before B committed.
-// The "away" version has xmin = B's transaction ID, which
-// wasn't committed yet as of A's snapshot — so it's invisible to A.
-
-return { status: "active" }; // A sees the pre-update value, consistently`
-      }
-    },
-
-    {
-      number: 5,
-      title: 'Old versions don\'t clean themselves up',
-      content: [
-        [
-          { type: 'text', text: 'Every update leaves the old row version lying around, because some snapshot somewhere might still need it. Once no active transaction could possibly need a version anymore, it\'s dead weight — taking up space and slowing down scans that have to skip past it.' }
-        ],
-        [
-          { type: 'text', text: 'Postgres calls the process that reclaims this space ' },
-          { type: 'text', text: 'vacuum', bold: true },
-          { type: 'text', text: ' : a background job that finds row versions no snapshot can see anymore and physically removes them, freeing the space for reuse.' }
-        ]
-      ],
-      callout: {
-        label: 'Trade being made',
-        content: [
-          [
-            { type: 'text', text: 'MVCC trades ' },
-            { type: 'text', text: 'extra storage and background cleanup work', bold: true },
-            { type: 'text', text: ' for ' },
-            { type: 'text', text: 'readers and writers that never block each other', bold: true },
-            { type: 'text', text: '. Skip vacuum for too long, under enough write load, and old versions pile up — a problem often called table or index bloat.' }
-          ]
-        ]
-      }
-    },
-
-    {
-      number: 6,
-      title: 'When to reach for it — and what it doesn\'t give you',
-      content: [
-        [
-          { type: 'text', text: 'MVCC is the default in most general-purpose relational databases today precisely because read-heavy, write-heavy, mixed workloads are the common case, and blocking either side on the other doesn\'t scale. It doesn\'t remove the need for locking entirely, though — two writers updating the same row still have to serialize, and snapshot isolation alone doesn\'t prevent every anomaly (write skew is the classic example), which is why some systems layer serializable isolation on top rather than relying on snapshots alone.' }
-        ]
+        {
+          type: 'text',
+          text: 'The traditional approach to preventing concurrent data corruption is locking: readers block writers, writers block readers, and execution serializes. MVCC approaches concurrency differently: readers and writers never operate on the exact same snapshot of data. By maintaining historic row versions, readers access consistent snapshots while writers create new versions concurrently without mutual blocking.'
+        }
       ]
     }
   ],
 
-  tradeoffs: {
-    strengths: [
-      'Mixed read/write workloads where long reads shouldn\'t block writers',
-      'Applications that need consistent, repeatable-read snapshots for reports',
-      'Systems already tolerant of background maintenance (vacuum/GC) for cleanup'
-    ],
-    weaknesses: [
-      'Extremely write-heavy tables where version churn outpaces cleanup',
-      'Workloads needing every serialization anomaly prevented without extra isolation work',
-      'Storage-constrained systems that can\'t absorb temporary bloat from old versions'
-    ]
-  },
-
-  related: [
+  sections: [
     {
-      name: 'SSTable',
-      description: 'A different setting, same instinct — never edit, always append a new version',
-      slug: 'sstable'
+      id: 'problem-with-locking-reads',
+      number: 1,
+      title: 'The Problem with Locking Reads',
+      blocks: [
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: 'In a lock-based system, a long-running read query holds shared locks across target rows for its duration. Any writer attempting to mutate those rows must wait—not because data integrity is actively compromised, but because lock systems cannot distinguish between inspecting state and mutating state.'
+            }
+          ]
+        },
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: 'MVCC eliminates read-write lock contention. Instead of forcing a writer to wait for active readers to release locks, the database engine creates a new physical version of the row. Existing readers continue processing the older version from their snapshot.'
+            }
+          ]
+        },
+        {
+          type: 'diagram',
+          renderEngine: 'component',
+          componentName: 'MVCCLockVsVersionIllustration',
+          caption: 'Locking forces writers to wait on active readers; MVCC creates parallel versions so both execute without delay',
+          alt: 'Visual comparison showing write blocking under shared locks versus non-blocking append under MVCC version chains',
+          width: 'full'
+        }
+      ]
+    },
+
+    {
+      id: 'row-as-version-chain',
+      number: 2,
+      title: 'Every Row Is Really a Chain of Versions',
+      blocks: [
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: 'Under MVCC, a logical table row is not an in-place mutable memory location. It is a linked sequence of physical row versions (tuples), each stamped with the transaction lifecycle that governs its visibility. PostgreSQL, for instance, embeds two hidden metadata columns in every tuple: '
+            },
+            {
+              type: 'bold',
+              text: 'xmin'
+            },
+            {
+              type: 'text',
+              text: ' (the transaction ID that created the version) and '
+            },
+            {
+              type: 'bold',
+              text: 'xmax'
+            },
+            {
+              type: 'text',
+              text: ' (the transaction ID that expired or deleted it).'
+            }
+          ]
+        },
+        {
+          type: 'concept-ref',
+          conceptId: 'rowVersionStamping'
+        },
+        {
+          type: 'code',
+          language: 'typescript',
+          code: `// A row's lifecycle as a version chain (Postgres-style xmin/xmax)
+
+// 1. Inserted by Transaction 100
+{ id: 42, status: "active", xmin: 100, xmax: null }
+
+// 2. Updated by Transaction 105:
+// Rather than overwriting the slot, T105 closes the active version
+// and appends a new physical tuple.
+{ id: 42, status: "active", xmin: 100, xmax: 105 }  // Superseded tuple
+{ id: 42, status: "away",   xmin: 105, xmax: null }  // Active current tuple
+
+// A transaction started before T105 reads the xmin:100 / xmax:105 tuple ("active").
+// A transaction started after T105 reads the xmin:105 / xmax:null tuple ("away").`
+        },
+        {
+          type: 'callout',
+          variant: 'info',
+          title: 'Worth Remembering',
+          content: [
+            {
+              type: 'paragraph',
+              content: [
+                {
+                  type: 'text',
+                  text: 'An UPDATE operation in an MVCC database is functionally a DELETE followed by an INSERT: '
+                },
+                {
+                  type: 'bold',
+                  text: 'mark the old version closed, then append a new version'
+                },
+                {
+                  type: 'text',
+                  text: '. This append-only pattern mirrors LSM-tree write paths to achieve non-blocking concurrency.'
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      id: 'what-a-snapshot-is',
+      number: 3,
+      title: 'How Snapshot Visibility Works',
+      blocks: [
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: 'When a transaction initiates a read under Snapshot Isolation, the engine captures a snapshot array consisting of active transaction IDs, low-water marks, and high-water marks. Every physical tuple encountered during page scans is evaluated against this snapshot state.'
+            }
+          ]
+        },
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: 'A row version is visible to a snapshot if its creating transaction (xmin) was committed before snapshot creation AND its expiring transaction (xmax) is either unassigned or was uncommitted at the time of snapshot creation.'
+            }
+          ]
+        },
+        {
+          type: 'concept-ref',
+          conceptId: 'snapshotIsolation'
+        },
+        {
+          type: 'diagram',
+          renderEngine: 'component',
+          componentName: 'MVCCSnapshotIllustration',
+          caption: 'Transactions evaluate tuple visibility by checking xmin/xmax fields against their initial snapshot state',
+          alt: 'Diagram showing transaction snapshot bounds comparing tuple xmin/xmax identifiers for visibility evaluation',
+          width: 'full'
+        }
+      ]
+    },
+
+    {
+      id: 'walking-through-one-row',
+      number: 4,
+      title: 'Trace: Concurrent Reader and Writer',
+      blocks: [
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: 'Consider a scenario where Transaction A initiates a long analytical read, after which Transaction B updates the target row and commits before Transaction A finishes.'
+            }
+          ]
+        },
+        {
+          type: 'code',
+          language: 'typescript',
+          code: `// Timeline of concurrent execution under MVCC Snapshot Isolation
+
+T1: Transaction A starts -> Captures Snapshot (active_txs: [])
+T2: Transaction B (TxID 200) updates row 42 ("active" -> "away") and commits
+    -> Tuple 1 (status: "active") updated to xmax: 200
+    -> Tuple 2 (status: "away")   inserted with xmin: 200, xmax: null
+T3: Transaction A executes SELECT status WHERE id = 42
+
+// Evaluation by Transaction A:
+// Tuple 2 has xmin = 200. Since TxID 200 was not committed when A took its snapshot at T1,
+// Tuple 2 is invisible.
+// Tuple 1 has xmin = 100 and xmax = 200. Since xmax (200) was not committed at T1,
+// Tuple 1 remains visible to A.
+
+return { status: "active" }; // Transaction A reads the consistent pre-update snapshot value`
+        }
+      ]
+    },
+
+    {
+      id: 'garbage-collection-and-vacuum',
+      number: 5,
+      title: 'Old Versions Don\'t Clean Themselves Up',
+      blocks: [
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: 'Because updates append new versions rather than mutating data in place, historical tuples accumulate in heap files. Once no active transaction snapshot requires access to a historical version, that tuple becomes dead space.'
+            }
+          ]
+        },
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: 'Engine processes (such as PostgreSQL\'s '
+            },
+            {
+              type: 'bold',
+              text: 'autovacuum'
+            },
+            {
+              type: 'text',
+              text: ' or MySQL InnoDB\'s purge threads) clean up dead tuples asynchronously, marking page bytes as reusable for future inserts.'
+            }
+          ]
+        },
+        {
+          type: 'concept-ref',
+          conceptId: 'vacuumGC'
+        },
+        {
+          type: 'concept-ref',
+          conceptId: 'tableBloat'
+        },
+        {
+          type: 'callout',
+          variant: 'warning',
+          title: 'Trade-off Analysis',
+          content: [
+            {
+              type: 'paragraph',
+              content: [
+                {
+                  type: 'text',
+                  text: 'MVCC trades '
+                },
+                {
+                  type: 'bold',
+                  text: 'storage amplification and background garbage collection overhead'
+                },
+                {
+                  type: 'text',
+                  text: ' in exchange for '
+                },
+                {
+                  type: 'bold',
+                  text: 'non-blocking concurrent readers and writers'
+                },
+                {
+                  type: 'text',
+                  text: '. If background vacuuming lags behind high-frequency updates, tables experience severe bloat.'
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      id: 'when-to-use-and-limitations',
+      number: 6,
+      title: 'When to Reach for MVCC—and Its Anomalies',
+      blocks: [
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: 'MVCC is the default concurrency model in modern relational databases because mixed OLTP and reporting workloads predominate. However, Snapshot Isolation does not eliminate all concurrent anomalies.'
+            }
+          ]
+        },
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: 'Two concurrent transactions under Snapshot Isolation can experience '
+            },
+            {
+              type: 'bold',
+              text: 'write skew'
+            },
+            {
+              type: 'text',
+              text: ', where each transaction reads overlapping snapshots, satisfies local conditions, and performs disjoint writes that violate global domain constraints. Resolving write skew requires explicit row locking (e.g., SELECT ... FOR UPDATE) or true Serializable Isolation.'
+            }
+          ]
+        },
+        {
+          type: 'concept-ref',
+          conceptId: 'writeSkew'
+        },
+        {
+          type: 'tradeoff',
+          title: 'MVCC Snapshot Isolation vs. Lock-Based Strict Serializability',
+          description: [
+            {
+              type: 'paragraph',
+              content: [
+                {
+                  type: 'text',
+                  text: 'Trade-offs between multi-version concurrency and strict pessimistic locking.'
+                }
+              ]
+            }
+          ],
+          sides: [
+            {
+              name: 'MVCC (Snapshot Isolation)',
+              pros: [
+                'Concurrent reads and writes do not block each other',
+                'Predictable latency for long-running analytical reporting queries',
+                'High throughput across high-concurrency mixed OLTP workloads'
+              ],
+              cons: [
+                'Requires background garbage collection (vacuum/purge) to reclaim dead space',
+                'Susceptible to snapshot anomalies like write skew unless serializable checking is active'
+              ]
+            },
+            {
+              name: 'Strict 2-Phase Locking (2PL)',
+              pros: [
+                'Prevents all concurrency anomalies including write skew by default',
+                'No storage bloat or tuple version chain overhead'
+              ],
+              cons: [
+                'Shared read locks block incoming exclusive write locks',
+                'High risk of deadlocks under severe concurrent access'
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+
+  glossary,
+
+  resources: [
+    {
+      type: 'article',
+      title: 'SSTable Architecture',
+      description: 'Explore append-only immutable storage files and version compaction in LSM engines.',
+      url: '/deep-dive/sstable',
+      slug: 'sstable',
+      relationship: 'similar'
     },
     {
-      name: 'Cassandra',
-      description: 'Solves concurrent writes with timestamps and reconciliation instead of snapshots',
-      slug: 'cassandra'
+      type: 'article',
+      title: 'Cassandra Architecture',
+      description: 'Contrast MVCC snapshots with timestamp-based reconciliation and tombstones.',
+      url: '/deep-dive/cassandra',
+      slug: 'cassandra',
+      relationship: 'similar'
+    },
+    {
+      type: 'article',
+      title: 'PostgreSQL Architecture',
+      description: 'Deep dive into PostgreSQL page layouts, visibility maps, and autovacuum tuning.',
+      url: '/deep-dive/postgres',
+      slug: 'postgres',
+      relationship: 'related'
     }
   ]
 };

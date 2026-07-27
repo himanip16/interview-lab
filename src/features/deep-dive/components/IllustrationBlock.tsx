@@ -1,20 +1,29 @@
 // src/features/deep-dive/components/IllustrationBlock.tsx
 
-type IllustrationWidth = 'full' | 'half' | 'third' | 'quarter' | 'fixed' | 'auto';
+import type { ReactNode } from 'react';
+
+type IllustrationWidth = 'full' | 'half' | 'two-thirds' | 'quarter' | 'fixed' | 'auto';
 
 interface IllustrationBlockProps {
-  illustration: React.ReactNode;
+  illustration: ReactNode;
   caption: string;
-  children?: React.ReactNode;
+  alt?: string;
+  children?: ReactNode;
   width?: IllustrationWidth;
 }
 
-export function IllustrationBlock({ illustration, caption, children, width = 'fixed' }: IllustrationBlockProps) {
+export function IllustrationBlock({
+  illustration,
+  caption,
+  alt,
+  children,
+  width = 'fixed',
+}: IllustrationBlockProps) {
   const isFullWidth = width === 'full';
-  
+
   return (
     <div className={`illust-row ${isFullWidth ? 'full-width' : ''}`}>
-      <div className={`illust-box ${width}`}>
+      <div className={`illust-box ${width}`} role="img" aria-label={alt}>
         {illustration}
         <div className="illust-cap">{caption}</div>
       </div>

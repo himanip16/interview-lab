@@ -1,7 +1,10 @@
 // src/features/deep-dive/types.ts
 
-import type { ComponentType } from "react";
 import type { CodeLanguage } from "@/shared/code/enums";
+
+/* ==========================================================================
+   1. CORE PRIMITIVES & TEXT
+   ========================================================================== */
 
 export type DeepDiveCategory =
   | "db"
@@ -12,57 +15,36 @@ export type DeepDiveCategory =
   | "data-structures"
   | "streaming";
 
-export type LinkType =
-  | "deep-dive"
-  | "transcript"
-  | "external";
-
-export type DiagramType =
-  | "excalidraw"
-  | "flowchart"
-  | "dataflow"
-  | "architecture"
-  | "sequence";
-
-export type CalloutType =
-  | "info"
-  | "warning"
-  | "concept"
-  | "tradeoff"
-  | "note";
-
-export interface DeepDiveSummary {
-  slug: string;
-  name: string;
-  eyebrow: string;
-  description: string;
-  tags: string[];
-  category: DeepDiveCategory;
-  readTime: string;
-  credit: string;
-  creditOrg: string;
-  docsUrl?: string;
+export interface LinkRef {
+  kind: "deep-dive" | "transcript" | "external";
+  target: string; // URL path, slug, or external URL
+  preview?: string;
 }
 
-/**
- * Inline text formatting within paragraphs
- */
-export interface InlineContent {
-  type: "text" | "bold" | "code" | "link";
+export interface InlineText {
+  type: "text" | "bold" | "italic" | "code";
   text: string;
-  href?: {
-    type: LinkType;
-    target: string;
-    preview?: string;
-  };
 }
 
-export type Paragraph = InlineContent[];
+export interface InlineLink {
+  type: "link";
+  text: string;
+  ref: LinkRef;
+}
 
-/**
- * Code snippets with language support
- */
-export interface CodeSnippet {
+export type InlineContent = InlineText | InlineLink;
+
+/* ==========================================================================
+   2. BLOCKS (Ordered Content Hierarchy)
+   ========================================================================== */
+
+export interface ParagraphBlock {
+  type: "paragraph";
+  content: InlineContent[];
+}
+
+export interface CodeBlock {
+  type: "code";
   code: string;
   language: CodeLanguage;
   title?: string;
@@ -71,140 +53,190 @@ export interface CodeSnippet {
 }
 
 /**
- * Diagrams: Excalidraw for hand-drawn style, or structured data for flowcharts
+ * Discriminated union for diagrams based on execution/rendering target
  */
-export interface Diagram {
-  type: DiagramType;
+export type DiagramBlock = {
+  type: "diagram";
   caption: string;
-  source: string; // URL to Excalidraw JSON, or inline JSON for structured diagrams
-  alt: string; // description for accessibility
+  alt: string;
   width?: "full" | "half" | "two-thirds";
+} & (
+  | { renderEngine: "excalidraw"; url: string }
+  | { renderEngine: "flowchart" | "mermaid"; definition: string }
+  | { renderEngine: "component"; componentName: string }
+  | { renderEngine: "image"; src: string }
+);
+
+export type CalloutType = "info" | "warning" | "concept" | "tradeoff" | "note" | "tip";
+
+export interface CalloutBlock {
+  type: "callout";
+  variant: CalloutType;
+  label?: string; // e.g., "Important", "Watch out"
+  title?: string;
+  content: ParagraphBlock[];
 }
 
-/**
- * Key concepts explained inline or as sidebars
- */
-export interface ConceptExplanation {
-  term: string; // e.g., "Partition Key", "Consistency Level"
-  definition: Paragraph[];
-  examples?: string[];
-  relatedTerms?: string[]; // references to other concepts in article
+export interface ComparisonColumn {
+  id: string;
+  label: string;
 }
 
-/**
- * Comparison rows for features/tradeoffs
- */
 export interface ComparisonRow {
   feature: string;
-  columns: Record<string, string>; // key -> value for each column
+  cells: Record<string, string>; // column.id -> value
 }
 
-/**
- * Flexible comparison block that can appear in sections
- */
 export interface ComparisonBlock {
+  type: "comparison";
   title?: string;
-  columnHeaders: Record<string, string>; // id -> display name
+  columns: ComparisonColumn[]; // Explicit array preserves column order
   rows: ComparisonRow[];
   caption?: string;
 }
 
-/**
- * Callouts for important ideas, warnings, or conceptual asides
- */
-export interface Callout {
-  type: CalloutType;
-  label?: string; // e.g., "Important", "Watch out", "Key Idea"
-  content: Paragraph[];
-  title?: string; // optional header for callout
+export interface TradeoffSide {
+  name: string; // e.g., "Favors Writes"
+  pros: string[];
+  cons: string[];
+}
+
+export interface TradeoffBlock {
+  type: "tradeoff";
+  title: string;
+  description: ParagraphBlock[];
+  sides: TradeoffSide[];
+  verdict?: ParagraphBlock[]; // Recommendation or platform specific choice
+}
+
+export interface QuoteBlock {
+  type: "quote";
+  quote: string;
+  author?: string;
+  role?: string;
+}
+
+export interface ImageBlock {
+  type: "image";
+  src: string;
+  alt: string;
+  caption?: string;
+  aspectRatio?: string;
+}
+
+export interface TableBlock {
+  type: "table";
+  headers: string[];
+  rows: string[][];
+  caption?: string;
 }
 
 /**
- * Related resources for deeper learning
+ * Reference to a globally defined concept in the article's glossary
  */
+export interface ConceptReferenceBlock {
+  type: "concept-ref";
+  conceptId: string;
+  summaryOverride?: ParagraphBlock[];
+}
+
+/**
+ * Unified Discriminated Union for all rendered content blocks
+ */
+export type ContentBlock =
+  | ParagraphBlock
+  | CodeBlock
+  | DiagramBlock
+  | CalloutBlock
+  | ComparisonBlock
+  | TradeoffBlock
+  | QuoteBlock
+  | ImageBlock
+  | TableBlock
+  | ConceptReferenceBlock;
+
+/* ==========================================================================
+   3. DOMAIN MODES (Glossary & Resources)
+   ========================================================================== */
+
+export interface Concept {
+  id: string;
+  term: string; // e.g., "Partition Key"
+  definition: ParagraphBlock[];
+  examples?: string[];
+  relatedConceptIds?: string[];
+}
+
 export interface RelatedResource {
   type: "article" | "video" | "tool" | "code" | "paper";
   title: string;
   description?: string;
   url: string;
-  slug?: string; // if it's another deep-dive
+  slug?: string; // Present if type === "article"
+  relationship?: "prerequisite" | "similar" | "contrast" | "buildsOn" | "next" | "related";
 }
 
-/**
- * Tradeoffs and decision space for this component
- */
-export interface TradeoffAnalysis {
-  title: string; // e.g., "Write vs Read Tradeoff", "Consistency vs Availability"
-  description: Paragraph[];
-  sides: Array<{
-    name: string; // e.g., "Favors Writes"
-    pros: string[];
-    cons: string[];
-  }>;
-  cassandraChoice?: Paragraph[]; // how Cassandra chose
-}
+/* ==========================================================================
+   4. SECTIONS & ARTICLE METADATA
+   ========================================================================== */
 
-/**
- * Main section of article
- */
 export interface Section {
+  id: string;
   number: number;
   title: string;
-  lede?: Paragraph[]; // optional intro para before main content
-  content: Paragraph[];
-
-  // Content blocks
-  diagrams?: Diagram[];
-  code?: CodeSnippet[];
-  callouts?: Callout[];
-  concepts?: ConceptExplanation[];
-  comparisons?: ComparisonBlock[];
-  tradeoffs?: TradeoffAnalysis[];
-
-  // Learning resources
-  resources?: RelatedResource[];
+  lede?: ParagraphBlock[];
+  blocks: ContentBlock[]; // Ordered sequence of content
 }
 
-/**
- * Glossary or concept index for the article
- */
-export interface ConceptIndex {
-  [term: string]: ConceptExplanation;
+export interface DifficultyConfig {
+  level: 1 | 2 | 3 | 4 | 5; // e.g. 1 (Beginner) to 5 (Master)
+  prerequisites?: string[]; // Related topics or article slugs
 }
 
-/**
- * Related deep-dive or external resource
- */
-export interface RelatedTechnology {
+export interface ArticleMetadata {
   slug: string;
   name: string;
+  eyebrow: string;
   description: string;
-  relationship?: "prerequisite" | "similar" | "contrast" | "buildsOn";
+  category: DeepDiveCategory;
+  tags: string[];
+  
+  // Publishing & Operations
+  published: boolean;
+  draft: boolean;
+  version: string;
+  publishedAt?: string;
+  updatedAt?: string;
+  
+  // Attribution & Effort
+  estimatedReadingMinutes: number;
+  credit?: string;
+  creditOrg?: string;
+  reviewedBy?: string[];
+  
+  // Search & Progression Graph
+  keywords?: string[];
+  aliases?: string[];
+  learningObjectives?: string[];
+  difficulty?: DifficultyConfig;
+  docsUrl?: string;
 }
 
 /**
- * Main article structure
+ * Lightweight DTO used for cards, lists, and index pages
  */
-export interface DeepDiveArticle extends DeepDiveSummary {
-  title: string;
-  lede: Paragraph[]; // intro paragraph(s)
-  
-  // Hero section
-  heroIllustration?: {
-    type: DiagramType;
-    source: string;
-    alt: string;
-  };
-  
-  // Main content
+export type DeepDiveSummary = ArticleMetadata;
+
+/**
+ * Full Deep Dive Article payload
+ */
+export interface DeepDiveArticle {
+  metadata: ArticleMetadata;
+  heroDiagram?: DiagramBlock;
+  lede: ParagraphBlock[];
   sections: Section[];
-
-  // Supporting structures
-  concepts?: ConceptIndex; // glossary of key terms
-  tradeoffs?: TradeoffAnalysis[]; // article-level tradeoffs
-  relatedArticles?: RelatedTechnology[];
-
-  // Metadata
-  lastUpdated?: string;
-  difficulty?: "beginner" | "intermediate" | "advanced";
+  
+  // Single sources of truth
+  glossary?: Record<string, Concept>; // Map of conceptId -> Concept
+  resources?: RelatedResource[];
 }

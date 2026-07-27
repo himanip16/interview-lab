@@ -1,253 +1,552 @@
 // src/content/deep-dive/articles/mongodb.ts
 
-import { DeepDiveArticle } from '@/features/deep-dive/types';
-import { MongoDBIllustration } from '@/content/deep-dive/illustrations/MongoDB';
+import type { DeepDiveArticle, Concept } from '@/features/deep-dive/types';
+
+/**
+ * Top-Level Glossary (Single Source of Truth)
+ * Terms are referenced inside sections via ConceptReferenceBlock items.
+ */
+const glossary: Record<string, Concept> = {
+  wiredTigerJournal: {
+    id: 'wiredTigerJournal',
+    term: 'WiredTiger Journal',
+    definition: [
+      {
+        type: 'paragraph',
+        content: [
+          {
+            type: 'text',
+            text: 'An write-ahead transaction log on disk used by MongoDB’s default storage engine, WiredTiger. It records incoming mutations sequentially prior to flushing data files, ensuring durability across unexpected crashes.'
+          }
+        ]
+      }
+    ],
+    examples: [
+      'Batching in-memory mutations and committing them to the journal on disk every 100ms'
+    ],
+    relatedConceptIds: ['writeConcern', 'oplog']
+  },
+  writeConcern: {
+    id: 'writeConcern',
+    term: 'Write Concern',
+    definition: [
+      {
+        type: 'paragraph',
+        content: [
+          {
+            type: 'text',
+            text: 'A configurable guarantee level requested by a client that dictates when MongoDB acknowledges a write operation. Options range from w:1 (acknowledged by primary in RAM) to w:majority (persisted across a majority of replica set nodes).'
+          }
+        ]
+      }
+    ],
+    examples: [
+      'w:1 for high-throughput logging',
+      'w:majority with j:true for financial updates requiring disk durability across a majority'
+    ],
+    relatedConceptIds: ['wiredTigerJournal', 'readConcern', 'oplog']
+  },
+  oplog: {
+    id: 'oplog',
+    term: 'Oplog (Operations Log)',
+    definition: [
+      {
+        type: 'paragraph',
+        content: [
+          {
+            type: 'text',
+            text: 'A capped collection on the primary node that records a sequential stream of all data-modifying operations. Secondary nodes continuously tail and replay the oplog to maintain replica synchronicity.'
+          }
+        ]
+      }
+    ],
+    examples: [
+      'Secondaries tailing primary oplog entries over the network to catch up on replication lag'
+    ],
+    relatedConceptIds: ['writeConcern', 'readConcern']
+  },
+  readConcern: {
+    id: 'readConcern',
+    term: 'Read Concern',
+    definition: [
+      {
+        type: 'paragraph',
+        content: [
+          {
+            type: 'text',
+            text: 'A setting controlling the isolation and consistency guarantees of data returned by read queries. Controls whether queries return uncommitted local data ("local") or data confirmed as durable by a cluster majority ("majority").'
+          }
+        ]
+      }
+    ],
+    examples: [
+      'readConcern: "majority" to prevent dirty reads from uncommitted primary state that might roll back'
+    ],
+    relatedConceptIds: ['writeConcern', 'oplog']
+  },
+  shardKey: {
+    id: 'shardKey',
+    term: 'Shard Key',
+    definition: [
+      {
+        type: 'paragraph',
+        content: [
+          {
+            type: 'text',
+            text: 'An indexed field or compound fields chosen to partition documents across shards in a distributed cluster. The shard key determines document distribution efficiency and prevents query routing bottlenecks.'
+          }
+        ]
+      }
+    ],
+    examples: [
+      'Hashing tenant_id as a shard key to evenly distribute tenant document chunks across shards'
+    ],
+    relatedConceptIds: ['writeConcern']
+  }
+};
 
 export const article: DeepDiveArticle = {
-  heroIllustration: MongoDBIllustration,
-  slug: 'mongodb',
-  name: 'MongoDB',
-  eyebrow: 'DOCUMENT · NoSQL',
-  category: 'db',
-  readTime: '12 min',
-  description: 'MongoDB is a document store that stores data as documents, not rows. That one decision changes how writes land on disk, how reads get consistent, and what "transaction" even means here. It is not "no consistency." It is consistency you dial in, per operation, and pay for exactly what you ask for.',
-  
-  tags: ['Document store', 'WiredTiger', 'Replica sets', 'Sharded'],
-  credit: 'Maintained by',
-  creditOrg: 'MongoDB Inc.',
-  docsUrl: 'https://www.mongodb.com/docs/',
-  title: 'What actually happens when you write to MongoDB',
-  lede: 'Say you call insertOne() and it returns success. Has your document survived a crash yet? Maybe not. That gap — between "acknowledged" and "durable" — is where most of MongoDB\'s design decisions live, and once you see it, everything else about the system starts making sense.',
-  sections: [
+  metadata: {
+    slug: 'mongodb',
+    name: 'MongoDB',
+    eyebrow: 'DOCUMENT · NoSQL',
+    description:
+      'MongoDB is a document store that trades default rigid guarantees for tuneable consistency per operation. Explore how WiredTiger journaling, write concerns, oplog replication, and sharding work under the hood.',
+    category: 'db',
+    tags: ['Document Store', 'WiredTiger', 'Replica Sets', 'Sharded Cluster', 'Write Concern', 'NoSQL'],
+
+    // Publishing & Operations
+    published: true,
+    draft: false,
+    version: '2.0.0',
+    publishedAt: '2024-11-05',
+    updatedAt: '2026-07-27',
+
+    // Metrics & Attribution
+    estimatedReadingMinutes: 12,
+    credit: 'Maintained by',
+    creditOrg: 'MongoDB Inc.',
+    docsUrl: 'https://www.mongodb.com/docs/',
+
+    // Discovery & Search Graph
+    keywords: [
+      'MongoDB Architecture',
+      'WiredTiger Storage Engine',
+      'Write Concern',
+      'Read Concern',
+      'Oplog Replication',
+      'Replica Set Elections',
+      'Multi-Document Transactions',
+      'Shard Key Strategy'
+    ],
+    aliases: ['Mongo Architecture', 'Document Store Persistence'],
+    learningObjectives: [
+      'Differentiate between memory acknowledgment, journal durability, and majority replication',
+      'Analyze the oplog tailing mechanics powering primary-to-secondary replication lag',
+      'Evaluate read concern levels to eliminate dirty reads during node failover',
+      'Formulate effective shard key strategies to eliminate write hotspots in sharded clusters'
+    ],
+    difficulty: {
+      level: 2,
+      prerequisites: ['kafka', 'memtable']
+    }
+  },
+
+  heroDiagram: {
+    type: 'diagram',
+    renderEngine: 'component',
+    componentName: 'MongoDBIllustration',
+    caption: 'MongoDB write and replication lifecycle across WiredTiger memory, disk journal, and replica set oplogs',
+    alt: 'Diagram demonstrating write flow from primary in-memory cache to journal log and secondary oplogs',
+    width: 'full'
+  },
+
+  lede: [
     {
-      number: 1,
-      title: 'The write that returns before it\'s safe',
+      type: 'paragraph',
       content: [
-        [
-          {
-            type: 'text',
-            text: 'When you insert a document, MongoDB updates it in memory and hands your client a success response almost instantly. But the document hasn\'t hit disk yet — not really. It\'s sitting in a cache, and separately, a note of the operation is queued to be written to a journal (a write-ahead log) on disk.'
-          }
-        ],
-        [
-          {
-            type: 'text',
-            text: 'Here\'s the part people miss: that journal write doesn\'t happen immediately either. By default, MongoDB batches journal writes and flushes them every 100ms. Why not just flush instantly, every time? Because an fsync — the disk operation that actually guarantees "this is safe" — costs a few milliseconds. Do that on every single write and your throughput collapses to a few hundred writes per second. Batch 100ms worth of writes into one fsync, and you can push tens of thousands. It\'s the same trade every log-structured system makes — Kafka does it with a batching delay, Postgres does it with its WAL writer.'
-          }
-        ],
-        [
-          {
-            type: 'text',
-            text: 'So the honest answer to "is my write safe" is: it depends what you asked for when you wrote it. That\'s the next section.'
-          }
-        ]
-      ],
-      callout: {
-        label: 'Worth remembering',
-        content: [
-          [
-            {
-              type: 'text',
-              text: 'If your server crashes 50ms after an insert returns "success," and you used the default write settings, that document can be gone. The client already moved on, believing it worked.'
-            }
-          ]
-        ]
-      }
-    },
-    {
-      number: 2,
-      title: 'You get to choose how much you trust the write',
-      content: [
-        [
-          {
-            type: 'text',
-            text: 'MongoDB doesn\'t force one answer to "how durable should this write be" — it lets you pick, per operation, through '
-          },
-          { type: 'text', text: 'write concern', bold: true },
-          { type: 'text', text: '.' }
-        ],
-        [
-          { type: 'text', text: 'Ask for ' },
-          { type: 'text', text: 'w:1', bold: true },
-          {
-            type: 'text',
-            text: ' and you get an acknowledgment as soon as the primary has it in memory — fast, but as we just saw, vulnerable to a crash before the next journal flush. Ask for '
-          },
-          { type: 'text', text: 'w:majority', bold: true },
-          {
-            type: 'text',
-            text: ' and MongoDB waits until most of the replica set has the write too — slower, but now the write survives even if the primary dies the next second, because a majority already has it.'
-          }
-        ],
-        [
-          {
-            type: 'text',
-            text: 'This is the actual design philosophy of MongoDB, in one sentence: nothing is durable or consistent by default, everything is durable or consistent if you ask for it, and you pay in latency for what you ask for.'
-          }
-        ]
-      ]
-    },
-    {
-      number: 3,
-      title: 'What a secondary actually sees, and when',
-      content: [
-        [
-          {
-            type: 'text',
-            text: 'Every write to the primary gets recorded, in order, into a special collection called the '
-          },
-          { type: 'text', text: 'oplog', bold: true },
-          {
-            type: 'text',
-            text: '. Secondaries don\'t get pushed writes — they continuously pull the oplog and replay it themselves. Which means a secondary is always slightly behind. How far behind is not a theoretical question — it\'s a number you can watch:'
-          }
-        ]
-      ],
-      callout: {
-        label: 'A real timeline',
-        content: [
-          [{ type: 'text', text: '10:00:00.000 — primary receives the write and applies it in memory.' }],
-          [{ type: 'text', text: '10:00:00.004 — client gets a success response (w:1).' }],
-          [{ type: 'text', text: '10:00:00.022 — secondary pulls the oplog entry.' }],
-          [{ type: 'text', text: '10:00:00.026 — secondary applies it and is now caught up.' }],
-          [
-            {
-              type: 'text',
-              text: 'For 22 milliseconds, a read on the secondary would have returned the old value. Route your reads there for scale, and that gap is the price.'
-            }
-          ]
-        ]
-      }
-    },
-    {
-      number: 4,
-      title: 'When the primary dies, who decides what happened?',
-      content: [
-        [
-          {
-            type: 'text',
-            text: 'If the primary goes down mid-write, two things could have happened: the write reached a majority of the replica set before the crash, or it didn\'t. MongoDB has to figure out which, and it does this through '
-          },
-          { type: 'text', text: 'read concern', bold: true },
-          { type: 'text', text: ' at read time rather than guessing at write time.' }
-        ],
-        [
-          { type: 'text', text: 'Read with ' },
-          { type: 'text', text: 'local', bold: true },
-          {
-            type: 'text',
-            text: ' concern and you might see a value that later gets rolled back — data the old primary had but never replicated anywhere else. Read with '
-          },
-          { type: 'text', text: 'majority', bold: true },
-          {
-            type: 'text',
-            text: ' concern and you only ever see writes that a majority of nodes already agreed on, which means they can never disappear, even across a failover.'
-          }
-        ],
-        [
-          {
-            type: 'text',
-            text: 'The remaining nodes then hold an election to pick a new primary — this is not instant. Default election timeout is around 10 seconds, and during that window, the replica set has no primary at all. Writes simply fail. This is the real cost of automatic failover: not data loss, usually, but a window of unavailability you have to design your application to tolerate.'
-          }
-        ]
-      ]
-    },
-    {
-      number: 5,
-      title: 'Can two documents be changed atomically together?',
-      content: [
-        [
-          {
-            type: 'text',
-            text: 'A single document write is always atomic in MongoDB — even if that document has ten nested fields changing at once, it\'s all-or-nothing. This covers more than people expect, because a document is often already scoped to one logical thing: one order, one user profile, one cart.'
-          }
-        ],
-        [
-          {
-            type: 'text',
-            text: 'But what if you need to move money between two documents — debit one account, credit another, and guarantee both happen or neither does? That\'s a multi-document transaction, and MongoDB has supported this since version 4.0. Under the hood it uses snapshot isolation: the transaction sees a frozen, consistent view of the data, and commits across every document involved at once, or rolls all of it back.'
-          }
-        ],
-        [
-          {
-            type: 'text',
-            text: 'The catch is cost. A transaction that stays open under heavy concurrent writes can hit conflicts and get retried, and there\'s a hard 60-second default limit before it\'s killed. MongoDB\'s own guidance is telling: keep transactions short, and prefer designing your documents so you rarely need one. The transaction is a safety net for the exception, not the pattern you build around.'
-          }
-        ]
-      ]
-    },
-    {
-      number: 6,
-      title: 'What happens when one machine isn\'t enough',
-      content: [
-        [
-          {
-            type: 'text',
-            text: 'Once a collection outgrows a single replica set, MongoDB splits it across many, by '
-          },
-          { type: 'text', text: 'sharding', bold: true },
-          {
-            type: 'text',
-            text: ' on a key you choose — say, user ID. Data is broken into ranges of that key called chunks, and a background process called the balancer moves chunks between shards to keep the load even.'
-          }
-        ],
-        [
-          {
-            type: 'text',
-            text: 'The shard key choice is where most sharding pain comes from. Pick something that increases monotonically — like a timestamp — and every new write lands on whichever shard holds the newest range. One shard takes all the traffic, the rest sit idle, and you\'ve built a distributed system that behaves like a single machine anyway.'
-          }
-        ],
-        [
-          {
-            type: 'text',
-            text: 'This is why the shard key decision matters as much as picking a primary key in a relational schema — get it wrong on a large, live collection, and fixing it later is a genuinely expensive operation, not a config change.'
-          }
-        ]
-      ]
-    },
-    {
-      number: 7,
-      title: 'When to reach for it — and when not to',
-      content: [
-        [
-          {
-            type: 'text',
-            text: 'Everything above adds up to a database that hands you dials instead of defaults — durability, consistency, and even schema are choices you make per operation and per collection, not settings baked in for you.'
-          }
-        ],
-        [
-          {
-            type: 'text',
-            text: 'That\'s a good trade when your data already has a natural document shape and you want that flexibility. It\'s a worse trade when you\'d rather the database enforce guarantees for you automatically. The tradeoffs below are the concrete version of that call.'
-          }
-        ]
+        {
+          type: 'text',
+          text: 'When insertOne() returns a success acknowledgment, has your document survived a hardware crash? Not necessarily. The operational gap between "acknowledged in memory" and "durable on disk" forms the core of MongoDB’s architecture. Once you understand this spectrum of durability trade-offs, every design decision in MongoDB becomes clear.'
+        }
       ]
     }
   ],
-  tradeoffs: {
-    strengths: [
-      'Data has a natural document shape — one order, one profile, one cart — that you\'d otherwise split across many joined tables',
-      'You want to choose durability and consistency per operation, not accept one fixed guarantee for everything',
-      'Write-heavy workloads that need horizontal scale via sharding',
-      'Schema changes often, and migrations on every change are a real cost you want to avoid'
-    ],
-    weaknesses: [
-      'Your queries constantly cut across many collections in ways you didn\'t design the documents for',
-      'You want strong consistency by default, without remembering to ask for it on every read and write',
-      'Multi-document transactions are your main pattern, not the occasional exception',
-      'The team needs schema enforced by the database, not by application code'
-    ]
-  },
-  related: [
+
+  sections: [
     {
-      name: 'DynamoDB',
-      description: 'Also document-capable, but partition-key first — a different scaling model entirely',
-      slug: 'dynamodb'
+      id: 'write-before-safe',
+      number: 1,
+      title: "The Write That Returns Before It's Safe",
+      blocks: [
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: 'When a write occurs, MongoDB updates the document in the WiredTiger internal cache and returns a success response almost instantly. The document sits in volatile memory while a record of the mutation is queued for the disk journal (a write-ahead log).'
+            }
+          ]
+        },
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: 'By default, MongoDB batches journal writes and flushes them to disk every 100ms. Instantaneous disk fsync calls per write would limit throughput to a few hundred writes per second. Batching disk writes into 100ms intervals allows throughput to reach tens of thousands of writes per second.'
+            }
+          ]
+        },
+        {
+          type: 'concept-ref',
+          conceptId: 'wiredTigerJournal'
+        },
+        {
+          type: 'callout',
+          variant: 'warning',
+          title: 'Worth Remembering',
+          content: [
+            {
+              type: 'paragraph',
+              content: [
+                {
+                  type: 'text',
+                  text: 'If a server crashes 50ms after an insert returns success under default write settings, that document can be lost despite the client having received a success response.'
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      id: 'choose-trust-level',
+      number: 2,
+      title: 'You Choose How Much You Trust the Write',
+      blocks: [
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: 'MongoDB allows applications to specify durability requirements per operation using '
+            },
+            {
+              type: 'bold',
+              text: 'Write Concern'
+            },
+            {
+              type: 'text',
+              text: '.'
+            }
+          ]
+        },
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: 'Requesting '
+            },
+            {
+              type: 'bold',
+              text: 'w:1'
+            },
+            {
+              type: 'text',
+              text: ' triggers an acknowledgment as soon as the primary node applies the write in memory—fast, but vulnerable to crash loss before the next journal flush. Requesting '
+            },
+            {
+              type: 'bold',
+              text: 'w:majority'
+            },
+            {
+              type: 'text',
+              text: ' causes MongoDB to wait until a majority of replica set nodes acknowledge the update in memory or journal, ensuring survival even if the primary node crashes immediately after.'
+            }
+          ]
+        },
+        {
+          type: 'concept-ref',
+          conceptId: 'writeConcern'
+        },
+        {
+          type: 'code',
+          language: 'javascript',
+          code: `// Customizing durability per operation
+
+// 1. Fast, memory-acknowledged write (higher throughput, risk of crash loss)
+await db.collection('logs').insertOne(
+  { event: 'page_view', ts: new Date() },
+  { writeConcern: { w: 1, j: false } }
+);
+
+// 2. Strict durable write (waits for majority replication & journal flush)
+await db.collection('orders').insertOne(
+  { orderId: 'ord_9981', amount: 149.99 },
+  { writeConcern: { w: 'majority', j: true, wtimeoutMS: 5000 } }
+);`
+        }
+      ]
+    },
+
+    {
+      id: 'secondary-visibility',
+      number: 3,
+      title: 'What a Secondary Sees—and When',
+      blocks: [
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: 'Every mutation on the primary is recorded sequentially in a special capped collection known as the '
+            },
+            {
+              type: 'bold',
+              text: 'oplog'
+            },
+            {
+              type: 'text',
+              text: '. Secondaries do not receive pushed writes directly; instead, they continuously pull and apply new oplog entries asynchronously.'
+            }
+          ]
+        },
+        {
+          type: 'concept-ref',
+          conceptId: 'oplog'
+        },
+        {
+          type: 'callout',
+          variant: 'info',
+          title: 'Replication Lag Timeline Example',
+          content: [
+            {
+              type: 'paragraph',
+              content: [
+                {
+                  type: 'text',
+                  text: '10:00:00.000 — Primary receives write and updates memory.\n10:00:00.004 — Client receives success response (w:1).\n10:00:00.022 — Secondary fetches the oplog entry over network.\n10:00:00.026 — Secondary applies mutation locally and catches up.\n\nDuring that 22-millisecond replication window, a query routed to the secondary node returns stale state.'
+                }
+              ]
+            }
+          ]
+        },
+        {
+          type: 'diagram',
+          renderEngine: 'component',
+          componentName: 'MongoDBReplicationIllustration',
+          caption: 'Primary records writes to the oplog, which secondaries asynchronously tail and apply',
+          alt: 'Diagram demonstrating oplog stream tailing from primary to secondary replica set nodes',
+          width: 'full'
+        }
+      ]
+    },
+
+    {
+      id: 'failover-and-read-concern',
+      number: 4,
+      title: 'When the Primary Dies: Read Isolation During Failover',
+      blocks: [
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: 'If a primary node crashes mid-write, operations fall into two categories: those replicated to a majority before the crash, and those that were not. MongoDB resolves un-replicated write conflicts through '
+            },
+            {
+              type: 'bold',
+              text: 'Read Concern'
+            },
+            {
+              type: 'text',
+              text: ' settings.'
+            }
+          ]
+        },
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: 'Reading with '
+            },
+            {
+              type: 'bold',
+              text: '"local"'
+            },
+            {
+              type: 'text',
+              text: ' concern can return documents that might subsequently be rolled back if the old primary dies before replicating them. Reading with '
+            },
+            {
+              type: 'bold',
+              text: '"majority"'
+            },
+            {
+              type: 'text',
+              text: ' concern guarantees queries return only records confirmed by a majority of cluster nodes, eliminating dirty reads across failovers.'
+            }
+          ]
+        },
+        {
+          type: 'concept-ref',
+          conceptId: 'readConcern'
+        }
+      ]
+    },
+
+    {
+      id: 'multi-document-transactions',
+      number: 5,
+      title: 'Multi-Document Atomicity and Transactions',
+      blocks: [
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: 'Single-document updates are inherently atomic in MongoDB—even when updating nested sub-documents or array fields. Because document schemas embed related items inside a single record, single-document atomicity covers most standard CRUD operations.'
+            }
+          ]
+        },
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: 'For operations spanning multiple collections or documents, MongoDB supports multi-document ACID transactions using snapshot isolation. Transactions enforce all-or-nothing execution across documents but incur locking and performance overhead. Transactions should be reserved for specific multi-document edge cases rather than primary application patterns.'
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      id: 'sharding-and-scaling',
+      number: 6,
+      title: 'Horizontal Scale via Sharding',
+      blocks: [
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: 'When dataset sizes or write throughput exceed single-replica capacity, MongoDB partitions collections across multiple replica sets (shards) using a defined '
+            },
+            {
+              type: 'bold',
+              text: 'Shard Key'
+            },
+            {
+              type: 'text',
+              text: '.'
+            }
+          ]
+        },
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: 'Choosing an effective shard key is critical. Selecting a monotonically increasing key (such as an auto-incrementing ID or timestamp) causes all new writes to target the single shard holding the latest range, creating write bottlenecks across the cluster.'
+            }
+          ]
+        },
+        {
+          type: 'concept-ref',
+          conceptId: 'shardKey'
+        }
+      ]
+    },
+
+    {
+      id: 'when-to-use',
+      number: 7,
+      title: 'When to Use MongoDB—and When to Avoid It',
+      blocks: [
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: 'MongoDB provides flexible per-operation trade-offs across consistency, durability, and schema enforcement. It is well-suited for document-shaped domain models but adds overhead when rigid relational guarantees are required by default.'
+            }
+          ]
+        },
+        {
+          type: 'tradeoff',
+          title: 'Tuneable Document Store vs. Traditional Relational Database',
+          description: [
+            {
+              type: 'paragraph',
+              content: [
+                {
+                  type: 'text',
+                  text: 'Comparing MongoDB’s per-operation consistency model with standard relational databases (e.g., PostgreSQL).'
+                }
+              ]
+            }
+          ],
+          sides: [
+            {
+              name: 'Document Store (MongoDB)',
+              pros: [
+                'Schema flexibility allowing natural embedding of nested domain objects (orders, carts)',
+                'Configurable per-operation durability and read isolation (Write & Read Concerns)',
+                'Built-in horizontal partitioning (sharding) for large-scale datasets'
+              ],
+              cons: [
+                'Uncommitted default reads (local concern) can suffer rollbacks during primary failover',
+                'Multi-document transactions add higher latency overhead than relational joins'
+              ]
+            },
+            {
+              name: 'Relational Store (PostgreSQL)',
+              pros: [
+                'ACID transaction guarantees enforced strictly by default',
+                'Powerful relational joins across deeply normalized table schemas',
+                'Native JSONB support offers hybrid relational/document capability'
+              ],
+              cons: [
+                'Schema migrations require explicit DDL updates across live collections',
+                'Horizontal scaling requires manual application-level sharded routing'
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+
+  glossary,
+
+  resources: [
+    {
+      type: 'article',
+      title: 'Kafka Architecture',
+      description: 'Compare log-structured batch disk flushes between Kafka and WiredTiger journals.',
+      url: '/deep-dive/kafka',
+      slug: 'kafka',
+      relationship: 'similar'
     },
     {
-      name: 'Postgres',
-      description: 'JSONB gives you document flexibility with full ACID and real joins — worth comparing head to head',
-      slug: 'postgres'
+      type: 'article',
+      title: 'Memtable Architecture',
+      description: 'Explore write-ahead logs and volatile in-memory buffering mechanics.',
+      url: '/deep-dive/memtable',
+      slug: 'memtable',
+      relationship: 'prerequisite'
+    },
+    {
+      type: 'article',
+      title: 'Cassandra Architecture',
+      description: 'Analyze masterless distributed replication compared to MongoDB primary-secondary replica sets.',
+      url: '/deep-dive/cassandra',
+      slug: 'cassandra',
+      relationship: 'similar'
     }
   ]
 };

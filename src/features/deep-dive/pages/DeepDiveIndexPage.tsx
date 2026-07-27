@@ -4,41 +4,46 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import type { ReactNode } from 'react';
 import styles from '@/features/deep-dive/components/DeepDiveIndex.module.css';
 import { deepDiveRegistry } from '@/content/deep-dive';
-
+import { contentComponents } from '@/content/deep-dive/component-registry';
+import type { DeepDiveCategory } from '@/features/deep-dive/types';
 
 interface Topic {
   slug: string;
   name: string;
   description: string;
   tags: string[];
-  category: string;
+  category: DeepDiveCategory;
   readTime: string;
-  mark: React.ReactNode;
+  mark: ReactNode;
 }
 
 const TOPICS: Topic[] = deepDiveRegistry.map((item) => {
-  const descText = item.description;
+  const { metadata } = item;
+
+  const Hero =
+    item.heroDiagram?.renderEngine === 'component'
+      ? contentComponents[item.heroDiagram.componentName]
+      : null;
 
   return {
-    slug: item.slug,
-    name: item.name,
-    description: descText.replace(/<[^>]*>/g, ""),
-    tags: item.tags,
-    category: item.category,
-    readTime: item.readTime,
-    mark: item.heroIllustration ? <item.heroIllustration /> : null,
+    slug: metadata.slug,
+    name: metadata.name,
+    description: metadata.description,
+    tags: metadata.tags,
+    category: metadata.category,
+    readTime: `${metadata.estimatedReadingMinutes} min read`,
+    mark: Hero ? <Hero /> : null,
   };
 });
 
 export function DeepDiveIndexPage() {
   const [filter, setFilter] = useState('all');
 
-  const filteredTopics = filter === 'all' 
-    ? TOPICS 
-    : TOPICS.filter(t => t.category === filter);
-
+  const filteredTopics =
+    filter === 'all' ? TOPICS : TOPICS.filter((t) => t.category === filter);
 
   return (
     <div style={{ background: 'var(--landing-bg)', minHeight: '100vh' }}>
@@ -63,25 +68,25 @@ export function DeepDiveIndexPage() {
         </div>
 
         <div className={styles.filters}>
-          <button 
+          <button
             className={`${styles.fpill} ${filter === 'all' ? styles.active : ''}`}
             onClick={() => setFilter('all')}
           >
             All
           </button>
-          <button 
+          <button
             className={`${styles.fpill} ${filter === 'db' ? styles.active : ''}`}
             onClick={() => setFilter('db')}
           >
             Databases
           </button>
-          <button 
+          <button
             className={`${styles.fpill} ${filter === 'msg' ? styles.active : ''}`}
             onClick={() => setFilter('msg')}
           >
             Messaging
           </button>
-          <button 
+          <button
             className={`${styles.fpill} ${filter === 'concept' ? styles.active : ''}`}
             onClick={() => setFilter('concept')}
           >

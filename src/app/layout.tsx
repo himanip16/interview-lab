@@ -24,7 +24,6 @@ export const metadata: Metadata = {
   title: "System Design Interviewer",
   description: "Learn system design through interactive visual explanations.",
 };
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -36,7 +35,7 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${poppins.variable} ${inter.variable} h-full antialiased`}
     >
-      <body className="flex min-h-screen flex-col">
+      <body className="h-full">
         <MainProvider>
           <AppShell>
             {children}

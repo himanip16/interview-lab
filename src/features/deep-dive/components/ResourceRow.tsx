@@ -1,29 +1,45 @@
 // src/features/deep-dive/components/ResourceRow.tsx
 
+import type { ReactNode } from 'react';
+import Link from 'next/link';
+
+type ChipVariant = 'ok' | 'prerequisite' | 'similar' | 'contrast' | 'buildsOn' | 'next';
+
 interface ResourceRowProps {
-  icon: React.ReactNode;
+  icon: ReactNode;
   title: string;
-  subtitle: string;
-  chips?: Array<{ label: string; variant?: 'ok' }>;
+  subtitle?: string;
+  href?: string;
+  chips?: Array<{ label: string; variant?: ChipVariant }>;
 }
 
-export function ResourceRow({ icon, title, subtitle, chips }: ResourceRowProps) {
-  return (
-    <div className="res-row">
+export function ResourceRow({ icon, title, subtitle, href, chips }: ResourceRowProps) {
+  const content = (
+    <>
       <div className="res-ic">{icon}</div>
       <div className="res-info">
         <div className="res-title">{title}</div>
-        <div className="res-sub">{subtitle}</div>
+        {subtitle && <div className="res-sub">{subtitle}</div>}
       </div>
-      {chips && (
+      {chips && chips.length > 0 && (
         <div className="chip-row">
           {chips.map((chip, index) => (
-            <span key={index} className={`chip ${chip.variant || ''}`}>
+            <span key={index} className={`chip ${chip.variant ?? ''}`}>
               {chip.label}
             </span>
           ))}
         </div>
       )}
-    </div>
+    </>
   );
+
+  if (href) {
+    return (
+      <Link href={href} className="res-row">
+        {content}
+      </Link>
+    );
+  }
+
+  return <div className="res-row">{content}</div>;
 }

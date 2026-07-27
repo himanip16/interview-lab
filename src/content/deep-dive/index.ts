@@ -1,20 +1,23 @@
 // src/content/deep-dive/index.ts
 
 import { deepDiveRegistry } from './generated';
+import type { DeepDiveArticle } from '@/features/deep-dive/types';
 
 export { deepDiveRegistry };
 
-export function getAllDeepDives() {
+export function getAllDeepDives(): DeepDiveArticle[] {
   return deepDiveRegistry;
 }
 
-export function getDeepDiveBySlug(slug: string) {
-  return deepDiveRegistry.find(article => article.slug === slug);
+export function getDeepDiveBySlug(slug: string): DeepDiveArticle | undefined {
+  return deepDiveRegistry.find(
+    (article) => article.metadata.slug === slug
+  );
 }
 
 export function getPreviousAndNext(slug: string) {
   const index = deepDiveRegistry.findIndex(
-    article => article.slug === slug
+    (article) => article.metadata.slug === slug
   );
 
   return {
