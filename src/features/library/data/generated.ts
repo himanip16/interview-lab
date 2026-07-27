@@ -36,6 +36,8 @@ import postfix from "@/content/transcripts/dsa/postfix";
 import resourceCachingLru from "@/content/transcripts/dsa/resource-caching-lru";
 import trappingRainWater from "@/content/transcripts/dsa/trapping-rain-water";
 import wordBreak from "@/content/transcripts/dsa/word-break";
+import wordLadder from "@/content/transcripts/dsa/word-ladder";
+import wordSearch2 from "@/content/transcripts/dsa/word-search2";
 import amazonLockers from "@/content/transcripts/hld/amazon-lockers";
 import autocomplete from "@/content/transcripts/hld/autocomplete";
 import configSync from "@/content/transcripts/hld/config-sync";
@@ -86,6 +88,8 @@ export const TRANSCRIPTS: readonly TranscriptEntry[] = [
   resourceCachingLru,
   trappingRainWater,
   wordBreak,
+  wordLadder,
+  wordSearch2,
   amazonLockers,
   autocomplete,
   configSync,

@@ -147,6 +147,13 @@ const transcript: TranscriptData = {
           type: "text",
           value: "Yeah — 2 to the 10th is about a thousand, times 3, so a few thousand strings tops. No problem.",
         },
+        {
+          type: "code",
+          id: "code-backtracking",
+          language: "python",
+          value:
+            "def getHappyString(n, k):\n    result = []\n    \n    def backtrack(current):\n        if len(current) == n:\n            result.append(current)\n            return\n        \n        for char in ['a', 'b', 'c']:\n            if not current or current[-1] != char:\n                backtrack(current + char)\n    \n    backtrack(\"\")\n    \n    if k > len(result):\n        return \"\"\n    return result[k - 1]",
+        },
       ],
     },
 
@@ -278,6 +285,13 @@ const transcript: TranscriptData = {
           type: "text",
           value:
             "Previous was 'a', so remaining choices are 'b' and 'c'. Block size is 2 to the 0, which is 1. k is 0, 0 divided by 1 is 0, index 0 from 'b','c' is 'b'. So... putting it together — c, a, b. \"cab\".",
+        },
+        {
+          type: "code",
+          id: "code-optimized",
+          language: "python",
+          value:
+            "def getHappyString(n, k):\n    # Adjust k to 0-indexed\n    k -= 1\n    \n    # Total strings = 3 * 2^(n-1), but we only need to check if k is in range\n    total = 3 * (2 ** (n - 1))\n    if k >= total:\n        return \"\"\n    \n    result = []\n    choices = ['a', 'b', 'c']\n    last_char = None\n    \n    for i in range(n):\n        # Block size at this level: how many strings under each choice\n        block_size = 2 ** (n - 1 - i)\n        \n        # Which choice does k fall into?\n        choice_index = k // block_size\n        k = k % block_size\n        \n        # Filter out the last character\n        available = [c for c in choices if c != last_char]\n        selected = available[choice_index]\n        result.append(selected)\n        last_char = selected\n    \n    return ''.join(result)",
         },
       ],
     },
@@ -464,12 +478,12 @@ const amazonKthLexicographicalHappyString: TranscriptEntry = {
     tags: [
       "Combinatorics",
       "Backtracking",
-      "Bit Manipulation",
+      "Block Division",
       "Overflow Handling",
       "Precomputation",
     ],
     description:
-      "SDE2 DSA interview on finding the k-th lexicographical happy string of length n. Covers backtracking generation, reframing the search tree as block-size division for direct O(n) construction, integer-overflow handling in the count formula, and scoping a precomputation suggestion to repeated-query volume rather than a single call.",
+      "SDE2 DSA interview on finding the k-th lexicographical happy string of length n. Covers backtracking generation with O(n * 2^n) complexity, reframing the search tree as block-size division for direct O(n) construction without enumeration, integer-overflow handling in the count formula, and scoping a precomputation suggestion to repeated-query volume rather than a single call.",
   },
 
   transcript,
