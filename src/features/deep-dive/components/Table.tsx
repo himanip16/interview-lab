@@ -1,4 +1,4 @@
-// src/features/deep-dive/components/ConsistencyTable.tsx
+// src/features/deep-dive/components/Table.tsx
 
 'use client';
 
@@ -18,7 +18,7 @@ interface TableRow {
   cells: TableCell[];
 }
 
-interface ConsistencyTableProps {
+interface TableProps {
   headers: string[];
   rows: TableRow[];
   badgeColumn?: number;
@@ -26,7 +26,7 @@ interface ConsistencyTableProps {
   className?: string;
 }
 
-export function ConsistencyTable({ headers, rows, badgeColumn = 0, whenColumn, className = '' }: ConsistencyTableProps) {
+export function Table({ headers, rows, badgeColumn = 0, whenColumn, className = '' }: TableProps) {
   return (
     <div className={`table-wrapper ${className}`}>
       <table className="ctable">

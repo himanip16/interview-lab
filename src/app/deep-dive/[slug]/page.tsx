@@ -12,13 +12,16 @@ import { Tag } from "@/features/deep-dive/components/Tag";
 import { ThemeToggle } from "@/features/deep-dive/components/ThemeToggle";
 import { IllustrationBlock } from "@/features/deep-dive/components/IllustrationBlock";
 import { ResourceRow } from "@/features/deep-dive/components/ResourceRow";
+import { NavigationRail, type RailItem } from "@/features/deep-dive/components/NavigationRail";
+import { TopBar } from "@/features/deep-dive/components/TopBar";
+import { Table } from "@/features/deep-dive/components/Table";
 
 import { getDeepDiveBySlug, getPreviousAndNext } from "@/content/deep-dive";
 import { contentComponents } from "@/content/deep-dive/component-registry";
 
 import "@/features/deep-dive/styles/deep-dive.css";
 
-import { BookOpen, MessageSquare, Code2, ChevronLeft } from "lucide-react";
+import { BookOpen, MessageSquare, Code2, ChevronLeft, Home, Book, LayoutGrid, Monitor, SquareStack } from "lucide-react";
 
 // renamed to avoid colliding with the `CodeBlock` content-block type
 import CodeBlockRenderer from "@/shared/code/CodeBlock";
@@ -166,25 +169,13 @@ function renderBlock(block: ContentBlock, key: number) {
 
     case "table":
       return (
-        <table key={key}>
-          <thead>
-            <tr>
-              {block.headers.map((h, i) => (
-                <th key={i}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {block.rows.map((row, ri) => (
-              <tr key={ri}>
-                {row.map((cell, ci) => (
-                  <td key={ci}>{cell}</td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-          {block.caption && <caption>{block.caption}</caption>}
-        </table>
+        <Table
+          key={key}
+          headers={block.headers}
+          rows={block.rows.map(row => ({
+            cells: row.map(cell => ({ content: cell }))
+          }))}
+        />
       );
 
     case "comparison":
@@ -262,83 +253,96 @@ export default async function DeepDiveArticlePage({ params }: PageProps) {
   const relatedArticles: RelatedResource[] =
     article.resources?.filter((r) => r.type === "article") ?? [];
 
+  const railItems: RailItem[] = [
+    { id: 'home', icon: <Home size={18} />, href: '/' },
+    { id: 'deep-dive', icon: <Book size={18} />, href: '/deep-dive', active: true },
+    { id: 'library', icon: <LayoutGrid size={18} />, href: '/library' },
+    { id: 'interview', icon: <Monitor size={18} />, href: '/interview' },
+    { id: 'practice', icon: <SquareStack size={18} />, href: '/practice' },
+  ];
+
   return (
-    <div className="wrap">
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 20 }}>
-        <ThemeToggle />
-      </div>
+    <div className="shell" style={{ background: 'var(--bg)' }}>
+      <NavigationRail 
+        logo="i"
+        items={railItems}
+      />
+      <div className="main">
+        <TopBar
+          breadcrumbs={[
+            { label: 'Deep dives' },
+            { label: metadata.name, bold: true }
+          ]}
+          xp={0}
+          showThemeToggle={true}
+          loginText="Log in"
+        />
+        <div className="wrap">
+          {article.heroDiagram?.renderEngine === "component" && (
+            <div className="mark-sm" style={{ width: 56, height: 56, marginBottom: 16 }}>
+              {(() => {
+                const Hero = contentComponents[article.heroDiagram.componentName];
+                return Hero ? <Hero /> : null;
+              })()}
+            </div>
+          )}
 
-      <div className="crumb">
-        <Link href="/deep-dive" className="back">
-          <ChevronLeft size={14} />
-        </Link>
-        Deep dives&nbsp;/&nbsp;
-        <b>{metadata.name}</b>
-      </div>
+          {metadata.eyebrow && <div className="eyebrow">{metadata.eyebrow}</div>}
+          <h1 className="title">{metadata.name}</h1>
 
-      {article.heroDiagram?.renderEngine === "component" && (
-        <div className="mark-sm" style={{ width: 56, height: 56, marginBottom: 16 }}>
-          {(() => {
-            const Hero = contentComponents[article.heroDiagram.componentName];
-            return Hero ? <Hero /> : null;
-          })()}
-        </div>
-      )}
-
-      {metadata.eyebrow && <div className="eyebrow">{metadata.eyebrow}</div>}
-      <h1 className="title">{metadata.name}</h1>
-
-      <div className="tags">
-        {metadata.tags.map((tag) => (
-          <Tag key={tag}>{tag}</Tag>
-        ))}
-      </div>
-
-      <div className="lede">{renderParagraphs(article.lede)}</div>
-
-      {article.sections.map((section) => renderSection(section, article.glossary))}
-
-      {article.resources && article.resources.length > 0 && (
-        <div className="resources">
-          {article.resources.map((resource, index) => (
-            <ResourceRow
-  key={index}
-  icon={iconMap[resource.type as IconKey] ?? null}
-  title={resource.title}
-  subtitle={resource.description}
-  href={resource.type === "article" && resource.slug
-    ? `/deep-dive/${resource.slug}`
-    : resource.url}
-  chips={resource.relationship ? [{ label: resource.relationship }] : []}
-/>
-          ))}
-        </div>
-      )}
-
-      {relatedArticles.length > 0 && (
-        <div className="related">
-          <div className="lbl">Continue the thread</div>
-          <div className="rel-row">
-            {relatedArticles.map((related) =>
-              related.slug ? (
-                <Link key={related.slug} href={`/deep-dive/${related.slug}`}>
-                  <RelatedTechnologyCard
-                    name={related.title}
-                    description={related.description ?? ""}
-                  />
-                </Link>
-              ) : null
-            )}
+          <div className="tags">
+            {metadata.tags.map((tag) => (
+              <Tag key={tag}>{tag}</Tag>
+            ))}
           </div>
-        </div>
-      )}
 
-      {(previous || next) && (
-        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 64, gap: 16 }}>
-          <div>{previous && <Link href={`/deep-dive/${previous.metadata.slug}`}>← {previous.metadata.name}</Link>}</div>
-<div>{next && <Link href={`/deep-dive/${next.metadata.slug}`}>{next.metadata.name} →</Link>}</div>
+          <div className="lede">{renderParagraphs(article.lede)}</div>
+
+          {article.sections.map((section) => renderSection(section, article.glossary))}
+
+          {article.resources && article.resources.length > 0 && (
+            <div className="resources">
+              {article.resources.map((resource, index) => (
+                <ResourceRow
+      key={index}
+      icon={iconMap[resource.type as IconKey] ?? null}
+      title={resource.title}
+      subtitle={resource.description}
+      href={resource.type === "article" && resource.slug
+        ? `/deep-dive/${resource.slug}`
+        : resource.url}
+      chips={resource.relationship ? [{ label: resource.relationship }] : []}
+/>
+              ))}
+            </div>
+          )}
+
+          {relatedArticles.length > 0 && (
+            <div className="related">
+              <div className="lbl">Continue the thread</div>
+              <div className="rel-row">
+                {relatedArticles.map((related) =>
+                  related.slug ? (
+                    <Link key={related.slug} href={`/deep-dive/${related.slug}`}>
+                      <RelatedTechnologyCard
+                        name={related.title}
+                        description={related.description ?? ""}
+                      />
+                    </Link>
+                  ) : null
+                )}
+              </div>
+            </div>
+          )}
+
+          {(previous || next) && (
+            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 64, gap: 16 }}>
+              <div>{previous && <Link href={`/deep-dive/${previous.metadata.slug}`}>← {previous.metadata.name}</Link>}</div>
+  <div>{next && <Link href={`/deep-dive/${next.metadata.slug}`}>{next.metadata.name} →</Link>}</div>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

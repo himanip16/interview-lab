@@ -2,7 +2,8 @@
 
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface BreadcrumbItem {
   label: string;
@@ -11,39 +12,50 @@ interface BreadcrumbItem {
 
 interface TopBarProps {
   breadcrumbs: BreadcrumbItem[];
-  onBack?: () => void;
   searchPlaceholder?: string;
   xp?: number;
   showThemeToggle?: boolean;
-  isDarkTheme?: boolean;
-  onThemeToggle?: () => void;
   loginText?: string;
-  onLogin?: () => void;
   rightContent?: ReactNode;
   className?: string;
 }
 
 export function TopBar({
   breadcrumbs,
-  onBack,
   searchPlaceholder = 'Search...',
   xp,
   showThemeToggle = true,
-  isDarkTheme = false,
-  onThemeToggle,
   loginText = 'Log in',
-  onLogin,
   rightContent,
   className = '',
 }: TopBarProps) {
+  const router = useRouter();
+  const [isDarkTheme, setIsDarkTheme] = useState(false);
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const initialTheme = savedTheme || (prefersDark ? 'dark' : 'light');
+    setIsDarkTheme(initialTheme === 'dark');
+    document.documentElement.setAttribute('data-theme', initialTheme);
+  }, []);
+
+  const handleThemeToggle = () => {
+    const newTheme = isDarkTheme ? 'light' : 'dark';
+    setIsDarkTheme(!isDarkTheme);
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+  };
+
+  const handleBack = () => {
+    router.back();
+  };
   return (
     <div className={`topbar ${className}`}>
       <div className="crumb">
-        {onBack && (
-          <button className="back" onClick={onBack} aria-label="Go back">
-            ←
-          </button>
-        )}
+        <button className="back" onClick={handleBack} aria-label="Go back">
+          ←
+        </button>
         {breadcrumbs.map((item, index) => (
           <span key={index}>
             {index > 0 && ' / '}
@@ -70,7 +82,7 @@ export function TopBar({
         {showThemeToggle && (
           <div
             className={`theme-switch ${isDarkTheme ? 'dark' : ''}`}
-            onClick={onThemeToggle}
+            onClick={handleThemeToggle}
             role="button"
             tabIndex={0}
             aria-label="Toggle theme"
@@ -78,11 +90,9 @@ export function TopBar({
             <div className="thumb" />
           </div>
         )}
-        {onLogin && (
-          <span className="login-link" onClick={onLogin}>
-            {loginText}
-          </span>
-        )}
+        <span className="login-link">
+          {loginText}
+        </span>
         {rightContent}
       </div>
     </div>
