@@ -45,7 +45,7 @@ export const WHITEBOARD_SYSTEMS: Record<string, WhiteboardSystem> = {
         deep: "Caches the last few redirects locally so repeat visits skip the network round trip.",
         failure: "If the gateway is unreachable, falls back to a \"try again\" state rather than a blank redirect.",
         tradeoffs: "Could resolve short codes locally for speed, but that would mean shipping the whole mapping to every client — not worth it at this scale.",
-        position: { top: "24px", left: "24px" },
+        position: { top: "100px", left: "200px" },
       },
       {
         id: "gateway",
@@ -56,7 +56,7 @@ export const WHITEBOARD_SYSTEMS: Record<string, WhiteboardSystem> = {
         deep: "Rate-limits by IP to stop one client from generating millions of codes.",
         failure: "Stateless, so any instance can go down without losing in-flight requests — the load balancer just stops sending it traffic.",
         tradeoffs: "Centralizing here adds a hop, but keeping auth and rate-limiting in one place beats duplicating it in every service.",
-        position: { top: "24px", right: "24px" },
+        position: { top: "100px", right: "200px" },
       },
       {
         id: "service",
@@ -67,7 +67,7 @@ export const WHITEBOARD_SYSTEMS: Record<string, WhiteboardSystem> = {
         deep: "Uses base62 encoding over an auto-incrementing counter, so codes stay short and collisions are structurally impossible.",
         failure: "If code generation fails mid-write, the write is retried with a fresh counter value rather than silently returning a broken link.",
         tradeoffs: "Hash-based codes would avoid a shared counter, but base62-over-counter is simpler and collisions become the harder problem to solve.",
-        position: { top: "200px", left: "50%", transform: "translateX(-50%)" },
+        position: { top: "500px", left: "50%", transform: "translateX(-50%)" },
       },
       {
         id: "db",
@@ -78,7 +78,7 @@ export const WHITEBOARD_SYSTEMS: Record<string, WhiteboardSystem> = {
         deep: "Reads are cached in front of the store, since the access pattern is extremely read-heavy relative to writes.",
         failure: "Replicated across zones — losing one replica costs latency, not data.",
         tradeoffs: "A relational database would make analytics easier, but a key-value store is a better match for how this data is actually accessed: by exact key, constantly.",
-        position: { bottom: "24px", left: "50%", transform: "translateX(-50%)" },
+        position: { bottom: "200px", left: "50%", transform: "translateX(-50%)" },
       },
     ],
   },

@@ -1,40 +1,178 @@
 // src/features/learning/components/whiteboard/canvas/EdgesLayer.tsx
 
-import React from "react";
+import React, { useMemo, useCallback } from "react";
 import { PositionedEdge } from "@/features/whiteboard/types/whiteboard";
+import {
+  WHITEBOARD_COLORS,
+  EDGE_STYLES,
+  ARROW_CONFIG,
+  INTERACTION_TARGETS,
+} from "@/features/whiteboard/theme";
+
+interface EdgeStyle {
+  stroke: string;
+  strokeWidth: string;
+  strokeDasharray: string;
+  opacity?: number;
+}
 
 interface EdgesLayerProps {
   edges: PositionedEdge[];
   activeEdgeId?: string;
   previousNodeId?: string;
   activeNodeId?: string;
+  onEdgeClick?: (edgeId: string) => void;
+  onEdgeHover?: (edgeId: string | null) => void;
+  hoveredEdgeId?: string;
 }
+
+// Check if edge is active (bidirectional matching)
+const isEdgeActive = (
+  edge: PositionedEdge,
+  activeEdgeId: string | undefined,
+  previousNodeId: string | undefined,
+  activeNodeId: string | undefined
+): boolean => {
+  if (edge.id === activeEdgeId) return true;
+  
+  // Bidirectional matching: check both A → B and B → A
+  const isForward = edge.fromId === previousNodeId && edge.toId === activeNodeId;
+  const isReverse = edge.fromId === activeNodeId && edge.toId === previousNodeId;
+  
+  return isForward || isReverse;
+};
+
+// Get edge style based on state
+const getEdgeStyle = (isActive: boolean, isHovered: boolean): EdgeStyle => {
+  if (isActive) {
+    return {
+      stroke: WHITEBOARD_COLORS.edgeActive,
+      strokeWidth: String(EDGE_STYLES.active.strokeWidth),
+      strokeDasharray: EDGE_STYLES.active.strokeDasharray,
+    };
+  }
+  if (isHovered) {
+    return {
+      stroke: WHITEBOARD_COLORS.edgeHover,
+      strokeWidth: String(EDGE_STYLES.hover.strokeWidth),
+      strokeDasharray: EDGE_STYLES.hover.strokeDasharray,
+    };
+  }
+  return {
+    stroke: WHITEBOARD_COLORS.edgeNormal,
+    strokeWidth: String(EDGE_STYLES.normal.strokeWidth),
+    strokeDasharray: EDGE_STYLES.normal.strokeDasharray,
+  };
+};
 
 export function EdgesLayer({
   edges,
   activeEdgeId,
   previousNodeId,
   activeNodeId,
+  onEdgeClick,
+  onEdgeHover,
+  hoveredEdgeId,
 }: EdgesLayerProps) {
+  // Memoize active edge calculations for performance
+  const edgeStates = useMemo(() => {
+    return edges.map((edge) => ({
+      edge,
+      isActive: isEdgeActive(edge, activeEdgeId, previousNodeId, activeNodeId),
+      isHovered: edge.id === hoveredEdgeId,
+    }));
+  }, [edges, activeEdgeId, previousNodeId, activeNodeId, hoveredEdgeId]);
+
+  const handleEdgeClick = useCallback(
+    (edgeId: string) => {
+      onEdgeClick?.(edgeId);
+    },
+    [onEdgeClick]
+  );
+
+  const handleEdgeHover = useCallback(
+    (edgeId: string | null) => {
+      onEdgeHover?.(edgeId);
+    },
+    [onEdgeHover]
+  );
+
   return (
     <g className="edges-layer">
-      {edges.map((edge) => {
-        const isActive =
-          edge.id === activeEdgeId ||
-          (edge.fromId === previousNodeId && edge.toId === activeNodeId);
+      {/* Arrow marker definition */}
+      <defs>
+        <marker
+          id="arrowhead-active"
+          markerWidth={ARROW_CONFIG.markerWidth}
+          markerHeight={ARROW_CONFIG.markerHeight}
+          refX={ARROW_CONFIG.refX}
+          refY={ARROW_CONFIG.refY}
+          orient="auto"
+        >
+          <polygon
+            points={`0,0 ${ARROW_CONFIG.markerWidth},${ARROW_CONFIG.markerHeight / 2} 0,${ARROW_CONFIG.markerHeight}`}
+            fill={WHITEBOARD_COLORS.edgeActive}
+          />
+        </marker>
+        <marker
+          id="arrowhead-normal"
+          markerWidth={ARROW_CONFIG.markerWidth}
+          markerHeight={ARROW_CONFIG.markerHeight}
+          refX={ARROW_CONFIG.refX}
+          refY={ARROW_CONFIG.refY}
+          orient="auto"
+        >
+          <polygon
+            points={`0,0 ${ARROW_CONFIG.markerWidth},${ARROW_CONFIG.markerHeight / 2} 0,${ARROW_CONFIG.markerHeight}`}
+            fill={WHITEBOARD_COLORS.edgeNormal}
+          />
+        </marker>
+      </defs>
+
+      {edgeStates.map(({ edge, isActive, isHovered }) => {
+        const style = getEdgeStyle(isActive, isHovered);
+        const markerId = isActive ? "url(#arrowhead-active)" : "url(#arrowhead-normal)";
 
         return (
-          <line
-            key={edge.id}
-            x1={edge.start.x}
-            y1={edge.start.y}
-            x2={edge.end.x}
-            y2={edge.end.y}
-            stroke={isActive ? "rgba(0, 217, 163, 0.6)" : "rgba(21, 22, 28, 0.16)"}
-            strokeWidth={isActive ? "3" : "2"}
-            strokeDasharray={isActive ? "0" : "5 6"}
-            className={isActive ? "animate-flow" : ""}
-          />
+          <g key={edge.id} className="edge-group">
+            {/* Invisible click target for easier interaction */}
+            <line
+              x1={edge.start.x}
+              y1={edge.start.y}
+              x2={edge.end.x}
+              y2={edge.end.y}
+              stroke="transparent"
+              strokeWidth={INTERACTION_TARGETS.clickTargetStrokeWidth}
+              style={{ opacity: INTERACTION_TARGETS.clickTargetOpacity }}
+              onClick={() => handleEdgeClick(edge.id)}
+              onMouseEnter={() => handleEdgeHover(edge.id)}
+              onMouseLeave={() => handleEdgeHover(null)}
+              className="cursor-pointer"
+              role="button"
+              tabIndex={0}
+              aria-label={`Edge from ${edge.fromId} to ${edge.toId}`}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleEdgeClick(edge.id);
+                }
+              }}
+            />
+
+            {/* Visible edge line */}
+            <line
+              x1={edge.start.x}
+              y1={edge.start.y}
+              x2={edge.end.x}
+              y2={edge.end.y}
+              stroke={style.stroke}
+              strokeWidth={style.strokeWidth}
+              strokeDasharray={style.strokeDasharray}
+              markerEnd={markerId}
+              className={isActive ? "animate-flow" : ""}
+              pointerEvents="none"
+            />
+          </g>
         );
       })}
     </g>

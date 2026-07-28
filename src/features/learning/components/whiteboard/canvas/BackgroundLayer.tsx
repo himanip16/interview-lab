@@ -1,5 +1,3 @@
-// src/features/learning/components/whiteboard/canvas/BackgroundLayer.tsx
-
 import React from "react";
 
 interface BackgroundLayerProps {
@@ -11,12 +9,12 @@ interface BackgroundLayerProps {
 export function BackgroundLayer({
   width,
   height,
-  gridSize = 50,
+  gridSize = 25,
 }: BackgroundLayerProps) {
-  const patternId = "grid-pattern";
+  const patternId = React.useId();
 
   return (
-    <g className="background-layer">
+    <svg width={width} height={height}>
       <defs>
         <pattern
           id={patternId}
@@ -27,12 +25,17 @@ export function BackgroundLayer({
           <path
             d={`M ${gridSize} 0 L 0 0 0 ${gridSize}`}
             fill="none"
-            stroke="rgba(21, 22, 28, 0.04)"
+            stroke="rgba(21,22,28,0.04)"
             strokeWidth="1"
           />
         </pattern>
       </defs>
-      <rect width={width} height={height} fill="url(#${patternId})" />
-    </g>
+
+      <rect
+        width="100%"
+        height="100%"
+        fill={`url(#${patternId})`}
+      />
+    </svg>
   );
 }

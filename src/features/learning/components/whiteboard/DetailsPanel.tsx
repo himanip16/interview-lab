@@ -8,43 +8,82 @@ interface DetailsPanelProps {
   node: DiagramNode | null;
   isOpen: boolean;
   onClose: () => void;
+  systemTitle?: string;
+  systemDescription?: string;
+  scenarioCount?: number;
 }
 
-export function DetailsPanel({ node, isOpen, onClose }: DetailsPanelProps) {
-  if (!node || !isOpen) return null;
+export function DetailsPanel({ 
+  node, 
+  isOpen, 
+  onClose, 
+  systemTitle = "System Architecture",
+  systemDescription = "Explore the system architecture by selecting components or starting a guided walkthrough.",
+  scenarioCount = 0
+}: DetailsPanelProps) {
+  if (!isOpen) return null;
 
   return (
     <>
       {/* Desktop: Right sidebar */}
       <div className="hidden xl:block w-[320px] shrink-0">
         <div className="sticky top-4">
-          <DetailsPanelContent node={node} onClose={onClose} />
+          {node ? (
+            <DetailsPanelContent node={node} onClose={onClose} />
+          ) : (
+            <DefaultContent 
+              systemTitle={systemTitle}
+              systemDescription={systemDescription}
+              scenarioCount={scenarioCount}
+            />
+          )}
         </div>
       </div>
 
       {/* Tablet: Floating panel */}
       <div className="hidden md:block xl:hidden">
         <div className="fixed right-4 top-4 w-80 max-h-[calc(100vh-2rem)] overflow-y-auto">
-          <DetailsPanelContent node={node} onClose={onClose} />
+          {node ? (
+            <DetailsPanelContent node={node} onClose={onClose} />
+          ) : (
+            <DefaultContent 
+              systemTitle={systemTitle}
+              systemDescription={systemDescription}
+              scenarioCount={scenarioCount}
+            />
+          )}
         </div>
       </div>
 
       {/* Mobile: Bottom sheet */}
       <div className="md:hidden fixed inset-x-0 bottom-0 z-40">
         <div className="bg-white rounded-t-2xl shadow-2xl border-t border-gray-200 max-h-[70vh] overflow-y-auto">
-          <div className="sticky top-0 bg-white border-b border-gray-100 p-4 flex items-center justify-between">
-            <h3 className="font-semibold text-gray-900">{node.title}</h3>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
-              aria-label="Close details"
-            >
-              ×
-            </button>
-          </div>
-          <div className="p-4">
-            <DetailsPanelContent node={node} onClose={onClose} isMobile />
-          </div>
+          {node ? (
+            <>
+              <div className="sticky top-0 bg-white border-b border-gray-100 p-4 flex items-center justify-between">
+                <h3 className="font-semibold text-gray-900">{node.title}</h3>
+                <button
+                  onClick={onClose}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  aria-label="Close details"
+                >
+                  ×
+                </button>
+              </div>
+              <div className="p-4">
+                <DetailsPanelContent node={node} onClose={onClose} isMobile />
+              </div>
+            </>
+          ) : (
+            <div className="p-4">
+              <DefaultContent 
+                systemTitle={systemTitle}
+                systemDescription={systemDescription}
+                scenarioCount={scenarioCount}
+                isMobile
+              />
+            </div>
+          )}
         </div>
         {/* Backdrop */}
         <div
@@ -53,6 +92,102 @@ export function DetailsPanel({ node, isOpen, onClose }: DetailsPanelProps) {
         />
       </div>
     </>
+  );
+}
+
+interface DefaultContentProps {
+  systemTitle: string;
+  systemDescription: string;
+  scenarioCount: number;
+  isMobile?: boolean;
+}
+
+function DefaultContent({ 
+  systemTitle, 
+  systemDescription, 
+  scenarioCount, 
+  isMobile 
+}: DefaultContentProps) {
+  return (
+    <div className={cn(
+      "bg-white rounded-xl border border-gray-200 shadow-lg p-5",
+      !isMobile && "p-6"
+    )}>
+      {/* System Title */}
+      <h3 className="font-bold text-lg text-gray-900 mb-2">{systemTitle}</h3>
+      
+      {/* System Description */}
+      <p className="text-sm text-gray-600 leading-relaxed mb-4">
+        {systemDescription}
+      </p>
+
+      {/* Scenario Count */}
+      {scenarioCount > 0 && (
+        <div className="bg-blue-50 rounded-lg p-3 mb-4">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+              <span className="text-blue-600 font-semibold text-sm">
+                {scenarioCount}
+              </span>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-blue-900">
+                Guided Scenarios
+              </p>
+              <p className="text-xs text-blue-600">
+                Interactive walkthroughs available
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Quick Start Guide */}
+      <div className="space-y-3">
+        <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+          Getting Started
+        </h4>
+        <div className="space-y-2 text-sm text-gray-600">
+          <div className="flex items-start gap-2">
+            <span className="text-blue-600 font-bold">1.</span>
+            <span>Select a scenario from the top bar to begin a guided walkthrough</span>
+          </div>
+          <div className="flex items-start gap-2">
+            <span className="text-blue-600 font-bold">2.</span>
+            <span>Click any component to inspect its role and design decisions</span>
+          </div>
+          <div className="flex items-start gap-2">
+            <span className="text-blue-600 font-bold">3.</span>
+            <span>Use scroll to pan and scroll wheel to zoom the canvas</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Category Legend */}
+      <div className="mt-5 pt-4 border-t border-gray-100">
+        <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+          Component Categories
+        </h4>
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          <div className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded-full bg-[var(--category-practice)]" />
+            <span className="text-gray-600">Entry Points</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded-full bg-[var(--category-concept)]" />
+            <span className="text-gray-600">Logic</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded-full bg-[var(--category-learn-deep)]" />
+            <span className="text-gray-600">Storage</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded-full bg-[var(--category-live)]" />
+            <span className="text-gray-600">Queues</span>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 

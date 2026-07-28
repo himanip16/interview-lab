@@ -29,6 +29,8 @@ interface ViewBox {
 interface InteractiveWhiteboardProps {
   frame: WhiteboardFrame;
   className?: string;
+  systemTitle?: string;
+  systemDescription?: string;
 }
 
 const CANVAS_W = DEFAULT_WHITEBOARD_CONFIG.canvasWidth;
@@ -36,7 +38,7 @@ const CANVAS_H = DEFAULT_WHITEBOARD_CONFIG.canvasHeight;
 const MIN_VIEW_W = CANVAS_W / 5;
 const MAX_VIEW_W = CANVAS_W * 3;
 
-export function InteractiveWhiteboard({ frame, className }: InteractiveWhiteboardProps) {
+export function InteractiveWhiteboard({ frame, className, systemTitle, systemDescription }: InteractiveWhiteboardProps) {
   // Initialize controller
   const controller = useMemo(() => {
     const scenarios = frame.scenarios || [];
@@ -129,7 +131,10 @@ export function InteractiveWhiteboard({ frame, className }: InteractiveWhiteboar
   }, [screenToViewBox]);
 
   const handlePointerDown = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
-    if ((e.target as SVGElement).closest("g[role='button']")) return;
+    // Allow panning on background, but not on nodes
+    const target = e.target as SVGElement;
+    if (target.closest("g[role='button']") || target.closest("g.nodes-layer")) return;
+    
     e.preventDefault();
     isPanning.current = true;
     lastPointer.current = { x: e.clientX, y: e.clientY };
@@ -166,6 +171,42 @@ export function InteractiveWhiteboard({ frame, className }: InteractiveWhiteboar
   const resetView = useCallback(() => {
     setViewBox({ x: 0, y: 0, width: CANVAS_W, height: CANVAS_H });
   }, []);
+
+  const fitToScreen = useCallback(() => {
+    // Calculate bounding box of all nodes
+    if (frame.nodes.length === 0) return;
+    
+    const padding = 100;
+    const minX = Math.min(...frame.nodes.map(n => n.x - n.width / 2)) - padding;
+    const maxX = Math.max(...frame.nodes.map(n => n.x + n.width / 2)) + padding;
+    const minY = Math.min(...frame.nodes.map(n => n.y - n.height / 2)) - padding;
+    const maxY = Math.max(...frame.nodes.map(n => n.y + n.height / 2)) + padding;
+    
+    const contentWidth = maxX - minX;
+    const contentHeight = maxY - minY;
+    
+    // Get SVG dimensions
+    const svg = svgRef.current;
+    if (!svg) return;
+    const rect = svg.getBoundingClientRect();
+    
+    // Calculate scale to fit content with some margin
+    const scaleX = rect.width / contentWidth;
+    const scaleY = rect.height / contentHeight;
+    const scale = Math.min(scaleX, scaleY, 1.5); // Max 1.5x zoom
+    
+    const newWidth = CANVAS_W / scale;
+    const newHeight = CANVAS_H / scale;
+    const centerX = (minX + maxX) / 2;
+    const centerY = (minY + maxY) / 2;
+    
+    setViewBox({
+      x: centerX - newWidth / 2,
+      y: centerY - newHeight / 2,
+      width: newWidth,
+      height: newHeight,
+    });
+  }, [frame.nodes]);
 
   // Node selection
   const handleSelectNode = useCallback((nodeId: NodeId) => {
@@ -228,12 +269,14 @@ export function InteractiveWhiteboard({ frame, className }: InteractiveWhiteboar
 
   return (
     <div className={cn("flex flex-col h-screen", className)}>
-      {/* Scenario Selector */}
-      <ScenarioSelector
-        scenarios={controller.getAllScenarios()}
-        activeScenarioId={controllerState.currentScenario?.id || null}
-        onSelectScenario={handleSelectScenario}
-      />
+      {/* Scenario Selector - more compact */}
+      {controller.getAllScenarios().length > 0 && (
+        <ScenarioSelector
+          scenarios={controller.getAllScenarios()}
+          activeScenarioId={controllerState.currentScenario?.id || null}
+          onSelectScenario={handleSelectScenario}
+        />
+      )}
 
       {/* Canvas Container */}
       <div className="flex-1 relative overflow-hidden">
@@ -282,14 +325,28 @@ export function InteractiveWhiteboard({ frame, className }: InteractiveWhiteboar
           />
         </svg>
 
-        {/* Reset View Button */}
-        <button
-          type="button"
-          onClick={resetView}
-          className="absolute top-4 right-4 text-xs font-semibold px-3 py-1.5 rounded-full bg-white border border-gray-200 shadow-sm z-10"
-        >
-          Reset view
-        </button>
+        {/* View Controls */}
+        <div className="absolute top-4 right-4 flex gap-2 z-10">
+          <button
+            type="button"
+            onClick={fitToScreen}
+            className="text-xs font-semibold px-3 py-1.5 rounded-full bg-white border border-gray-200 shadow-sm hover:bg-gray-50 transition-colors"
+          >
+            Fit to screen
+          </button>
+          <button
+            type="button"
+            onClick={resetView}
+            className="text-xs font-semibold px-3 py-1.5 rounded-full bg-white border border-gray-200 shadow-sm hover:bg-gray-50 transition-colors"
+          >
+            Reset view
+          </button>
+        </div>
+
+        {/* Interaction Hints */}
+        <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm rounded-full px-4 py-2 text-xs font-medium text-gray-600 shadow-sm z-10">
+          Click nodes • Drag to pan • Scroll to zoom
+        </div>
 
         {/* Walkthrough Callout (HTML overlay) */}
         {currentStep && focusedNode && calloutPosition && (
@@ -310,6 +367,9 @@ export function InteractiveWhiteboard({ frame, className }: InteractiveWhiteboar
         node={focusedNode}
         isOpen={focusedNodeId !== null && controllerState.currentScenario === null}
         onClose={handleCloseDetails}
+        systemTitle={systemTitle}
+        systemDescription={systemDescription}
+        scenarioCount={controller.getAllScenarios().length}
       />
     </div>
   );
