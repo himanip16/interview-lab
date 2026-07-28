@@ -84,4 +84,59 @@ export interface PositionedEdge {
 export interface WhiteboardFrame {
   nodes: PositionedNode[];
   edges: PositionedEdge[];
+  scenarios?: Scenario[];
+}
+
+// ==========================================================================
+// SCENARIO & WALKTHROUGH TYPES
+// ==========================================================================
+
+/**
+ * Single focus state for the whiteboard
+ * - idle: No node focused
+ * - focused: User manually selected a node
+ * - scenario: Node is focused as part of an active walkthrough
+ */
+export type FocusState =
+  | { type: 'idle' }
+  | { type: 'focused', nodeId: NodeId }
+  | { type: 'scenario', nodeId: NodeId, scenarioId: string, stepId: string };
+
+/**
+ * Individual step in a learning scenario
+ * Contains only scenario-specific narration, not node data (to avoid duplication)
+ */
+export interface ScenarioStep {
+  id: string;
+  nodeId: NodeId;
+  narration: string;  // What happens in this step (context-specific)
+  waitForUser: boolean;  // true = manual advance, false = auto
+  nextStepId?: string;  // For branching scenarios
+}
+
+/**
+ * Learning scenario - a guided walkthrough of the system
+ */
+export interface Scenario {
+  id: string;
+  question: string;  // "How does a user book a ride?"
+  category: 'user' | 'driver' | 'system' | 'failure';
+  
+  // Learning path
+  prerequisiteNodeIds: NodeId[];  // Required components
+  relatedScenarioIds: string[];   // Suggested next scenarios
+  
+  // Ordered steps (linear for now, branching via nextStepId)
+  steps: ScenarioStep[];
+  startStepId: string;
+}
+
+/**
+ * Controller state (separation of concerns)
+ */
+export interface ScenarioControllerState {
+  currentScenario: Scenario | null;
+  currentStep: ScenarioStep | null;
+  focusState: FocusState;
+  progress: { current: number; total: number };
 }
