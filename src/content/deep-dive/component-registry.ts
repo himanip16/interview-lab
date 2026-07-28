@@ -15,6 +15,7 @@ import { CassandraReadPathIllustration } from "./illustrations/CassandraReadPath
 import { CassandraRingIllustration } from "./illustrations/CassandraRingIllustration";
 import { ConsistentHashingIllustration } from "./illustrations/ConsistentHashing";
 import { ConsistentHashingHero } from "./illustrations/ConsistentHashingHero";
+import { CyclicSortIllustration } from "./illustrations/CyclicSortIllustration";
 import { DPIllustration } from "./illustrations/DPIllustration";
 import { DynamoConsistencyIllustration } from "./illustrations/DynamoConsistencyIllustration";
 import { DynamoDBIllustration } from "./illustrations/DynamoDB";
@@ -33,13 +34,16 @@ import { MemoizationIllustration } from "./illustrations/MemoizationIllustration
 import { ModuloIllustration } from "./illustrations/ModuloIllustration";
 import { MongoDBIllustration } from "./illustrations/MongoDB";
 import { MonotonicStackIllustration } from "./illustrations/MonotonicStackIllustration";
+import { OwnershipArrowIllustration } from "./illustrations/OwnershipArrowIllustration";
 import { PostgresIllustration } from "./illustrations/Postgres";
 import { RecursionIllustration } from "./illustrations/RecursionIllustration";
 import { RedisIllustration } from "./illustrations/Redis";
 import { SQSIllustration } from "./illustrations/SQSIllustration";
 import { SSTableIllustration } from "./illustrations/SSTable";
 import { SlidingWindowIllustration } from "./illustrations/SlidingWindowIllustration";
+import { SortingOrderIllustration } from "./illustrations/SortingOrderIllustration";
 import { SparkIllustration } from "./illustrations/Spark";
+import { SpiralWalkIllustration } from "./illustrations/SpiralWalkIllustration";
 import { TabulationIllustration } from "./illustrations/TabulationIllustration";
 import { TopologicalSortIllustration } from "./illustrations/TopologicalSortIllustration";
 import { TrieIllustration } from "./illustrations/TrieIllustration";
@@ -59,6 +63,7 @@ export const contentComponents: Record<string, ComponentType> = {
   CassandraRingIllustration,
   ConsistentHashingIllustration,
   ConsistentHashingHero,
+  CyclicSortIllustration,
   DPIllustration,
   DynamoConsistencyIllustration,
   DynamoDBIllustration,
@@ -77,13 +82,16 @@ export const contentComponents: Record<string, ComponentType> = {
   ModuloIllustration,
   MongoDBIllustration,
   MonotonicStackIllustration,
+  OwnershipArrowIllustration,
   PostgresIllustration,
   RecursionIllustration,
   RedisIllustration,
   SQSIllustration,
   SSTableIllustration,
   SlidingWindowIllustration,
+  SortingOrderIllustration,
   SparkIllustration,
+  SpiralWalkIllustration,
   TabulationIllustration,
   TopologicalSortIllustration,
   TrieIllustration,

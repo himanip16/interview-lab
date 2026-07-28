@@ -847,6 +847,7 @@ section p b {
   margin: 0;
   white-space: pre;
   min-width: fit-content;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
 }
 
 @media (max-width: 420px) {
@@ -1194,11 +1195,14 @@ section p b {
    ========================================================================== */
 
 .subhead {
+  margin: 22px 0 10px;
+}
+
+.subhead-header {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 22px 0 10px;
-  flex-wrap: wrap;
+  margin-bottom: 8px;
 }
 
 .subhead .dot {
@@ -1220,8 +1224,6 @@ section p b {
   font-size: 13.5px;
   line-height: 1.75;
   color: var(--text-soft);
-  margin-top: 8px;
-  width: 100%;
 }
 
 @media (max-width: 420px) {

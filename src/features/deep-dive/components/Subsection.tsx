@@ -15,8 +15,10 @@ interface SubsectionProps {
 export function Subsection({ dotColor = 'var(--mint-deep)', title, content, className = '' }: SubsectionProps) {
   return (
     <div className={`subhead ${className}`}>
-      <div className="dot" style={{ background: dotColor }} />
-      <h3>{title}</h3>
+      <div className="subhead-header">
+        <div className="dot" style={{ background: dotColor }} />
+        <h3>{title}</h3>
+      </div>
       <ContentRenderer content={content} />
     </div>
   );

@@ -219,11 +219,18 @@ export const article: DeepDiveArticle = {
       title: 'Rotating Without a Second Array',
       blocks: [
         {
-          type: 'paragraph',
+          type: 'subsection',
+          dotColor: 'var(--mint-deep)',
+          title: 'Three-Reversal Trick',
           content: [
             {
-              type: 'text',
-              text: "The in-place trick is to reverse the whole array, then reverse each of the two pieces that should end up in swapped order. Reversing the whole thing gets everything backwards, and reversing each half un-reverses it locally while leaving the two halves swapped — which is exactly a rotation."
+              type: 'paragraph',
+              content: [
+                {
+                  type: 'text',
+                  text: "The in-place trick is to reverse the whole array, then reverse each of the two pieces that should end up in swapped order. Reversing the whole thing gets everything backwards, and reversing each half un-reverses it locally while leaving the two halves swapped — which is exactly a rotation."
+                }
+              ]
             }
           ]
         },
@@ -266,11 +273,18 @@ export const article: DeepDiveArticle = {
       title: 'Walking a Grid From the Outside In',
       blocks: [
         {
-          type: 'paragraph',
+          type: 'subsection',
+          dotColor: 'var(--coral)',
+          title: 'Shrinking Boundaries',
           content: [
             {
-              type: 'text',
-              text: "Printing a matrix in spiral order is simulation in its purest form: right along the top, down the right side, left along the bottom, up the left side, then shrink and repeat. The clean way to track this isn't a formula for \"the nth cell in spiral order\" — it's four boundaries that close in after each leg."
+              type: 'paragraph',
+              content: [
+                {
+                  type: 'text',
+                  text: "Printing a matrix in spiral order is simulation in its purest form: right along the top, down the right side, left along the bottom, up the left side, then shrink and repeat. The clean way to track this isn't a formula for \"the nth cell in spiral order\" — it's four boundaries that close in after each leg."
+                }
+              ]
             }
           ]
         },
@@ -325,20 +339,27 @@ export const article: DeepDiveArticle = {
       title: "Updating Cells That Depend on Each Other",
       blocks: [
         {
-          type: 'paragraph',
+          type: 'subsection',
+          dotColor: 'var(--amber)',
+          title: 'State Encoding',
           content: [
             {
-              type: 'text',
-              text: "Game of Life adds a trap that rotation and spiral traversal don't have: every cell's next state depends on its neighbors' current state, and if you update cells one at a time in place, later cells end up reading already-updated neighbors instead of the original board."
-            }
-          ]
-        },
-        {
-          type: 'paragraph',
-          content: [
+              type: 'paragraph',
+              content: [
+                {
+                  type: 'text',
+                  text: "Game of Life adds a trap that rotation and spiral traversal don't have: every cell's next state depends on its neighbors' current state, and if you update cells one at a time in place, later cells end up reading already-updated neighbors instead of the original board."
+                }
+              ]
+            },
             {
-              type: 'text',
-              text: "The usual fix is a second grid — simple, but O(rows × cols) extra space. The in-place fix is to encode both the old and new state in the same cell, using a second bit, so every read of a neighbor still sees its original value even after that neighbor's new state has been written on top of it:"
+              type: 'paragraph',
+              content: [
+                {
+                  type: 'text',
+                  text: "The usual fix is a second grid — simple, but O(rows × cols) extra space. The in-place fix is to encode both the old and new state in the same cell, using a second bit, so every read of a neighbor still sees its original value even after that neighbor's new state has been written on top of it:"
+                }
+              ]
             }
           ]
         },
@@ -393,11 +414,18 @@ export const article: DeepDiveArticle = {
       title: 'Facing a Direction Without a Wall of If-Statements',
       blocks: [
         {
-          type: 'paragraph',
+          type: 'subsection',
+          dotColor: 'var(--mint-deep)',
+          title: 'Direction Vectors',
           content: [
             {
-              type: 'text',
-              text: "Robot-on-a-grid problems ask you to track a moving point, a facing direction, and turns. The naive version writes out a branch for every combination of current direction and turn command — sixteen cases before you've even started moving. The cleaner version stores the four directions in a fixed list and represents \"facing\" as an index into it."
+              type: 'paragraph',
+              content: [
+                {
+                  type: 'text',
+                  text: "Robot-on-a-grid problems ask you to track a moving point, a facing direction, and turns. The naive version writes out a branch for every combination of current direction and turn command — sixteen cases before you've even started moving. The cleaner version stores the four directions in a fixed list and represents \"facing\" as an index into it."
+                }
+              ]
             }
           ]
         },
@@ -447,11 +475,18 @@ export const article: DeepDiveArticle = {
       title: 'Rotating a Grid 90° Without a Second Grid',
       blocks: [
         {
-          type: 'paragraph',
+          type: 'subsection',
+          dotColor: 'var(--coral)',
+          title: 'Transpose + Reverse',
           content: [
             {
-              type: 'text',
-              text: 'Rotating a square matrix 90° clockwise looks like it needs a fresh grid to write the rotated result into — but it decomposes into two simpler in-place operations: transpose the matrix (swap across the main diagonal), then reverse each row.'
+              type: 'paragraph',
+              content: [
+                {
+                  type: 'text',
+                  text: 'Rotating a square matrix 90° clockwise looks like it needs a fresh grid to write the rotated result into — but it decomposes into two simpler in-place operations: transpose the matrix (swap across the main diagonal), then reverse each row.'
+                }
+              ]
             }
           ]
         },

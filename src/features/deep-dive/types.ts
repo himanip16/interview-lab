@@ -141,6 +141,13 @@ export interface ConceptReferenceBlock {
   summaryOverride?: ParagraphBlock[];
 }
 
+export interface SubsectionBlock {
+  type: "subsection";
+  dotColor?: string;
+  title: string;
+  content: ParagraphBlock[];
+}
+
 /**
  * Unified Discriminated Union for all rendered content blocks
  */
@@ -154,7 +161,8 @@ export type ContentBlock =
   | QuoteBlock
   | ImageBlock
   | TableBlock
-  | ConceptReferenceBlock;
+  | ConceptReferenceBlock
+  | SubsectionBlock;
 
 /* ==========================================================================
    3. DOMAIN MODES (Glossary & Resources)

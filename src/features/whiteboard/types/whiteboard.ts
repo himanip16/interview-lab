@@ -18,6 +18,7 @@ export interface NodeDetails {
   deepDive: string;
   failureModes: string;
   tradeoffs: string;
+  notes?: string;  // Additional context not in role/deepDive
 }
 
 /**

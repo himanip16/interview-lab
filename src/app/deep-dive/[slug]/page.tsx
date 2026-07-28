@@ -12,16 +12,15 @@ import { Tag } from "@/features/deep-dive/components/Tag";
 import { ThemeToggle } from "@/features/deep-dive/components/ThemeToggle";
 import { IllustrationBlock } from "@/features/deep-dive/components/IllustrationBlock";
 import { ResourceRow } from "@/features/deep-dive/components/ResourceRow";
-import { NavigationRail, type RailItem } from "@/features/deep-dive/components/NavigationRail";
-import { TopBar } from "@/features/deep-dive/components/TopBar";
 import { Table } from "@/features/deep-dive/components/Table";
+import { Subsection } from "@/features/deep-dive/components/Subsection";
 
 import { getDeepDiveBySlug, getPreviousAndNext } from "@/content/deep-dive";
 import { contentComponents } from "@/content/deep-dive/component-registry";
 
 import "@/features/deep-dive/styles/deep-dive.css";
 
-import { BookOpen, MessageSquare, Code2, ChevronLeft, Home, Book, LayoutGrid, Monitor, SquareStack } from "lucide-react";
+import { BookOpen, MessageSquare, Code2, ChevronLeft } from "lucide-react";
 
 // renamed to avoid colliding with the `CodeBlock` content-block type
 import CodeBlockRenderer from "@/shared/code/CodeBlock";
@@ -181,26 +180,26 @@ function renderBlock(block: ContentBlock, key: number) {
     case "comparison":
       // brand new block type — no existing UI for this in the old page
       return (
-        <table key={key}>
-          <thead>
-            <tr>
-              <th></th>
-              {block.columns.map((c) => (
-                <th key={c.id}>{c.label}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {block.rows.map((row, ri) => (
-              <tr key={ri}>
-                <td>{row.feature}</td>
-                {block.columns.map((c) => (
-                  <td key={c.id}>{row.cells[c.id]}</td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <Table
+          key={key}
+          headers={['', ...block.columns.map(c => c.label)]}
+          rows={block.rows.map(row => ({
+            cells: [
+              { content: row.feature, isBold: true },
+              ...block.columns.map(c => ({ content: row.cells[c.id] }))
+            ]
+          }))}
+        />
+      );
+
+    case "subsection":
+      return (
+        <Subsection
+          key={key}
+          dotColor={block.dotColor}
+          title={block.title}
+          content={block.content}
+        />
       );
 
     case "concept-ref":
@@ -253,31 +252,8 @@ export default async function DeepDiveArticlePage({ params }: PageProps) {
   const relatedArticles: RelatedResource[] =
     article.resources?.filter((r) => r.type === "article") ?? [];
 
-  const railItems: RailItem[] = [
-    { id: 'home', icon: <Home size={18} />, href: '/' },
-    { id: 'deep-dive', icon: <Book size={18} />, href: '/deep-dive', active: true },
-    { id: 'library', icon: <LayoutGrid size={18} />, href: '/library' },
-    { id: 'interview', icon: <Monitor size={18} />, href: '/interview' },
-    { id: 'practice', icon: <SquareStack size={18} />, href: '/practice' },
-  ];
-
   return (
-    <div className="shell" style={{ background: 'var(--bg)' }}>
-      <NavigationRail 
-        logo="i"
-        items={railItems}
-      />
-      <div className="main">
-        <TopBar
-          breadcrumbs={[
-            { label: 'Deep dives' },
-            { label: metadata.name, bold: true }
-          ]}
-          xp={0}
-          showThemeToggle={true}
-          loginText="Log in"
-        />
-        <div className="wrap">
+    <div className="wrap">
           {article.heroDiagram?.renderEngine === "component" && (
             <div className="mark-sm" style={{ width: 56, height: 56, marginBottom: 16 }}>
               {(() => {
@@ -342,7 +318,5 @@ export default async function DeepDiveArticlePage({ params }: PageProps) {
             </div>
           )}
         </div>
-      </div>
-    </div>
   );
 }
