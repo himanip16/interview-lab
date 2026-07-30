@@ -427,29 +427,19 @@ export function InteractiveWhiteboard({ diagram, learning, className, systemTitl
         {/* Hover Annotation Tooltip */}
         {hoveredNodeId && annotPosition && mode === 'explore' && (
           <div
-            className="absolute z-20 w-56 bg-gray-900 text-white rounded-xl p-3.5 shadow-xl opacity-0 translate-y-1 transition-all duration-180"
+            className="absolute z-20 bg-gray-900 text-white rounded-lg px-3 py-2 shadow-xl pointer-events-none"
             style={{
-              left: annotPosition.x + 14,
-              top: annotPosition.y,
-              opacity: 1,
-              transform: 'translateY(0)',
+              left: annotPosition.x + 12,
+              top: annotPosition.y - 8,
+              transform: 'translateY(-100%)',
             }}
           >
-            <div className="text-xs font-bold mb-1">
+            <div className="text-xs font-semibold">
               {nodesById.get(hoveredNodeId as any)?.data.title}
             </div>
-            <div className="text-[9.5px] text-white/50 uppercase tracking-wider mb-1.5">
-              {nodesById.get(hoveredNodeId as any)?.data.category}
+            <div className="text-[10px] text-white/70 mt-0.5 max-w-[200px] truncate">
+              {nodesById.get(hoveredNodeId as any)?.data.details.role || 'Component'}
             </div>
-            <div className="text-[11.5px] text-white/75 leading-relaxed mb-2">
-              {nodesById.get(hoveredNodeId as any)?.data.details.role || 'Component description'}
-            </div>
-            <button
-              onClick={() => handleSelectNode(hoveredNodeId as NodeId)}
-              className="text-xs font-bold text-emerald-400 cursor-pointer hover:text-emerald-300"
-            >
-              See full breakdown →
-            </button>
           </div>
         )}
 

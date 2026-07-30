@@ -81,12 +81,32 @@ export function FocusEffectsLayer({ nodes, activeNodeId }: FocusEffectsLayerProp
   return (
     <g className="focus-effects-layer">
       {nodes.map((node) => {
-        if (node.data.id === activeNodeId) {
-          return null;
-        }
-
         const left = node.x - node.width / 2;
         const top = node.y - node.height / 2;
+        const isActive = node.data.id === activeNodeId;
+
+        if (isActive) {
+          // Add highlight ring around active node
+          const ringPadding = 8;
+          return (
+            <rect
+              key={`highlight-${node.data.id}`}
+              x={left - ringPadding}
+              y={top - ringPadding}
+              width={node.width + ringPadding * 2}
+              height={node.height + ringPadding * 2}
+              rx={FOCUS_EFFECTS.nodeBorderRadius + ringPadding / 2}
+              fill="none"
+              stroke={WHITEBOARD_COLORS.edgeActive}
+              strokeWidth={2}
+              style={{
+                opacity: 0.8,
+                transition: `opacity ${FOCUS_EFFECTS.transitionDuration}ms ease-in-out`,
+              }}
+              className="transition-opacity"
+            />
+          );
+        }
 
         return (
           <rect
