@@ -9,7 +9,7 @@ interface BackgroundLayerProps {
 export function BackgroundLayer({
   width,
   height,
-  gridSize = 25,
+  gridSize = 28,
 }: BackgroundLayerProps) {
   const patternId = React.useId();
 
@@ -25,17 +25,17 @@ export function BackgroundLayer({
           <path
             d={`M ${gridSize} 0 L 0 0 0 ${gridSize}`}
             fill="none"
-            stroke="rgba(21,22,28,0.04)"
+            stroke="rgba(21,22,28,0.08)"
             strokeWidth="1"
           />
         </pattern>
       </defs>
 
       <rect
-        x={-width}
-        y={-height}
-        width={width * 3}
-        height={height * 3}
+        x={0}
+        y={0}
+        width={width}
+        height={height}
         fill={`url(#${patternId})`}
         data-canvas-background="true"
       />

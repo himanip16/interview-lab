@@ -16,6 +16,13 @@ interface ViewBox {
   height: number;
 }
 
+interface DiagramBounds {
+  minX: number;
+  maxX: number;
+  minY: number;
+  maxY: number;
+}
+
 interface UseCanvasViewportReturn {
   viewBox: ViewBox;
   svgRef: React.RefObject<SVGSVGElement | null>;
@@ -30,6 +37,7 @@ interface UseCanvasViewportReturn {
   fitToScreen: (nodes: Array<{ x: number; y: number; width: number; height: number }>) => void;
   zoomIn: () => void;
   zoomOut: () => void;
+  setDiagramBounds: (bounds: DiagramBounds | null) => void;
 }
 
 export function useCanvasViewport(): UseCanvasViewportReturn {
@@ -39,6 +47,9 @@ export function useCanvasViewport(): UseCanvasViewportReturn {
     width: CANVAS_W,
     height: CANVAS_H,
   });
+
+  // Diagram bounds for intelligent clamping
+  const [diagramBounds, setDiagramBoundsState] = useState<DiagramBounds | null>(null);
 
   // Ref-based state for high-frequency updates
   const viewBoxRef = useRef<ViewBox>(viewBox);
@@ -76,7 +87,22 @@ export function useCanvasViewport(): UseCanvasViewportReturn {
   }, []);
 
   const clampViewBox = useCallback((x: number, y: number, width: number, height: number): ViewBox => {
-    // Clamp to prevent dragging into infinite empty space
+    // Use diagram bounds if available, otherwise fall back to canvas bounds
+    if (diagramBounds) {
+      const minX = diagramBounds.minX - PADDING;
+      const maxX = diagramBounds.maxX + PADDING - width;
+      const minY = diagramBounds.minY - PADDING;
+      const maxY = diagramBounds.maxY + PADDING - height;
+
+      return {
+        x: Math.max(minX, Math.min(maxX, x)),
+        y: Math.max(minY, Math.min(maxY, y)),
+        width,
+        height,
+      };
+    }
+
+    // Fallback to canvas bounds (prevents dragging into infinite empty space)
     const minX = -PADDING;
     const maxX = CANVAS_W + PADDING - width;
     const minY = -PADDING;
@@ -88,7 +114,7 @@ export function useCanvasViewport(): UseCanvasViewportReturn {
       width,
       height,
     };
-  }, []);
+  }, [diagramBounds]);
 
   const handleWheel = useCallback((e: React.WheelEvent<SVGSVGElement>) => {
     e.preventDefault();
@@ -225,6 +251,10 @@ export function useCanvasViewport(): UseCanvasViewportReturn {
     scheduleUpdate();
   }, [scheduleUpdate]);
 
+  const setDiagramBounds = useCallback((bounds: DiagramBounds | null) => {
+    setDiagramBoundsState(bounds);
+  }, []);
+
   return {
     viewBox,
     svgRef,
@@ -239,5 +269,6 @@ export function useCanvasViewport(): UseCanvasViewportReturn {
     fitToScreen,
     zoomIn,
     zoomOut,
+    setDiagramBounds,
   };
 }

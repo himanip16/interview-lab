@@ -8,6 +8,14 @@ import { cn } from "@/shared/utils/utils";
 import { WhiteboardFrame, NodeId, Scenario } from "@/features/whiteboard/types/whiteboard";
 import { DEFAULT_WHITEBOARD_CONFIG } from "@/features/whiteboard/config";
 
+const CATEGORY_COLORS = {
+  entry: "#FF5A3C",
+  logic: "#6A5AE0",
+  storage: "#00A87E",
+  queue: "#E8940A",
+  network: "#15161C",
+} as const;
+
 import { DetailsPanel } from "./DetailsPanel";
 
 import { BackgroundLayer } from "./canvas/BackgroundLayer";
@@ -37,6 +45,7 @@ type WhiteboardMode = 'explore' | 'flows';
 export function InteractiveWhiteboard({ diagram, learning, className, systemTitle, systemDescription }: InteractiveWhiteboardProps) {
   const [mode, setMode] = useState<WhiteboardMode>('explore');
   const [selectedJourneyIndex, setSelectedJourneyIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
   
   const scenarios = learning.scenarios || [];
   const nodes = diagram.nodes.map((n) => n.data);
@@ -70,6 +79,7 @@ export function InteractiveWhiteboard({ diagram, learning, className, systemTitl
     fitToScreen,
     zoomIn,
     zoomOut,
+    setDiagramBounds,
   } = useCanvasViewport();
 
   // Node interaction hook
@@ -150,15 +160,33 @@ export function InteractiveWhiteboard({ diagram, learning, className, systemTitl
     }
   }, [activeNodeId, nodesById, fitToScreen]);
 
-  // Initial fit to screen when diagram loads
+  // Calculate diagram bounds for intelligent viewport clamping
   useEffect(() => {
     if (diagram.nodes.length > 0) {
-      fitToScreen(diagram.nodes.map(node => ({
-        x: node.x,
-        y: node.y,
-        width: node.width,
-        height: node.height,
-      })));
+      const minX = Math.min(...diagram.nodes.map(n => n.x - n.width / 2));
+      const maxX = Math.max(...diagram.nodes.map(n => n.x + n.width / 2));
+      const minY = Math.min(...diagram.nodes.map(n => n.y - n.height / 2));
+      const maxY = Math.max(...diagram.nodes.map(n => n.y + n.height / 2));
+      
+      setDiagramBounds({ minX, maxX, minY, maxY });
+    } else {
+      setDiagramBounds(null);
+    }
+  }, [diagram.nodes, setDiagramBounds]);
+
+  // Initial fit to screen when diagram loads - only fit if nodes exist
+  useEffect(() => {
+    if (diagram.nodes.length > 0) {
+      // Small delay to ensure SVG is mounted
+      const timer = setTimeout(() => {
+        fitToScreen(diagram.nodes.map(node => ({
+          x: node.x,
+          y: node.y,
+          width: node.width,
+          height: node.height,
+        })));
+      }, 100);
+      return () => clearTimeout(timer);
     }
   }, [diagram.nodes, fitToScreen]);
 
@@ -175,12 +203,51 @@ export function InteractiveWhiteboard({ diagram, learning, className, systemTitl
   const handleSelectScenarioWithIndex = useCallback((scenarioId: string, index: number) => {
     setSelectedJourneyIndex(index);
     handleSelectScenario(scenarioId);
+    setIsPlaying(false); // Reset play state when switching scenarios
   }, [handleSelectScenario]);
+
+  // Auto-advance timer for flow playback
+  useEffect(() => {
+    if (!isPlaying) return;
+
+    const timer = setInterval(() => {
+      const canAdvance = controllerState.progress.current < controllerState.progress.total;
+      if (canAdvance) {
+        nextStep();
+      } else {
+        setIsPlaying(false);
+      }
+    }, 2500);
+
+    return () => clearInterval(timer);
+  }, [isPlaying, nextStep, controllerState.progress]);
 
   return (
     <div className={cn("flex h-screen w-screen overflow-hidden bg-white", className)}>
       {/* Main Stage */}
       <main className="flex-1 relative flex flex-col min-w-0">
+        {/* Bottom Sheet Overlay */}
+        {focusedNodeId && (
+          <div
+            className="fixed inset-0 z-30 bg-black/20"
+            onClick={handleCloseDetails}
+          />
+        )}
+        {/* Title Row */}
+        <div className="px-5 py-4 flex items-start justify-between flex-wrap gap-3">
+          <div>
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              {systemTitle || 'System Architecture'}
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" style={{ animation: 'pulse 1.8s ease-in-out infinite' }}></span>
+            </h1>
+            <p className="text-sm text-gray-500 mt-1">
+              {mode === 'explore' 
+                ? 'Hover a component for a quick note, tap for the full breakdown.' 
+                : 'Follow a real journey through the system, phase by phase.'}
+            </p>
+          </div>
+        </div>
+
         {/* Canvas Container */}
         <div className="flex-1 relative overflow-hidden">
           <svg
@@ -231,12 +298,12 @@ export function InteractiveWhiteboard({ diagram, learning, className, systemTitl
 
         {/* View Controls */}
         <div className="absolute top-4 left-4 flex items-center gap-2 z-10">
-          <div className="flex gap-1.5 bg-gray-50 p-1 rounded-full">
+          <div className="flex gap-1.5 bg-[#FAF9F6] p-1 rounded-full">
             <button
               onClick={() => setMode('explore')}
-              className={`text-xs font-semibold px-3 py-1.5 rounded-full transition-colors ${
+              className={`text-xs font-semibold px-4 py-2 rounded-full transition-colors ${
                 mode === 'explore' 
-                  ? 'bg-gray-900 text-white' 
+                  ? 'bg-[#15161C] text-white' 
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -244,9 +311,9 @@ export function InteractiveWhiteboard({ diagram, learning, className, systemTitl
             </button>
             <button
               onClick={() => setMode('flows')}
-              className={`text-xs font-semibold px-3 py-1.5 rounded-full transition-colors ${
+              className={`text-xs font-semibold px-4 py-2 rounded-full transition-colors ${
                 mode === 'flows' 
-                  ? 'bg-gray-900 text-white' 
+                  ? 'bg-[#15161C] text-white' 
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -291,20 +358,20 @@ export function InteractiveWhiteboard({ diagram, learning, className, systemTitl
         {mode === 'explore' && (
           <div className="absolute bottom-4 right-4 flex gap-3 text-[10.5px] text-gray-500 bg-white/90 backdrop-blur-sm px-3 py-2 rounded-full z-10">
             <span className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-orange-500"></span>
-              Entry
+              <span className="w-1.5 h-1.5 rounded-full bg-[#FF5A3C]"></span>
+              Client
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-gray-900"></span>
-              Network
+              <span className="w-1.5 h-1.5 rounded-full bg-[#15161C]"></span>
+              Gateway
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-violet-500"></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-[#6A5AE0]"></span>
               Logic
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-              Storage
+              <span className="w-1.5 h-1.5 rounded-full bg-[#00A87E]"></span>
+              Integration
             </span>
           </div>
         )}
@@ -383,6 +450,16 @@ export function InteractiveWhiteboard({ diagram, learning, className, systemTitl
                 ))}
               </div>
               <button
+                onClick={() => setIsPlaying(!isPlaying)}
+                className={`text-xs font-semibold px-4 py-2 rounded-full border cursor-pointer ${
+                  isPlaying 
+                    ? 'bg-emerald-600 text-white border-emerald-600' 
+                    : 'bg-emerald-600 text-white border-emerald-600'
+                }`}
+              >
+                {isPlaying ? 'Pause' : 'Play ▶'}
+              </button>
+              <button
                 onClick={nextStep}
                 disabled={controllerState.progress.current === controllerState.progress.total}
                 className="text-xs font-semibold px-4 py-2 rounded-full border cursor-pointer bg-white text-gray-700 border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -396,35 +473,117 @@ export function InteractiveWhiteboard({ diagram, learning, className, systemTitl
         {/* Hover Annotation Tooltip */}
         {hoveredNodeId && annotPosition && mode === 'explore' && (
           <div
-            className="absolute z-20 bg-gray-900 text-white rounded-lg px-3 py-2 shadow-xl pointer-events-none"
+            className="absolute z-20 bg-[#15161C] text-white rounded-xl px-4 py-3 shadow-xl pointer-events-auto"
             style={{
-              left: annotPosition.x + 12,
-              top: annotPosition.y - 8,
-              transform: 'translateY(-100%)',
+              left: annotPosition.x + 14,
+              top: annotPosition.y,
+              transform: 'translateY(0)',
+              opacity: 1,
+              transition: 'opacity 0.18s ease, transform 0.18s ease',
             }}
           >
-            <div className="text-xs font-semibold">
+            <div className="text-xs font-bold mb-1">
               {nodesById.get(hoveredNodeId as any)?.data.title}
             </div>
-            <div className="text-[10px] text-white/70 mt-0.5 max-w-[200px] truncate">
-              {nodesById.get(hoveredNodeId as any)?.data.details.role || 'Component'}
+            <div className="text-[9.5px] text-white/50 uppercase tracking-wider mb-1.5">
+              {nodesById.get(hoveredNodeId as any)?.data.category || 'Component'}
+            </div>
+            <div className="text-[11.5px] text-white/75 leading-relaxed mb-2">
+              {nodesById.get(hoveredNodeId as any)?.data.details.role || 'System component'}
+            </div>
+            <div className="text-[9.5px] font-bold px-2 py-1 rounded-full inline-block mb-2 bg-emerald-500/20 text-emerald-400">
+              Not a SPOF
+            </div>
+            <div 
+              className="text-xs font-bold text-emerald-400 cursor-pointer"
+              onClick={() => handleSelectNode(hoveredNodeId as any)}
+            >
+              See full breakdown →
             </div>
           </div>
         )}
         </div>
       </main>
 
-      {/* Side Inspector */}
-      <aside className="w-80 lg:w-96 border-l border-gray-200 bg-white shrink-0 z-20">
-        <DetailsPanel
-          node={focusedNode}
-          isOpen={focusedNodeId !== null}
-          onClose={handleCloseDetails}
-          systemTitle={systemTitle}
-          systemDescription={systemDescription}
-          scenarioCount={getAllScenarios().length}
-        />
-      </aside>
+      {/* Bottom Sheet */}
+      {focusedNodeId && (
+        <div className="fixed inset-x-0 bottom-0 z-40 bg-white rounded-t-3xl shadow-2xl border-t border-gray-200 max-h-[78vh] overflow-y-auto max-w-[520px] mx-auto left-0 right-0 transform transition-transform duration-[350ms] cubic-bezier(0.34,1.1,0.64,1) translate-y-0">
+          <div className="w-9 h-1 bg-gray-300 rounded-full mx-auto my-4" />
+          <div className="px-6 pb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <div
+                className="w-9 h-9 rounded-lg flex items-center justify-center text-white flex-shrink-0"
+                style={{ backgroundColor: CATEGORY_COLORS[focusedNode?.category as keyof typeof CATEGORY_COLORS] || '#15161C' }}
+              >
+                <div className="w-4 h-4 rounded-full border-2 border-current opacity-80" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-base">{focusedNode?.title}</h3>
+                <p className="text-xs text-gray-500 font-medium">
+                  {focusedNode?.category}
+                </p>
+              </div>
+              <button
+                onClick={handleCloseDetails}
+                className="w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors"
+                aria-label="Close details"
+              >
+                ×
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block mb-1">
+                  Purpose
+                </span>
+                <p className="text-xs text-gray-500 leading-relaxed">
+                  {focusedNode?.details.role}
+                </p>
+              </div>
+              {focusedNode?.details.deepDive && (
+                <div>
+                  <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block mb-1">
+                    Why we need it
+                  </span>
+                  <p className="text-xs text-gray-500 leading-relaxed">
+                    {focusedNode.details.deepDive}
+                  </p>
+                </div>
+              )}
+              {focusedNode?.details.failureModes && (
+                <div>
+                  <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block mb-1">
+                    If it fails
+                  </span>
+                  <p className="text-xs text-gray-500 leading-relaxed">
+                    {focusedNode.details.failureModes}
+                  </p>
+                </div>
+              )}
+              {focusedNode?.details.tradeoffs && (
+                <div>
+                  <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block mb-1">
+                    Tradeoffs
+                  </span>
+                  <p className="text-xs text-gray-500 leading-relaxed">
+                    {focusedNode.details.tradeoffs}
+                  </p>
+                </div>
+              )}
+              {focusedNode?.details.notes && (
+                <div>
+                  <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block mb-1">
+                    Notes
+                  </span>
+                  <p className="text-xs text-gray-500 leading-relaxed">
+                    {focusedNode.details.notes}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

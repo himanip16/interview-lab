@@ -23,13 +23,14 @@ export function calculateWhiteboardFrame(
   layout: NodeLayout[],
   config: WhiteboardConfig = DEFAULT_WHITEBOARD_CONFIG
 ): WhiteboardFrame {
-
-  validateDesign(design, layout, config);
-
   const layoutMap = new Map(layout.map(item => [item.nodeId, item]));
 
   const positionedNodes: PositionedNode[] = design.nodes.map(node => {
-    const position = layoutMap.get(node.id)!;
+    const position = layoutMap.get(node.id);
+    
+    if (!position) {
+      throw new Error(`[WhiteboardEngine] Missing layout coordinates for node: ${node.id}`);
+    }
 
     return {
       id: node.id,
@@ -51,18 +52,25 @@ export function calculateWhiteboardFrame(
 
   const nodeMap = new Map(positionedNodes.map(node => [node.id, node]));
 
-  const positionedEdges: PositionedEdge[] = design.edges.map(edge => {
-    const source = nodeMap.get(edge.from)!;
-    const target = nodeMap.get(edge.to)!;
+  const positionedEdges: PositionedEdge[] = [];
 
-    return {
+  for (const edge of design.edges) {
+    const source = nodeMap.get(edge.from);
+    const target = nodeMap.get(edge.to);
+
+    if (!source || !target) {
+      console.warn(`[WhiteboardEngine] Skipping dangling edge ${edge.id}: source or target node not found.`);
+      continue;
+    }
+
+    positionedEdges.push({
       id: edge.id,
       fromId: edge.from,
       toId: edge.to,
       start: getConnectionPoint(source, target),
       end: getConnectionPoint(target, source),
-    };
-  });
+    });
+  }
 
   return {
     nodes: positionedNodes,

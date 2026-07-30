@@ -183,6 +183,33 @@ export function EdgesLayer({
               pointerEvents="none"
             />
 
+            {/* Static colored dots on edges */}
+            {!isActive && (
+              <>
+                <circle
+                  cx={(edge.start.x + edge.end.x) / 2}
+                  cy={(edge.start.y + edge.end.y) / 2}
+                  r="4"
+                  fill="#FF5A3C"
+                  opacity="0.8"
+                />
+                <circle
+                  cx={(edge.start.x + edge.end.x) / 2 - 15}
+                  cy={(edge.start.y + edge.end.y) / 2}
+                  r="3"
+                  fill="#15161C"
+                  opacity="0.6"
+                />
+                <circle
+                  cx={(edge.start.x + edge.end.x) / 2 + 15}
+                  cy={(edge.start.y + edge.end.y) / 2}
+                  r="3"
+                  fill="#6A5AE0"
+                  opacity="0.6"
+                />
+              </>
+            )}
+
             {/* Animated moving dot for active edges */}
             {isActive && showAnimation && (
               <>
@@ -216,6 +243,35 @@ export function EdgesLayer({
                     path={`M${edge.start.x},${edge.start.y} L${edge.end.x},${edge.end.y}`}
                   />
                 </circle>
+                {/* Arrival pulse animation at destination */}
+                <rect
+                  x={edge.end.x - 60}
+                  y={edge.end.y - 24}
+                  width={120}
+                  height={48}
+                  rx={13}
+                  fill="none"
+                  stroke="var(--violet)"
+                  strokeWidth="2.5"
+                  opacity="0"
+                >
+                  <animate
+                    attributeName="opacity"
+                    values="1;0"
+                    dur="0.6s"
+                    begin="1.1s"
+                    fill="freeze"
+                  />
+                  <animateTransform
+                    attributeName="transform"
+                    type="scale"
+                    from="1"
+                    to="1.35"
+                    dur="0.6s"
+                    begin="1.1s"
+                    fill="freeze"
+                  />
+                </rect>
               </>
             )}
 
