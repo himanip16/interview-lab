@@ -1,6 +1,6 @@
 // src/features/learning/components/whiteboard/hooks/useCanvasViewport.ts
 
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import { DEFAULT_WHITEBOARD_CONFIG } from "@/features/whiteboard/config";
 
 const CANVAS_W = DEFAULT_WHITEBOARD_CONFIG.canvasWidth;
@@ -40,9 +40,17 @@ export function useCanvasViewport(): UseCanvasViewportReturn {
     height: CANVAS_H,
   });
 
+  // Ref-based state for high-frequency updates
+  const viewBoxRef = useRef<ViewBox>(viewBox);
   const svgRef = useRef<SVGSVGElement>(null);
   const isPanning = useRef(false);
   const lastPointer = useRef<{ x: number; y: number } | null>(null);
+  const rafPending = useRef(false);
+
+  // Sync ref to state
+  useEffect(() => {
+    viewBoxRef.current = viewBox;
+  }, [viewBox]);
 
   const screenToViewBox = useCallback((clientX: number, clientY: number) => {
     const svg = svgRef.current;
@@ -52,10 +60,20 @@ export function useCanvasViewport(): UseCanvasViewportReturn {
     const ratioX = (clientX - rect.left) / rect.width;
     const ratioY = (clientY - rect.top) / rect.height;
     return {
-      x: viewBox.x + ratioX * viewBox.width,
-      y: viewBox.y + ratioY * viewBox.height,
+      x: viewBoxRef.current.x + ratioX * viewBoxRef.current.width,
+      y: viewBoxRef.current.y + ratioY * viewBoxRef.current.height,
     };
-  }, [viewBox]);
+  }, []);
+
+  // Schedule React state update via rAF
+  const scheduleUpdate = useCallback(() => {
+    if (rafPending.current) return;
+    rafPending.current = true;
+    requestAnimationFrame(() => {
+      setViewBox(viewBoxRef.current);
+      rafPending.current = false;
+    });
+  }, []);
 
   const clampViewBox = useCallback((x: number, y: number, width: number, height: number): ViewBox => {
     // Clamp to prevent dragging into infinite empty space
@@ -77,20 +95,24 @@ export function useCanvasViewport(): UseCanvasViewportReturn {
     const zoomPoint = screenToViewBox(e.clientX, e.clientY);
     const zoomFactor = e.deltaY > 0 ? 1.1 : 1 / 1.1;
 
-    setViewBox((prev) => {
-      const newWidth = Math.min(MAX_VIEW_W, Math.max(MIN_VIEW_W, prev.width * zoomFactor));
-      const scale = newWidth / prev.width;
-      const newHeight = prev.height * scale;
-      const newX = zoomPoint.x - (zoomPoint.x - prev.x) * scale;
-      const newY = zoomPoint.y - (zoomPoint.y - prev.y) * scale;
-      return clampViewBox(newX, newY, newWidth, newHeight);
-    });
-  }, [screenToViewBox, clampViewBox]);
+    const current = viewBoxRef.current;
+    const newWidth = Math.min(MAX_VIEW_W, Math.max(MIN_VIEW_W, current.width * zoomFactor));
+    const scale = newWidth / current.width;
+    const newHeight = current.height * scale;
+    const newX = zoomPoint.x - (zoomPoint.x - current.x) * scale;
+    const newY = zoomPoint.y - (zoomPoint.y - current.y) * scale;
+    
+    viewBoxRef.current = clampViewBox(newX, newY, newWidth, newHeight);
+    scheduleUpdate();
+  }, [screenToViewBox, clampViewBox, scheduleUpdate]);
 
   const handlePointerDown = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
-    // Allow panning on background, but not on nodes
+    // Decouple from DOM inspection - only pan if on background
     const target = e.target as SVGElement;
-    if (target.closest("g[role='button']") || target.closest("g.nodes-layer")) return;
+    const isBackground = target === e.currentTarget || 
+      (target as unknown as HTMLElement)?.dataset?.canvasBackground === "true";
+    
+    if (!isBackground) return;
     
     e.preventDefault();
     isPanning.current = true;
@@ -108,20 +130,19 @@ export function useCanvasViewport(): UseCanvasViewportReturn {
 
     const dxScreen = e.clientX - lastPointer.current.x;
     const dyScreen = e.clientY - lastPointer.current.y;
-    const dxView = (dxScreen / rect.width) * viewBox.width;
-    const dyView = (dyScreen / rect.height) * viewBox.height;
+    const current = viewBoxRef.current;
+    const dxView = (dxScreen / rect.width) * current.width;
+    const dyView = (dyScreen / rect.height) * current.height;
 
-    setViewBox((prev) => {
-      const clamped = clampViewBox(
-        prev.x - dxView,
-        prev.y - dyView,
-        prev.width,
-        prev.height
-      );
-      return clamped;
-    });
+    viewBoxRef.current = clampViewBox(
+      current.x - dxView,
+      current.y - dyView,
+      current.width,
+      current.height
+    );
+    scheduleUpdate();
     lastPointer.current = { x: e.clientX, y: e.clientY };
-  }, [viewBox.width, viewBox.height, clampViewBox]);
+  }, [clampViewBox, scheduleUpdate]);
 
   const handlePointerUp = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
     isPanning.current = false;
@@ -130,13 +151,16 @@ export function useCanvasViewport(): UseCanvasViewportReturn {
   }, []);
 
   const resetView = useCallback(() => {
-    setViewBox({ x: 0, y: 0, width: CANVAS_W, height: CANVAS_H });
-  }, []);
+    viewBoxRef.current = { x: 0, y: 0, width: CANVAS_W, height: CANVAS_H };
+    scheduleUpdate();
+  }, [scheduleUpdate]);
 
   const fitToScreen = useCallback((nodes: Array<{ x: number; y: number; width: number; height: number }>) => {
     if (nodes.length === 0) return;
     
     const padding = 100;
+    // Fix coordinate math: use explicit top-left anchor extents
+    // Nodes are positioned by center (x, y), so convert to top-left for bounds
     const minX = Math.min(...nodes.map(n => n.x - n.width / 2)) - padding;
     const maxX = Math.max(...nodes.map(n => n.x + n.width / 2)) + padding;
     const minY = Math.min(...nodes.map(n => n.y - n.height / 2)) - padding;
@@ -158,29 +182,48 @@ export function useCanvasViewport(): UseCanvasViewportReturn {
     const centerX = (minX + maxX) / 2;
     const centerY = (minY + maxY) / 2;
     
-    setViewBox({
+    viewBoxRef.current = {
       x: centerX - newWidth / 2,
       y: centerY - newHeight / 2,
       width: newWidth,
       height: newHeight,
-    });
-  }, []);
+    };
+    scheduleUpdate();
+  }, [scheduleUpdate]);
 
   const zoomIn = useCallback(() => {
-    setViewBox(prev => ({
-      ...prev,
-      width: Math.max(MIN_VIEW_W, prev.width * 0.85),
-      height: prev.height * 0.85,
-    }));
-  }, []);
+    const current = viewBoxRef.current;
+    const newWidth = Math.max(MIN_VIEW_W, current.width * 0.85);
+    const scale = newWidth / current.width;
+    const newHeight = current.height * scale;
+    const centerX = current.x + current.width / 2;
+    const centerY = current.y + current.height / 2;
+    
+    viewBoxRef.current = {
+      x: centerX - newWidth / 2,
+      y: centerY - newHeight / 2,
+      width: newWidth,
+      height: newHeight,
+    };
+    scheduleUpdate();
+  }, [scheduleUpdate]);
 
   const zoomOut = useCallback(() => {
-    setViewBox(prev => ({
-      ...prev,
-      width: Math.min(MAX_VIEW_W, prev.width * 1.15),
-      height: prev.height * 1.15,
-    }));
-  }, []);
+    const current = viewBoxRef.current;
+    const newWidth = Math.min(MAX_VIEW_W, current.width * 1.15);
+    const scale = newWidth / current.width;
+    const newHeight = current.height * scale;
+    const centerX = current.x + current.width / 2;
+    const centerY = current.y + current.height / 2;
+    
+    viewBoxRef.current = {
+      x: centerX - newWidth / 2,
+      y: centerY - newHeight / 2,
+      width: newWidth,
+      height: newHeight,
+    };
+    scheduleUpdate();
+  }, [scheduleUpdate]);
 
   return {
     viewBox,

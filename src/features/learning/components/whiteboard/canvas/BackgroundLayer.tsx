@@ -14,7 +14,7 @@ export function BackgroundLayer({
   const patternId = React.useId();
 
   return (
-    <g>
+    <g data-canvas-background="true">
       <defs>
         <pattern
           id={patternId}
@@ -37,6 +37,7 @@ export function BackgroundLayer({
         width={width * 3}
         height={height * 3}
         fill={`url(#${patternId})`}
+        data-canvas-background="true"
       />
     </g>
   );

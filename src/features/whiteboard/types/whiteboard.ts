@@ -114,6 +114,12 @@ export interface ScenarioStep {
   narration: string;  // What happens in this step (context-specific)
   waitForUser: boolean;  // true = manual advance, false = auto
   nextStepId?: string;  // For branching scenarios
+  // Edge annotation for spatially-attached explanations
+  edgeAnnotation?: {
+    title: string;  // Short title for the edge (e.g., "Find nearby drivers")
+    description: string;  // What the edge represents
+    concepts?: string[];  // Technical concepts to highlight
+  };
 }
 
 /**

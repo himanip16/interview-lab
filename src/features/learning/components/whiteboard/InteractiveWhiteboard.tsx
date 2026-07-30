@@ -9,7 +9,6 @@ import { WhiteboardFrame, NodeId, Scenario } from "@/features/whiteboard/types/w
 import { DEFAULT_WHITEBOARD_CONFIG } from "@/features/whiteboard/config";
 
 import { DetailsPanel } from "./DetailsPanel";
-import { WalkthroughCallout } from "./WalkthroughCallout";
 
 import { BackgroundLayer } from "./canvas/BackgroundLayer";
 import { EdgesLayer } from "./canvas/EdgesLayer";
@@ -19,7 +18,6 @@ import { NavigationHintsLayer } from "./canvas/NavigationHintsLayer";
 
 import { useCanvasViewport } from "./hooks/useCanvasViewport";
 import { useWhiteboardController } from "./hooks/useWhiteboardController";
-import { useScenarioPlayback } from "./hooks/useScenarioPlayback";
 import { useNodeInteraction } from "./hooks/useNodeInteraction";
 
 
@@ -32,6 +30,7 @@ interface InteractiveWhiteboardProps {
 }
 
 const CANVAS_W = DEFAULT_WHITEBOARD_CONFIG.canvasWidth;
+const CANVAS_H = DEFAULT_WHITEBOARD_CONFIG.canvasHeight;
 
 type WhiteboardMode = 'explore' | 'flows';
 
@@ -83,13 +82,6 @@ export function InteractiveWhiteboard({ diagram, learning, className, systemTitl
     clearHover,
   } = useNodeInteraction(mode);
 
-  // Playback hook
-  const { isPlaying, playPause, stop: stopPlayback } = useScenarioPlayback(
-    nextStep,
-    () => controllerState.currentStep !== null,
-    2100
-  );
-
   // Get current focus state
   const focusedNodeId =
     controllerState.focusState.type === "idle"
@@ -116,23 +108,6 @@ export function InteractiveWhiteboard({ diagram, learning, className, systemTitl
     return edge?.id;
   }, [currentStep, diagram.edges]);
 
-  // Calculate callout position - use nodesById for performance
-  const calloutPosition = useMemo(() => {
-    if (!activeNodeId || !currentStep) return null;
-    const node = nodesById.get(activeNodeId);
-    if (!node) return null;
-
-    // Convert viewBox coordinates to screen coordinates
-    const svg = svgRef.current;
-    if (!svg) return null;
-    const rect = svg.getBoundingClientRect();
-
-    const screenX = ((node.x - viewBox.x) / viewBox.width) * rect.width + rect.left;
-    const screenY = ((node.y - viewBox.y) / viewBox.height) * rect.height + rect.top;
-
-    return { x: screenX, y: screenY };
-  }, [activeNodeId, currentStep, nodesById, viewBox]);
-
   // Node selection
   const handleSelectNode = useCallback((nodeId: NodeId) => {
     focusNode(nodeId);
@@ -146,8 +121,7 @@ export function InteractiveWhiteboard({ diagram, learning, className, systemTitl
     } else {
       startScenario(scenarioId);
     }
-    stopPlayback();
-  }, [startScenario, exitScenario, stopPlayback]);
+  }, [startScenario, exitScenario]);
 
   const handleCloseDetails = useCallback(() => {
     clearFocus();
@@ -166,7 +140,12 @@ export function InteractiveWhiteboard({ diagram, learning, className, systemTitl
     if (activeNodeId) {
       const node = nodesById.get(activeNodeId);
       if (node) {
-        fitToScreen([node]);
+        fitToScreen([{
+          x: node.x,
+          y: node.y,
+          width: node.width,
+          height: node.height,
+        }]);
       }
     }
   }, [activeNodeId, nodesById, fitToScreen]);
@@ -174,7 +153,12 @@ export function InteractiveWhiteboard({ diagram, learning, className, systemTitl
   // Initial fit to screen when diagram loads
   useEffect(() => {
     if (diagram.nodes.length > 0) {
-      fitToScreen(diagram.nodes);
+      fitToScreen(diagram.nodes.map(node => ({
+        x: node.x,
+        y: node.y,
+        width: node.width,
+        height: node.height,
+      })));
     }
   }, [diagram.nodes, fitToScreen]);
 
@@ -210,7 +194,7 @@ export function InteractiveWhiteboard({ diagram, learning, className, systemTitl
             onPointerLeave={viewportHandlers.onPointerLeave}
           >
             {/* Layer 1: Background */}
-            <BackgroundLayer width={CANVAS_W} height={CANVAS_W} />
+            <BackgroundLayer width={CANVAS_W} height={CANVAS_H} />
 
             {/* Layer 2: Edges */}
             <EdgesLayer
@@ -222,6 +206,7 @@ export function InteractiveWhiteboard({ diagram, learning, className, systemTitl
               onEdgeHover={handleEdgeHover}
               hoveredEdgeId={hoveredEdgeId}
               showAnimation={mode === 'flows'}
+              edgeAnnotation={currentStep?.edgeAnnotation}
             />
 
             {/* Layer 3: Nodes */}
@@ -375,51 +360,35 @@ export function InteractiveWhiteboard({ diagram, learning, className, systemTitl
         {/* Flow Controls Bottom Overlay */}
         {mode === 'flows' && controllerState.currentScenario && (
           <div className="absolute bottom-0 left-0 right-0 z-10 p-4 bg-gradient-to-t from-gray-50 to-transparent">
-            <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm max-w-lg mx-auto">
-              <div className="text-[10.5px] font-bold text-violet-500 uppercase tracking-wider mb-1">
-                Step {controllerState.progress.current} of {controllerState.progress.total}
+            <div className="bg-white rounded-full px-6 py-3 border border-gray-100 shadow-sm max-w-md mx-auto flex items-center justify-between gap-4">
+              <button
+                onClick={previousStep}
+                disabled={controllerState.progress.current === 1}
+                className="text-xs font-semibold px-4 py-2 rounded-full border cursor-pointer bg-white text-gray-700 border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                ← Prev
+              </button>
+              <div className="flex gap-1.5">
+                {Array.from({ length: controllerState.progress.total }).map((_, i) => (
+                  <div
+                    key={i}
+                    className={`w-2 h-2 rounded-full ${
+                      i < controllerState.progress.current - 1
+                        ? 'bg-emerald-600'
+                        : i === controllerState.progress.current - 1
+                        ? 'bg-violet-500'
+                        : 'bg-gray-200'
+                    }`}
+                  />
+                ))}
               </div>
-              <p className="text-sm text-gray-700 mb-3">
-                {currentStep?.narration || 'Follow the journey through the system.'}
-              </p>
-              <div className="flex items-center justify-between gap-2">
-                <button
-                  onClick={previousStep}
-                  className="text-xs font-semibold px-4 py-2 rounded-full border cursor-pointer bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
-                >
-                  ← Prev
-                </button>
-                <div className="flex gap-1">
-                  {Array.from({ length: controllerState.progress.total }).map((_, i) => (
-                    <div
-                      key={i}
-                      className={`w-1.5 h-1.5 rounded-full ${
-                        i < controllerState.progress.current - 1
-                          ? 'bg-emerald-600'
-                          : i === controllerState.progress.current - 1
-                          ? 'bg-violet-500'
-                          : 'bg-gray-200'
-                      }`}
-                    />
-                  ))}
-                </div>
-                <button
-                  onClick={playPause}
-                  className={`text-xs font-semibold px-4 py-2 rounded-full cursor-pointer ${
-                    isPlaying
-                      ? 'bg-gray-200 text-gray-700'
-                      : 'bg-emerald-600 text-white'
-                  }`}
-                >
-                  {isPlaying ? 'Pause' : 'Play ▶'}
-                </button>
-                <button
-                  onClick={nextStep}
-                  className="text-xs font-semibold px-4 py-2 rounded-full border cursor-pointer bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
-                >
-                  Next →
-                </button>
-              </div>
+              <button
+                onClick={nextStep}
+                disabled={controllerState.progress.current === controllerState.progress.total}
+                className="text-xs font-semibold px-4 py-2 rounded-full border cursor-pointer bg-white text-gray-700 border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next →
+              </button>
             </div>
           </div>
         )}
@@ -441,19 +410,6 @@ export function InteractiveWhiteboard({ diagram, learning, className, systemTitl
               {nodesById.get(hoveredNodeId as any)?.data.details.role || 'Component'}
             </div>
           </div>
-        )}
-
-        {/* Walkthrough Callout (HTML overlay) */}
-        {currentStep && focusedNode && calloutPosition && (
-          <WalkthroughCallout
-            step={currentStep}
-            node={focusedNode}
-            progress={controllerState.progress}
-            onPrevious={previousStep}
-            onNext={nextStep}
-            onExit={exitScenario}
-            position={calloutPosition}
-          />
         )}
         </div>
       </main>

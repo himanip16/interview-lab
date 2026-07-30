@@ -16,6 +16,12 @@ interface EdgeStyle {
   opacity?: number;
 }
 
+interface EdgeAnnotation {
+  title: string;
+  description: string;
+  concepts?: string[];
+}
+
 interface EdgesLayerProps {
   edges: PositionedEdge[];
   activeEdgeId?: string;
@@ -25,6 +31,7 @@ interface EdgesLayerProps {
   onEdgeHover?: (edgeId: string | null) => void;
   hoveredEdgeId?: string;
   showAnimation?: boolean;
+  edgeAnnotation?: EdgeAnnotation;
 }
 
 // Check if edge is active (bidirectional matching)
@@ -75,6 +82,7 @@ export function EdgesLayer({
   onEdgeHover,
   hoveredEdgeId,
   showAnimation = false,
+  edgeAnnotation,
 }: EdgesLayerProps) {
   // Memoize active edge calculations for performance
   const edgeStates = useMemo(() => {
@@ -209,6 +217,45 @@ export function EdgesLayer({
                   />
                 </circle>
               </>
+            )}
+
+            {/* Edge annotation label for active edge */}
+            {isActive && edgeAnnotation && (
+              <g
+                transform={`translate(${(edge.start.x + edge.end.x) / 2}, ${(edge.start.y + edge.end.y) / 2})`}
+              >
+                <foreignObject
+                  x="-80"
+                  y="-40"
+                  width="160"
+                  height="80"
+                  overflow="visible"
+                >
+                  <div
+                    className="bg-white rounded-lg shadow-lg border border-gray-200 p-3 pointer-events-none"
+                    style={{ fontSize: '11px', fontFamily: 'system-ui, sans-serif' }}
+                  >
+                    <div className="font-semibold text-gray-900 mb-1">
+                      {edgeAnnotation.title}
+                    </div>
+                    <div className="text-gray-600 leading-relaxed mb-2">
+                      {edgeAnnotation.description}
+                    </div>
+                    {edgeAnnotation.concepts && edgeAnnotation.concepts.length > 0 && (
+                      <div className="flex gap-1 flex-wrap">
+                        {edgeAnnotation.concepts.map((concept, i) => (
+                          <span
+                            key={i}
+                            className="bg-violet-100 text-violet-700 px-2 py-0.5 rounded text-[10px]"
+                          >
+                            {concept}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </foreignObject>
+              </g>
             )}
           </g>
         );
