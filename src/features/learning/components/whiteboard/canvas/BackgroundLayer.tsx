@@ -14,7 +14,7 @@ export function BackgroundLayer({
   const patternId = React.useId();
 
   return (
-    <svg width={width} height={height}>
+    <g>
       <defs>
         <pattern
           id={patternId}
@@ -32,10 +32,12 @@ export function BackgroundLayer({
       </defs>
 
       <rect
-        width="100%"
-        height="100%"
+        x={-width}
+        y={-height}
+        width={width * 3}
+        height={height * 3}
         fill={`url(#${patternId})`}
       />
-    </svg>
+    </g>
   );
 }

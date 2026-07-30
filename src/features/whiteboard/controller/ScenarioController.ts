@@ -16,11 +16,14 @@ import {
  * - Controller owns the walkthrough logic
  * - Renderer simply renders the state given to it
  * - This allows features like autoplay, branching, search without touching rendering
+ * 
+ * Observable pattern: Components can subscribe to state changes instead of polling
  */
 export class ScenarioController {
   private state: ScenarioControllerState;
   private scenarios: Map<string, Scenario>;
   private nodes: Map<string, DiagramNode>;
+  private listeners: Set<(state: ScenarioControllerState) => void> = new Set();
 
   constructor(scenarios: Scenario[], nodes: DiagramNode[]) {
     this.scenarios = new Map(scenarios.map((s) => [s.id, s]));
@@ -31,6 +34,24 @@ export class ScenarioController {
       focusState: { type: "idle" },
       progress: { current: 0, total: 0 },
     };
+  }
+
+  /**
+   * Subscribe to state changes
+   * Returns an unsubscribe function
+   */
+  subscribe(listener: (state: ScenarioControllerState) => void): () => void {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  /**
+   * Notify all listeners of state changes
+   */
+  private notify(): void {
+    this.listeners.forEach((listener) => listener(this.state));
   }
 
   /**
@@ -54,6 +75,7 @@ export class ScenarioController {
       },
       progress: { current: 1, total: scenario.steps.length },
     };
+    this.notify();
   }
 
   /**
@@ -78,6 +100,7 @@ export class ScenarioController {
       stepId: nextStep.id,
     };
     this.state.progress.current++;
+    this.notify();
   }
 
   /**
@@ -100,6 +123,7 @@ export class ScenarioController {
       stepId: prevStep.id,
     };
     this.state.progress.current--;
+    this.notify();
   }
 
   /**
@@ -120,6 +144,7 @@ export class ScenarioController {
       (s) => s.id === stepId
     );
     this.state.progress.current = currentIndex + 1;
+    this.notify();
   }
 
   /**
@@ -127,6 +152,7 @@ export class ScenarioController {
    */
   focusNode(nodeId: NodeId): void {
     this.state.focusState = { type: "focused", nodeId };
+    this.notify();
   }
 
   /**
@@ -134,6 +160,7 @@ export class ScenarioController {
    */
   clearFocus(): void {
     this.state.focusState = { type: "idle" };
+    this.notify();
   }
 
   /**
@@ -146,6 +173,7 @@ export class ScenarioController {
       focusState: { type: "idle" },
       progress: { current: 0, total: 0 },
     };
+    this.notify();
   }
 
   /**

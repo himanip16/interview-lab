@@ -24,6 +24,7 @@ interface EdgesLayerProps {
   onEdgeClick?: (edgeId: string) => void;
   onEdgeHover?: (edgeId: string | null) => void;
   hoveredEdgeId?: string;
+  showAnimation?: boolean;
 }
 
 // Check if edge is active (bidirectional matching)
@@ -73,6 +74,7 @@ export function EdgesLayer({
   onEdgeClick,
   onEdgeHover,
   hoveredEdgeId,
+  showAnimation = false,
 }: EdgesLayerProps) {
   // Memoize active edge calculations for performance
   const edgeStates = useMemo(() => {
@@ -172,6 +174,42 @@ export function EdgesLayer({
               className={isActive ? "animate-flow" : ""}
               pointerEvents="none"
             />
+
+            {/* Animated moving dot for active edges */}
+            {isActive && showAnimation && (
+              <>
+                <circle
+                  r="11"
+                  fill="rgba(106,90,224,0.28)"
+                  cx={edge.start.x}
+                  cy={edge.start.y}
+                >
+                  <animateMotion
+                    dur="1.1s"
+                    fill="freeze"
+                    calcMode="spline"
+                    keyTimes="0;1"
+                    keySplines="0.3 0 0.15 1"
+                    path={`M${edge.start.x},${edge.start.y} L${edge.end.x},${edge.end.y}`}
+                  />
+                </circle>
+                <circle
+                  r="6"
+                  fill="var(--violet)"
+                  cx={edge.start.x}
+                  cy={edge.start.y}
+                >
+                  <animateMotion
+                    dur="1.1s"
+                    fill="freeze"
+                    calcMode="spline"
+                    keyTimes="0;1"
+                    keySplines="0.3 0 0.15 1"
+                    path={`M${edge.start.x},${edge.start.y} L${edge.end.x},${edge.end.y}`}
+                  />
+                </circle>
+              </>
+            )}
           </g>
         );
       })}

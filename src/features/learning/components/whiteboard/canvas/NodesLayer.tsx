@@ -9,6 +9,7 @@ interface NodesLayerProps {
   focusedNodeId: NodeId | null;
   activeNodeId: NodeId | null;
   onSelectNode: (nodeId: NodeId) => void;
+  onNodeHover?: (nodeId: string | null, position?: { x: number; y: number }) => void;
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -24,6 +25,7 @@ export function NodesLayer({
   focusedNodeId,
   activeNodeId,
   onSelectNode,
+  onNodeHover,
 }: NodesLayerProps) {
   return (
     <g className="nodes-layer">
@@ -40,6 +42,8 @@ export function NodesLayer({
             key={node.data.id}
             transform={`translate(${left}, ${top})`}
             onClick={() => onSelectNode(node.data.id)}
+            onMouseEnter={() => onNodeHover?.(node.data.id, { x: node.x + node.width / 2, y: node.y })}
+            onMouseLeave={() => onNodeHover?.(null)}
             role="button"
             aria-label={`Inspect ${node.data.title}`}
             aria-pressed={isFocused || isActive}

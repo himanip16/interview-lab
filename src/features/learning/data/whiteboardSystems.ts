@@ -1,5 +1,8 @@
 // src/features/learning/data/whiteboardSystems.ts
 
+import { Scenario } from "@/features/whiteboard/types/whiteboard";
+import { UBER_SCENARIOS, URL_SHORTENER_SCENARIOS } from "./scenarios";
+
 export interface WhiteboardNode {
   id: string;
   title: string;
@@ -21,6 +24,7 @@ export interface WhiteboardSystem {
   flows: number;
   mark: string;
   nodes: WhiteboardNode[];
+  scenarios?: Scenario[];
 }
 
 // TODO: this static map is a placeholder until whiteboard systems are
@@ -35,6 +39,7 @@ export const WHITEBOARD_SYSTEMS: Record<string, WhiteboardSystem> = {
     comps: 4,
     flows: 2,
     mark: `<circle cx="12" cy="32" r="6" fill="#FF5A3C"/><circle cx="52" cy="32" r="6" fill="#FF5A3C"/><circle cx="32" cy="14" r="6" fill="#15161C"/><circle cx="32" cy="50" r="6" fill="#6A5AE0"/><path d="M12 32L32 14M52 32L32 14M32 14L32 50" stroke="#15161C" stroke-width="1.5" opacity=".25"/>`,
+    scenarios: URL_SHORTENER_SCENARIOS,
     nodes: [
       {
         id: "client",
@@ -90,7 +95,97 @@ export const WHITEBOARD_SYSTEMS: Record<string, WhiteboardSystem> = {
     comps: 7,
     flows: 3,
     mark: `<circle cx="12" cy="32" r="6" fill="#FF5A3C"/><circle cx="52" cy="32" r="6" fill="#FF5A3C"/><circle cx="32" cy="14" r="6" fill="#15161C"/><circle cx="32" cy="50" r="6" fill="#6A5AE0"/><path d="M12 32L32 14M52 32L32 14M32 14L32 50" stroke="#15161C" stroke-width="1.5" opacity=".25"/>`,
-    nodes: [],
+    scenarios: UBER_SCENARIOS,
+    nodes: [
+      {
+        id: "user-app",
+        title: "User app",
+        kind: "Client · entry point",
+        color: "var(--coral)",
+        role: "Rider's mobile app for requesting rides, viewing driver details, and tracking trip progress.",
+        deep: "Uses location services for pickup/dropoff, stores ride history locally, and handles real-time updates via websockets.",
+        failure: "If network fails, app queues requests and retries when connection is restored. Shows cached driver data when offline.",
+        tradeoffs: "Native apps provide better performance but require separate development for iOS/Android. Web version would be universal but less performant.",
+        position: { top: "100px", left: "200px" },
+      },
+      {
+        id: "driver-app",
+        title: "Driver app",
+        kind: "Client · entry point",
+        color: "var(--coral)",
+        role: "Driver's mobile app for receiving ride requests, navigation, and trip management.",
+        deep: "Continuously streams driver location to backend, receives ride offers with surge pricing info, and integrates with mapping for navigation.",
+        failure: "If location service fails, driver can't receive ride requests. App falls back to manual status updates until location is restored.",
+        tradeoffs: "Background location tracking drains battery, but is essential for real-time matching. App optimizes by batching location updates.",
+        position: { top: "100px", right: "200px" },
+      },
+      {
+        id: "api-gateway",
+        title: "API gateway",
+        kind: "Gateway · routing",
+        color: "var(--ink)",
+        role: "Single entry point for all API requests - handles authentication, rate limiting, and routing to appropriate services.",
+        deep: "Implements JWT authentication, per-user rate limits to prevent abuse, and routes requests based on API version and endpoint.",
+        failure: "Stateless design allows horizontal scaling. If one instance fails, load balancer redirects traffic to healthy instances.",
+        tradeoffs: "Adds a network hop but centralizes cross-cutting concerns like auth and rate limiting, avoiding duplication across services.",
+        position: { top: "300px", left: "50%", transform: "translateX(-50%)" },
+      },
+      {
+        id: "ride-service",
+        title: "Ride service",
+        kind: "Service · core logic",
+        color: "var(--violet)",
+        role: "Core business logic for ride lifecycle - creates ride requests, matches drivers, tracks trip state, and handles payments.",
+        deep: "Manages ride state machine (requested, matched, arrived, in_progress, completed), integrates with payment gateway, and stores ride history.",
+        failure: "If service crashes during active ride, state is recovered from database. In-memory state is periodically persisted for crash recovery.",
+        tradeoffs: "Could split into separate services (matching, payments), but keeping ride lifecycle together simplifies transaction management.",
+        position: { top: "500px", left: "300px" },
+      },
+      {
+        id: "dispatch-service",
+        title: "Dispatch service",
+        kind: "Service · core logic",
+        color: "var(--violet)",
+        role: "Real-time driver matching algorithm - finds nearby drivers, ranks them, and sends ride offers.",
+        deep: "Uses geospatial queries to find drivers within radius, ranks by distance/rating/acceptance rate, and handles offer expiration.",
+        failure: "If dispatch fails, ride service retries matching. Failed matches are logged for analysis and potential algorithm improvements.",
+        tradeoffs: "Centralized matching is simpler but can become bottleneck. Could use distributed matching but adds complexity.",
+        position: { top: "500px", right: "300px" },
+      },
+      {
+        id: "location-service",
+        title: "Location service",
+        kind: "Service · infrastructure",
+        color: "var(--violet)",
+        role: "Manages real-time location tracking for drivers and provides geospatial queries for matching.",
+        deep: "Uses geospatial database (PostGIS) for efficient radius queries, maintains driver location cache, and handles location update streams.",
+        failure: "Location data is ephemeral - temporary loss is acceptable. Service recovers by re-subscribing to driver location streams.",
+        tradeoffs: "In-memory cache provides fast reads but needs periodic persistence. Could use dedicated geospatial DB but adds operational complexity.",
+        position: { top: "700px", left: "50%", transform: "translateX(-50%)" },
+      },
+      {
+        id: "pricing-service",
+        title: "Pricing service",
+        kind: "Service · core logic",
+        color: "var(--violet)",
+        role: "Calculates dynamic pricing based on distance, time, and real-time supply-demand (surge pricing).",
+        deep: "Integrates with mapping service for distance/time estimates, calculates base fare, applies surge multiplier based on area demand.",
+        failure: "If pricing service is down, falls back to standard pricing. Surge pricing failures don't block ride requests.",
+        tradeoffs: "Real-time surge pricing can maximize revenue but may alienate customers. Could use ML for smarter pricing but adds complexity.",
+        position: { top: "900px", left: "300px" },
+      },
+      {
+        id: "database",
+        title: "Database",
+        kind: "Storage · relational",
+        color: "var(--mint-deep)",
+        role: "Persistent storage for ride history, user profiles, driver information, and transaction records.",
+        deep: "Uses relational database for ACID transactions on ride bookings, with read replicas for analytics queries.",
+        failure: "Multi-region replication ensures durability. If primary fails, replica is promoted with minimal downtime.",
+        tradeoffs: "Relational DB provides strong consistency but may limit horizontal scaling. Could use NoSQL for specific workloads.",
+        position: { top: "900px", right: "300px" },
+      },
+    ],
   },
   "twitter": {
     slug: "twitter",

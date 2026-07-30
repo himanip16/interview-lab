@@ -4,6 +4,14 @@ import React from "react";
 import { DiagramNode } from "@/features/whiteboard/types/whiteboard";
 import { cn } from "@/shared/utils/utils";
 
+const CATEGORY_COLORS = {
+  entry: "#FF5A3C",
+  logic: "#6A5AE0",
+  storage: "#00A87E",
+  queue: "#E8940A",
+  network: "#15161C",
+} as const;
+
 interface DetailsPanelProps {
   node: DiagramNode | null;
   isOpen: boolean;
@@ -11,6 +19,26 @@ interface DetailsPanelProps {
   systemTitle?: string;
   systemDescription?: string;
   scenarioCount?: number;
+}
+
+function PanelBody({ node, onClose, systemTitle, systemDescription, scenarioCount, isMobile }: {
+  node: DiagramNode | null;
+  onClose: () => void;
+  systemTitle: string;
+  systemDescription: string;
+  scenarioCount: number;
+  isMobile?: boolean;
+}) {
+  return node ? (
+    <DetailsPanelContent node={node} onClose={onClose} isMobile={isMobile} />
+  ) : (
+    <DefaultContent 
+      systemTitle={systemTitle}
+      systemDescription={systemDescription}
+      scenarioCount={scenarioCount}
+      isMobile={isMobile}
+    />
+  );
 }
 
 export function DetailsPanel({ 
@@ -27,37 +55,39 @@ export function DetailsPanel({
     <>
       {/* Desktop: Right sidebar */}
       <div className="hidden xl:block w-[320px] shrink-0">
-        <div className="sticky top-4">
-          {node ? (
-            <DetailsPanelContent node={node} onClose={onClose} />
-          ) : (
-            <DefaultContent 
-              systemTitle={systemTitle}
-              systemDescription={systemDescription}
-              scenarioCount={scenarioCount}
-            />
-          )}
+        <div className="sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto">
+          <PanelBody
+            node={node}
+            onClose={onClose}
+            systemTitle={systemTitle}
+            systemDescription={systemDescription}
+            scenarioCount={scenarioCount}
+          />
         </div>
       </div>
 
       {/* Tablet: Floating panel */}
       <div className="hidden md:block xl:hidden">
         <div className="fixed right-4 top-4 w-80 max-h-[calc(100vh-2rem)] overflow-y-auto">
-          {node ? (
-            <DetailsPanelContent node={node} onClose={onClose} />
-          ) : (
-            <DefaultContent 
-              systemTitle={systemTitle}
-              systemDescription={systemDescription}
-              scenarioCount={scenarioCount}
-            />
-          )}
+          <PanelBody
+            node={node}
+            onClose={onClose}
+            systemTitle={systemTitle}
+            systemDescription={systemDescription}
+            scenarioCount={scenarioCount}
+          />
         </div>
       </div>
 
       {/* Mobile: Bottom sheet */}
-      <div className="md:hidden fixed inset-x-0 bottom-0 z-40">
-        <div className="bg-white rounded-t-2xl shadow-2xl border-t border-gray-200 max-h-[70vh] overflow-y-auto">
+      <div className="md:hidden">
+        {/* Backdrop */}
+        <div
+          className="fixed inset-0 z-30 bg-black/20"
+          onClick={onClose}
+        />
+        {/* Sheet */}
+        <div className="fixed inset-x-0 bottom-0 z-40 bg-white rounded-t-2xl shadow-2xl border-t border-gray-200 max-h-[70vh] overflow-y-auto">
           {node ? (
             <>
               <div className="sticky top-0 bg-white border-b border-gray-100 p-4 flex items-center justify-between">
@@ -71,12 +101,21 @@ export function DetailsPanel({
                 </button>
               </div>
               <div className="p-4">
-                <DetailsPanelContent node={node} onClose={onClose} isMobile />
+                <PanelBody
+                  node={node}
+                  onClose={onClose}
+                  systemTitle={systemTitle}
+                  systemDescription={systemDescription}
+                  scenarioCount={scenarioCount}
+                  isMobile
+                />
               </div>
             </>
           ) : (
             <div className="p-4">
-              <DefaultContent 
+              <PanelBody
+                node={node}
+                onClose={onClose}
                 systemTitle={systemTitle}
                 systemDescription={systemDescription}
                 scenarioCount={scenarioCount}
@@ -85,11 +124,6 @@ export function DetailsPanel({
             </div>
           )}
         </div>
-        {/* Backdrop */}
-        <div
-          className="fixed inset-0 bg-black/20 z-30"
-          onClick={onClose}
-        />
       </div>
     </>
   );
@@ -162,31 +196,6 @@ function DefaultContent({
           </div>
         </div>
       </div>
-
-      {/* Category Legend */}
-      <div className="mt-5 pt-4 border-t border-gray-100">
-        <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
-          Component Categories
-        </h4>
-        <div className="grid grid-cols-2 gap-2 text-xs">
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-[var(--category-practice)]" />
-            <span className="text-gray-600">Entry Points</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-[var(--category-concept)]" />
-            <span className="text-gray-600">Logic</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-[var(--category-learn-deep)]" />
-            <span className="text-gray-600">Storage</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-[var(--category-live)]" />
-            <span className="text-gray-600">Queues</span>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
@@ -198,76 +207,74 @@ interface DetailsPanelContentProps {
 }
 
 function DetailsPanelContent({ node, onClose, isMobile }: DetailsPanelContentProps) {
-  const CATEGORY_COLORS: Record<string, string> = {
-    entry: "var(--category-practice)",
-    logic: "var(--category-concept)",
-    storage: "var(--category-learn-deep)",
-    queue: "var(--category-live)",
-    network: "var(--category-neutral)",
-  };
-
-  const color = CATEGORY_COLORS[node.category] || "var(--category-neutral)";
+  const color = CATEGORY_COLORS[node.category as keyof typeof CATEGORY_COLORS] || "#15161C";
 
   return (
-    <div className={cn("bg-white rounded-xl border border-gray-200", !isMobile && "shadow-lg")}>
+    <div 
+      className={cn("bg-white rounded-2xl", !isMobile && "shadow-lg")}
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${node.title} details`}
+    >
+      {/* Handle for mobile */}
+      {isMobile && (
+        <div className="w-9 h-1 bg-gray-300 rounded-full mx-auto my-4" />
+      )}
+
       {/* Header */}
-      <div className="p-4 border-b border-gray-100">
-        <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-lg flex items-center justify-center text-white"
-            style={{ backgroundColor: color }}
-          >
-            <div className="w-5 h-5 rounded-full border-2 border-current opacity-80" />
-          </div>
-          <div className="flex-1">
-            <h3 className="font-semibold text-gray-900">{node.title}</h3>
-            <p className="text-xs text-gray-500 uppercase font-medium">
-              {node.category}
-            </p>
-          </div>
-          {!isMobile && (
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
-              aria-label="Close details"
-            >
-              ×
-            </button>
-          )}
+      <div className="px-5 py-4 flex items-center gap-3">
+        <div
+          className="w-9 h-9 rounded-lg flex items-center justify-center text-white flex-shrink-0"
+          style={{ backgroundColor: color }}
+        >
+          <div className="w-4 h-4 rounded-full border-2 border-current opacity-80" />
         </div>
+        <div className="flex-1">
+          <h3 className="font-semibold text-base">{node.title}</h3>
+          <p className="text-xs text-gray-500 font-medium">
+            {node.category}
+          </p>
+        </div>
+        <button
+          onClick={onClose}
+          className="w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors"
+          aria-label="Close details"
+        >
+          ×
+        </button>
       </div>
 
       {/* Content */}
-      <div className="p-4 space-y-4">
-        {/* Role */}
+      <div className="px-5 pb-5 space-y-4">
+        {/* What it does */}
         <div>
-          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1">
-            Role
+          <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block mb-1">
+            What it does
           </span>
-          <p className="text-sm text-gray-700 leading-relaxed">
+          <p className="text-xs text-gray-500 leading-relaxed">
             {node.details.role}
           </p>
         </div>
 
-        {/* Deep Dive */}
+        {/* Why we need it */}
         {node.details.deepDive && (
           <div>
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1">
-              Deep Dive
+            <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block mb-1">
+              Why we need it
             </span>
-            <p className="text-sm text-gray-700 leading-relaxed">
+            <p className="text-xs text-gray-500 leading-relaxed">
               {node.details.deepDive}
             </p>
           </div>
         )}
 
-        {/* Failure Modes */}
+        {/* Failure handling */}
         {node.details.failureModes && (
           <div>
-            <span className="text-xs font-semibold text-red-600 uppercase tracking-wide block mb-1">
-              Failure Modes
+            <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block mb-1">
+              Failure handling
             </span>
-            <p className="text-sm text-gray-700 leading-relaxed">
+            <p className="text-xs text-gray-500 leading-relaxed">
               {node.details.failureModes}
             </p>
           </div>
@@ -276,10 +283,10 @@ function DetailsPanelContent({ node, onClose, isMobile }: DetailsPanelContentPro
         {/* Tradeoffs */}
         {node.details.tradeoffs && (
           <div>
-            <span className="text-xs font-semibold text-amber-600 uppercase tracking-wide block mb-1">
+            <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block mb-1">
               Tradeoffs
             </span>
-            <p className="text-sm text-gray-700 leading-relaxed">
+            <p className="text-xs text-gray-500 leading-relaxed">
               {node.details.tradeoffs}
             </p>
           </div>
@@ -288,10 +295,10 @@ function DetailsPanelContent({ node, onClose, isMobile }: DetailsPanelContentPro
         {/* Notes */}
         {node.details.notes && (
           <div>
-            <span className="text-xs font-semibold text-blue-600 uppercase tracking-wide block mb-1">
+            <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block mb-1">
               Notes
             </span>
-            <p className="text-sm text-gray-700 leading-relaxed">
+            <p className="text-xs text-gray-500 leading-relaxed">
               {node.details.notes}
             </p>
           </div>

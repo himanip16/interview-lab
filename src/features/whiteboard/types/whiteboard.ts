@@ -108,7 +108,9 @@ export type FocusState =
  */
 export interface ScenarioStep {
   id: string;
-  nodeId: NodeId;
+  nodeId: NodeId;  // Node being explained
+  fromNodeId?: NodeId;  // Source node for request/flow
+  toNodeId?: NodeId;  // Target node for request/flow
   narration: string;  // What happens in this step (context-specific)
   waitForUser: boolean;  // true = manual advance, false = auto
   nextStepId?: string;  // For branching scenarios
@@ -119,8 +121,11 @@ export interface ScenarioStep {
  */
 export interface Scenario {
   id: string;
-  question: string;  // "How does a user book a ride?"
+  title: string;  // "Driver cancels ride"
   category: 'user' | 'driver' | 'system' | 'failure';
+  difficulty?: 'easy' | 'medium' | 'hard';
+  duration?: string;  // "3 min"
+  actor?: 'user' | 'driver' | 'system';
   
   // Learning path
   prerequisiteNodeIds: NodeId[];  // Required components
@@ -139,4 +144,64 @@ export interface ScenarioControllerState {
   currentStep: ScenarioStep | null;
   focusState: FocusState;
   progress: { current: number; total: number };
+}
+
+// ==========================================================================
+// GENERIC WHITEBOARD DATA MODEL
+// ==========================================================================
+
+/**
+ * Generic whiteboard node for data-driven architecture
+ */
+export interface WhiteboardNode {
+  id: string;
+  label: string;
+  kind: string;
+  color: string;
+
+  purpose: string;
+  calledBy: string;
+  calls: string;
+  contract: string;
+
+  failureMode: string;
+  isSpof: boolean;
+
+  improvements: string[];
+}
+
+/**
+ * Individual step in a flow journey
+ */
+export interface FlowStep {
+  from?: string;
+  to?: string;
+  text: string;
+  note?: boolean;  // for steps that are explanation only
+}
+
+/**
+ * Phase containing multiple flow steps
+ */
+export interface FlowPhase {
+  title: string;
+  steps: FlowStep[];
+}
+
+/**
+ * Complete journey through the system
+ */
+export interface Journey {
+  name: string;
+  phases: FlowPhase[];
+}
+
+/**
+ * Complete whiteboard system with nodes, edges, and journeys
+ */
+export interface WhiteboardSystem {
+  slug: string;
+  nodes: WhiteboardNode[];
+  edges: DiagramEdge[];
+  journeys: Journey[];
 }

@@ -2,19 +2,18 @@
 
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { cn } from '@/shared/utils/utils';
-import { Panel } from '@/shared/ui/Panel';
-import { Breadcrumb } from '@/shared/layout/Breadcrumb';
-import { WHITEBOARD_SYSTEMS, WHITEBOARD_SYSTEM_LIST } from '../data/whiteboardSystems';
+import { WHITEBOARD_SYSTEMS } from '../data/whiteboardSystems';
 import { SYSTEM_DESIGNS, SYSTEM_LAYOUTS } from '../data/whiteboardAdapter';
 import { loadWhiteboardScene } from '../services/WhiteboardService';
-import Whiteboard from './whiteboard/Whiteboard';
-import { useRouter } from 'next/navigation';
+import { InteractiveWhiteboard } from './whiteboard/InteractiveWhiteboard';
+import { useRouter, useParams } from 'next/navigation';
 
-export default function WhiteboardWorkspace({ initialSlug }: { initialSlug: string }) {
+export default function WhiteboardWorkspace() {
   const router = useRouter();
-  const [currentSlug, setCurrentSlug] = useState(initialSlug);
+  const params = useParams();
+  const currentSlug = (params.slug as string) || 'url-shortener';
 
   const system = WHITEBOARD_SYSTEMS[currentSlug] || WHITEBOARD_SYSTEMS['url-shortener'];
   
@@ -23,60 +22,54 @@ export default function WhiteboardWorkspace({ initialSlug }: { initialSlug: stri
     const design = SYSTEM_DESIGNS[currentSlug];
     const layout = SYSTEM_LAYOUTS[currentSlug];
     if (!design || !layout) return null;
-    return loadWhiteboardScene(design, layout);
+    const baseFrame = loadWhiteboardScene(design, layout);
+    
+    // Get scenarios from the system registry
+    const system = WHITEBOARD_SYSTEMS[currentSlug];
+    
+    return {
+      diagram: baseFrame,
+      learning: {
+        scenarios: system?.scenarios ?? []
+      }
+    };
   }, [currentSlug]);
 
   return (
-    <Panel variant="default" className="max-w-[1080px] mx-auto p-[30px_36px_36px] bg-white">
-      {/* Navigation */}
-      <div className="mb-8">
-        <Breadcrumb
-          items={[
-            { label: 'Learn', href: '/learn' },
-            { label: 'Whiteboarding', active: true }
-          ]}
-          onBack={() => router.push('/learn')}
-        />
-      </div>
-
-      {/* Header & System Pills */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <h1 className="heading-m font-semibold text-[var(--ink)]">{system.title}</h1>
-            <div className="w-1.5 h-1.5 rounded-full bg-[var(--mint)] animate-pulse" />
+    <div className="flex flex-col h-screen bg-white">
+      {/* Header */}
+      <div className="px-6 py-4 border-b border-gray-100">
+        <div className="flex items-center gap-3 mb-2">
+          <h1 className="text-xl font-semibold text-gray-900">{system.title}</h1>
+          <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+        </div>
+        <p className="text-sm text-gray-500">{system.oneLiner}</p>
+        {frame?.learning.scenarios && frame.learning.scenarios.length > 0 && (
+          <div className="mt-2 flex items-center gap-2 text-xs text-gray-400">
+            <span className="font-medium text-gray-600">{frame.learning.scenarios.length} interactive flows</span>
+            <span>·</span>
+            <span>{frame.learning.scenarios.map(s => s.title).join(' · ')}</span>
           </div>
-          <p className="body-s text-[var(--ink-400)]">Click nodes to inspect architectural tradeoffs</p>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          {WHITEBOARD_SYSTEM_LIST.map((sys) => (
-            <button
-              key={sys.slug}
-              onClick={() => setCurrentSlug(sys.slug)}
-              className={cn(
-                "px-4 py-1.5 radius-pill text-xs font-semibold transition-all border",
-                currentSlug === sys.slug 
-                  ? "bg-[var(--ink)] text-white border-[var(--ink)]" 
-                  : "bg-white text-[var(--ink-400)] border-[var(--border)] hover:border-[var(--ink-200)]"
-              )}
-            >
-              {sys.label}
-            </button>
-          ))}
-        </div>
+        )}
       </div>
 
       {/* Unified Whiteboard Component */}
       {frame ? (
-        <Whiteboard frame={frame} />
+        <InteractiveWhiteboard 
+          diagram={frame.diagram}
+          learning={frame.learning}
+          systemTitle={system.title}
+          systemDescription={system.oneLiner}
+        />
       ) : (
-        <div className="rounded-[22px] border border-dashed border-[rgba(21,22,28,0.15)] p-8 flex flex-col justify-center items-center text-center min-h-[400px]">
-          <p className="text-[13px] text-[#5A5B66]">
-            Failed to load whiteboard data for {system.title}
-          </p>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-gray-500">
+              Failed to load whiteboard data for {system.title}
+            </p>
+          </div>
         </div>
       )}
-    </Panel>
+    </div>
   );
 }

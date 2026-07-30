@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Whiteboard — Design Uber</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{ --paper:#FAF9F6; --ink:#15161C; --ink-soft:#5A5B66; --mint:#00D9A3; --mint-deep:#00A87E; --coral:#FF5A3C; --violet:#6A5AE0; --amber:#E8940A; }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; }
+  h1,h2,h3{ font-family:'Poppins',sans-serif; letter-spacing:-0.02em; }
+
+  .shell{ display:flex; min-height:100vh; }
+  .rail{ width:60px; flex-shrink:0; background:#fff; border-right:1px solid rgba(21,22,28,0.06); display:flex; flex-direction:column; align-items:center; padding:18px 0; gap:8px; }
+  .rail-logo{ width:32px; height:32px; border-radius:9px; background:var(--ink); color:#fff; display:flex; align-items:center; justify-content:center; font-family:'Poppins',sans-serif; font-weight:700; font-size:13px; margin-bottom:14px; }
+  .rail-item{ width:38px; height:38px; border-radius:11px; display:flex; align-items:center; justify-content:center; color:var(--ink-soft); }
+  .rail-item.active{ background:rgba(0,217,163,0.12); color:var(--mint-deep); }
+
+  .main{ flex:1; min-width:0; }
+  .topbar{ display:flex; align-items:center; justify-content:space-between; padding:14px 22px; border-bottom:1px solid rgba(21,22,28,0.06); background:#fff; flex-wrap:wrap; gap:10px; }
+  .crumb{ font-size:13px; font-weight:600; }
+  .top-right{ display:flex; align-items:center; gap:12px; }
+  .xp-badge{ display:flex; align-items:center; gap:5px; font-size:11.5px; font-weight:700; color:var(--amber); background:rgba(232,148,10,0.1); padding:5px 11px; border-radius:999px; }
+
+  .content{ padding:20px; max-width:1400px; margin:0 auto; }
+  .crumb2{ display:flex; align-items:center; gap:8px; font-size:13px; color:var(--ink-soft); font-weight:500; margin-bottom:14px; }
+  .back{ width:26px; height:26px; border-radius:50%; border:1px solid rgba(21,22,28,0.1); background:none; color:var(--ink); display:flex; align-items:center; justify-content:center; cursor:pointer; }
+
+  .title-row{ display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:14px; margin-bottom:16px; }
+  .title-row h1{ font-size:26px; font-weight:700; display:flex; align-items:center; gap:8px; }
+  .status-dot{ width:7px; height:7px; border-radius:50%; background:var(--mint); animation:pulse 1.8s ease-in-out infinite; }
+  @keyframes pulse{ 0%,100%{ opacity:1; } 50%{ opacity:.3; } }
+  @keyframes arrivalPulse{ 0%{ opacity:1; transform:scale(1); } 100%{ opacity:0; transform:scale(1.35); } }
+  .title-row p{ font-size:13px; color:var(--ink-soft); margin-top:4px; }
+
+  .mode-pills{ display:flex; gap:6px; background:var(--paper); padding:4px; border-radius:999px; flex-shrink:0; }
+  .mode-pill{ font-size:12.5px; font-weight:600; padding:8px 16px; border-radius:999px; color:var(--ink-soft); cursor:pointer; }
+  .mode-pill.active{ background:var(--ink); color:#fff; }
+
+  .canvas-shell{ position:relative; background:#fff; border-radius:22px; border:1px solid rgba(21,22,28,0.07); overflow:hidden; }
+  .canvas-scroll{ height:76vh; min-height:560px; overflow:hidden; cursor:grab; touch-action:none;
+    background-image:radial-gradient(circle, rgba(21,22,28,0.12) 1.4px, transparent 1.4px);
+    background-size:28px 28px; background-position:0 0; background-color:var(--paper); }
+  .canvas-scroll.dragging{ cursor:grabbing; }
+  .canvas-inner{ transform-origin:0 0; }
+  .zoom-pct{ position:absolute; top:16px; left:16px; font-size:11px; font-weight:600; color:var(--ink-soft); background:#fff; padding:6px 12px; border-radius:999px; z-index:5; border:1px solid rgba(21,22,28,0.08); }
+
+  .zoom-controls{ position:absolute; top:16px; right:16px; display:flex; flex-direction:column; gap:6px; z-index:5; }
+  .zbtn{ width:34px; height:34px; border-radius:10px; background:#fff; border:1px solid rgba(21,22,28,0.1); box-shadow:0 6px 16px rgba(21,22,28,0.08); display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--ink); font-weight:700; }
+  .hint-badge{ position:absolute; bottom:16px; left:16px; font-size:11px; color:var(--ink-soft); background:var(--paper); padding:6px 12px; border-radius:999px; z-index:5; }
+  .legend{ position:absolute; bottom:16px; right:16px; display:flex; gap:12px; font-size:10.5px; color:var(--ink-soft); background:var(--paper); padding:7px 13px; border-radius:999px; z-index:5; }
+  .legend span{ display:flex; align-items:center; gap:5px; }
+  .legend .sw{ width:7px; height:7px; border-radius:50%; }
+
+  .annot{ position:absolute; z-index:8; width:220px; background:var(--ink); color:#fff; border-radius:14px; padding:13px 15px; pointer-events:none; opacity:0; transform:translateY(4px); transition:opacity .18s ease, transform .18s ease; box-shadow:0 16px 34px rgba(0,0,0,0.22); }
+  .annot.show{ opacity:1; transform:translateY(0); pointer-events:auto; }
+  .annot .at{ font-size:12.5px; font-weight:700; margin-bottom:4px; }
+  .annot .ak{ font-size:9.5px; color:rgba(255,255,255,0.5); text-transform:uppercase; letter-spacing:.05em; margin-bottom:6px; }
+  .annot .ap{ font-size:11.5px; color:rgba(255,255,255,0.75); line-height:1.5; margin-bottom:8px; }
+  .annot .aspof{ font-size:9.5px; font-weight:700; padding:3px 8px; border-radius:999px; display:inline-block; margin-bottom:8px; }
+  .annot .aspof.yes{ background:rgba(255,90,60,0.25); color:#FF8A6E; }
+  .annot .aspof.no{ background:rgba(0,217,163,0.2); color:var(--mint); }
+  .annot .amore{ font-size:11px; font-weight:700; color:var(--mint); cursor:pointer; }
+
+  .sheet-overlay{ position:fixed; inset:0; background:rgba(21,22,28,0.4); z-index:30; display:none; }
+  .sheet-overlay.open{ display:block; }
+  .sheet{ position:fixed; left:0; right:0; bottom:0; max-width:520px; margin:0 auto; background:#fff; border-radius:24px 24px 0 0; z-index:31; padding:20px 24px 30px; transform:translateY(100%); transition:transform .35s cubic-bezier(.34,1.1,.64,1); max-height:78vh; overflow-y:auto; }
+  .sheet.open{ transform:translateY(0); }
+  .sheet-handle{ width:36px; height:4px; background:rgba(21,22,28,0.15); border-radius:2px; margin:0 auto 16px; }
+  .sheet-head{ display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+  .sheet-dot{ width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0; }
+  .sheet-head h3{ font-size:16px; font-weight:600; }
+  .sheet-head .kind{ font-size:11px; color:var(--ink-soft); }
+  .close-sheet{ margin-left:auto; width:28px; height:28px; border-radius:50%; border:1px solid rgba(21,22,28,0.1); background:none; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  .ins-block{ margin-bottom:14px; }
+  .ins-label{ font-size:10px; font-weight:700; letter-spacing:.05em; color:var(--mint-deep); margin-bottom:5px; text-transform:uppercase; }
+  .ins-text{ font-size:12.5px; color:var(--ink-soft); line-height:1.6; }
+  .ins-text b{ color:var(--ink); }
+  .req-box{ background:var(--paper); border-radius:10px; padding:9px 11px; font-family:monospace; font-size:11px; color:var(--ink-soft); }
+  .spof-badge{ display:inline-flex; font-size:11px; font-weight:700; padding:5px 11px; border-radius:999px; }
+  .spof-badge.no{ background:rgba(0,168,126,0.12); color:var(--mint-deep); } .spof-badge.yes{ background:rgba(255,90,60,0.12); color:var(--coral); }
+  .strength-list li{ font-size:12px; color:var(--ink-soft); line-height:1.55; margin-bottom:4px; padding-left:13px; position:relative; list-style:none; }
+  .strength-list li::before{ content:'\2022'; position:absolute; left:0; color:var(--mint-deep); }
+
+  .journey-pills{ display:flex; gap:8px; margin-bottom:10px; }
+  .jpill{ font-size:12px; font-weight:600; padding:8px 15px; border-radius:999px; border:1px solid rgba(21,22,28,0.1); color:var(--ink-soft); cursor:pointer; background:#fff; }
+  .jpill.active{ background:var(--violet); color:#fff; border-color:var(--violet); }
+  .phase-timeline{ display:flex; align-items:center; gap:4px; overflow-x:auto; }
+  .phase-chip{ font-size:11px; font-weight:600; padding:6px 12px; border-radius:999px; background:#fff; border:1px solid rgba(21,22,28,0.1); color:var(--ink-soft); white-space:nowrap; cursor:pointer; flex-shrink:0; }
+  .phase-chip.active{ background:var(--ink); color:#fff; border-color:var(--ink); }
+  .phase-chip.done{ color:var(--mint-deep); border-color:rgba(0,168,126,0.3); }
+  .phase-arrow{ color:var(--ink-soft); opacity:.4; flex-shrink:0; font-size:11px; }
+
+  .flow-overlay-top{ position:absolute; top:0; left:0; right:0; z-index:6; padding:14px 18px 20px; background:linear-gradient(var(--paper) 45%, transparent); }
+  .flow-overlay-bottom{ position:absolute; bottom:0; left:0; right:0; z-index:6; padding:20px 18px 14px; background:linear-gradient(transparent, var(--paper) 55%); }
+  .flow-caption{ background:#fff; border-radius:16px; padding:14px 18px; border:1px solid rgba(21,22,28,0.08); box-shadow:0 10px 26px rgba(21,22,28,0.06); max-width:520px; margin:0 auto; }
+  .flow-caption .step-label{ font-size:10.5px; font-weight:700; color:var(--violet); text-transform:uppercase; letter-spacing:.05em; }
+  .flow-caption p{ font-size:13.5px; margin-top:5px; }
+  .flow-controls{ display:flex; align-items:center; justify-content:space-between; margin-top:10px; gap:8px; max-width:520px; margin-left:auto; margin-right:auto; }
+  .fbtn{ font-size:12px; font-weight:600; padding:9px 14px; border-radius:999px; border:1px solid rgba(21,22,28,0.1); background:#fff; cursor:pointer; }
+  .fbtn.play{ background:var(--mint-deep); color:#fff; border:none; }
+  .step-dots{ display:flex; gap:5px; }
+  .sdot{ width:6px; height:6px; border-radius:50%; background:rgba(21,22,28,0.15); }
+  .sdot.done{ background:var(--mint-deep); } .sdot.current{ background:var(--violet); }
+
+.canvas-inner.auto-pan{ transition:transform .5s cubic-bezier(.4,0,.2,1); }
+
+  @media (max-width:700px){ .rail{ width:52px; } .xp-badge{ display:none; } .canvas-scroll{ height:54vh; } }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <div class="rail">
+    <div class="rail-logo">i</div>
+    <div class="rail-item"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-9 9 9M5 10v10h14V10"/></svg></div>
+    <div class="rail-item active"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg></div>
+    <div class="rail-item"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20M4 4.5A2.5 2.5 0 016.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15z"/></svg></div>
+    <div class="rail-item"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="14" rx="2"/><path d="M9 20h6"/></svg></div>
+    <div class="rail-item"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg></div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="crumb">Whiteboard</div>
+      <div class="top-right">
+        <div class="xp-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>0 XP</div>
+        <span style="font-size:13px; font-weight:600; cursor:pointer;">Log in</span>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="crumb2"><button class="back">&larr;</button>Learn &nbsp;/&nbsp; Whiteboarding</div>
+
+      <div class="title-row">
+        <div>
+          <h1>Design Uber <span class="status-dot"></span></h1>
+          <p id="modeHint">Hover a component for a quick note, tap for the full breakdown.</p>
+        </div>
+        <div class="mode-pills">
+          <div class="mode-pill active" data-mode="explore">Explore</div>
+          <div class="mode-pill" data-mode="flows">Flows</div>
+        </div>
+      </div>
+
+      <div class="canvas-shell">
+        <div class="canvas-scroll" id="canvasScroll">
+          <div class="canvas-inner" id="canvasInner">
+            <svg width="900" height="620" viewBox="0 0 900 620" id="diagramSvg"></svg>
+          </div>
+        </div>
+        <div class="zoom-controls">
+          <div class="zbtn" id="zoomIn">+</div>
+          <div class="zbtn" id="zoomOut">&minus;</div>
+          <div class="zbtn" id="zoomReset" style="font-size:9px;">RST</div>
+        </div>
+        <div class="zoom-pct" id="zoomPct">100%</div>
+        <div class="hint-badge" id="canvasHint">Drag or scroll to pan &middot; Ctrl+scroll to zoom</div>
+        <div class="legend" id="legendRow">
+          <span><span class="sw" style="background:var(--coral)"></span>Client</span>
+          <span><span class="sw" style="background:var(--ink)"></span>Gateway</span>
+          <span><span class="sw" style="background:var(--violet)"></span>Logic</span>
+          <span><span class="sw" style="background:var(--mint-deep)"></span>Integration</span>
+        </div>
+        <div class="annot" id="annot"></div>
+
+        <div class="flow-overlay-top" id="flowsControls" style="display:none;">
+          <div class="journey-pills">
+            <div class="jpill active" data-j="0">Rider's full journey</div>
+            <div class="jpill" data-j="1">Driver's full journey</div>
+          </div>
+          <div class="phase-timeline" id="phaseTimeline"></div>
+        </div>
+
+        <div class="flow-overlay-bottom" id="flowsPanel" style="display:none;">
+          <div class="flow-caption">
+            <div class="step-label" id="phaseLabel">Phase</div>
+            <p id="stepText">&nbsp;</p>
+          </div>
+          <div class="flow-controls">
+            <button class="fbtn" id="prevBtn">&larr; Prev</button>
+            <div class="step-dots" id="stepDots"></div>
+            <button class="fbtn play" id="playBtn">Play &#9654;</button>
+            <button class="fbtn" id="nextBtn">Next &rarr;</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="sheet-overlay" id="sheetOverlay"></div>
+<div class="sheet" id="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-head">
+    <div class="sheet-dot" id="sheetDot"></div>
+    <div><h3 id="sheetTitle"></h3><div class="kind" id="sheetKind"></div></div>
+    <button class="close-sheet" id="closeSheet">&times;</button>
+  </div>
+  <div id="sheetBody"></div>
+</div>
+
+<script>
+const NODES = {
+  rider:    { label:'Rider App',       kind:'Client',      color:'var(--coral)',  x:60,  y:80,
+    purpose:'Lets riders request trips, track drivers, and pay.',
+    calledBy:'The rider, directly.', calls:'API Gateway', contract:'POST /rides { pickup, dropoff }',
+    ifFails:'Rider can\u2019t request or track a trip on this device.', spof:false,
+    spofNote:'Only affects one rider\u2019s device, not the system.', strengthen:['Offline queue for requests made mid-signal-loss'] },
+  driver:   { label:'Driver App',      kind:'Client',      color:'var(--coral)',  x:60,  y:440,
+    purpose:'Sends location pings and receives ride offers.',
+    calledBy:'The driver, directly.', calls:'API Gateway', contract:'PATCH /location { lat, lng } every 4s',
+    ifFails:'Driver goes invisible to Dispatch until reconnected.', spof:false,
+    spofNote:'Only affects one driver\u2019s device.', strengthen:['Retry location pings with exponential backoff'] },
+  gateway:  { label:'API Gateway',     kind:'Gateway',     color:'var(--ink)',    x:340, y:80,
+    purpose:'Single entry point \u2014 authenticates requests and routes them to the right service.',
+    calledBy:'Rider App, Driver App', calls:'Dispatch, Pricing, Payment, Location', contract:'Routes by path, attaches auth context',
+    ifFails:'Nothing gets in or out \u2014 the whole app is down.', spof:true,
+    spofNote:'Yes, unless run as multiple stateless replicas behind a load balancer.',
+    strengthen:['Run 3+ replicas across zones','Circuit-break slow downstream services'] },
+  dispatch: { label:'Dispatch Service',kind:'Core logic',  color:'var(--violet)', x:400, y:280,
+    purpose:'Matches riders to the best available driver.',
+    calledBy:'API Gateway', calls:'Location Service, Pricing Service', contract:'POST /match { riderId, pickup } \u2192 { driverId, eta }',
+    ifFails:'No new rides can be matched \u2014 existing trips still complete.', spof:true,
+    spofNote:'Currently yes \u2014 no fallback matching path exists.',
+    strengthen:['Queue unmatched requests instead of dropping them','Add a degraded fallback mode'] },
+  location: { label:'Location Service',kind:'Core logic',  color:'var(--violet)', x:660, y:180,
+    purpose:'Tracks real-time driver locations and answers \u201cwho\u2019s nearby\u201d queries.',
+    calledBy:'Dispatch Service, API Gateway', calls:'Redis Geo index', contract:'GET /nearby?lat&lng&radius \u2192 [driverId]',
+    ifFails:'Dispatch can\u2019t find candidates \u2014 matching stalls.', spof:false,
+    spofNote:'No \u2014 sharded by geographic region.', strengthen:['Already regionally sharded','Cache last-known location as fallback'] },
+  pricing:  { label:'Pricing Service', kind:'Core logic',  color:'var(--violet)', x:400, y:460,
+    purpose:'Calculates fare, including surge multiplier for the area.',
+    calledBy:'Dispatch Service', calls:'Surge data store', contract:'GET /price?area \u2192 { base, surge }',
+    ifFails:'Trips can still be matched, using a stale or default price.', spof:false,
+    spofNote:'No \u2014 Dispatch proceeds with cached last-known price.', strengthen:['Already degrades gracefully to cached pricing'] },
+  payment:  { label:'Payment Service', kind:'Integration', color:'var(--mint-deep)', x:660, y:460,
+    purpose:'Charges the rider and pays out the driver after a completed trip.',
+    calledBy:'API Gateway', calls:'External payment provider', contract:'POST /charge { riderId, amount }',
+    ifFails:'Trip completes but payment is queued for retry, not lost.', spof:false,
+    spofNote:'No \u2014 async with retry, doesn\u2019t block the ride.', strengthen:['Already async \u2014 keep it that way'] },
+};
+const EDGES = [ ['rider','gateway'], ['driver','gateway'], ['gateway','dispatch'], ['gateway','payment'], ['dispatch','location'], ['dispatch','pricing'] ];
+
+const JOURNEYS = [
+  { name:"Rider's full journey", phases:[
+    { title:'Before booking', steps:[
+      { note:'Rider opens the app and sees nearby cars from cached location data \u2014 nothing is requested yet.' }
+    ]},
+    { title:'Requesting a ride', steps:[
+      { from:'rider', to:'gateway', text:'Rider taps "Request Ride" \u2014 pickup and dropoff sent to the Gateway.' },
+      { from:'gateway', to:'dispatch', text:'Gateway authenticates the request and forwards it to Dispatch.' },
+      { from:'dispatch', to:'location', text:'Dispatch asks Location Service for nearby available drivers.' },
+      { from:'dispatch', to:'pricing', text:'Dispatch requests a fare estimate for this trip.' },
+      { from:'dispatch', to:'gateway', text:'Dispatch picks the best driver, sends the match back through Gateway.' },
+      { from:'gateway', to:'rider', text:'Rider sees "Driver assigned" with an ETA.' },
+    ]},
+    { title:'During the trip', steps:[
+      { from:'driver', to:'gateway', text:'Driver\u2019s location keeps streaming in so the rider\u2019s map stays live.' },
+      { from:'gateway', to:'location', text:'Gateway forwards each update to Location Service.' },
+      { note:'Payment is pre-authorized at trip start, not charged yet.' },
+    ]},
+    { title:'After the trip', steps:[
+      { from:'gateway', to:'payment', text:'Trip ends \u2014 Gateway triggers the actual charge.' },
+      { note:'Payment provider confirms the charge; driver payout is queued separately.' },
+      { note:'Rider is prompted to rate the driver \u2014 no backend call shown here, purely client-side until submitted.' },
+    ]},
+  ]},
+  { name:"Driver's full journey", phases:[
+    { title:'Going online', steps:[
+      { note:'Driver toggles "Go Online." The app starts sending location pings.' },
+    ]},
+    { title:'Waiting for requests', steps:[
+      { from:'driver', to:'gateway', text:'Driver app sends a location ping every few seconds.' },
+      { from:'gateway', to:'location', text:'Gateway forwards the update to Location Service.' },
+      { from:'location', to:'dispatch', text:'Location Service marks this driver as available and searchable.' },
+    ]},
+    { title:'Trip accepted', steps:[
+      { from:'dispatch', to:'gateway', text:'Dispatch matches this driver and pushes an offer through Gateway.' },
+      { from:'gateway', to:'driver', text:'Driver app shows the offer \u2014 Accept / Decline.' },
+    ]},
+    { title:'During & after the trip', steps:[
+      { note:'Driver follows in-app navigation to pickup, then dropoff \u2014 no new service calls beyond ongoing location pings.' },
+      { from:'gateway', to:'payment', text:'On completion, payout is queued for this driver.' },
+    ]},
+  ]},
+];
+
+const svg = document.getElementById('diagramSvg');
+function nodeCenter(id){ const n=NODES[id]; return {x:n.x+60, y:n.y+24}; }
+
+function drawDiagram(){
+  svg.innerHTML = '';
+  EDGES.forEach(([a,b]) => {
+    const p1=nodeCenter(a), p2=nodeCenter(b);
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1',p1.x); line.setAttribute('y1',p1.y); line.setAttribute('x2',p2.x); line.setAttribute('y2',p2.y);
+    line.setAttribute('stroke','rgba(21,22,28,0.15)'); line.setAttribute('stroke-width','2'); line.setAttribute('class','edge');
+    line.dataset.a=a; line.dataset.b=b;
+    svg.appendChild(line);
+  });
+  Object.entries(NODES).forEach(([id,n]) => {
+    const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+    g.setAttribute('class','node'); g.dataset.id=id; g.style.cursor='pointer';
+    const rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+    rect.setAttribute('x',n.x); rect.setAttribute('y',n.y); rect.setAttribute('width',120); rect.setAttribute('height',48);
+    rect.setAttribute('rx',13); rect.setAttribute('fill',n.color); rect.setAttribute('class','nrect');
+    g.appendChild(rect);
+    const text = document.createElementNS('http://www.w3.org/2000/svg','text');
+    text.setAttribute('x',n.x+60); text.setAttribute('y',n.y+29); text.setAttribute('text-anchor','middle');
+    text.setAttribute('font-size','12.5'); text.setAttribute('font-weight','700'); text.setAttribute('fill','#fff');
+    text.textContent = n.label;
+    g.appendChild(text);
+    g.addEventListener('mouseenter', () => showAnnot(id, g));
+    g.addEventListener('mouseleave', () => hideAnnot());
+    g.addEventListener('click', () => openSheet(id));
+    g.addEventListener('touchstart', (e) => { e.preventDefault(); showAnnot(id, g); }, {passive:false});
+    svg.appendChild(g);
+  });
+}
+drawDiagram();
+
+let scale=1, panX=0, panY=0, dragging=false, startX=0, startY=0;
+const inner = document.getElementById('canvasInner');
+const scroll = document.getElementById('canvasScroll');
+function applyTransform(){
+  inner.style.transform = 'translate(' + panX + 'px,' + panY + 'px) scale(' + scale + ')';
+  const gridSize = 28 * scale;
+  scroll.style.backgroundSize = gridSize + 'px ' + gridSize + 'px';
+  scroll.style.backgroundPosition = panX + 'px ' + panY + 'px';
+  document.getElementById('zoomPct').textContent = Math.round(scale * 100) + '%';
+}
+scroll.addEventListener('mousedown', e => { dragging=true; scroll.classList.add('dragging'); startX=e.clientX-panX; startY=e.clientY-panY; });
+window.addEventListener('mousemove', e => { if(dragging){ panX=e.clientX-startX; panY=e.clientY-startY; applyTransform(); hideAnnot(); }});
+window.addEventListener('mouseup', () => { dragging=false; scroll.classList.remove('dragging'); });
+scroll.addEventListener('touchstart', e => { const t=e.touches[0]; dragging=true; startX=t.clientX-panX; startY=t.clientY-panY; });
+scroll.addEventListener('touchmove', e => { if(dragging){ const t=e.touches[0]; panX=t.clientX-startX; panY=t.clientY-startY; applyTransform(); } }, {passive:true});
+scroll.addEventListener('touchend', () => dragging=false);
+scroll.addEventListener('wheel', e => {
+  e.preventDefault();
+  if(e.ctrlKey || e.metaKey){
+    scale = Math.min(Math.max(scale + (e.deltaY<0?0.08:-0.08), 0.4), 2.2);
+  } else {
+    panX -= e.deltaX;
+    panY -= e.deltaY;
+  }
+  applyTransform();
+}, {passive:false});
+document.getElementById('zoomIn').onclick = () => { scale=Math.min(scale+0.15,2); applyTransform(); };
+document.getElementById('zoomOut').onclick = () => { scale=Math.max(scale-0.15,0.5); applyTransform(); };
+document.getElementById('zoomReset').onclick = () => { scale=1; panX=0; panY=0; applyTransform(); };
+
+const annot = document.getElementById('annot');
+const shellEl = document.querySelector('.canvas-shell');
+function showAnnot(id, gEl){
+  const n = NODES[id];
+  const rect = gEl.querySelector('rect').getBoundingClientRect();
+  const shellRect = shellEl.getBoundingClientRect();
+  let left = rect.right - shellRect.left + 14;
+  let top = rect.top - shellRect.top;
+  if(left + 220 > shellRect.width){ left = rect.left - shellRect.left - 234; }
+  annot.style.left = left + 'px';
+  annot.style.top = Math.max(10, top) + 'px';
+  annot.innerHTML = '' +
+    '<div class="at">' + n.label + '</div>' +
+    '<div class="ak">' + n.kind + '</div>' +
+    '<div class="ap">' + n.purpose + '</div>' +
+    '<div class="aspof ' + (n.spof?'yes':'no') + '">' + (n.spof?'Single point of failure':'Not a SPOF') + '</div>' +
+    '<div class="amore" onclick="openSheet(\'' + id + '\')">See full breakdown &rarr;</div>';
+  annot.classList.add('show');
+}
+function hideAnnot(){ annot.classList.remove('show'); }
+
+function openSheet(id){
+  const n = NODES[id];
+  document.getElementById('sheetDot').style.background = n.color;
+  document.getElementById('sheetTitle').textContent = n.label;
+  document.getElementById('sheetKind').textContent = n.kind;
+  document.getElementById('sheetBody').innerHTML = '' +
+    '<div class="ins-block"><div class="ins-label">Purpose</div><div class="ins-text">' + n.purpose + '</div></div>' +
+    '<div class="ins-block"><div class="ins-label">Who requests it</div><div class="ins-text"><b>' + n.calledBy + '</b></div></div>' +
+    '<div class="ins-block"><div class="ins-label">Who it requests</div><div class="ins-text"><b>' + n.calls + '</b></div></div>' +
+    '<div class="ins-block"><div class="ins-label">What\'s being requested</div><div class="req-box">' + n.contract + '</div></div>' +
+    '<div class="ins-block"><div class="ins-label">If it fails</div><div class="ins-text">' + n.ifFails + '</div></div>' +
+    '<div class="ins-block"><div class="ins-label">Single point of failure?</div>' +
+      '<div class="spof-badge ' + (n.spof?'yes':'no') + '">' + (n.spof?'Yes':'No') + '</div>' +
+      '<div class="ins-text" style="margin-top:6px;">' + n.spofNote + '</div></div>' +
+    '<div class="ins-block"><div class="ins-label">Making it stronger</div><ul class="strength-list">' + n.strengthen.map(function(s){ return '<li>' + s + '</li>'; }).join('') + '</ul></div>';
+  document.getElementById('sheet').classList.add('open');
+  document.getElementById('sheetOverlay').classList.add('open');
+  hideAnnot();
+}
+document.getElementById('closeSheet').onclick = closeSheet;
+document.getElementById('sheetOverlay').onclick = closeSheet;
+function closeSheet(){ document.getElementById('sheet').classList.remove('open'); document.getElementById('sheetOverlay').classList.remove('open'); }
+
+document.querySelectorAll('.mode-pill').forEach(p => {
+  p.onclick = () => {
+    document.querySelectorAll('.mode-pill').forEach(x=>x.classList.remove('active'));
+    p.classList.add('active');
+    const isFlows = p.dataset.mode === 'flows';
+    document.getElementById('flowsControls').style.display = isFlows ? 'block' : 'none';
+    document.getElementById('flowsPanel').style.display = isFlows ? 'block' : 'none';
+    document.getElementById('legendRow').style.display = isFlows ? 'none' : 'flex';
+    document.getElementById('canvasHint').style.display = isFlows ? 'none' : 'block';
+    document.getElementById('modeHint').textContent = isFlows ? 'Follow a real journey through the system, phase by phase.' : 'Hover a component for a quick note, tap for the full breakdown.';
+    document.querySelectorAll('.nrect').forEach(r=>r.setAttribute('stroke','none'));
+    if(isFlows){ loadJourney(0); }
+  };
+});
+
+let curJourney=0, curPhase=0, curStep=0, playTimer=null;
+
+document.querySelectorAll('.jpill').forEach(p => {
+  p.onclick = () => {
+    document.querySelectorAll('.jpill').forEach(x=>x.classList.remove('active'));
+    p.classList.add('active');
+    loadJourney(parseInt(p.dataset.j));
+  };
+});
+
+function loadJourney(idx){
+  curJourney = idx; curPhase = 0; curStep = 0;
+  clearInterval(playTimer); playTimer=null;
+  scale = 1; applyTransform();
+  renderPhaseTimeline();
+  showStep();
+}
+function renderPhaseTimeline(){
+  const j = JOURNEYS[curJourney];
+  document.getElementById('phaseTimeline').innerHTML = j.phases.map((ph,i) =>
+    (i>0?'<span class="phase-arrow">&rarr;</span>':'') +
+    '<div class="phase-chip ' + (i===curPhase?'active':i<curPhase?'done':'') + '" onclick="jumpPhase(' + i + ')">' + ph.title + '</div>'
+  ).join('');
+}
+function jumpPhase(i){ curPhase=i; curStep=0; renderPhaseTimeline(); showStep(); }
+
+function centerOnNodes(ids){
+  const viewport = scroll.getBoundingClientRect();
+  const topSafe = 92, bottomSafe = 150;
+  const pts = ids.map(nodeCenter);
+  const midX = pts.reduce((s,p)=>s+p.x,0) / pts.length;
+  const midY = pts.reduce((s,p)=>s+p.y,0) / pts.length;
+  const availCenterY = topSafe + (viewport.height - topSafe - bottomSafe) / 2;
+  const targetPanX = viewport.width/2 - midX*scale;
+  const targetPanY = availCenterY - midY*scale;
+  inner.classList.add('auto-pan');
+  panX = targetPanX; panY = targetPanY;
+  applyTransform();
+  setTimeout(() => inner.classList.remove('auto-pan'), 520);
+}
+
+function showStep(){
+  const phase = JOURNEYS[curJourney].phases[curPhase];
+  const step = phase.steps[curStep];
+  document.getElementById('phaseLabel').textContent = phase.title + ' \u2014 step ' + (curStep+1) + ' of ' + phase.steps.length;
+  document.getElementById('stepText').textContent = step.text || step.note;
+  renderStepDots(phase.steps.length);
+  svg.querySelectorAll('.edge').forEach(e => e.setAttribute('stroke','rgba(21,22,28,0.12)'));
+  svg.querySelectorAll('.nrect').forEach(r => { r.setAttribute('opacity','0.35'); r.setAttribute('stroke','none'); });
+  if(step.from && step.to){
+    centerOnNodes([step.from, step.to]);
+    setTimeout(() => highlightEdge(step.from, step.to), 260);
+  }
+}
+function renderStepDots(total){
+  document.getElementById('stepDots').innerHTML = Array.from({length:total},(_,i)=>'<div class="sdot ' + (i<curStep?'done':i===curStep?'current':'') + '"></div>').join('');
+}
+function highlightEdge(a,b){
+  [a,b].forEach(id => {
+    const rect = svg.querySelector('.node[data-id="' + id + '"] .nrect');
+    if(rect){ rect.setAttribute('opacity','1'); rect.setAttribute('stroke','var(--violet)'); rect.setAttribute('stroke-width','3'); }
+  });
+  const edge = svg.querySelector('.edge[data-a="' + a + '"][data-b="' + b + '"]') || svg.querySelector('.edge[data-a="' + b + '"][data-b="' + a + '"]');
+  if(edge) edge.setAttribute('stroke','var(--violet)');
+
+  const p1 = nodeCenter(a), p2 = nodeCenter(b);
+  const midX = (p1.x + p2.x) / 2, midY = (p1.y + p2.y) / 2;
+  const dx = p2.x - p1.x, dy = p2.y - p1.y;
+  const bow = 22;
+  const ctrlX = midX - dy * (bow / Math.hypot(dx,dy) || 0);
+  const ctrlY = midY + dx * (bow / Math.hypot(dx,dy) || 0);
+  const path = 'M' + p1.x + ',' + p1.y + ' Q' + ctrlX + ',' + ctrlY + ' ' + p2.x + ',' + p2.y;
+
+  const glow = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  glow.setAttribute('r','11'); glow.setAttribute('fill','rgba(106,90,224,0.28)'); glow.setAttribute('cx',p1.x); glow.setAttribute('cy',p1.y);
+  const dot = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  dot.setAttribute('r','6'); dot.setAttribute('fill','var(--violet)'); dot.setAttribute('cx',p1.x); dot.setAttribute('cy',p1.y);
+
+  [glow, dot].forEach(el => {
+    const anim = document.createElementNS('http://www.w3.org/2000/svg','animateMotion');
+    anim.setAttribute('dur','1.1s'); anim.setAttribute('fill','freeze');
+    anim.setAttribute('calcMode','spline'); anim.setAttribute('keyTimes','0;1'); anim.setAttribute('keySplines','0.3 0 0.15 1');
+    anim.setAttribute('path', path);
+    el.appendChild(anim);
+    svg.appendChild(el);
+  });
+
+  setTimeout(() => {
+    glow.remove(); dot.remove();
+    const destRect = svg.querySelector('.node[data-id="' + b + '"] .nrect');
+    if(destRect){
+      const pulse = document.createElementNS('http://www.w3.org/2000/svg','rect');
+      const bx = parseFloat(destRect.getAttribute('x')), by = parseFloat(destRect.getAttribute('y'));
+      pulse.setAttribute('x',bx); pulse.setAttribute('y',by); pulse.setAttribute('width',120); pulse.setAttribute('height',48);
+      pulse.setAttribute('rx',13); pulse.setAttribute('fill','none'); pulse.setAttribute('stroke','var(--violet)'); pulse.setAttribute('stroke-width','2.5');
+      pulse.style.transformOrigin = (bx+60) + 'px ' + (by+24) + 'px';
+      pulse.style.animation = 'arrivalPulse .6s ease-out forwards';
+      svg.appendChild(pulse);
+      setTimeout(() => pulse.remove(), 650);
+    }
+  }, 1100);
+}
+function advance(){
+  const phases = JOURNEYS[curJourney].phases;
+  if(curStep < phases[curPhase].steps.length-1){ curStep++; }
+  else if(curPhase < phases.length-1){ curPhase++; curStep=0; renderPhaseTimeline(); }
+  else return false;
+  showStep(); return true;
+}
+function retreat(){
+  if(curStep > 0){ curStep--; }
+  else if(curPhase > 0){ curPhase--; curStep=JOURNEYS[curJourney].phases[curPhase].steps.length-1; renderPhaseTimeline(); }
+  showStep();
+}
+document.getElementById('nextBtn').onclick = advance;
+document.getElementById('prevBtn').onclick = retreat;
+document.getElementById('playBtn').onclick = function(){
+  if(playTimer){ clearInterval(playTimer); playTimer=null; this.textContent='Play \u25B6'; return; }
+  this.textContent = 'Pause';
+  playTimer = setInterval(()=>{ if(!advance()){ clearInterval(playTimer); playTimer=null; document.getElementById('playBtn').textContent='Play \u25B6'; } }, 2100);
+};
+</script>
+
+</body>
+</html>

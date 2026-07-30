@@ -1,7 +1,11 @@
 // src/features/learning/components/whiteboard/canvas/FocusEffectsLayer.tsx
 
-import React from "react";
+import React, { useMemo } from "react";
 import { PositionedNode, NodeId } from "@/features/whiteboard/types/whiteboard";
+import {
+  FOCUS_EFFECTS,
+  WHITEBOARD_COLORS,
+} from "@/features/whiteboard/theme";
 
 interface FocusEffectsLayerProps {
   nodes: PositionedNode[];
@@ -13,9 +17,69 @@ export function FocusEffectsLayer({ nodes, activeNodeId }: FocusEffectsLayerProp
     return null;
   }
 
+  // Find active node for mask optimization
+  const activeNode = useMemo(
+    () => nodes.find((n) => n.data.id === activeNodeId),
+    [nodes, activeNodeId]
+  );
+
+  if (!activeNode) {
+    return null;
+  }
+
+  // For large boards (100+ nodes), use single overlay with mask for better performance
+  // For smaller boards, individual rects are acceptable
+  const useOptimizedOverlay = nodes.length > 100;
+
+  if (useOptimizedOverlay) {
+    // Optimized approach: single overlay with mask to cut out active node
+    const activeLeft = activeNode.x - activeNode.width / 2;
+    const activeTop = activeNode.y - activeNode.height / 2;
+
+    return (
+      <g className="focus-effects-layer">
+        <defs>
+          <mask id="focus-mask">
+            {/* White = visible, Black = hidden */}
+            <rect
+              x="0"
+              y="0"
+              width="100%"
+              height="100%"
+              fill="white"
+            />
+            {/* Cut out the active node area */}
+            <rect
+              x={activeLeft}
+              y={activeTop}
+              width={activeNode.width}
+              height={activeNode.height}
+              rx={FOCUS_EFFECTS.nodeBorderRadius}
+              fill="black"
+            />
+          </mask>
+        </defs>
+        {/* Single dim overlay with mask */}
+        <rect
+          x="0"
+          y="0"
+          width="100%"
+          height="100%"
+          fill={WHITEBOARD_COLORS.dimOverlay}
+          style={{
+            opacity: FOCUS_EFFECTS.dimOpacity,
+            transition: `opacity ${FOCUS_EFFECTS.transitionDuration}ms ease-in-out`,
+          }}
+          mask="url(#focus-mask)"
+          className="transition-opacity"
+        />
+      </g>
+    );
+  }
+
+  // Standard approach for smaller boards: individual dim rects
   return (
     <g className="focus-effects-layer">
-      {/* Dim inactive nodes */}
       {nodes.map((node) => {
         if (node.data.id === activeNodeId) {
           return null;
@@ -31,10 +95,13 @@ export function FocusEffectsLayer({ nodes, activeNodeId }: FocusEffectsLayerProp
             y={top}
             width={node.width}
             height={node.height}
-            rx={12}
-            fill="black"
-            opacity={0.3}
-            className="transition-opacity duration-500"
+            rx={FOCUS_EFFECTS.nodeBorderRadius}
+            fill={WHITEBOARD_COLORS.dimOverlay}
+            style={{
+              opacity: FOCUS_EFFECTS.dimOpacity,
+              transition: `opacity ${FOCUS_EFFECTS.transitionDuration}ms ease-in-out`,
+            }}
+            className="transition-opacity"
           />
         );
       })}
