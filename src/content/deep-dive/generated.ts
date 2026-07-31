@@ -14,6 +14,7 @@ import { article as mvcc } from "./articles/mvcc";
 import { article as ownership } from "./articles/ownership";
 import { article as postgres } from "./articles/postgres";
 import { article as redis } from "./articles/redis";
+import { article as segmentTree } from "./articles/segmentTree";
 import { article as simulation } from "./articles/simulation";
 import { article as slidingWindow } from "./articles/slidingWindow";
 import { article as sorting } from "./articles/sorting";
@@ -38,6 +39,7 @@ export const deepDiveRegistry = [
   ownership,
   postgres,
   redis,
+  segmentTree,
   simulation,
   slidingWindow,
   sorting,

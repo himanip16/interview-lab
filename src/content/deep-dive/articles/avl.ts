@@ -15,9 +15,9 @@ export const article: DeepDiveArticle = {
     // Publishing & Operations
     published: true,
     draft: false,
-    version: "1.0.0",
+    version: "1.1.0",
     publishedAt: "2026-02-10",
-    updatedAt: "2026-07-27",
+    updatedAt: "2026-07-31",
 
     // Metrics & Attribution
     estimatedReadingMinutes: 12,
@@ -62,7 +62,16 @@ export const article: DeepDiveArticle = {
       content: [
         {
           type: "text",
-          text: "A plain binary search tree is fast only if you get lucky — if data arrives already mixed up, a tree can collapse into a linked list. An AVL tree refuses to get sloppy. After every write, it checks if any subtree got too tall compared to its sibling, and if so, it rotates nodes to restore the balance. It costs a little work per write to buy the guarantee that searches will never degrade, no matter what order the data came in.",
+          text: "Imagine you built a search system that flew through every test. Then one day, production data arrives already sorted — and suddenly your O(log n) lookup crawls at O(n). Nothing crashed. No error was thrown. The tree just quietly turned into a linked list.",
+        },
+      ],
+    },
+    {
+      type: "paragraph",
+      content: [
+        {
+          type: "text",
+          text: "That's the trap a plain binary search tree can't escape: it's only fast if you get lucky with the order data arrives in. An AVL tree refuses to leave that to luck. After every write, it checks whether any subtree has gotten too tall next to its sibling — and if it has, it rotates nodes until the tree is level again. A little extra work on every write buys a guarantee that reads never degrade, no matter what order the data came in.",
         },
       ],
     },
@@ -72,14 +81,14 @@ export const article: DeepDiveArticle = {
     {
       id: "bst-collapse",
       number: 1,
-      title: "The problem: BSTs can break",
+      title: "Wait — how does a tree become a linked list?",
       blocks: [
         {
           type: "paragraph",
           content: [
             {
               type: "text",
-              text: "A binary search tree only stays fast if it's roughly balanced. Insert 1, 2, 3, 4, 5 in order into a vanilla BST and you don't get a tree — you get a linked list. Search for 5? You touch all five nodes. The O(log n) guarantee vanishes.",
+              text: "A binary search tree only stays fast if it's roughly balanced. Insert 1, 2, 3, 4, 5 in that order into a vanilla BST and you don't get a tree — every new value is larger than the last, so each one hangs off the right side of the one before it. You get a straight line. Search for 5? You touch all five nodes on the way down. The O(log n) guarantee is gone, and nothing in the code ever told you it happened.",
             },
           ],
         },
@@ -88,7 +97,7 @@ export const article: DeepDiveArticle = {
           content: [
             {
               type: "text",
-              text: "An AVL tree refuses to let this happen. It watches the height of every subtree, and if one side ever grows two levels taller than the other, it rotates nodes around to bring them back in line. The tree heals itself automatically.",
+              text: "An AVL tree is built to make that failure mode impossible. It watches the height of every subtree, and the moment one side grows two levels taller than the other, it rotates nodes around to bring them back in line. The tree heals itself — automatically, on every single write.",
             },
           ],
         },
@@ -107,14 +116,14 @@ export const article: DeepDiveArticle = {
     {
       id: "height-invariant",
       number: 2,
-      title: "Balance: the height invariant",
+      title: "So how does it know when a tree is going bad?",
       blocks: [
         {
           type: "paragraph",
           content: [
             {
               type: "text",
-              text: "The rule is simple: for every node, the height of its left subtree and right subtree can differ by at most 1. That's it. That one constraint is what forces the tree to stay balanced.",
+              text: "It doesn't need to inspect the whole tree. It measures one thing, locally, at every node: the difference in height between that node's left side and its right side. If one side is ever more than one level taller than the other, AVL calls the tree broken at that point — and something has to give.",
             },
           ],
         },
@@ -123,7 +132,25 @@ export const article: DeepDiveArticle = {
           content: [
             {
               type: "text",
-              text: "Every node stores its height (or calculates it on-the-fly). After an insert or delete, walk back up the tree toward the root. At each node, check: does the height difference violate the invariant? If yes, rotate. If no, keep walking up.",
+              text: "That single rule — left and right heights can differ by at most 1, everywhere in the tree — is the whole invariant. It sounds almost too simple to prevent the collapse from the last section, but enforcing it at every node is exactly what keeps any subtree from running away in height.",
+            },
+          ],
+        },
+        {
+          type: "paragraph",
+          content: [
+            {
+              type: "text",
+              text: "In practice, every node caches its own height so the check is instant. After an insert or delete, you walk back up toward the root. At each node: is the height difference too big? If yes, rotate. If no, keep climbing.",
+            },
+          ],
+        },
+        {
+          type: "paragraph",
+          content: [
+            {
+              type: "text",
+              text: "As code, the check is just arithmetic:",
             },
           ],
         },
@@ -160,14 +187,14 @@ function isBalanced(node: AVLNode | null): boolean {
     {
       id: "rotations",
       number: 3,
-      title: "Rotations: the rebalancing weapon",
+      title: "How do you fix a tree without breaking its order?",
       blocks: [
         {
           type: "paragraph",
           content: [
             {
               type: "text",
-              text: "When a node's balance factor goes out of bounds (< -1 or > 1), the tree rotates. A rotation is a small, local restructuring that preserves BST order while moving tall subtrees closer to the root.",
+              text: "Here's the part that seems like it shouldn't work: when a node's balance goes bad, AVL doesn't rebuild anything. It doesn't re-sort. It just grabs a small handful of nodes near the problem and re-links them — a rotation. And somehow, after that local shuffle, the tree is still in perfect sorted order and is balanced again.",
             },
           ],
         },
@@ -176,7 +203,7 @@ function isBalanced(node: AVLNode | null): boolean {
           content: [
             {
               type: "text",
-              text: "There are four cases, each fixed by one or two rotations:",
+              text: "The trick is that a rotation never moves a node to a place that would violate BST ordering — it just changes who's whose parent among a few nodes that were already sitting next to each other. There are exactly four situations this can happen in, depending on which side is too tall and which way it leans:",
             },
           ],
         },
@@ -242,6 +269,15 @@ function isBalanced(node: AVLNode | null): boolean {
           width: "full",
         },
         {
+          type: "paragraph",
+          content: [
+            {
+              type: "text",
+              text: "Strip away the four-case naming and a single rotation is really just three pointer changes: a node hands off one of its children to its parent, and swaps places with it. That's the whole repair. Here's what it looks like in code:",
+            },
+          ],
+        },
+        {
           type: "code",
           language: "typescript",
           title: "Rotation Implementation",
@@ -298,14 +334,14 @@ function rebalance(node: AVLNode | null): AVLNode | null {
     {
       id: "insert-operation",
       number: 4,
-      title: "Insert: write, rebalance, propagate",
+      title: "Insert: does one fix really settle the whole tree?",
       blocks: [
         {
           type: "paragraph",
           content: [
             {
               type: "text",
-              text: "Insertion is plain BST insertion — put the new node in its sorted position. Then walk back up the tree. At each ancestor, update its height and check the balance factor. If it's violated, rotate locally and keep walking.",
+              text: "Insertion starts out completely ordinary — put the new node in its sorted position, exactly like a plain BST would. The interesting part happens on the way back out: you walk back up toward the root, and at every ancestor you update its cached height and check the balance factor.",
             },
           ],
         },
@@ -314,7 +350,7 @@ function rebalance(node: AVLNode | null): AVLNode | null {
           content: [
             {
               type: "text",
-              text: "The key insight: one insertion can trigger at most one rebalance operation. After a single rotation fixes a violation, all ancestors above it are automatically balanced again. You don't cascade rotations — you cascade height updates, but at most one rotation per insertion.",
+              text: "Here's the surprising guarantee: a single insertion can trigger at most one rotation, ever. Once that one rotation fixes the first violation it finds on the way up, every node above it is automatically back in balance too. You still climb the whole path updating heights, but you never chain rotation after rotation after a single insert.",
             },
           ],
         },
@@ -333,14 +369,14 @@ function rebalance(node: AVLNode | null): AVLNode | null {
     {
       id: "delete-operation",
       number: 5,
-      title: "Delete: messier, same principle",
+      title: "Delete: why one fix isn't enough this time",
       blocks: [
         {
           type: "paragraph",
           content: [
             {
               type: "text",
-              text: "Deletion starts like a BST: if the node has two children, swap it with its in-order successor, then delete the successor (which has at most one child). Then, like insert, walk back up and rebalance.",
+              text: "Deletion starts like a BST too: if the node has two children, swap it with its in-order successor, then delete the successor instead (which has at most one child of its own). Then, just like insert, you walk back up and rebalance.",
             },
           ],
         },
@@ -349,7 +385,7 @@ function rebalance(node: AVLNode | null): AVLNode | null {
           content: [
             {
               type: "text",
-              text: "The difference: a deletion can leave the tree less tall than it was before, which might rebalance a node that wasn't imbalanced before. So you keep checking and rotating all the way to the root, not just until the first rotation.",
+              text: "But deletion breaks the tidy \"one rotation and you're done\" guarantee from insertion. Removing a node can shrink a subtree's height, which can throw off the balance of a node further up that was perfectly fine before — even one that's nowhere near where you deleted. So on delete, you keep checking and rotating all the way to the root, not just until the first fix.",
             },
           ],
         },
@@ -393,14 +429,14 @@ function rebalance(node: AVLNode | null): AVLNode | null {
     {
       id: "cost-analysis",
       number: 6,
-      title: "Cost: O(log n) search, O(log n) write",
+      title: "So was all that rotating worth it?",
       blocks: [
         {
           type: "paragraph",
           content: [
             {
               type: "text",
-              text: "An AVL tree guarantees that the height is always O(log n) — more precisely, at most 1.44 × log₂(n). That means search is O(log n) always, no unlucky orderings.",
+              text: "Here's the payoff: an AVL tree guarantees its height is always O(log n) — more precisely, at most 1.44 × log₂(n). Search is O(log n), always. Not \"usually,\" not \"unless the input arrives sorted\" — always.",
             },
           ],
         },
@@ -409,7 +445,7 @@ function rebalance(node: AVLNode | null): AVLNode | null {
           content: [
             {
               type: "text",
-              text: "Insert and delete are also O(log n): walk to the insertion point (O(log n)), rebalance on the way back up (O(log n) rotations, each O(1)). The tree never gets out of hand.",
+              text: "Insert and delete are O(log n) too: walk to the insertion point (O(log n)), rebalance on the way back up (O(log n) rotations, each one O(1) work). The tree never gets a chance to get out of hand.",
             },
           ],
         },
@@ -418,7 +454,7 @@ function rebalance(node: AVLNode | null): AVLNode | null {
           content: [
             {
               type: "text",
-              text: "The trade-off: every write does work to maintain balance. A plain BST with lucky input can be faster than an AVL tree — you pay per write to guarantee fast reads. But the read guarantee is bulletproof.",
+              text: "The trade-off is real, though: every write does extra work to maintain that balance. A plain BST with lucky input can outrun an AVL tree on writes — you're paying per write to buy a bulletproof guarantee on reads.",
             },
           ],
         },
@@ -453,14 +489,14 @@ function rebalance(node: AVLNode | null): AVLNode | null {
     {
       id: "real-world-usage",
       number: 7,
-      title: "Where AVL trees live today",
+      title: "If it's this good, why haven't you heard of it in production?",
       blocks: [
         {
           type: "paragraph",
           content: [
             {
               type: "text",
-              text: "AVL trees are less common than they used to be. Most production systems use ",
+              text: "AVL trees are less common than they used to be. Most production systems reach for ",
             },
             {
               type: "bold",
@@ -468,7 +504,7 @@ function rebalance(node: AVLNode | null): AVLNode | null {
             },
             {
               type: "text",
-              text: " (which relax the balance invariant slightly to reduce rotation overhead) or ",
+              text: " instead — they relax the balance invariant slightly, which trades a bit of read speed for far fewer rotations on writes — or ",
             },
             {
               type: "bold",
@@ -476,7 +512,7 @@ function rebalance(node: AVLNode | null): AVLNode | null {
             },
             {
               type: "text",
-              text: " (which optimize for disk I/O by storing multiple keys per node).",
+              text: ", which are built around disk I/O by packing multiple keys into each node.",
             },
           ],
         },
@@ -485,7 +521,7 @@ function rebalance(node: AVLNode | null): AVLNode | null {
           content: [
             {
               type: "text",
-              text: "But AVL trees still show up in competitive programming, in-memory databases that don't fit on disk, and anywhere the simplicity of a strict balance guarantee is worth the extra rotation cost.",
+              text: "But AVL trees haven't disappeared. They still show up in competitive programming, in in-memory databases small enough to never touch disk, and anywhere the simplicity of a strict, easy-to-verify balance guarantee is worth paying for in extra rotations.",
             },
           ],
         },

@@ -40,6 +40,7 @@ import { RecursionIllustration } from "./illustrations/RecursionIllustration";
 import { RedisIllustration } from "./illustrations/Redis";
 import { SQSIllustration } from "./illustrations/SQSIllustration";
 import { SSTableIllustration } from "./illustrations/SSTable";
+import { SegmentTreeIllustration } from "./illustrations/SegmentTree";
 import { SlidingWindowIllustration } from "./illustrations/SlidingWindowIllustration";
 import { SortingOrderIllustration } from "./illustrations/SortingOrderIllustration";
 import { SparkIllustration } from "./illustrations/Spark";
@@ -88,6 +89,7 @@ export const contentComponents: Record<string, ComponentType> = {
   RedisIllustration,
   SQSIllustration,
   SSTableIllustration,
+  SegmentTreeIllustration,
   SlidingWindowIllustration,
   SortingOrderIllustration,
   SparkIllustration,

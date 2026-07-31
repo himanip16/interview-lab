@@ -1,4 +1,11 @@
-// src/content/transcripts/system-design/load-balancer-hld-lld.ts
+// src/content/transcripts/system-design/load-balancer-hld.ts
+//
+// NOTE ON SCHEMA: this file introduces a new message role, "context", used
+// for narrator-style beats inserted between interviewer/candidate turns.
+// If your TranscriptEntry / message role union type only allows
+// "interviewer" | "candidate" | "takeaway", add "context" to it before
+// this compiles. Everything else (content item shapes: text/highlight/
+// whiteboard) is unchanged from your existing schema.
 
 import { Difficulty } from "@prisma/client";
 import { TranscriptData } from "@/features/library/types/transcript";
@@ -6,9 +13,9 @@ import { TranscriptEntry } from "../types";
 
 const transcript: TranscriptData = {
   metadata: {
-    title: "Load Balancer — High-Level and Low-Level Design",
-    difficulty: Difficulty.HARD,
-    duration: 45,
+    title: "Design a Load Balancer",
+    difficulty: Difficulty.MEDIUM,
+    duration: 25,
     template: "System Design",
     category: "System Design",
     company: "Amazon",
@@ -16,9 +23,21 @@ const transcript: TranscriptData = {
 
   messages: [
     {
-      id: "1",
+      id: "0",
       role: "interviewer",
       elapsedSeconds: 0,
+      content: [
+        {
+          type: "text",
+          value:
+            "Picture a single web server handling every visitor to a site. It's fine at first. Then traffic grows, and one day that one server can't keep up — pages time out, or worse, the server crashes and the whole site goes down. The obvious fix is to run several copies of the server. But now someone has to decide, for every incoming request, which copy handles it. That decision-maker is the load balancer — and it turns out to be a surprisingly deep problem on its own.",
+        },
+      ],
+    },
+    {
+      id: "1",
+      role: "interviewer",
+      elapsedSeconds: 15,
       content: [
         {
           type: "text",
@@ -30,7 +49,7 @@ const transcript: TranscriptData = {
     {
       id: "2",
       role: "candidate",
-      elapsedSeconds: 15,
+      elapsedSeconds: 30,
       content: [
         {
           type: "text",
@@ -41,8 +60,20 @@ const transcript: TranscriptData = {
     },
     {
       id: "3",
+      role: "context",
+      elapsedSeconds: 40,
+      content: [
+        {
+          type: "text",
+          value:
+            "Before the numbers land, notice what the candidate is doing: not designing yet, just figuring out which version of the problem this is. \"100 servers, no affinity\" and \"500 servers, affinity required\" are different systems. That question — clarify before you build — is itself part of what's being evaluated here.",
+        },
+      ],
+    },
+    {
+      id: "4",
       role: "interviewer",
-      elapsedSeconds: 28,
+      elapsedSeconds: 55,
       content: [
         {
           type: "text",
@@ -52,9 +83,9 @@ const transcript: TranscriptData = {
       ],
     },
     {
-      id: "4",
+      id: "5",
       role: "candidate",
-      elapsedSeconds: 45,
+      elapsedSeconds: 75,
       content: [
         {
           type: "text",
@@ -72,9 +103,21 @@ const transcript: TranscriptData = {
       ],
     },
     {
-      id: "5",
+      id: "6",
+      role: "context",
+      elapsedSeconds: 90,
+      content: [
+        {
+          type: "text",
+          value:
+            "Worth sitting with that last line. We built the load balancer to fix the \"one server can go down\" problem — and immediately created a new single point of failure in its place. That pattern repeats constantly in system design: solving one bottleneck by introducing a new component, which then needs its own redundancy.",
+        },
+      ],
+    },
+    {
+      id: "7",
       role: "interviewer",
-      elapsedSeconds: 70,
+      elapsedSeconds: 105,
       content: [
         {
           type: "text",
@@ -83,9 +126,9 @@ const transcript: TranscriptData = {
       ],
     },
     {
-      id: "6",
+      id: "8",
       role: "candidate",
-      elapsedSeconds: 90,
+      elapsedSeconds: 125,
       content: [
         {
           type: "text",
@@ -95,9 +138,33 @@ const transcript: TranscriptData = {
       ],
     },
     {
-      id: "7",
+      id: "9",
+      role: "context",
+      elapsedSeconds: 140,
+      content: [
+        {
+          type: "text",
+          value:
+            "The choice here isn't arbitrary — it falls straight out of the requirement. If nobody needed session affinity or content-based routing, L4 would be the better default: cheaper, faster, doesn't need to understand HTTP at all. L7 is the more expensive option, chosen only because the earlier requirement (session affinity) demands it.",
+        },
+      ],
+    },
+    {
+      id: "10",
+      role: "context",
+      elapsedSeconds: 155,
+      content: [
+        {
+          type: "text",
+          value:
+            "Here's the scenario the interviewer is about to build toward. Say you have 10 servers, and you decide which one handles a client with a simple formula: hash(userId) % 10. That works fine — until traffic grows and you add 10 more servers. Now the formula becomes hash(userId) % 20, and the divisor changed. Almost every user's result changes too, even though most servers didn't actually go anywhere. In practice that means: sessions break, and caches that were warm for a user are suddenly on the wrong machine — everyone's requests miss and have to be rebuilt from scratch. This is the exact problem the next few questions are circling.",
+        },
+      ],
+    },
+    {
+      id: "11",
       role: "interviewer",
-      elapsedSeconds: 115,
+      elapsedSeconds: 175,
       content: [
         {
           type: "text",
@@ -107,9 +174,9 @@ const transcript: TranscriptData = {
       ],
     },
     {
-      id: "8",
+      id: "12",
       role: "candidate",
-      elapsedSeconds: 140,
+      elapsedSeconds: 200,
       content: [
         {
           type: "text",
@@ -127,9 +194,21 @@ const transcript: TranscriptData = {
       ],
     },
     {
-      id: "9",
+      id: "13",
+      role: "context",
+      elapsedSeconds: 215,
+      content: [
+        {
+          type: "text",
+          value:
+            "The core idea of a hash ring: instead of a formula that depends on how many servers currently exist, place both servers and clients as fixed points on a circle. A client is always routed to \"the next server point clockwise from it.\" Adding a server just inserts one new point on the circle — it only steals the clients between it and its neighbor. Everyone else's next-clockwise-server stays exactly the same. That's the whole trick: growth becomes a local change instead of a global one.",
+        },
+      ],
+    },
+    {
+      id: "14",
       role: "interviewer",
-      elapsedSeconds: 165,
+      elapsedSeconds: 235,
       content: [
         {
           type: "text",
@@ -138,9 +217,9 @@ const transcript: TranscriptData = {
       ],
     },
     {
-      id: "10",
+      id: "15",
       role: "candidate",
-      elapsedSeconds: 190,
+      elapsedSeconds: 260,
       content: [
         {
           type: "whiteboard",
@@ -157,9 +236,21 @@ const transcript: TranscriptData = {
       ],
     },
     {
-      id: "11",
+      id: "16",
+      role: "context",
+      elapsedSeconds: 280,
+      content: [
+        {
+          type: "text",
+          value:
+            "One server, one point on the ring, would mean that server's \"share\" of the circle is whatever random arc it happened to land in — could be huge, could be tiny. Multiple points per server (virtual nodes) is the fix: spread across enough points, luck averages out, and every physical server ends up owning roughly an equal slice of total traffic.",
+        },
+      ],
+    },
+    {
+      id: "17",
       role: "interviewer",
-      elapsedSeconds: 225,
+      elapsedSeconds: 300,
       content: [
         {
           type: "text",
@@ -168,9 +259,9 @@ const transcript: TranscriptData = {
       ],
     },
     {
-      id: "12",
+      id: "18",
       role: "candidate",
-      elapsedSeconds: 245,
+      elapsedSeconds: 320,
       content: [
         {
           type: "text",
@@ -188,9 +279,21 @@ const transcript: TranscriptData = {
       ],
     },
     {
-      id: "13",
+      id: "19",
+      role: "context",
+      elapsedSeconds: 335,
+      content: [
+        {
+          type: "text",
+          value:
+            "Why not just rely on the 5-second ping? Because a server can die at second 1 of that window, and every real request in the next 4 seconds gets sent to a dead machine and fails before the next check ever notices. Passive checking closes that gap: the LB is watching its own live traffic for failures, not just its own scheduled pings.",
+        },
+      ],
+    },
+    {
+      id: "20",
       role: "interviewer",
-      elapsedSeconds: 270,
+      elapsedSeconds: 350,
       content: [
         {
           type: "text",
@@ -199,9 +302,9 @@ const transcript: TranscriptData = {
       ],
     },
     {
-      id: "14",
+      id: "21",
       role: "candidate",
-      elapsedSeconds: 288,
+      elapsedSeconds: 370,
       content: [
         {
           type: "text",
@@ -219,301 +322,51 @@ const transcript: TranscriptData = {
       ],
     },
     {
-      id: "15",
-      role: "interviewer",
-      elapsedSeconds: 310,
-      content: [
-        {
-          type: "text",
-          value: "HLD's solid. Let's go low-level. Design the classes.",
-        },
-      ],
-    },
-    {
-      id: "16",
-      role: "candidate",
-      elapsedSeconds: 340,
-      content: [
-        {
-          type: "text",
-          value:
-            "Core pieces: a `Server` holding host, port, health status, and current load. A `ServerPool` that owns the collection and handles add/remove safely. A `LoadBalancingStrategy` interface so the algorithm is swappable — round robin, least connections, consistent hash — without touching the pool or the request path.",
-        },
-        {
-          id: "highlight-strategy-pattern",
-          type: "highlight",
-          status: "strong",
-          value: "Separates algorithm selection from pool management via Strategy pattern",
-          explanation:
-            "Keeps the balancing policy pluggable and testable independent of concurrency concerns in the pool.",
-        },
-      ],
-    },
-    {
-      id: "17",
-      role: "interviewer",
-      elapsedSeconds: 365,
-      content: [
-        {
-          type: "text",
-          value:
-            "Write the Strategy interface and a round-robin implementation. Plain Java, no streams.",
-        },
-      ],
-    },
-    {
-      id: "18",
-      role: "candidate",
-      elapsedSeconds: 400,
-      content: [
-        {
-          type: "code",
-          language: "java",
-          value:
-            "public interface LoadBalancingStrategy {\n    Server selectServer(List<Server> healthyServers);\n}\n\npublic class RoundRobinStrategy implements LoadBalancingStrategy {\n    private final AtomicInteger index = new AtomicInteger(0);\n\n    @Override\n    public Server selectServer(List<Server> healthyServers) {\n        if (healthyServers.isEmpty()) {\n            throw new NoHealthyServerException(\"No healthy servers available\");\n        }\n        int i = Math.abs(index.getAndIncrement() % healthyServers.size());\n        return healthyServers.get(i);\n    }\n}",
-        },
-        {
-          type: "text",
-          value: "AtomicInteger for the counter so concurrent requests don't corrupt the index.",
-        },
-      ],
-    },
-    {
-      id: "19",
-      role: "interviewer",
-      elapsedSeconds: 425,
-      content: [
-        {
-          type: "text",
-          value:
-            "index.getAndIncrement() runs forever. What happens when it overflows Integer.MAX_VALUE?",
-        },
-      ],
-    },
-    {
-      id: "20",
-      role: "candidate",
-      elapsedSeconds: 445,
-      content: [
-        {
-          type: "text",
-          value:
-            "It wraps to Integer.MIN_VALUE, which is negative — that's exactly why I have the Math.abs() there. But actually Math.abs(Integer.MIN_VALUE) is still negative, that's a known JVM quirk since there's no positive counterpart in two's complement. Safer fix: mask with `& Integer.MAX_VALUE` instead of Math.abs, or just let index wrap and take `((index % size) + size) % size` to always land positive.",
-        },
-        {
-          id: "highlight-integer-overflow-bug",
-          type: "highlight",
-          status: "strong",
-          value: "Finds that Math.abs(Integer.MIN_VALUE) does not fix the overflow case",
-          explanation:
-            "A genuinely obscure but real Java bug — Math.abs has one input value it can't fix due to two's-complement asymmetry. Candidate catches it and gives two working alternatives.",
-        },
-        {
-          type: "code",
-          language: "java",
-          value:
-            "int i = (int) (Long.remainderUnsigned(index.getAndIncrement(), healthyServers.size()));",
-        },
-      ],
-    },
-    {
-      id: "21",
-      role: "interviewer",
-      elapsedSeconds: 470,
-      content: [
-        {
-          type: "text",
-          value:
-            "Fine. Now — servers get added and removed constantly, but requests are also reading the list to pick a target. How do you keep that safe without stalling every request behind a lock?",
-        },
-      ],
-    },
-    {
       id: "22",
-      role: "candidate",
-      elapsedSeconds: 500,
+      role: "context",
+      elapsedSeconds: 385,
       content: [
         {
           type: "text",
           value:
-            "Reads massively outnumber writes here — server list changes rarely compared to request volume. I'd use `CopyOnWriteArrayList` for the healthy-server list: reads never block, and writes pay the cost of copying the array, which is fine since add/remove is rare. A `ReentrantReadWriteLock` would also work but adds contention on the read side that CopyOnWriteArrayList avoids entirely for this read-heavy pattern.",
-        },
-        {
-          id: "highlight-concurrency-choice",
-          type: "highlight",
-          status: "strong",
-          value: "Picks CopyOnWriteArrayList and justifies it against the read/write ratio",
-          explanation:
-            "Concurrency structure choice is tied explicitly to the access pattern (read-heavy, rare writes) rather than picked by habit.",
-        },
-        {
-          type: "code",
-          language: "java",
-          value:
-            "public class ServerPool {\n    private final CopyOnWriteArrayList<Server> healthyServers = new CopyOnWriteArrayList<>();\n\n    public void markHealthy(Server server) {\n        healthyServers.addIfAbsent(server);\n    }\n\n    public void markUnhealthy(Server server) {\n        healthyServers.remove(server);\n    }\n\n    public List<Server> getHealthyServers() {\n        return healthyServers;\n    }\n}",
+            "This is why \"just mark it healthy again\" is the wrong instinct. A server that was briefly flagged and comes back could still be shaky. Dumping full production traffic on it immediately is how one recovering server gets hammered right back into failure. Slow-start avoids re-triggering the same problem it just recovered from.",
         },
       ],
     },
     {
       id: "23",
-      role: "interviewer",
-      elapsedSeconds: 530,
-      content: [
-        {
-          type: "text",
-          value:
-            "Two health-check threads both detect the same server failing at the same instant, both call markUnhealthy(). Problem?",
-        },
-      ],
-    },
-    {
-      id: "24",
-      role: "candidate",
-      elapsedSeconds: 550,
-      content: [
-        {
-          type: "text",
-          value:
-            "No real problem — `remove()` on an already-absent element is a no-op, it won't throw or corrupt state. Same reasoning is why I used `addIfAbsent` on markHealthy, so a duplicate health-check success doesn't add the server twice. The operations are idempotent by construction, so I don't need extra locking around the double-detection case.",
-        },
-        {
-          id: "highlight-idempotent-ops",
-          type: "highlight",
-          status: "strong",
-          value: "Recognizes idempotency removes the need for extra synchronization here",
-          explanation:
-            "Rather than reaching for more locking, candidate identifies the operations are already safe under duplicate calls — a cleaner answer than adding unnecessary coordination.",
-        },
-      ],
-    },
-    {
-      id: "25",
-      role: "interviewer",
-      elapsedSeconds: 575,
-      content: [
-        {
-          type: "text",
-          value: "Wire the least-connections strategy now. What does it need that round robin doesn't?",
-        },
-      ],
-    },
-    {
-      id: "26",
-      role: "candidate",
-      elapsedSeconds: 610,
-      content: [
-        {
-          type: "code",
-          language: "java",
-          value:
-            "public class LeastConnectionsStrategy implements LoadBalancingStrategy {\n    @Override\n    public Server selectServer(List<Server> healthyServers) {\n        if (healthyServers.isEmpty()) {\n            throw new NoHealthyServerException(\"No healthy servers available\");\n        }\n        Server chosen = healthyServers.get(0);\n        int minConnections = chosen.getActiveConnections();\n        for (int i = 1; i < healthyServers.size(); i++) {\n            Server candidate = healthyServers.get(i);\n            int connections = candidate.getActiveConnections();\n            if (connections < minConnections) {\n                chosen = candidate;\n                minConnections = connections;\n            }\n        }\n        return chosen;\n    }\n}",
-        },
-        {
-          type: "text",
-          value:
-            "It needs each Server to track its own active connection count, incremented when a request routes there, decremented when it completes. That counter has to be an AtomicInteger too, since requests complete on different threads than the ones that started them.",
-        },
-      ],
-    },
-    {
-      id: "27",
-      role: "interviewer",
-      elapsedSeconds: 640,
-      content: [
-        {
-          type: "text",
-          value:
-            "This loop is O(n) per request, scanning all 500 servers. At 100K req/sec, is that a problem?",
-        },
-      ],
-    },
-    {
-      id: "28",
-      role: "candidate",
-      elapsedSeconds: 665,
-      content: [
-        {
-          type: "text",
-          value:
-            "500 comparisons per request is genuinely cheap — nanoseconds, not the bottleneck at 100K req/sec. I wouldn't optimize this without measuring first. If it ever did matter, a min-heap keyed on connection count would get selection to O(log n), but that adds complexity — re-heapifying on every connection change — for a cost that's not actually shown to be a problem yet. I'd hold off unless profiling says otherwise.",
-        },
-        {
-          id: "highlight-premature-optimization",
-          type: "highlight",
-          status: "strong",
-          value: "Declines to over-engineer without a measured bottleneck",
-          explanation:
-            "Interviewer sets a trap toward premature optimization; candidate names the theoretically better structure but explicitly declines it without evidence of need — a sign of engineering judgment, not just algorithm knowledge.",
-        },
-      ],
-    },
-    {
-      id: "29",
-      role: "interviewer",
-      elapsedSeconds: 690,
-      content: [
-        {
-          type: "text",
-          value: "Last one — how would you test the ServerPool concurrency logic?",
-        },
-      ],
-    },
-    {
-      id: "30",
-      role: "candidate",
-      elapsedSeconds: 720,
-      content: [
-        {
-          type: "text",
-          value:
-            "Single-threaded tests first — add, remove, addIfAbsent duplicate, remove-nonexistent — to lock down expected behavior. Then a concurrency test: spin up, say, 50 threads hammering markHealthy/markUnhealthy on overlapping servers simultaneously with a CountDownLatch to start them together, then assert the final healthy set matches what the last operations should produce, and that no exception or corrupted state occurs. I wouldn't try to assert exact intermediate states under concurrency — that's inherently racy — just the invariants that must hold regardless of interleaving.",
-        },
-        {
-          id: "highlight-concurrency-testing",
-          type: "highlight",
-          status: "strong",
-          value: "Distinguishes testable invariants from non-deterministic intermediate states",
-          explanation:
-            "Good concurrency-testing instinct: asserting on final invariants rather than trying to pin down a specific thread interleaving, which would make the test flaky.",
-        },
-      ],
-    },
-    {
-      id: "31",
       role: "takeaway",
-      elapsedSeconds: 745,
+      elapsedSeconds: 400,
       content: [
         {
           type: "text",
           value:
-            "Takeaway: the design moves from HLD to LLD without the two feeling disconnected — every low-level decision (CopyOnWriteArrayList, Strategy pattern, idempotent pool operations) traces back to a constraint established at the high level (100K req/sec, session affinity, 500 servers). Three moments stand out: recognizing that naive mod-based hashing forces a mass remap when the server count changes, catching the Math.abs(Integer.MIN_VALUE) overflow edge case in the round-robin counter — a genuinely obscure Java gotcha most candidates miss — and declining to prematurely optimize the O(n) least-connections scan without a measured need. The candidate also handles two pushback scenarios well: flapping health checks (answered with gradual traffic ramp-up on recovery, not instant full trust) and concurrent duplicate health-check detection (answered by recognizing the pool operations are already idempotent, avoiding unnecessary locking). LLD code stays in plain Java without streams or lambdas throughout, matching interview-under-pressure constraints rather than showcasing language features.",
+            "Takeaway: the whole HLD traces back to one starting fact — 100K req/sec across 500 servers, with some clients needing session affinity. Every decision after that is a consequence, not a free choice: L7 over L4 because affinity requires reading the request; consistent hashing over modulo hashing because the fleet will grow and a mass remap would break every active session; virtual nodes because a single ring point per server distributes load unevenly; and a two-layer health check (active + passive) with gradual recovery because a server can fail faster than a polling interval catches it, and can be untrustworthy for a moment even after it comes back. None of these are memorized best practices — each one is the direct answer to a concrete failure scenario the interviewer built on top of the last.",
         },
       ],
     },
   ],
 };
 
-const loadBalancerHldLld: TranscriptEntry = {
+const loadBalancerHld: TranscriptEntry = {
   summary: {
-    slug: "load-balancer-hld-lld",
-    title: "Load Balancer — High-Level and Low-Level Design",
+    slug: "load-balancer-hld",
+    title: "Load Balancer — High-Level Design",
     category: "hld",
-    difficulty: Difficulty.HARD,
-    duration: 45,
+    difficulty: Difficulty.MEDIUM,
+    duration: 25,
     tags: [
       "System Design",
       "Load Balancing",
       "Consistent Hashing",
-      "Concurrency",
-      "Strategy Pattern",
-      "LLD",
-      "Java",
+      "Health Checks",
+      "L4 vs L7",
     ],
     description:
-      "Combined HLD-to-LLD system design interview for a load balancer, Amazon style. HLD covers L4 vs L7 tradeoffs, why the load balancer itself must not be a single point of failure, consistent hashing (with virtual nodes) to avoid mass remapping when servers are added, and a two-layer health check strategy combining active polling with passive failure detection plus gradual traffic ramp-up on recovery to avoid flapping. LLD covers Server/ServerPool/LoadBalancingStrategy class design in plain Java (no streams or lambdas), a CopyOnWriteArrayList concurrency choice justified against a read-heavy access pattern, idempotent pool operations that need no extra locking under concurrent duplicate health-check detection, a genuine Integer.MIN_VALUE overflow bug caught in a round-robin counter, and a deliberate decision not to prematurely optimize an O(n) least-connections scan without measured evidence of a bottleneck. Closes with a concurrency-testing approach focused on final invariants rather than racy intermediate-state assertions.",
+      "High-level system design interview for a load balancer, Amazon style, framed for learners rather than practitioners. Opens with the motivating problem (one server can't survive scale or failure) before introducing scale requirements. Covers why the load balancer itself must not become a new single point of failure, the L4 vs L7 tradeoff as a direct consequence of needing session affinity, the concrete before/after scenario that motivates consistent hashing (naive modulo hashing causing a mass remap when the fleet grows, breaking sessions and invalidating caches), virtual nodes on the hash ring to even out load distribution, and a two-layer health check strategy — active polling plus passive failure detection from live traffic — with gradual traffic ramp-up on recovery to avoid re-triggering flapping. Narrator-style context beats are interleaved between interviewer/candidate turns to explain what's being tested and why, rather than leaving the reasoning implicit.",
   },
 
   transcript,
 };
 
-export default loadBalancerHldLld;
+export default loadBalancerHld;

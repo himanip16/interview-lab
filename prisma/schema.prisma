@@ -42,6 +42,9 @@ model User {
   passwordHash    String?
   isGuest         Boolean  @default(false)
   guestIdentifier String?  @unique // Stable identifier for guest users to prevent race conditions
+  name            String?  // User's display name (from Google OAuth)
+  image           String?  // User's profile picture URL (from Google OAuth)
+  googleId        String?  @unique // Google OAuth user ID
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -63,6 +66,7 @@ model User {
   deepDiveBookmarks       DeepDiveBookmark[]
   todoItems               TodoItem[]
   userXP                  UserXP?
+  subscription            Subscription?
 }
 
 // ---------------------------------------------------------------------------
@@ -1032,4 +1036,98 @@ model XPActivity {
 
   @@index([userId])
   @@index([activityType])
+}
+
+// ---------------------------------------------------------------------------
+// Payment & Subscription System
+// ---------------------------------------------------------------------------
+
+model Subscription {
+  id              String           @id @default(cuid())
+  userId          String           @unique
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  stripeCustomerId String?         @unique
+  stripeSubscriptionId String?     @unique
+  stripePriceId     String?
+  
+  status           SubscriptionStatus @default(ACTIVE)
+  planType         PlanType         @default(FREE)
+  
+  currentPeriodEnd DateTime?
+  cancelAtPeriodEnd Boolean         @default(false)
+  
+  payments         Payment[]
+  
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  
+  @@index([userId])
+  @@index([stripeSubscriptionId])
+}
+
+model Payment {
+  id              String       @id @default(cuid())
+  subscriptionId  String
+  subscription    Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  
+  stripePaymentIntentId String?  @unique
+  amount          Int
+  currency        String       @default("usd")
+  status          PaymentStatus @default(PENDING)
+  
+  metadata        Json?
+  
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  
+  @@index([subscriptionId])
+  @@index([stripePaymentIntentId])
+}
+
+model Price {
+  id              String   @id @default(cuid())
+  stripePriceId   String   @unique
+  planType        PlanType
+  amount          Int
+  currency        String   @default("usd")
+  interval        PriceInterval
+  intervalCount   Int      @default(1)
+  
+  isActive        Boolean  @default(true)
+  
+  features        Json?    // List of features for this plan
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([planType])
+  @@index([isActive])
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELLED
+  PAST_DUE
+  TRIALING
+  INCOMPLETE
+  INCOMPLETE_EXPIRED
+}
+
+enum PlanType {
+  FREE
+  PRO
+  ENTERPRISE
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum PriceInterval {
+  MONTH
+  YEAR
 }

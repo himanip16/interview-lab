@@ -36,9 +36,11 @@ type Props = {
 
 export function InlineHighlight({
   block,
+  isOpen,
   onToggle,
 }: {
   block: Extract<ContentBlock, { type: "highlight" }>;
+  isOpen: boolean;
   onToggle: () => void;
 }) {
   const style = STATUS_STYLE[block.status] ?? STATUS_STYLE.note;
@@ -46,6 +48,8 @@ export function InlineHighlight({
     <span
       role="button"
       tabIndex={0}
+      aria-expanded={isOpen}
+      aria-label={`Toggle ${block.status} annotation`}
       onClick={onToggle}
       onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onToggle()}
       className="cursor-pointer rounded px-0.5"
@@ -111,6 +115,7 @@ function NoteCard({ note, onRemove, onCollapse }: { note: string; onRemove: () =
         <span className="flex-1">📝 {note}</span>
         <button 
           onClick={onCollapse}
+          aria-label="Close note"
           className="text-[10px] font-semibold cursor-pointer"
           style={{ color: MESSAGE_STYLES.note.color, opacity: 0.7 }}
         >
@@ -154,6 +159,7 @@ function AIReply({ reply, onCollapse }: { reply: string; onCollapse: () => void 
         <span className="flex-1"><b style={{ color: MESSAGE_STYLES.aiReply.accentColor }}>AI:</b> {reply}</span>
         <button 
           onClick={onCollapse}
+          aria-label="Close AI reply"
           className="text-[10px] font-semibold cursor-pointer"
           style={{ color: MESSAGE_STYLES.aiReply.color, opacity: 0.7 }}
         >

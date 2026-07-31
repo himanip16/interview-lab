@@ -25,11 +25,13 @@ export function InlineContentRenderer({
     <p className="whitespace-pre-wrap">
       {items.map((item, ii) => {
         if (item.type === "highlight") {
+          const key = getHighlightKey(item, ii);
           return (
             <InlineHighlight 
-              key={getHighlightKey(item, ii)} 
+              key={key} 
               block={item} 
-              onToggle={() => onToggleHighlight(getHighlightKey(item, ii))} 
+              isOpen={openHighlightId === key}
+              onToggle={() => onToggleHighlight(key)} 
             />
           );
         }
