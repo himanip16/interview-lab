@@ -45,19 +45,13 @@ export default function TranscriptDetailPage() {
   }
 
   return (
-    <div
-      style={{ background: "#EAE7DF" }}
-      className="min-h-[calc(100dvh-64px)] pb-24 sm:h-[calc(100dvh-64px)] sm:overflow-hidden sm:pb-0"
-    >
-      <div className="mx-auto h-full max-w-[900px] p-2 sm:p-4">
-        <TranscriptReader
-          title={transcript.title}
-          company={transcript.company}
-          difficulty={transcript.difficulty}
-          duration={transcript.duration}
-          transcript={transcript.transcript}
-        />
-      </div>
-    </div>
+    <TranscriptReader
+      title={transcript.title}
+      company={transcript.company}
+      difficulty={transcript.difficulty}
+      duration={transcript.duration}
+      transcript={transcript.transcript}
+      sections={transcript.transcript.sections}
+    />
   );
 }

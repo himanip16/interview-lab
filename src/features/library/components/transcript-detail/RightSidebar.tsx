@@ -14,7 +14,7 @@ export function RightSidebar({ architectureSteps, currentSectionIndex }: Props) 
   const visibleCount = (architectureSteps[Math.min(currentSectionIndex, architectureSteps.length - 1)] || []).length;
 
   return (
-    <div className="sticky top-5 hidden w-[260px] shrink-0 lg:block">
+    <div className="sticky top-5 hidden w-[260px] shrink-0 xl:block lg:block">
       <div
         className="rounded-[18px] border p-4.5"
         style={{ background: "#fff", borderColor: "rgba(21,22,28,0.07)" }}

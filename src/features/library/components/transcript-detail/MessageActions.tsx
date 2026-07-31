@@ -8,6 +8,8 @@ type Props = {
   messageId: string;
   isBookmarked: boolean;
   isCandidate: boolean;
+  showBookmarkNote?: boolean;
+  showAskAI?: boolean;
   onToggleBookmark: (id: string) => void;
   onAddNote: (id: string) => void;
   onAskAI: (id: string, type: "why" | "explain" | "challenge") => void;
@@ -17,6 +19,8 @@ export function MessageActions({
   messageId, 
   isBookmarked, 
   isCandidate, 
+  showBookmarkNote = true,
+  showAskAI = false,
   onToggleBookmark, 
   onAddNote, 
   onAskAI 
@@ -30,25 +34,29 @@ export function MessageActions({
       onMouseLeave={() => setShowActions(false)}
       style={{ opacity: showActions ? 1 : undefined }}
     >
-      <button
-        onClick={() => onToggleBookmark(messageId)}
-        className="flex items-center gap-1 rounded-full border px-2 py-1 text-[10.5px] font-semibold cursor-pointer"
-        style={{
-          color: isBookmarked ? "#E8940A" : "#5A5B66",
-          borderColor: isBookmarked ? "rgba(232,148,10,0.3)" : "rgba(21,22,28,0.1)",
-          background: isBookmarked ? "rgba(232,148,10,0.08)" : "none"
-        }}
-      >
-        ★ {isBookmarked ? "Bookmarked" : "Bookmark"}
-      </button>
-      <button
-        onClick={() => onAddNote(messageId)}
-        className="flex items-center gap-1 rounded-full border px-2 py-1 text-[10.5px] font-semibold cursor-pointer"
-        style={{ color: "#5A5B66", borderColor: "rgba(21,22,28,0.1)", background: "none" }}
-      >
-        + Note
-      </button>
-      {isCandidate && (
+      {showBookmarkNote && (
+        <>
+          <button
+            onClick={() => onToggleBookmark(messageId)}
+            className="flex items-center gap-1 rounded-full border px-2 py-1 text-[10.5px] font-semibold cursor-pointer"
+            style={{
+              color: isBookmarked ? "#E8940A" : "#5A5B66",
+              borderColor: isBookmarked ? "rgba(232,148,10,0.3)" : "rgba(21,22,28,0.1)",
+              background: isBookmarked ? "rgba(232,148,10,0.08)" : "none"
+            }}
+          >
+            ★ {isBookmarked ? "Bookmarked" : "Bookmark"}
+          </button>
+          <button
+            onClick={() => onAddNote(messageId)}
+            className="flex items-center gap-1 rounded-full border px-2 py-1 text-[10.5px] font-semibold cursor-pointer"
+            style={{ color: "#5A5B66", borderColor: "rgba(21,22,28,0.1)", background: "none" }}
+          >
+            + Note
+          </button>
+        </>
+      )}
+      {showAskAI && isCandidate && (
         <div className="flex gap-1 flex-wrap">
           <button
             onClick={() => onAskAI(messageId, "why")}

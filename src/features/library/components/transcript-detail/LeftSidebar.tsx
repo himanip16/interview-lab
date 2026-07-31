@@ -37,7 +37,7 @@ export function LeftSidebar({
   }, [bookmarks, allMessages]);
 
   return (
-    <div className="sticky top-5 flex w-[220px] shrink-0 flex-col gap-3.5">
+    <div className="sticky top-5 hidden w-[220px] shrink-0 flex-col gap-3.5 lg:flex xl:flex">
       {/* Progress Card */}
       <div
         className="rounded-[18px] border p-4.5"

@@ -49,19 +49,39 @@ export function InteractiveWhiteboard({ diagram, learning, className, systemTitl
   console.log('[InteractiveWhiteboard] diagram.nodes:', diagram.nodes);
   console.log('[InteractiveWhiteboard] diagram.edges:', diagram.edges);
   
+  const [isMounted, setIsMounted] = useState(false);
   const [mode, setMode] = useState<WhiteboardMode>('explore');
   const [selectedJourneyIndex, setSelectedJourneyIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   
   const scenarios = learning.scenarios || [];
-  const nodes = diagram.nodes.map((n) => n.data);
+  
+  // Sanitize node positions to ensure valid coordinates
+  const sanitizedNodes = useMemo(() => {
+    return diagram.nodes.map(node => ({
+      ...node,
+      x: isNaN(node.x) || node.x === null ? 0 : Math.max(0, node.x),
+      y: isNaN(node.y) || node.y === null ? 0 : Math.max(0, node.y),
+    }));
+  }, [diagram.nodes]);
+  
+  const nodes = sanitizedNodes.map((n) => n.data);
   console.log('[InteractiveWhiteboard] scenarios:', scenarios);
   console.log('[InteractiveWhiteboard] nodes:', nodes);
   
+  // Mount gate to prevent hydration mismatches
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+  
+  if (!isMounted) {
+    return null;
+  }
+  
   // Performance optimization: Create Map for O(1) node lookups
   const nodesById = useMemo(
-    () => new Map(diagram.nodes.map(n => [n.data.id, n])),
-    [diagram.nodes]
+    () => new Map(sanitizedNodes.map(n => [n.data.id, n])),
+    [sanitizedNodes]
   );
   
   // Controller hook - prevents recreation with useRef
@@ -170,24 +190,24 @@ export function InteractiveWhiteboard({ diagram, learning, className, systemTitl
 
   // Calculate diagram bounds for intelligent viewport clamping
   useEffect(() => {
-    if (diagram.nodes.length > 0) {
-      const minX = Math.min(...diagram.nodes.map(n => n.x - n.width / 2));
-      const maxX = Math.max(...diagram.nodes.map(n => n.x + n.width / 2));
-      const minY = Math.min(...diagram.nodes.map(n => n.y - n.height / 2));
-      const maxY = Math.max(...diagram.nodes.map(n => n.y + n.height / 2));
+    if (sanitizedNodes.length > 0) {
+      const minX = Math.min(...sanitizedNodes.map(n => n.x - n.width / 2));
+      const maxX = Math.max(...sanitizedNodes.map(n => n.x + n.width / 2));
+      const minY = Math.min(...sanitizedNodes.map(n => n.y - n.height / 2));
+      const maxY = Math.max(...sanitizedNodes.map(n => n.y + n.height / 2));
       
       setDiagramBounds({ minX, maxX, minY, maxY });
     } else {
       setDiagramBounds(null);
     }
-  }, [diagram.nodes, setDiagramBounds]);
+  }, [sanitizedNodes, setDiagramBounds]);
 
   // Initial fit to screen when diagram loads - only fit if nodes exist
   useEffect(() => {
-    if (diagram.nodes.length > 0) {
+    if (sanitizedNodes.length > 0) {
       // Small delay to ensure SVG is mounted
       const timer = setTimeout(() => {
-        fitToScreen(diagram.nodes.map(node => ({
+        fitToScreen(sanitizedNodes.map(node => ({
           x: node.x,
           y: node.y,
           width: node.width,
@@ -196,7 +216,7 @@ export function InteractiveWhiteboard({ diagram, learning, className, systemTitl
       }, 100);
       return () => clearTimeout(timer);
     }
-  }, [diagram.nodes, fitToScreen]);
+  }, [sanitizedNodes, fitToScreen]);
 
   // Get next node ID for navigation hints
   const nextNodeId = useMemo(() => {
@@ -231,10 +251,10 @@ export function InteractiveWhiteboard({ diagram, learning, className, systemTitl
   }, [isPlaying, nextStep, controllerState.progress]);
 
   return (
-    <div className={cn("flex h-screen w-screen overflow-hidden bg-white", className)}>
+    <div className={cn("flex h-full w-full relative overflow-hidden bg-white", className)}>
       {/* Main Stage */}
       <main className="flex-1 relative flex flex-col min-w-0">
-        {/* Bottom Sheet Overlay */}
+        {/* Inspector Panel Overlay */}
         {focusedNodeId && (
           <div
             className="fixed inset-0 z-30 bg-black/20"
@@ -286,7 +306,7 @@ export function InteractiveWhiteboard({ diagram, learning, className, systemTitl
 
             {/* Layer 3: Nodes */}
             <NodesLayer
-            nodes={diagram.nodes}
+            nodes={sanitizedNodes}
             focusedNodeId={focusedNodeId}
             activeNodeId={activeNodeId}
             onSelectNode={handleSelectNode}
@@ -294,11 +314,11 @@ export function InteractiveWhiteboard({ diagram, learning, className, systemTitl
           />
 
           {/* Layer 4: Focus Effects */}
-          <FocusEffectsLayer nodes={diagram.nodes} activeNodeId={activeNodeId} />
+          <FocusEffectsLayer nodes={sanitizedNodes} activeNodeId={activeNodeId} />
 
           {/* Layer 5: Navigation Hints */}
           <NavigationHintsLayer
-            nodes={diagram.nodes}
+            nodes={sanitizedNodes}
             activeNodeId={activeNodeId}
             nextNodeId={nextNodeId}
           />
@@ -434,45 +454,66 @@ export function InteractiveWhiteboard({ diagram, learning, className, systemTitl
 
         {/* Flow Controls Bottom Overlay */}
         {mode === 'flows' && controllerState.currentScenario && (
-          <div className="absolute bottom-0 left-0 right-0 z-10 p-4 bg-gradient-to-t from-gray-50 to-transparent">
-            <div className="bg-white rounded-full px-6 py-3 border border-gray-100 shadow-sm max-w-md mx-auto flex items-center justify-between gap-4">
+          <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-20">
+            <div className="bg-white/95 backdrop-blur-sm rounded-2xl px-5 py-3 border border-gray-200 shadow-xl flex items-center justify-between gap-3 min-w-[320px]">
               <button
                 onClick={previousStep}
                 disabled={controllerState.progress.current === 1}
-                className="text-xs font-semibold px-4 py-2 rounded-full border cursor-pointer bg-white text-gray-700 border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                title="Previous step"
               >
-                ← Prev
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
               </button>
-              <div className="flex gap-1.5">
-                {Array.from({ length: controllerState.progress.total }).map((_, i) => (
-                  <div
-                    key={i}
-                    className={`w-2 h-2 rounded-full ${
-                      i < controllerState.progress.current - 1
-                        ? 'bg-emerald-600'
-                        : i === controllerState.progress.current - 1
-                        ? 'bg-violet-500'
-                        : 'bg-gray-200'
-                    }`}
-                  />
-                ))}
+              <div className="flex items-center gap-2">
+                <div className="flex gap-1.5">
+                  {Array.from({ length: controllerState.progress.total }).map((_, i) => (
+                    <div
+                      key={i}
+                      className={`w-2 h-2 rounded-full transition-all ${
+                        i < controllerState.progress.current - 1
+                          ? 'bg-emerald-500 scale-110'
+                          : i === controllerState.progress.current - 1
+                          ? 'bg-violet-500 scale-125'
+                          : 'bg-gray-300'
+                      }`}
+                    />
+                  ))}
+                </div>
+                <span className="text-xs font-medium text-gray-600 ml-2">
+                  {controllerState.progress.current}/{controllerState.progress.total}
+                </span>
               </div>
               <button
                 onClick={() => setIsPlaying(!isPlaying)}
-                className={`text-xs font-semibold px-4 py-2 rounded-full border cursor-pointer ${
+                className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${
                   isPlaying 
-                    ? 'bg-emerald-600 text-white border-emerald-600' 
-                    : 'bg-emerald-600 text-white border-emerald-600'
+                    ? 'bg-amber-500 text-white hover:bg-amber-600' 
+                    : 'bg-emerald-500 text-white hover:bg-emerald-600'
                 }`}
+                title={isPlaying ? 'Pause' : 'Play'}
               >
-                {isPlaying ? 'Pause' : 'Play ▶'}
+                {isPlaying ? (
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                    <rect x="6" y="4" width="4" height="16" rx="1" />
+                    <rect x="14" y="4" width="4" height="16" rx="1" />
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4 ml-0.5" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M5 3l14 9-14 9V3z" />
+                  </svg>
+                )}
               </button>
               <button
                 onClick={nextStep}
                 disabled={controllerState.progress.current === controllerState.progress.total}
-                className="text-xs font-semibold px-4 py-2 rounded-full border cursor-pointer bg-white text-gray-700 border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                title="Next step"
               >
-                Next →
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                  <path d="M9 18l6-6-6-6" />
+                </svg>
               </button>
             </div>
           </div>
@@ -513,80 +554,79 @@ export function InteractiveWhiteboard({ diagram, learning, className, systemTitl
         </div>
       </main>
 
-      {/* Bottom Sheet */}
+      {/* Inspector Panel (Slide-over from right) */}
       {focusedNodeId && (
         <div 
-          className="fixed inset-x-0 bottom-0 z-40 bg-white rounded-t-3xl shadow-2xl border-t border-gray-200 max-h-[78vh] overflow-y-auto max-w-[520px] mx-auto left-0 right-0 transform transition-transform duration-[350ms] cubic-bezier(0.34,1.1,0.64,1) translate-y-0"
+          className="fixed top-0 right-0 bottom-0 z-40 bg-white shadow-2xl border-l border-gray-200 w-[400px] max-w-[90vw] overflow-y-auto transform transition-transform duration-[350ms] cubic-bezier(0.34,1.1,0.64,1) translate-x-0"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="w-9 h-1 bg-gray-300 rounded-full mx-auto my-4" />
-          <div className="px-6 pb-8">
-            <div className="flex items-center gap-3 mb-4">
+          <div className="px-6 py-5">
+            <div className="flex items-center gap-3 mb-6">
               <div
-                className="w-9 h-9 rounded-lg flex items-center justify-center text-white flex-shrink-0"
+                className="w-10 h-10 rounded-lg flex items-center justify-center text-white flex-shrink-0"
                 style={{ backgroundColor: CATEGORY_COLORS[focusedNode?.category as keyof typeof CATEGORY_COLORS] || '#15161C' }}
               >
-                <div className="w-4 h-4 rounded-full border-2 border-current opacity-80" />
+                <div className="w-5 h-5 rounded-full border-2 border-current opacity-80" />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-base">{focusedNode?.title}</h3>
-                <p className="text-xs text-gray-500 font-medium">
+                <h3 className="font-semibold text-lg">{focusedNode?.title}</h3>
+                <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">
                   {focusedNode?.category}
                 </p>
               </div>
               <button
                 onClick={handleCloseDetails}
-                className="w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors"
+                className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors"
                 aria-label="Close details"
               >
                 ×
               </button>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-5">
               <div>
-                <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block mb-1">
+                <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider block mb-2">
                   Purpose
                 </span>
-                <p className="text-xs text-gray-500 leading-relaxed">
+                <p className="text-sm text-gray-600 leading-relaxed">
                   {focusedNode?.details.role}
                 </p>
               </div>
               {focusedNode?.details.deepDive && (
                 <div>
-                  <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block mb-1">
+                  <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider block mb-2">
                     Why we need it
                   </span>
-                  <p className="text-xs text-gray-500 leading-relaxed">
+                  <p className="text-sm text-gray-600 leading-relaxed">
                     {focusedNode.details.deepDive}
                   </p>
                 </div>
               )}
               {focusedNode?.details.failureModes && (
                 <div>
-                  <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block mb-1">
+                  <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider block mb-2">
                     If it fails
                   </span>
-                  <p className="text-xs text-gray-500 leading-relaxed">
+                  <p className="text-sm text-gray-600 leading-relaxed">
                     {focusedNode.details.failureModes}
                   </p>
                 </div>
               )}
               {focusedNode?.details.tradeoffs && (
                 <div>
-                  <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block mb-1">
+                  <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider block mb-2">
                     Tradeoffs
                   </span>
-                  <p className="text-xs text-gray-500 leading-relaxed">
+                  <p className="text-sm text-gray-600 leading-relaxed">
                     {focusedNode.details.tradeoffs}
                   </p>
                 </div>
               )}
               {focusedNode?.details.notes && (
                 <div>
-                  <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block mb-1">
+                  <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider block mb-2">
                     Notes
                   </span>
-                  <p className="text-xs text-gray-500 leading-relaxed">
+                  <p className="text-sm text-gray-600 leading-relaxed">
                     {focusedNode.details.notes}
                   </p>
                 </div>

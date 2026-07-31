@@ -119,6 +119,10 @@ export function ContentBlockRenderer({ block }: { block: ContentBlock }) {
         </div>
       );
 
+    case "concept":
+      // Concept blocks are handled by ConceptReference component in MessageBlock
+      return <span className="font-semibold" style={{ color: "#00A87E" }}>{block.value}</span>;
+
     default:
       return null;
   }

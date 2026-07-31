@@ -2,10 +2,14 @@
 
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { MessageBlock } from "./MessageBlock";
-import type { ContentBlock, TranscriptData } from "@/features/library/types/transcript";
+import { ContinueBanner } from "./ContinueBanner";
+import { SectionMarker } from "./SectionMarker";
+import { LeftSidebar } from "./LeftSidebar";
+import { RightSidebar } from "./RightSidebar";
+import type { ContentBlock, TranscriptData, TranscriptSection, UserProgress } from "@/features/library/types/transcript";
 
 type Props = {
   title: string;
@@ -13,6 +17,7 @@ type Props = {
   difficulty: string;
   duration: number;
   transcript: TranscriptData;
+  sections?: TranscriptSection[];
 };
 
 function collectHighlights(transcript: TranscriptData) {
@@ -26,109 +31,356 @@ function collectHighlights(transcript: TranscriptData) {
   return highlights;
 }
 
-export function TranscriptReader({ title, company, difficulty, duration, transcript }: Props) {
+export function TranscriptReader({ title, company, difficulty, duration, transcript, sections = [] }: Props) {
   const router = useRouter();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const sectionRefs = useRef<Record<string, HTMLDivElement>>({});
+  const messageRefs = useRef<Record<string, HTMLDivElement>>({});
+  
   const [progress, setProgress] = useState(0);
+  const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
+  const [bookmarks, setBookmarks] = useState<Set<string>>(new Set());
+  const [notes, setNotes] = useState<Record<string, string>>({});
+  const [aiReplies, setAiReplies] = useState<Record<string, string>>({});
+  const [exploredConcepts, setExploredConcepts] = useState<string[]>([]);
 
   const highlights = useMemo(() => collectHighlights(transcript), [transcript]);
   const strengths = highlights.filter((h) => h.status === "strong");
   const gaps = highlights.filter((h) => h.status === "missed");
 
-  const onScroll = () => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const max = el.scrollHeight - el.clientHeight;
-    setProgress(max > 0 ? (el.scrollTop / max) * 100 : 0);
-  };
+  const allMessages = useMemo(() => {
+    return transcript.messages.map((m) => ({
+      id: m.id,
+      text: typeof m.content === "string" ? m.content : m.content.map((b) => b.type === "text" ? b.value : "").join(" ")
+    }));
+  }, [transcript.messages]);
+
+  const allMessagesFlat = useMemo(() => {
+    if (sections.length > 0) {
+      return sections.flatMap(s => s.messages.map(m => ({ ...m, sectionId: s.id })));
+    }
+    return transcript.messages.map(m => ({ ...m, sectionId: "default" }));
+  }, [sections, transcript.messages]);
+
+  // Load from localStorage
+  useEffect(() => {
+    const savedBookmarks = localStorage.getItem("td_bookmarks");
+    if (savedBookmarks) setBookmarks(new Set(JSON.parse(savedBookmarks)));
+
+    const savedNotes = localStorage.getItem("td_notes");
+    if (savedNotes) setNotes(JSON.parse(savedNotes));
+
+    const savedExplored = localStorage.getItem("td_explored");
+    if (savedExplored) setExploredConcepts(JSON.parse(savedExplored));
+  }, []);
+
+  // Save to localStorage
+  const saveBookmarks = useCallback((newBookmarks: Set<string>) => {
+    setBookmarks(newBookmarks);
+    localStorage.setItem("td_bookmarks", JSON.stringify([...newBookmarks]));
+  }, []);
+
+  const saveNotes = useCallback((newNotes: Record<string, string>) => {
+    setNotes(newNotes);
+    localStorage.setItem("td_notes", JSON.stringify(newNotes));
+  }, []);
+
+  const saveExploredConcepts = useCallback((newExplored: string[]) => {
+    setExploredConcepts(newExplored);
+    localStorage.setItem("td_explored", JSON.stringify(newExplored));
+  }, []);
+
+  const saveProgress = useCallback((messageId: string, sectionId: string, pct: number) => {
+    const progress: UserProgress = { messageId, sectionId, pct };
+    localStorage.setItem("td_progress", JSON.stringify(progress));
+  }, []);
+
+  // Intersection observers for progress tracking
+  useEffect(() => {
+    const msgObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const target = entry.target as HTMLElement;
+            const idx = allMessagesFlat.findIndex((m) => m.id === target.dataset.id);
+            if (idx > -1) {
+              const pct = Math.round(((idx + 1) / allMessagesFlat.length) * 100);
+              setProgress(pct);
+              const msg = allMessagesFlat[idx];
+              saveProgress(msg.id || "", msg.sectionId, pct);
+            }
+          }
+        });
+      },
+      { rootMargin: "0px 0px -60% 0px" }
+    );
+
+    Object.values(messageRefs.current).forEach((el) => {
+      if (el) msgObserver.observe(el);
+    });
+
+    return () => msgObserver.disconnect();
+  }, [allMessagesFlat, saveProgress]);
+
+  // Intersection observer for sections
+  useEffect(() => {
+    const sectionObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const target = entry.target as HTMLElement;
+            const sectionId = target.dataset.section;
+            const idx = sections.findIndex((s) => s.id === sectionId);
+            if (idx > -1) setCurrentSectionIndex(idx);
+          }
+        });
+      },
+      { rootMargin: "-20% 0px -70% 0px" }
+    );
+
+    Object.values(sectionRefs.current).forEach((el) => {
+      if (el) sectionObserver.observe(el);
+    });
+
+    return () => sectionObserver.disconnect();
+  }, [sections]);
+
+  const handleJumpToSection = useCallback((sectionId: string) => {
+    const el = sectionRefs.current[sectionId];
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
+  const handleJumpToMessage = useCallback((messageId: string) => {
+    const el = messageRefs.current[messageId];
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, []);
+
+  const handleJumpToConcept = useCallback((conceptKey: string) => {
+    if (!exploredConcepts.includes(conceptKey)) {
+      saveExploredConcepts([...exploredConcepts, conceptKey]);
+    }
+  }, [exploredConcepts, saveExploredConcepts]);
+
+  const handleToggleBookmark = useCallback((messageId: string) => {
+    const newBookmarks = new Set(bookmarks);
+    if (newBookmarks.has(messageId)) {
+      newBookmarks.delete(messageId);
+    } else {
+      newBookmarks.add(messageId);
+    }
+    saveBookmarks(newBookmarks);
+  }, [bookmarks, saveBookmarks]);
+
+  const handleAddNote = useCallback((messageId: string, note: string) => {
+    const newNotes = { ...notes };
+    if (note) {
+      newNotes[messageId] = note;
+    } else {
+      delete newNotes[messageId];
+    }
+    saveNotes(newNotes);
+  }, [notes, saveNotes]);
+
+  const handleAskAI = useCallback((messageId: string, type: "why" | "explain" | "challenge") => {
+    const replies: Record<string, string> = {
+      why: "The candidate is trading strong consistency for write throughput and lower latency — reasonable here since query logs only feed an hourly batch job, not something a user reads immediately.",
+      explain: "In short: writes go to a store built for handling huge volumes quickly, without needing every replica to agree instantly — that tradeoff is fine because nothing downstream needs the data right away.",
+      challenge: "A fair pushback: what happens if that batch job falls behind? At 10k QPS, how stale can rankings get before autocomplete quality visibly degrades?",
+    };
+    setAiReplies((prev) => ({ ...prev, [messageId]: replies[type] }));
+  }, []);
+
+  const handleCollapseAiReply = useCallback((messageId: string) => {
+    setAiReplies((prev) => {
+      const newReplies = { ...prev };
+      delete newReplies[messageId];
+      return newReplies;
+    });
+  }, []);
+
+  const handleExploreConcept = useCallback((conceptKey: string) => {
+    if (!exploredConcepts.includes(conceptKey)) {
+      saveExploredConcepts([...exploredConcepts, conceptKey]);
+    }
+  }, [exploredConcepts, saveExploredConcepts]);
+
+  const handleContinueJump = useCallback(() => {
+    const saved = localStorage.getItem("td_progress");
+    if (saved) {
+      try {
+        const progress: UserProgress = JSON.parse(saved);
+        handleJumpToMessage(progress.messageId);
+      } catch (e) {
+        console.error("Error parsing progress:", e);
+      }
+    }
+  }, [handleJumpToMessage]);
+
+  const concepts = transcript.metadata.concepts || {};
+  const architectureSteps = transcript.metadata.architectureSteps || [];
 
   return (
-    <div
-      className="flex h-full min-h-0 flex-col overflow-hidden rounded-lg"
-      style={{ background: "#FAF9F6", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)" }}
-    >
-      {/* Scroll progress bar */}
-      <div className="h-[3px] shrink-0" style={{ background: "rgba(21,22,28,0.06)" }}>
-        <div className="h-full transition-[width] duration-100" style={{ width: `${progress}%`, background: "#00A87E" }} />
-      </div>
+    <div style={{ background: "#FAF9F6", fontFamily: "'Inter', sans-serif", color: "#15161C" }}>
+      {/* Continue Banner */}
+      <ContinueBanner 
+        sectionTitle={sections[currentSectionIndex]?.title || title} 
+        onJump={handleContinueJump} 
+      />
 
-      <div ref={scrollRef} onScroll={onScroll} className="min-h-0 flex-1 overflow-y-auto px-4 pb-10 pt-5 sm:px-6 sm:pt-6">
-        <button
-          onClick={() => router.push("/learn/transcripts")}
-          className="mb-4 flex items-center gap-2 rounded-full border px-3 py-1.5 text-[13px] font-medium sm:mb-5"
-          style={{ borderColor: "rgba(21,22,28,0.1)", background: "none", color: "#5A5B66" }}
+      {/* Header */}
+      <div className="mx-auto max-w-[1300px] px-6 py-6 pb-4.5" style={{ borderBottom: "1px solid rgba(21,22,28,0.07)" }}>
+        <div className="text-[12px] font-bold uppercase tracking-wider" style={{ color: "#6A5AE0" }}>
+          {transcript.metadata.category} {transcript.metadata.template}
+        </div>
+        <h1 
+          className="mt-2 text-[28px] font-extrabold leading-tight tracking-tight" 
+          style={{ fontFamily: "'Poppins', sans-serif", letterSpacing: "-0.02em" }}
         >
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
-            <path d="M15 6l-6 6 6 6" />
-          </svg>
-          Library / <b style={{ color: "#15161C" }}>Read a transcript</b>
-        </button>
-
-        <h1 className="text-[22px] font-bold leading-tight tracking-tight sm:text-[26px]" style={{ fontFamily: "'Poppins', sans-serif" }}>
           {title}
         </h1>
-
-        <div className="mt-2.5 flex flex-wrap gap-2">
-          {company && <span className="rounded-full border px-3 py-1 text-[11px] font-semibold" style={{ borderColor: "rgba(21,22,28,0.08)", color: "#5A5B66" }}>{company}</span>}
-          <span className="rounded-full border px-3 py-1 text-[11px] font-semibold" style={{ borderColor: "rgba(21,22,28,0.08)", color: "#5A5B66" }}>{difficulty}</span>
-          <span className="rounded-full border px-3 py-1 text-[11px] font-semibold" style={{ borderColor: "rgba(21,22,28,0.08)", color: "#5A5B66" }}>{duration} min</span>
+        <div className="mt-3 flex flex-wrap items-center gap-2.5">
+          <span 
+            className="rounded-full px-3 py-1 text-[11.5px] font-semibold"
+            style={{ 
+              background: difficulty === "Hard" ? "rgba(255,90,60,0.12)" : "var(--bubble)",
+              color: difficulty === "Hard" ? "#FF5A3C" : "#5A5B66"
+            }}
+          >
+            {difficulty}
+          </span>
+          <span className="rounded-full px-3 py-1 text-[11.5px] font-semibold" style={{ background: "var(--bubble)", color: "#5A5B66" }}>
+            {duration} min
+          </span>
+          {company && <span className="rounded-full px-3 py-1 text-[11.5px] font-semibold" style={{ background: "var(--bubble)", color: "#5A5B66" }}>
+            {company}
+          </span>}
         </div>
-
-        <div className="mt-4 flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-[12px] font-semibold" style={{ background: "rgba(0,217,163,0.08)", color: "#00A87E" }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" className="shrink-0">
-            <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z" />
-            <circle cx="12" cy="12" r="3" />
-          </svg>
-          This is a full past session. Just read — nothing to answer.
-        </div>
-
-        {highlights.length > 0 && (
-          <div className="mt-5 flex flex-wrap gap-x-4 gap-y-1.5 text-[11px]" style={{ color: "#5A5B66" }}>
-            <span className="flex items-center gap-1.5">
-              <span className="h-2 w-[18px] rounded" style={{ background: "rgba(0,217,163,0.35)" }} />
-              Strong moment
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="h-2 w-[18px] rounded" style={{ background: "rgba(255,90,60,0.28)" }} />
-              Missed something
-            </span>
-            <span className="opacity-80">tap a highlight to see why</span>
+        {transcript.metadata.topics && transcript.metadata.topics.length > 0 && (
+          <div className="mt-3.5 flex flex-wrap items-center gap-2">
+            <span className="text-[11px] font-semibold" style={{ color: "#5A5B66" }}>Topics</span>
+            {transcript.metadata.topics.map((topic) => (
+              <span
+                key={topic}
+                className="cursor-pointer rounded-full border px-3 py-1 text-[11.5px] font-semibold"
+                style={{
+                  borderColor: exploredConcepts.includes(topic) ? "rgba(0,168,126,0.3)" : "rgba(21,22,28,0.1)",
+                  color: exploredConcepts.includes(topic) ? "#00A87E" : "#5A5B66"
+                }}
+                onClick={() => handleJumpToConcept(topic)}
+              >
+                {topic}
+              </span>
+            ))}
           </div>
         )}
+      </div>
 
-        <div className="mt-5 flex flex-col gap-5">
-          {transcript.messages.map((message, i) => (
-            <MessageBlock key={message.id ?? i} message={message} />
-          ))}
-        </div>
+      {/* Three-column layout */}
+      <div className="mx-auto flex gap-5 px-6 py-5.5 pb-20 max-w-[1300px] items-start">
+        {/* Left Sidebar */}
+        <LeftSidebar
+          sections={sections.length > 0 ? sections : [{ id: "default", title: "Transcript", time: "0:00", messages: transcript.messages }]}
+          currentSectionIndex={currentSectionIndex}
+          progress={progress}
+          bookmarks={[...bookmarks]}
+          allMessages={allMessages}
+          exploredConcepts={exploredConcepts}
+          concepts={concepts}
+          onJumpToSection={handleJumpToSection}
+          onJumpToMessage={handleJumpToMessage}
+          onJumpToConcept={handleJumpToConcept}
+        />
 
-        {(strengths.length > 0 || gaps.length > 0) && (
-          <div className="mt-9 rounded-[22px] p-5 sm:p-[26px]" style={{ background: "#15161C", color: "#fff" }}>
-            <h3 className="mb-3.5 text-[15px] font-semibold sm:text-[16px]">How this session went</h3>
-            <div className="flex flex-col gap-3 sm:flex-row">
-              {strengths.length > 0 && (
-                <div className="flex-1 rounded-2xl p-3.5" style={{ background: "rgba(255,255,255,0.06)" }}>
-                  <div className="mb-1.5 text-[10px] font-bold uppercase tracking-wide" style={{ color: "#00D9A3" }}>
-                    Strength
-                  </div>
-                  <p className="text-[12px] leading-relaxed" style={{ color: "rgba(255,255,255,0.7)" }}>
-                    {strengths[0].explanation}
-                  </p>
+        {/* Center Transcript */}
+        <div className="flex-1 min-w-0 max-w-[640px] lg:max-w-[640px] xl:max-w-[640px] w-full">
+          {sections.length > 0 ? (
+            sections.map((section, sectionIndex) => (
+              <div key={section.id}>
+                <SectionMarker title={section.title} isFirst={sectionIndex === 0} />
+                <div ref={(el) => { if (el) sectionRefs.current[section.id] = el; }} data-section={section.id}>
+                  {section.messages.map((message) => (
+                    <div
+                      key={message.id}
+                      ref={(el) => { if (el && message.id) messageRefs.current[message.id] = el; }}
+                      data-id={message.id}
+                    >
+                      <MessageBlock
+                        message={message}
+                        isBookmarked={bookmarks.has(message.id || "")}
+                        note={notes[message.id || ""]}
+                        aiReply={aiReplies[message.id || ""]}
+                        concepts={concepts}
+                        exploredConcepts={exploredConcepts}
+                        onToggleBookmark={handleToggleBookmark}
+                        onAddNote={handleAddNote}
+                        onAskAI={handleAskAI}
+                        onExploreConcept={handleExploreConcept}
+                        onCollapseAiReply={handleCollapseAiReply}
+                      />
+                    </div>
+                  ))}
                 </div>
-              )}
-              {gaps.length > 0 && (
-                <div className="flex-1 rounded-2xl p-3.5" style={{ background: "rgba(255,255,255,0.06)" }}>
-                  <div className="mb-1.5 text-[10px] font-bold uppercase tracking-wide" style={{ color: "#FF8A6E" }}>
-                    To work on
+              </div>
+            ))
+          ) : (
+            transcript.messages.map((message) => (
+              <div
+                key={message.id}
+                ref={(el) => { if (el && message.id) messageRefs.current[message.id] = el; }}
+                data-id={message.id}
+              >
+                <MessageBlock
+                  message={message}
+                  isBookmarked={bookmarks.has(message.id || "")}
+                  note={notes[message.id || ""]}
+                  aiReply={aiReplies[message.id || ""]}
+                  concepts={concepts}
+                  exploredConcepts={exploredConcepts}
+                  onToggleBookmark={handleToggleBookmark}
+                  onAddNote={handleAddNote}
+                  onAskAI={handleAskAI}
+                  onExploreConcept={handleExploreConcept}
+                  onCollapseAiReply={handleCollapseAiReply}
+                />
+              </div>
+            ))
+          )}
+
+          {/* Session summary */}
+          {(strengths.length > 0 || gaps.length > 0) && (
+            <div className="mt-9 rounded-[22px] p-5 sm:p-[26px]" style={{ background: "#15161C", color: "#fff" }}>
+              <h3 className="mb-3.5 text-[15px] font-semibold sm:text-[16px]">How this session went</h3>
+              <div className="flex flex-col gap-3 sm:flex-row">
+                {strengths.length > 0 && (
+                  <div className="flex-1 rounded-2xl p-3.5" style={{ background: "rgba(255,255,255,0.06)" }}>
+                    <div className="mb-1.5 text-[10px] font-bold uppercase tracking-wide" style={{ color: "#00D9A3" }}>
+                      Strength
+                    </div>
+                    <p className="text-[12px] leading-relaxed" style={{ color: "rgba(255,255,255,0.7)" }}>
+                      {strengths[0].explanation}
+                    </p>
                   </div>
-                  <p className="text-[12px] leading-relaxed" style={{ color: "rgba(255,255,255,0.7)" }}>
-                    {gaps[0].explanation}
-                  </p>
-                </div>
-              )}
+                )}
+                {gaps.length > 0 && (
+                  <div className="flex-1 rounded-2xl p-3.5" style={{ background: "rgba(255,255,255,0.06)" }}>
+                    <div className="mb-1.5 text-[10px] font-bold uppercase tracking-wide" style={{ color: "#FF8A6E" }}>
+                      To work on
+                    </div>
+                    <p className="text-[12px] leading-relaxed" style={{ color: "rgba(255,255,255,0.7)" }}>
+                      {gaps[0].explanation}
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
+
+        {/* Right Sidebar */}
+        <RightSidebar
+          architectureSteps={architectureSteps}
+          currentSectionIndex={currentSectionIndex}
+        />
       </div>
     </div>
   );

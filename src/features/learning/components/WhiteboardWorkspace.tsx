@@ -62,23 +62,7 @@ export default function WhiteboardWorkspace() {
   }, [currentSlug, isImplemented]);
 
   return (
-    <div className="flex flex-col h-screen bg-white">
-      {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-100">
-        <div className="flex items-center gap-3 mb-2">
-          <h1 className="text-xl font-semibold text-gray-900">{system.title}</h1>
-          <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-        </div>
-        <p className="text-sm text-gray-500">{system.oneLiner}</p>
-        {frame?.learning.scenarios && frame.learning.scenarios.length > 0 && (
-          <div className="mt-2 flex items-center gap-2 text-xs text-gray-400">
-            <span className="font-medium text-gray-600">{frame.learning.scenarios.length} interactive flows</span>
-            <span>·</span>
-            <span>{frame.learning.scenarios.map(s => s.title).join(' · ')}</span>
-          </div>
-        )}
-      </div>
-
+    <div className="h-[calc(100vh-4rem)]">
       {/* Unified Whiteboard Component */}
       {isImplemented && frame ? (
         <>
@@ -94,7 +78,7 @@ export default function WhiteboardWorkspace() {
       ) : (
         <>
           {console.log('[WhiteboardWorkspace] Showing Coming Soon - isImplemented:', isImplemented, 'frame:', frame)}
-          <div className="flex-1 flex items-center justify-center">
+          <div className="flex-1 flex items-center justify-center h-full">
             <div className="text-center">
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
                 <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
