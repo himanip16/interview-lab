@@ -8,10 +8,11 @@ type Props = {
   messageId: string;
   isBookmarked: boolean;
   isCandidate: boolean;
+  variant?: "candidate" | "interviewer";
   showBookmarkNote?: boolean;
   showAskAI?: boolean;
   onToggleBookmark: (id: string) => void;
-  onAddNote: (id: string) => void;
+  onStartNote: (id: string) => void;
   onAskAI: (id: string, type: "why" | "explain" | "challenge") => void;
 };
 
@@ -19,12 +20,16 @@ export function MessageActions({
   messageId, 
   isBookmarked, 
   isCandidate, 
+  variant,
   showBookmarkNote = true,
   showAskAI = false,
   onToggleBookmark, 
-  onAddNote, 
+  onStartNote, 
   onAskAI 
 }: Props) {
+  // If variant is specified, override the flags
+  const effectiveShowBookmarkNote = variant === undefined ? showBookmarkNote : true;
+  const effectiveShowAskAI = variant === undefined ? showAskAI : variant === "candidate";
   const [showActions, setShowActions] = useState(false);
 
   return (
@@ -34,7 +39,7 @@ export function MessageActions({
       onMouseLeave={() => setShowActions(false)}
       style={{ opacity: showActions ? 1 : undefined }}
     >
-      {showBookmarkNote && (
+      {effectiveShowBookmarkNote && (
         <>
           <button
             onClick={() => onToggleBookmark(messageId)}
@@ -48,7 +53,7 @@ export function MessageActions({
             ★ {isBookmarked ? "Bookmarked" : "Bookmark"}
           </button>
           <button
-            onClick={() => onAddNote(messageId)}
+            onClick={() => onStartNote(messageId)}
             className="flex items-center gap-1 rounded-full border px-2 py-1 text-[10.5px] font-semibold cursor-pointer"
             style={{ color: "#5A5B66", borderColor: "rgba(21,22,28,0.1)", background: "none" }}
           >
@@ -56,7 +61,7 @@ export function MessageActions({
           </button>
         </>
       )}
-      {showAskAI && isCandidate && (
+      {effectiveShowAskAI && isCandidate && (
         <div className="flex gap-1 flex-wrap">
           <button
             onClick={() => onAskAI(messageId, "why")}

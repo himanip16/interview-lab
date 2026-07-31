@@ -171,15 +171,21 @@ export function TranscriptReader({ title, company, difficulty, duration, transcr
     saveBookmarks(newBookmarks);
   }, [bookmarks, saveBookmarks]);
 
-  const handleAddNote = useCallback((messageId: string, note: string) => {
+  const handleSaveNote = useCallback((messageId: string, note: string) => {
     const newNotes = { ...notes };
-    if (note) {
-      newNotes[messageId] = note;
-    } else {
-      delete newNotes[messageId];
-    }
+    newNotes[messageId] = note;
     saveNotes(newNotes);
   }, [notes, saveNotes]);
+
+  const handleDeleteNote = useCallback((messageId: string) => {
+    const newNotes = { ...notes };
+    delete newNotes[messageId];
+    saveNotes(newNotes);
+  }, [notes, saveNotes]);
+
+  const handleStartNote = useCallback(() => {
+    // Note input state is managed locally in MessageBlock
+  }, []);
 
   const handleAskAI = useCallback((messageId: string, type: "why" | "explain" | "challenge") => {
     const replies: Record<string, string> = {
@@ -312,7 +318,9 @@ export function TranscriptReader({ title, company, difficulty, duration, transcr
                         concepts={concepts}
                         exploredConcepts={exploredConcepts}
                         onToggleBookmark={handleToggleBookmark}
-                        onAddNote={handleAddNote}
+                        onStartNote={handleStartNote}
+                        onSaveNote={handleSaveNote}
+                        onDeleteNote={handleDeleteNote}
                         onAskAI={handleAskAI}
                         onExploreConcept={handleExploreConcept}
                         onCollapseAiReply={handleCollapseAiReply}
@@ -337,7 +345,9 @@ export function TranscriptReader({ title, company, difficulty, duration, transcr
                   concepts={concepts}
                   exploredConcepts={exploredConcepts}
                   onToggleBookmark={handleToggleBookmark}
-                  onAddNote={handleAddNote}
+                  onStartNote={handleStartNote}
+                  onSaveNote={handleSaveNote}
+                  onDeleteNote={handleDeleteNote}
                   onAskAI={handleAskAI}
                   onExploreConcept={handleExploreConcept}
                   onCollapseAiReply={handleCollapseAiReply}
