@@ -23,10 +23,15 @@ export function loadWhiteboardScene(
   layout: NodeLayout[],
   config: WhiteboardConfig = DEFAULT_WHITEBOARD_CONFIG
 ): WhiteboardFrame {
+  console.log('[WhiteboardService] loadWhiteboardScene called with design:', design);
+  console.log('[WhiteboardService] loadWhiteboardScene called with layout:', layout);
   try {
     validateDesign(design, layout, config);
+    console.log('[WhiteboardService] Design validation passed');
 
-    return calculateWhiteboardFrame(design, layout, config);
+    const frame = calculateWhiteboardFrame(design, layout, config);
+    console.log('[WhiteboardService] Calculated frame:', frame);
+    return frame;
   } catch (error) {
     console.error("Failed to load whiteboard scene:", error);
     throw error;

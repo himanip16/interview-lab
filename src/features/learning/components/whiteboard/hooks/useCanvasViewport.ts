@@ -87,26 +87,20 @@ export function useCanvasViewport(): UseCanvasViewportReturn {
   }, []);
 
   const clampViewBox = useCallback((x: number, y: number, width: number, height: number): ViewBox => {
-    // Use diagram bounds if available, otherwise fall back to canvas bounds
-    if (diagramBounds) {
-      const minX = diagramBounds.minX - PADDING;
-      const maxX = diagramBounds.maxX + PADDING - width;
-      const minY = diagramBounds.minY - PADDING;
-      const maxY = diagramBounds.maxY + PADDING - height;
+    // Determine the boundaries based on the diagram or a default area
+    const bounds = diagramBounds || { 
+        minX: 0, 
+        minY: 0, 
+        maxX: CANVAS_W, 
+        maxY: CANVAS_H 
+    };
 
-      return {
-        x: Math.max(minX, Math.min(maxX, x)),
-        y: Math.max(minY, Math.min(maxY, y)),
-        width,
-        height,
-      };
-    }
-
-    // Fallback to canvas bounds (prevents dragging into infinite empty space)
-    const minX = -PADDING;
-    const maxX = CANVAS_W + PADDING - width;
-    const minY = -PADDING;
-    const maxY = CANVAS_H + PADDING - height;
+    // ALLOW the camera to move anywhere within the bounds plus significant padding
+    // We remove the "- width" restriction which was locking the camera
+    const minX = bounds.minX - width;
+    const maxX = bounds.maxX;
+    const minY = bounds.minY - height;
+    const maxY = bounds.maxY;
 
     return {
       x: Math.max(minX, Math.min(maxX, x)),
@@ -114,7 +108,7 @@ export function useCanvasViewport(): UseCanvasViewportReturn {
       width,
       height,
     };
-  }, [diagramBounds]);
+}, [diagramBounds]);
 
   const handleWheel = useCallback((e: React.WheelEvent<SVGSVGElement>) => {
     e.preventDefault();
@@ -133,12 +127,11 @@ export function useCanvasViewport(): UseCanvasViewportReturn {
   }, [screenToViewBox, clampViewBox, scheduleUpdate]);
 
   const handlePointerDown = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
-    // Decouple from DOM inspection - only pan if on background
-    const target = e.target as SVGElement;
-    const isBackground = target === e.currentTarget || 
-      (target as unknown as HTMLElement)?.dataset?.canvasBackground === "true";
-    
-    if (!isBackground) return;
+    // Don't start panning if the user is clicking a button or an interactive node
+    const target = e.target as HTMLElement;
+    if (target.closest('button') || target.getAttribute('role') === 'button') {
+        return;
+    }
     
     e.preventDefault();
     isPanning.current = true;
@@ -184,6 +177,13 @@ export function useCanvasViewport(): UseCanvasViewportReturn {
   const fitToScreen = useCallback((nodes: Array<{ x: number; y: number; width: number; height: number }>) => {
     if (nodes.length === 0) return;
     
+    const svg = svgRef.current;
+    if (!svg) return;
+    const rect = svg.getBoundingClientRect();
+    // BUG FIX: If the element isn't rendered yet, stop immediately 
+    // to prevent divide-by-zero errors.
+    if (rect.width === 0 || rect.height === 0) return;
+    
     const padding = 100;
     // Fix coordinate math: use explicit top-left anchor extents
     // Nodes are positioned by center (x, y), so convert to top-left for bounds
@@ -195,13 +195,10 @@ export function useCanvasViewport(): UseCanvasViewportReturn {
     const contentWidth = maxX - minX;
     const contentHeight = maxY - minY;
     
-    const svg = svgRef.current;
-    if (!svg) return;
-    const rect = svg.getBoundingClientRect();
-    
     const scaleX = rect.width / contentWidth;
     const scaleY = rect.height / contentHeight;
-    const scale = Math.min(scaleX, scaleY, 1.5);
+    // BUG FIX: Ensure scale is a valid positive number
+    const scale = Math.max(0.01, Math.min(scaleX, scaleY, 1.5));
     
     const newWidth = CANVAS_W / scale;
     const newHeight = CANVAS_H / scale;

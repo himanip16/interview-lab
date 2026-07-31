@@ -13,11 +13,11 @@ interface NodesLayerProps {
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
-  entry: "var(--category-practice)",
-  logic: "var(--category-concept)",
-  storage: "var(--category-learn-deep)",
-  queue: "var(--category-live)",
-  network: "var(--category-neutral)",
+  entry: "#FF5A3C",
+  logic: "#6A5AE0",
+  storage: "#00A87E",
+  queue: "#E8940A",
+  network: "#15161C",
 };
 
 const NODE_ICONS: Record<string, string> = {

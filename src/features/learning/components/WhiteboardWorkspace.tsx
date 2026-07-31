@@ -95,19 +95,19 @@ export default function WhiteboardWorkspace() {
         <>
           {console.log('[WhiteboardWorkspace] Showing Coming Soon - isImplemented:', isImplemented, 'frame:', frame)}
           <div className="flex-1 flex items-center justify-center">
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
-              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+                <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Coming Soon</h3>
+              <p className="text-sm text-gray-500">
+                {system.title} is currently being built. Check back later!
+              </p>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Coming Soon</h3>
-            <p className="text-sm text-gray-500">
-              {system.title} is currently being built. Check back later!
-            </p>
           </div>
-        </div>
+        </>
       )}
     </div>
   );

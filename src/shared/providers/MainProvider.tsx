@@ -22,17 +22,17 @@ export function MainProvider({
   }
 
   return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="light"
-      enableSystem={false}
-      disableTransitionOnChange
-      storageKey="theme"
-      nonce=""
-    >
-      <AuthProvider>
-        {children}
-      </AuthProvider>
-    </ThemeProvider>
+    <div suppressHydrationWarning>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="light"
+        enableSystem={false}
+        disableTransitionOnChange
+      >
+        <AuthProvider>
+          {children}
+        </AuthProvider>
+      </ThemeProvider>
+    </div>
   );
 }

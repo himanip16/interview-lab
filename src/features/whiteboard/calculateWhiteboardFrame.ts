@@ -23,7 +23,13 @@ export function calculateWhiteboardFrame(
   layout: NodeLayout[],
   config: WhiteboardConfig = DEFAULT_WHITEBOARD_CONFIG
 ): WhiteboardFrame {
+  console.log('[calculateWhiteboardFrame] Function called');
+  console.log('[calculateWhiteboardFrame] design:', design);
+  console.log('[calculateWhiteboardFrame] layout:', layout);
+  console.log('[calculateWhiteboardFrame] config:', config);
+  
   const layoutMap = new Map(layout.map(item => [item.nodeId, item]));
+  console.log('[calculateWhiteboardFrame] layoutMap created with keys:', Array.from(layoutMap.keys()));
 
   const positionedNodes: PositionedNode[] = design.nodes.map(node => {
     const position = layoutMap.get(node.id);
@@ -32,7 +38,7 @@ export function calculateWhiteboardFrame(
       throw new Error(`[WhiteboardEngine] Missing layout coordinates for node: ${node.id}`);
     }
 
-    return {
+    const positionedNode = {
       id: node.id,
       data: node,
 
@@ -44,13 +50,18 @@ export function calculateWhiteboardFrame(
       width: config.defaultNodeWidth,
       height: config.defaultNodeHeight,
     };
+    console.log('[calculateWhiteboardFrame] Positioned node:', positionedNode);
+    return positionedNode;
   });
+  
+  console.log('[calculateWhiteboardFrame] Total positionedNodes:', positionedNodes.length);
 
   if (config.enableCollisionDetection) {
     validateCollisions(positionedNodes);
   }
 
   const nodeMap = new Map(positionedNodes.map(node => [node.id, node]));
+  console.log('[calculateWhiteboardFrame] nodeMap created with keys:', Array.from(nodeMap.keys()));
 
   const positionedEdges: PositionedEdge[] = [];
 
@@ -63,17 +74,23 @@ export function calculateWhiteboardFrame(
       continue;
     }
 
-    positionedEdges.push({
+    const positionedEdge = {
       id: edge.id,
       fromId: edge.from,
       toId: edge.to,
       start: getConnectionPoint(source, target),
       end: getConnectionPoint(target, source),
-    });
+    };
+    positionedEdges.push(positionedEdge);
+    console.log('[calculateWhiteboardFrame] Positioned edge:', positionedEdge);
   }
+  
+  console.log('[calculateWhiteboardFrame] Total positionedEdges:', positionedEdges.length);
 
-  return {
+  const result = {
     nodes: positionedNodes,
     edges: positionedEdges,
   };
+  console.log('[calculateWhiteboardFrame] Final result:', result);
+  return result;
 }

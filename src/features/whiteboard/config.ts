@@ -14,14 +14,14 @@ export type WhiteboardConfig = {
 };
 
 export const DEFAULT_WHITEBOARD_CONFIG: WhiteboardConfig = {
-  canvasWidth: 100000, // Effectively infinite canvas
-  canvasHeight: 100000,
+  canvasWidth: 3000, // Changed from 100,000
+  canvasHeight: 3000, // Changed from 100,000
 
   gridColumns: 16,
   gridRows: 16,
 
-  defaultNodeWidth: 200,
-  defaultNodeHeight: 100,
+  defaultNodeWidth: 240, // Slightly larger for better readability
+  defaultNodeHeight: 120,
 
   enableCollisionDetection: false,
 };

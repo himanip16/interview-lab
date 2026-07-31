@@ -43,12 +43,20 @@ const CANVAS_H = DEFAULT_WHITEBOARD_CONFIG.canvasHeight;
 type WhiteboardMode = 'explore' | 'flows';
 
 export function InteractiveWhiteboard({ diagram, learning, className, systemTitle, systemDescription }: InteractiveWhiteboardProps) {
+  console.log('[InteractiveWhiteboard] Component rendered');
+  console.log('[InteractiveWhiteboard] diagram:', diagram);
+  console.log('[InteractiveWhiteboard] learning:', learning);
+  console.log('[InteractiveWhiteboard] diagram.nodes:', diagram.nodes);
+  console.log('[InteractiveWhiteboard] diagram.edges:', diagram.edges);
+  
   const [mode, setMode] = useState<WhiteboardMode>('explore');
   const [selectedJourneyIndex, setSelectedJourneyIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   
   const scenarios = learning.scenarios || [];
   const nodes = diagram.nodes.map((n) => n.data);
+  console.log('[InteractiveWhiteboard] scenarios:', scenarios);
+  console.log('[InteractiveWhiteboard] nodes:', nodes);
   
   // Performance optimization: Create Map for O(1) node lookups
   const nodesById = useMemo(
