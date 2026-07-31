@@ -28,6 +28,11 @@ export type ContentBlock =
       caption?: string;
       durationSeconds?: number;
       id?: string;
+    }
+  | {
+      type: "concept";
+      value: string;
+      conceptKey: string;
     };
 
 export type TranscriptMessage = {
@@ -36,6 +41,26 @@ export type TranscriptMessage = {
   content: ContentBlock[] | string;
   elapsedSeconds?: number;
   timestamp?: string;
+  intent?: string;
+  eval?: string[];
+};
+
+export type TranscriptSection = {
+  id: string;
+  title: string;
+  time: string;
+  messages: TranscriptMessage[];
+};
+
+export type Concept = {
+  name: string;
+  sub: string;
+  uses: string[];
+};
+
+export type ArchitectureNode = {
+  label: string;
+  color: string;
 };
 
 export type TranscriptMetadata = {
@@ -45,11 +70,21 @@ export type TranscriptMetadata = {
   template: string;
   category: string;
   company?: string;
+  topics?: string[];
+  concepts?: Record<string, Concept>;
+  architectureSteps?: ArchitectureNode[][];
 };
 
 export type TranscriptData = {
   metadata: TranscriptMetadata;
   messages: TranscriptMessage[];
+  sections?: TranscriptSection[];
 };
 
 export type EnhancedTranscript = TranscriptMessage[];
+
+export type UserProgress = {
+  messageId: string;
+  sectionId: string;
+  pct: number;
+};

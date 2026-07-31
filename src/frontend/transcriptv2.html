@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Autocomplete Search System — Interview Replay</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{ --paper:#FAF9F6; --ink:#15161C; --ink-soft:#5A5B66; --mint:#00D9A3; --mint-deep:#00A87E; --coral:#FF5A3C; --violet:#6A5AE0; --amber:#E8940A; --bubble:#F1EFEA; }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{ background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; }
+  h1,h2,h3{ font-family:'Poppins',sans-serif; letter-spacing:-0.02em; }
+
+  /* ---------- CONTINUE BANNER ---------- */
+  .continue-banner{ display:none; align-items:center; justify-content:space-between; gap:14px; background:var(--ink); color:#fff; padding:12px 22px; }
+  .continue-banner.show{ display:flex; }
+  .continue-banner .cb-text{ font-size:13px; }
+  .continue-banner .cb-text b{ color:var(--mint); }
+  .continue-banner button{ background:var(--mint-deep); color:#fff; border:none; padding:8px 16px; border-radius:999px; font-size:12.5px; font-weight:600; cursor:pointer; flex-shrink:0; }
+
+  /* ---------- HEADER ---------- */
+  .header{ max-width:1300px; margin:0 auto; padding:26px 24px 18px; border-bottom:1px solid rgba(21,22,28,0.07); }
+  .eyebrow{ font-size:12px; font-weight:700; letter-spacing:.08em; color:var(--violet); }
+  .header h1{ font-size:28px; font-weight:800; margin-top:8px; }
+  .header-meta{ display:flex; align-items:center; gap:10px; margin-top:12px; flex-wrap:wrap; }
+  .meta-pill{ font-size:11.5px; font-weight:600; padding:5px 12px; border-radius:999px; background:var(--bubble); color:var(--ink-soft); }
+  .meta-pill.hard{ background:rgba(255,90,60,0.12); color:var(--coral); }
+  .topics-row{ display:flex; align-items:center; gap:8px; margin-top:14px; flex-wrap:wrap; }
+  .topics-row .tlabel{ font-size:11px; color:var(--ink-soft); font-weight:600; }
+  .topic-chip{ font-size:11.5px; font-weight:600; padding:5px 12px; border-radius:999px; border:1px solid rgba(21,22,28,0.1); color:var(--ink-soft); cursor:pointer; }
+  .topic-chip.explored{ color:var(--mint-deep); border-color:rgba(0,168,126,0.3); }
+
+  /* ---------- LAYOUT ---------- */
+  .layout{ max-width:1300px; margin:0 auto; display:flex; gap:20px; padding:22px 24px 80px; align-items:flex-start; }
+
+  .nav-col{ flex:0 0 220px; position:sticky; top:20px; }
+  .nav-card{ background:#fff; border:1px solid rgba(21,22,28,0.07); border-radius:18px; padding:18px; margin-bottom:14px; }
+  .nav-card h3{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); margin-bottom:12px; }
+
+  .progress-track{ height:6px; border-radius:3px; background:rgba(21,22,28,0.08); overflow:hidden; margin-bottom:4px; }
+  .progress-fill{ height:100%; background:var(--mint-deep); width:0%; transition:width .4s ease; }
+  .progress-pct{ font-size:11px; color:var(--ink-soft); font-weight:600; margin-bottom:14px; }
+
+  .nav-item{ display:flex; align-items:center; gap:9px; padding:8px 8px; border-radius:10px; cursor:pointer; font-size:12.5px; font-weight:500; color:var(--ink-soft); }
+  .nav-item:hover{ background:var(--paper); }
+  .nav-item.active{ background:rgba(106,90,224,0.09); color:var(--violet); font-weight:700; }
+  .nav-item .ns{ width:16px; height:16px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:9px; }
+  .nav-item.done .ns{ background:var(--mint-deep); color:#fff; }
+  .nav-item.active .ns{ background:var(--violet); color:#fff; }
+  .nav-item.upcoming .ns{ border:1.5px solid rgba(21,22,28,0.18); }
+  .nav-time{ margin-left:auto; font-size:10px; color:var(--ink-soft); opacity:.6; }
+
+  .bm-item{ font-size:12px; color:var(--ink-soft); padding:8px; border-radius:9px; cursor:pointer; margin-bottom:2px; }
+  .bm-item:hover{ background:var(--paper); }
+  .bm-empty{ font-size:11.5px; color:var(--ink-soft); opacity:.7; padding:4px 0; }
+
+  .concept-track{ display:flex; flex-direction:column; gap:6px; }
+  .ct-row{ display:flex; align-items:center; gap:8px; font-size:12px; color:var(--ink-soft); }
+  .ct-row .cdot{ width:6px; height:6px; border-radius:50%; }
+  .ct-row.explored{ color:var(--ink); font-weight:600; }
+  .ct-row.explored .cdot{ background:var(--mint-deep); }
+  .ct-row:not(.explored) .cdot{ border:1.5px solid rgba(21,22,28,0.2); background:none; }
+
+  /* ---------- TRANSCRIPT ---------- */
+  .transcript-col{ flex:1; min-width:0; max-width:640px; }
+  .section-marker{ font-size:11px; font-weight:700; letter-spacing:.08em; color:var(--violet); text-transform:uppercase; margin:34px 0 16px; padding-top:6px; }
+  .section-marker:first-child{ margin-top:0; }
+
+  .msg{ display:flex; gap:10px; margin-bottom:6px; position:relative; }
+  .msg.candidate{ flex-direction:row-reverse; }
+  .avatar{ width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#fff; flex-shrink:0; }
+  .avatar.interviewer{ background:var(--ink); } .avatar.candidate{ background:var(--violet); }
+  .msg-body{ max-width:78%; }
+  .msg.candidate .msg-body{ display:flex; flex-direction:column; align-items:flex-end; }
+  .bubble{ padding:13px 16px; border-radius:16px; font-size:13.5px; line-height:1.65; }
+  .msg.interviewer .bubble{ background:#fff; border:1px solid rgba(21,22,28,0.07); border-top-left-radius:4px; }
+  .msg.candidate .bubble{ background:var(--bubble); border-top-right-radius:4px; }
+
+  .intent-tag{ display:inline-flex; align-items:center; gap:5px; font-size:10px; font-weight:700; color:var(--amber); background:rgba(232,148,10,0.1); padding:3px 9px; border-radius:999px; margin-bottom:7px; }
+
+  .cref{ border-bottom:1.5px dotted var(--mint-deep); color:var(--mint-deep); font-weight:600; cursor:pointer; position:relative; }
+  .cref-pop{ position:absolute; z-index:15; left:0; bottom:calc(100% + 8px); width:250px; background:var(--ink); color:#fff; border-radius:14px; padding:14px 16px; box-shadow:0 16px 34px rgba(0,0,0,0.22); display:none; }
+  .cref-pop.open{ display:block; }
+  .cref-pop .ct{ font-size:13px; font-weight:700; }
+  .cref-pop .cs{ font-size:10.5px; color:rgba(255,255,255,0.55); margin-bottom:8px; }
+  .cref-pop .cu{ font-size:9.5px; font-weight:700; color:rgba(255,255,255,0.5); text-transform:uppercase; letter-spacing:.05em; margin-bottom:5px; }
+  .cref-pop li{ font-size:11.5px; color:rgba(255,255,255,0.8); list-style:none; padding-left:14px; position:relative; margin-bottom:3px; }
+  .cref-pop li::before{ content:'\2713'; position:absolute; left:0; color:var(--mint); }
+  .cref-pop .cd{ display:block; margin-top:8px; font-size:11.5px; font-weight:700; color:var(--mint); }
+
+  .msg-actions{ display:flex; align-items:center; gap:6px; margin-top:6px; opacity:0; transition:opacity .15s ease; }
+  .msg:hover .msg-actions, .msg-actions.pinned{ opacity:1; }
+  .mact{ font-size:10.5px; font-weight:600; color:var(--ink-soft); background:none; border:1px solid rgba(21,22,28,0.1); padding:4px 9px; border-radius:999px; cursor:pointer; display:flex; align-items:center; gap:4px; }
+  .mact.bookmarked{ color:var(--amber); border-color:rgba(232,148,10,0.3); background:rgba(232,148,10,0.08); }
+  .ask-ai-row{ display:flex; gap:5px; flex-wrap:wrap; }
+  .ask-pill{ font-size:10.5px; font-weight:600; color:var(--violet); background:rgba(106,90,224,0.08); border:none; padding:4px 10px; border-radius:999px; cursor:pointer; }
+
+  .note-card{ margin-top:6px; background:#FFF8E1; border-left:3px solid var(--amber); border-radius:10px; padding:9px 12px; font-size:12px; color:#7A5C00; max-width:78%; }
+  .note-input-row{ margin-top:6px; display:flex; gap:6px; max-width:78%; }
+  .note-input{ flex:1; font-size:12px; padding:8px 10px; border-radius:9px; border:1px solid rgba(21,22,28,0.12); outline:none; }
+  .note-save{ font-size:11px; font-weight:700; background:var(--ink); color:#fff; border:none; padding:0 12px; border-radius:9px; cursor:pointer; }
+
+  .ai-reply{ margin-top:6px; max-width:78%; background:rgba(106,90,224,0.06); border:1px solid rgba(106,90,224,0.15); border-radius:12px; padding:10px 13px; font-size:12px; color:var(--ink-soft); }
+  .ai-reply b{ color:var(--violet); }
+
+  .eval-callout{ margin:12px 0; padding:14px 16px; border-radius:14px; background:rgba(0,217,163,0.07); border:1px solid rgba(0,168,126,0.2); max-width:78%; }
+  .eval-callout .el{ font-size:11px; font-weight:700; color:var(--mint-deep); display:flex; align-items:center; gap:6px; margin-bottom:7px; }
+  .eval-callout li{ font-size:12px; color:var(--ink-soft); list-style:none; padding-left:16px; position:relative; margin-bottom:3px; }
+  .eval-callout li::before{ content:'\2713'; position:absolute; left:0; color:var(--mint-deep); font-weight:700; }
+
+  /* ---------- ARCHITECTURE PANEL ---------- */
+  .arch-col{ flex:0 0 260px; position:sticky; top:20px; }
+  .arch-card{ background:#fff; border:1px solid rgba(21,22,28,0.07); border-radius:18px; padding:18px; }
+  .arch-card h3{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); margin-bottom:14px; }
+  .arch-node{ opacity:0; transform:translateY(8px); transition:opacity .4s ease, transform .4s ease; display:flex; align-items:center; gap:9px; padding:10px 12px; border-radius:11px; margin-bottom:8px; font-size:12px; font-weight:600; color:#fff; }
+  .arch-node.visible{ opacity:1; transform:translateY(0); }
+  .arch-link{ width:1.5px; height:14px; background:rgba(21,22,28,0.15); margin-left:24px; opacity:0; transition:opacity .3s ease; }
+  .arch-link.visible{ opacity:1; }
+
+  @media (max-width:1000px){ .arch-col{ display:none; } }
+  @media (max-width:760px){
+    .layout{ flex-direction:column; }
+    .nav-col{ position:static; width:100%; order:2; }
+    .transcript-col{ max-width:100%; order:1; }
+    .msg-body{ max-width:88%; } .note-card,.note-input-row,.ai-reply,.eval-callout{ max-width:88%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="continue-banner" id="continueBanner">
+  <div class="cb-text">Continue from where you left off &mdash; <b id="cbSection"></b>, <span id="cbPct"></span> complete</div>
+  <button id="cbJump">Jump back in</button>
+</div>
+
+<div class="header">
+  <div class="eyebrow">FAANG SYSTEM DESIGN INTERVIEW</div>
+  <h1>Autocomplete Search System</h1>
+  <div class="header-meta">
+    <span class="meta-pill hard">Hard</span>
+    <span class="meta-pill">45 min</span>
+    <span class="meta-pill">Meta</span>
+  </div>
+  <div class="topics-row">
+    <span class="tlabel">Topics</span>
+    <span class="topic-chip" data-concept="trie">Trie</span>
+    <span class="topic-chip" data-concept="redis">Redis</span>
+    <span class="topic-chip" data-concept="cassandra">Cassandra</span>
+    <span class="topic-chip" data-concept="sharding">Sharding</span>
+    <span class="topic-chip" data-concept="consistentHashing">Consistent Hashing</span>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="nav-col">
+    <div class="nav-card">
+      <h3>Your progress</h3>
+      <div class="progress-track"><div class="progress-fill" id="progFill"></div></div>
+      <div class="progress-pct" id="progPct">0% complete</div>
+      <div id="navList"></div>
+    </div>
+    <div class="nav-card">
+      <h3>My Bookmarks</h3>
+      <div id="bmList"><div class="bm-empty">Nothing bookmarked yet.</div></div>
+    </div>
+    <div class="nav-card">
+      <h3>Concepts explored</h3>
+      <div class="concept-track" id="conceptTrack"></div>
+    </div>
+  </div>
+
+  <div class="transcript-col" id="transcriptCol"></div>
+
+  <div class="arch-col">
+    <div class="arch-card">
+      <h3>System design, as it emerges</h3>
+      <div id="archNodes"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   CONCEPT GLOSSARY — curated, not every noun
+   ============================================================ */
+const CONCEPTS = {
+  trie: { name:'Trie', sub:'Prefix tree data structure', uses:['O(k) prefix lookup, k = query length','Shared storage for common prefixes'] },
+  redis: { name:'Redis', sub:'In-memory key-value store', uses:['Caching hot autocomplete results','Sub-millisecond read latency'] },
+  cassandra: { name:'Cassandra', sub:'Distributed NoSQL database', uses:['High write throughput for query logs','Durable long-term storage'] },
+  sharding: { name:'Sharding', sub:'Partitioning data across servers', uses:['Splits the trie by prefix range','Keeps each shard\u2019s memory footprint manageable'] },
+  loadBalancer: { name:'Load Balancer', sub:'Distributes traffic across servers', uses:['Routes autocomplete requests by prefix','Enables horizontal scaling'] },
+  consistentHashing: { name:'Consistent Hashing', sub:'Stable key-to-node mapping', uses:['Minimizes reshuffling when shards change','Used to route prefix ranges to trie shards'] },
+  kafka: { name:'Kafka', sub:'Distributed log for streaming events', uses:['Would carry query logs to the ranking pipeline','Not deep-dived in this transcript yet'] },
+};
+let explored = JSON.parse(localStorage.getItem('td_explored') || '[]');
+
+/* ============================================================
+   TRANSCRIPT DATA
+   ============================================================ */
+const SECTIONS = [
+  { id:'requirements', title:'Requirements', time:'00:00', messages:[
+    { id:'m1', role:'interviewer', text:'Let\u2019s design an autocomplete system, like a search bar suggesting queries as you type. Where do you want to start?' },
+    { id:'m2', role:'candidate', text:'I\u2019d like to nail down scale first \u2014 how many queries per second, and how many unique historical queries are we suggesting from?' },
+    { id:'m3', role:'interviewer', text:'Assume 10,000 queries per second at peak, and a corpus of about 100 million unique past queries.', intent:'Establishing scale constraints before design begins' },
+    { id:'m4', role:'candidate', text:'Got it \u2014 so this needs to be read-optimized and very low latency, since it fires on every keystroke. I\u2019d target under 100ms end to end.',
+      eval:['Read-heavy workload','Latency requirement','Framed the problem before proposing a design'] },
+  ]},
+  { id:'api', title:'API Design', time:'05:20', messages:[
+    { id:'m5', role:'interviewer', text:'Sketch out the API for this.' },
+    { id:'m6', role:'candidate', text:'A single read endpoint: GET /suggest?prefix=xyz&limit=5, returning the top 5 matches ranked by frequency. Writes happen asynchronously, not on this path.' },
+  ]},
+  { id:'trie', title:'Trie Design', time:'12:40', messages:[
+    { id:'m7', role:'interviewer', text:'How do you actually store and look up the suggestions?' },
+    { id:'m8', role:'candidate', text:'A <span class="cref" data-concept="trie">trie</span>. Each node represents a character, and I\u2019d cache the top-k completions at each node so a lookup doesn\u2019t need to walk the whole subtree at request time.' },
+    { id:'m9', role:'interviewer', text:'How will this scale to billions of queries across many servers?', intent:'Testing whether the candidate\u2019s trie design survives a distributed environment, not just a single machine' },
+    { id:'m10', role:'candidate', text:'A single in-memory trie won\u2019t fit on one machine at that scale, so I\u2019d shard it by prefix range using <span class="cref" data-concept="sharding">sharding</span>, and route requests with <span class="cref" data-concept="consistentHashing">consistent hashing</span> so adding a shard doesn\u2019t reshuffle everything.',
+      eval:['Recognized the single-machine limit unprompted','Connected sharding to consistent hashing correctly'] },
+  ]},
+  { id:'ranking', title:'Ranking System', time:'20:10', messages:[
+    { id:'m11', role:'interviewer', text:'The top-k at each node \u2014 how does it stay fresh as query popularity shifts?' },
+    { id:'m12', role:'candidate', text:'I wouldn\u2019t recompute it live. Query logs get aggregated in batch, maybe hourly, and the results get pushed into <span class="cref" data-concept="redis">Redis</span> in front of the trie shards \u2014 hot prefixes get served from cache, cold ones fall through to the trie.' },
+  ]},
+  { id:'scaling', title:'Scaling', time:'28:00', messages:[
+    { id:'m13', role:'interviewer', text:'Where do the raw query logs actually get stored?' },
+    { id:'m14', role:'candidate', text:'<span class="cref" data-concept="cassandra">Cassandra</span> \u2014 it\u2019s write-heavy and append-only, which matches logging perfectly, and I don\u2019t need strong consistency for something that only feeds a batch job.' },
+    { id:'m15', role:'interviewer', text:'And how do requests actually find the right shard?' },
+    { id:'m16', role:'candidate', text:'A <span class="cref" data-concept="loadBalancer">load balancer</span> in front, using the same consistent hashing scheme as the shard assignment, so it can route directly instead of guessing.' },
+  ]},
+];
+const ALL_MESSAGES = SECTIONS.flatMap(s => s.messages.map(m => ({...m, sectionId:s.id})));
+
+/* ============================================================
+   RENDER TRANSCRIPT
+   ============================================================ */
+const bookmarks = new Set(JSON.parse(localStorage.getItem('td_bookmarks') || '[]'));
+const notes = JSON.parse(localStorage.getItem('td_notes') || '{}');
+
+const col = document.getElementById('transcriptCol');
+let html = '';
+SECTIONS.forEach(section => {
+  html += `<div class="section-marker" id="marker-${section.id}" data-section="${section.id}">${section.title}</div>`;
+  section.messages.forEach(m => {
+    html += `<div class="msg ${m.role}" id="msg-${m.id}" data-id="${m.id}">
+      <div class="avatar ${m.role}">${m.role==='interviewer'?'IV':'YOU'}</div>
+      <div class="msg-body">
+        ${m.intent?`<div class="intent-tag">\u{1F4CD} Testing: ${m.intent}</div>`:''}
+        <div class="bubble">${m.text}</div>
+        <div class="msg-actions">
+          <button class="mact ${bookmarks.has(m.id)?'bookmarked':''}" data-act="bookmark" data-id="${m.id}">\u2605 ${bookmarks.has(m.id)?'Bookmarked':'Bookmark'}</button>
+          <button class="mact" data-act="note" data-id="${m.id}">+ Note</button>
+          ${m.role==='candidate' ? `
+          <div class="ask-ai-row">
+            <button class="ask-pill" data-ask="why" data-id="${m.id}">\u{1F4AC} Ask why?</button>
+            <button class="ask-pill" data-ask="explain" data-id="${m.id}">\u{1F4AC} I don't understand</button>
+            <button class="ask-pill" data-ask="challenge" data-id="${m.id}">\u{1F4AC} Challenge this</button>
+          </div>` : ''}
+        </div>
+        <div class="note-slot" id="note-slot-${m.id}">${notes[m.id] ? `<div class="note-card">\u{1F4DD} ${notes[m.id]}</div>` : ''}</div>
+        <div class="ai-slot" id="ai-slot-${m.id}"></div>
+      </div>
+    </div>`;
+    if(m.eval){
+      html += `<div class="eval-callout"><div class="el">\u2713 Good signal</div><ul>${m.eval.map(e=>`<li>${e}</li>`).join('')}</ul></div>`;
+    }
+  });
+});
+col.innerHTML = html;
+
+/* ============================================================
+   LEFT NAV — sections + progress
+   ============================================================ */
+let currentSectionIdx = 0;
+function renderNav(){
+  document.getElementById('navList').innerHTML = SECTIONS.map((s,i) => {
+    const state = i < currentSectionIdx ? 'done' : i === currentSectionIdx ? 'active' : 'upcoming';
+    const icon = state==='done' ? '\u2713' : state==='active' ? '' : '';
+    return `<div class="nav-item ${state}" data-jump="${s.id}">
+      <span class="ns">${icon}</span>${s.title}<span class="nav-time">${s.time}</span>
+    </div>`;
+  }).join('');
+}
+renderNav();
+document.querySelectorAll('.nav-item').forEach(el => {
+  el.addEventListener('click', () => {
+    document.getElementById('marker-' + el.dataset.jump).scrollIntoView({behavior:'smooth', block:'start'});
+  });
+});
+
+/* ============================================================
+   PROGRESS TRACKING + AUTOSAVE
+   ============================================================ */
+function updateProgress(seenIdx){
+  const pct = Math.round(((seenIdx+1) / ALL_MESSAGES.length) * 100);
+  document.getElementById('progFill').style.width = pct + '%';
+  document.getElementById('progPct').textContent = pct + '% complete';
+  const msg = ALL_MESSAGES[seenIdx];
+  localStorage.setItem('td_progress', JSON.stringify({ messageId: msg.id, sectionId: msg.sectionId, pct }));
+}
+
+const msgObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if(entry.isIntersecting){
+      const idx = ALL_MESSAGES.findIndex(m => m.id === entry.target.dataset.id);
+      if(idx > -1) updateProgress(idx);
+    }
+  });
+}, { rootMargin: '0px 0px -60% 0px' });
+document.querySelectorAll('.msg').forEach(el => msgObserver.observe(el));
+
+const sectionObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if(entry.isIntersecting){
+      currentSectionIdx = SECTIONS.findIndex(s => s.id === entry.target.dataset.section);
+      renderNav();
+      revealArchUpTo(currentSectionIdx);
+    }
+  });
+}, { rootMargin: '-20% 0px -70% 0px' });
+document.querySelectorAll('.section-marker').forEach(el => sectionObserver.observe(el));
+
+/* continue banner on load */
+(function(){
+  const saved = JSON.parse(localStorage.getItem('td_progress') || 'null');
+  if(saved && saved.pct < 98){
+    const section = SECTIONS.find(s => s.id === saved.sectionId);
+    document.getElementById('cbSection').textContent = section ? section.title : saved.sectionId;
+    document.getElementById('cbPct').textContent = saved.pct + '%';
+    document.getElementById('continueBanner').classList.add('show');
+    document.getElementById('cbJump').onclick = () => {
+      document.getElementById('msg-' + saved.messageId).scrollIntoView({behavior:'smooth', block:'center'});
+      document.getElementById('continueBanner').classList.remove('show');
+    };
+  }
+})();
+
+/* ============================================================
+   BOOKMARKS
+   ============================================================ */
+function renderBookmarks(){
+  const list = document.getElementById('bmList');
+  if(bookmarks.size === 0){ list.innerHTML = '<div class="bm-empty">Nothing bookmarked yet.</div>'; return; }
+  list.innerHTML = [...bookmarks].map(id => {
+    const m = ALL_MESSAGES.find(x => x.id === id);
+    const preview = m.text.replace(/<[^>]+>/g,'').slice(0, 60);
+    return `<div class="bm-item" data-jump="${id}">${preview}&hellip;</div>`;
+  }).join('');
+  list.querySelectorAll('.bm-item').forEach(el => {
+    el.onclick = () => document.getElementById('msg-' + el.dataset.jump).scrollIntoView({behavior:'smooth', block:'center'});
+  });
+}
+renderBookmarks();
+
+document.querySelectorAll('[data-act="bookmark"]').forEach(btn => {
+  btn.onclick = () => {
+    const id = btn.dataset.id;
+    if(bookmarks.has(id)){ bookmarks.delete(id); btn.classList.remove('bookmarked'); btn.innerHTML = '\u2605 Bookmark'; }
+    else { bookmarks.add(id); btn.classList.add('bookmarked'); btn.innerHTML = '\u2605 Bookmarked'; }
+    localStorage.setItem('td_bookmarks', JSON.stringify([...bookmarks]));
+    renderBookmarks();
+  };
+});
+
+/* ============================================================
+   NOTES
+   ============================================================ */
+document.querySelectorAll('[data-act="note"]').forEach(btn => {
+  btn.onclick = () => {
+    const id = btn.dataset.id;
+    const slot = document.getElementById('note-slot-' + id);
+    if(slot.querySelector('.note-input')) return;
+    slot.innerHTML = `<div class="note-input-row">
+      <input class="note-input" placeholder="Remember this caching strategy..." value="${notes[id]||''}">
+      <button class="note-save">Save</button>
+    </div>`;
+    slot.querySelector('.note-save').onclick = () => {
+      const val = slot.querySelector('.note-input').value.trim();
+      if(val){ notes[id] = val; localStorage.setItem('td_notes', JSON.stringify(notes)); slot.innerHTML = `<div class="note-card">\u{1F4DD} ${val}</div>`; }
+      else{ delete notes[id]; localStorage.setItem('td_notes', JSON.stringify(notes)); slot.innerHTML = ''; }
+    };
+  };
+});
+
+/* ============================================================
+   CONCEPT HOVER CARDS + EXPLORED TRACKING
+   ============================================================ */
+function renderConceptTrack(){
+  document.getElementById('conceptTrack').innerHTML = Object.entries(CONCEPTS).map(([key,c]) => `
+    <div class="ct-row ${explored.includes(key)?'explored':''}"><span class="cdot"></span>${c.name} ${explored.includes(key)?'\u2713':'\u25CB'}</div>
+  `).join('');
+  document.querySelectorAll('.topic-chip').forEach(chip => {
+    if(explored.includes(chip.dataset.concept)) chip.classList.add('explored');
+  });
+}
+renderConceptTrack();
+
+function markExplored(key){
+  if(!explored.includes(key)){ explored.push(key); localStorage.setItem('td_explored', JSON.stringify(explored)); renderConceptTrack(); }
+}
+
+document.body.addEventListener('click', (e) => {
+  const cref = e.target.closest('.cref');
+  if(cref){
+    document.querySelectorAll('.cref-pop.open').forEach(p => p.remove());
+    const key = cref.dataset.concept;
+    const c = CONCEPTS[key];
+    const pop = document.createElement('div');
+    pop.className = 'cref-pop open';
+    pop.innerHTML = `<div class="ct">${c.name}</div><div class="cs">${c.sub}</div>
+      <div class="cu">Used here for</div><ul>${c.uses.map(u=>`<li>${u}</li>`).join('')}</ul>
+      <span class="cd">Read deep dive &rarr;</span>`;
+    cref.appendChild(pop);
+    markExplored(key);
+    e.stopPropagation();
+    return;
+  }
+  if(e.target.closest('.topic-chip')){
+    markExplored(e.target.closest('.topic-chip').dataset.concept);
+    return;
+  }
+  document.querySelectorAll('.cref-pop.open').forEach(p => p.remove());
+});
+
+/* ============================================================
+   ASK AI
+   ============================================================ */
+const AI_REPLIES = {
+  why: "The candidate is trading strong consistency for write throughput and lower latency — reasonable here since query logs only feed an hourly batch job, not something a user reads immediately.",
+  explain: "In short: writes go to a store built for handling huge volumes quickly, without needing every replica to agree instantly — that tradeoff is fine because nothing downstream needs the data right away.",
+  challenge: "A fair pushback: what happens if that batch job falls behind? At 10k QPS, how stale can rankings get before autocomplete quality visibly degrades?",
+};
+document.querySelectorAll('.ask-pill').forEach(btn => {
+  btn.onclick = () => {
+    const slot = document.getElementById('ai-slot-' + btn.dataset.id);
+    slot.innerHTML = `<div class="ai-reply"><b>AI:</b> ${AI_REPLIES[btn.dataset.ask]}</div>`;
+  };
+});
+
+/* ============================================================
+   EVOLVING ARCHITECTURE PANEL
+   ============================================================ */
+const ARCH_STEPS = [
+  [ { label:'Client', color:'var(--coral)' } ],
+  [ { label:'Client', color:'var(--coral)' }, { label:'API Gateway', color:'var(--ink)' } ],
+  [ { label:'Client', color:'var(--coral)' }, { label:'API Gateway', color:'var(--ink)' }, { label:'Trie Shards', color:'var(--violet)' } ],
+  [ { label:'Client', color:'var(--coral)' }, { label:'API Gateway', color:'var(--ink)' }, { label:'Trie Shards', color:'var(--violet)' }, { label:'Redis Cache', color:'var(--mint-deep)' } ],
+  [ { label:'Client', color:'var(--coral)' }, { label:'API Gateway', color:'var(--ink)' }, { label:'Trie Shards', color:'var(--violet)' }, { label:'Redis Cache', color:'var(--mint-deep)' }, { label:'Cassandra Logs', color:'var(--mint-deep)' } ],
+];
+function renderArchSkeleton(){
+  const maxNodes = ARCH_STEPS[ARCH_STEPS.length-1];
+  document.getElementById('archNodes').innerHTML = maxNodes.map((n,i) => `
+    ${i>0?'<div class="arch-link" id="arch-link-'+i+'"></div>':''}
+    <div class="arch-node" id="arch-node-${i}" style="background:${n.color}">${n.label}</div>
+  `).join('');
+}
+renderArchSkeleton();
+function revealArchUpTo(sectionIdx){
+  const step = Math.min(sectionIdx, ARCH_STEPS.length-1);
+  const count = ARCH_STEPS[step].length;
+  for(let i=0;i<count;i++){
+    const node = document.getElementById('arch-node-' + i);
+    const link = document.getElementById('arch-link-' + i);
+    if(node) node.classList.add('visible');
+    if(link) link.classList.add('visible');
+  }
+}
+revealArchUpTo(0);
+</script>
+
+</body>
+</html>

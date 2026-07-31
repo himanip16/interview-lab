@@ -23,6 +23,9 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "System Design Interviewer",
   description: "Learn system design through interactive visual explanations.",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 export default function RootLayout({
   children,

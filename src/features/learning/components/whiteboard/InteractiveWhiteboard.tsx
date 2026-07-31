@@ -515,7 +515,10 @@ export function InteractiveWhiteboard({ diagram, learning, className, systemTitl
 
       {/* Bottom Sheet */}
       {focusedNodeId && (
-        <div className="fixed inset-x-0 bottom-0 z-40 bg-white rounded-t-3xl shadow-2xl border-t border-gray-200 max-h-[78vh] overflow-y-auto max-w-[520px] mx-auto left-0 right-0 transform transition-transform duration-[350ms] cubic-bezier(0.34,1.1,0.64,1) translate-y-0">
+        <div 
+          className="fixed inset-x-0 bottom-0 z-40 bg-white rounded-t-3xl shadow-2xl border-t border-gray-200 max-h-[78vh] overflow-y-auto max-w-[520px] mx-auto left-0 right-0 transform transition-transform duration-[350ms] cubic-bezier(0.34,1.1,0.64,1) translate-y-0"
+          onClick={(e) => e.stopPropagation()}
+        >
           <div className="w-9 h-1 bg-gray-300 rounded-full mx-auto my-4" />
           <div className="px-6 pb-8">
             <div className="flex items-center gap-3 mb-4">
