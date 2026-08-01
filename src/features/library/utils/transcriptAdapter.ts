@@ -5,6 +5,7 @@ import type { TranscriptEntry } from "@/content/transcripts/types";
 export function adaptTranscript(transcript: any): TranscriptEntry {
   return {
     summary: {
+      id: transcript.id ?? 0,
       slug: transcript.slug,
       title: transcript.title,
       category: transcript.category,
