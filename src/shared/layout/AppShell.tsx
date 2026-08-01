@@ -232,25 +232,28 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                   href={item.path}
                   title={collapsed ? item.name : undefined}
                   className={cn(
-                    "flex items-center gap-3 py-2 text-[13.5px] font-medium relative transition-colors",
+                    "flex items-center gap-3 py-2 text-[13.5px] font-medium relative transition-all duration-200 rounded-md",
                     collapsed ? "justify-center px-0" : "px-3",
                     isActive(item.path)
-                      ? "text-[var(--text-primary)] font-semibold"
-                      : "text-[var(--text-secondary)] hover:bg-[var(--surface-page)] hover:text-[var(--text-primary)]"
+                      ? "text-[var(--text-primary)] font-semibold bg-[var(--surface-page)]"
+                      : "text-[var(--text-secondary)] hover:bg-[var(--surface-page)] hover:text-[var(--text-primary)] hover:translate-x-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--category-learn-deep)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-panel)]"
                   )}
                 >
                   <span
                     className={cn(
-                      "w-[18px] h-[18px] flex-shrink-0",
+                      "w-[18px] h-[18px] flex-shrink-0 transition-transform duration-200",
                       isActive(item.path)
-                        ? "text-[var(--category-learn-deep)]"
-                        : "text-[var(--text-secondary)]"
+                        ? "text-[var(--category-learn-deep)] scale-110"
+                        : "text-[var(--text-secondary)] hover:scale-105"
                     )}
                   >
                     {item.icon}
                   </span>
                   {!collapsed && (
                     <span className="whitespace-nowrap overflow-hidden">{item.name}</span>
+                  )}
+                  {isActive(item.path) && !collapsed && (
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-[var(--category-learn-deep)] rounded-r-full" />
                   )}
                 </Link>
               ))}
@@ -313,7 +316,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       {/* Topbar */}
       <header
         className={cn(
-          "fixed top-0 right-0 left-0 lg:left-[var(--sidebar-w)] h-18 bg-[var(--surface-panel)] border-b border-[var(--border)] flex items-center px-4 sm:px-6 z-30",
+          "fixed top-0 right-0 left-0 lg:left-[var(--sidebar-w)] h-16 bg-[var(--surface-panel)] border-b border-[var(--border)] flex items-center px-4 sm:px-6 z-30",
           mounted && "transition-[left] duration-200 ease-out"
         )}
       >
@@ -346,15 +349,19 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             </div>
           </div>
 
-          {/* Search - prominent */}
-          <div className="flex-1 flex justify-center">
-            <div className="flex items-center gap-3 bg-[var(--surface-page)] border border-[var(--border)] rounded-lg px-4 py-2.5 text-[13px] text-[var(--text-secondary)] w-full max-w-lg focus-within:border-[var(--category-learn-deep)] focus-within:ring-1 focus-within:ring-[var(--category-learn-deep)] transition-all">
-              <svg className="w-[14px] h-[14px] opacity-60 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          {/* Search - naturally integrated */}
+          <div className="flex-1 max-w-md">
+            <div className="flex items-center gap-2.5 bg-[var(--surface-page)] border border-[var(--border)] rounded-md px-3 py-2 text-[13px] text-[var(--text-secondary)] focus-within:border-[var(--category-learn-deep)] focus-within:ring-1 focus-within:ring-[var(--category-learn-deep)] transition-all">
+              <svg className="w-[13px] h-[13px] opacity-50 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="11" cy="11" r="7" />
                 <path d="M21 21l-4.3-4.3" />
               </svg>
-              <span className="flex-1">Search interviews, concepts, deep dives...</span>
-              <kbd className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 text-[11px] font-medium text-[var(--text-secondary)] bg-[var(--surface-panel)] border border-[var(--border)] rounded">
+              <input
+                type="text"
+                placeholder="Search..."
+                className="flex-1 bg-transparent outline-none placeholder:text-[var(--text-secondary)]"
+              />
+              <kbd className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium text-[var(--text-secondary)] bg-[var(--surface-panel)] border border-[var(--border)] rounded">
                 ⌘K
               </kbd>
             </div>
@@ -373,7 +380,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="w-9 h-9 rounded-full border border-[var(--border)] bg-[var(--surface-panel)] text-[var(--text-secondary)] flex items-center justify-center hover:border-[var(--category-learn-deep)] transition-colors flex-shrink-0"
+              className="w-8 h-8 rounded-full border border-[var(--border)] bg-[var(--surface-panel)] text-[var(--text-secondary)] flex items-center justify-center hover:border-[var(--category-learn-deep)] hover:text-[var(--text-primary)] transition-all duration-200 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--category-learn-deep)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-panel)] flex-shrink-0"
             >
               {theme === "dark" ? (
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -394,7 +401,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               <div className="relative" ref={menuRef}>
                 <button
                   onClick={() => setMenuOpen((v) => !v)}
-                  className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--text-primary)] text-sm font-semibold text-white"
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--text-primary)] text-sm font-semibold text-white transition-all duration-200 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--category-learn-deep)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-panel)]"
                   aria-haspopup="menu"
                   aria-expanded={menuOpen}
                 >
@@ -432,7 +439,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
-            className="w-9 h-9 sm:w-9.5 sm:h-9.5 rounded-full border border-[var(--border)] bg-[var(--surface-panel)] text-[var(--text-secondary)] flex items-center justify-center hover:border-[var(--category-learn-deep)] transition-colors flex-shrink-0"
+            className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full border border-[var(--border)] bg-[var(--surface-panel)] text-[var(--text-secondary)] flex items-center justify-center hover:border-[var(--category-learn-deep)] hover:text-[var(--text-primary)] transition-all duration-200 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--category-learn-deep)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-panel)] flex-shrink-0"
           >
             {theme === "dark" ? (
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -496,16 +503,22 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             key={item.path}
             href={item.path}
             className={cn(
-              "flex-1 flex flex-col items-center justify-center gap-1 py-2 min-w-0 transition-colors",
+              "flex-1 flex flex-col items-center justify-center gap-1 py-2 min-w-0 transition-all duration-200 relative",
               isActive(item.path)
                 ? "text-[var(--category-learn-deep)]"
-                : "text-[var(--text-secondary)]"
+                : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--category-learn-deep)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-panel)]"
             )}
           >
-            <span className="w-5 h-5 flex-shrink-0">{item.icon}</span>
+            <span className={cn(
+              "w-5 h-5 flex-shrink-0 transition-transform duration-200",
+              isActive(item.path) ? "scale-110" : "hover:scale-105"
+            )}>{item.icon}</span>
             <span className="text-[10px] font-medium truncate w-full text-center px-0.5">
               {item.name}
             </span>
+            {isActive(item.path) && (
+              <span className="absolute top-0 w-8 h-0.5 bg-[var(--category-learn-deep)] rounded-full" />
+            )}
           </Link>
         ))}
       </nav>
@@ -513,7 +526,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       {/* Main Content */}
       <main
         className={cn(
-          "pt-10 pb-16 lg:pb-0 lg:pl-[var(--sidebar-w)] min-h-screen px-4 sm:px-6",
+          "pt-20 pb-16 lg:pb-0 lg:pl-[var(--sidebar-w)] min-h-screen px-4 sm:px-6",
           mounted && "transition-[padding-left] duration-200 ease-out"
         )}
       >

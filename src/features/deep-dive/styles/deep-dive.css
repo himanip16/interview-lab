@@ -788,6 +788,8 @@ section p b {
 
 .rel-card {
   flex: 1;
+  min-width: 0;
+  height: 280px;
   padding: 20px;
   border-radius: 18px;
   border: 1px solid var(--border-soft);
@@ -884,6 +886,7 @@ section p b {
   overflow: hidden;
   line-height: 1.5;
   min-height: 39px;
+  flex: 1;
 }
 
 @media (max-width: 900px) {

@@ -42,8 +42,8 @@ export function SplitBackground() {
           top: '10%',
           left: '8%',
           background: isDark
-            ? 'rgba(0, 217, 163, 0.04)'
-            : 'rgba(0, 217, 163, 0.18)',
+            ? 'rgba(0, 217, 163, 0.02)'
+            : 'rgba(0, 217, 163, 0.06)',
           animation: 'breathe 8s ease-in-out infinite',
         }}
       />
@@ -55,8 +55,8 @@ export function SplitBackground() {
           bottom: '-5%',
           right: '10%',
           background: isDark
-            ? 'rgba(255, 90, 60, 0.03)'
-            : 'rgba(255, 90, 60, 0.14)',
+            ? 'rgba(255, 90, 60, 0.015)'
+            : 'rgba(255, 90, 60, 0.05)',
           animation: 'breathe 8s ease-in-out infinite 1.5s',
         }}
       />

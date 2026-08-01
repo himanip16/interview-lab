@@ -22,7 +22,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "System Design Interviewer",
-  description: "Learn system design through interactive visual explanations.",
+  description: "Learn system design through real Staff Engineer conversations—not textbooks. Experience realistic engineering discussions and master how senior engineers actually think.",
   icons: {
     icon: "/favicon.ico",
   },

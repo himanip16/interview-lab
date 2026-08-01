@@ -28,6 +28,7 @@ export function MainProvider({
         defaultTheme="light"
         enableSystem={false}
         disableTransitionOnChange
+        storageKey="theme"
       >
         <AuthProvider>
           {children}

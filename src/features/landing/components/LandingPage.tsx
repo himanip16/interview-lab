@@ -5,7 +5,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import styles from './LandingPage.module.css';
 
 interface Problem {
@@ -22,6 +22,7 @@ export default function LandingPage() {
   const [mounted, setMounted] = useState(false);
   const [problems, setProblems] = useState<Problem[]>([]);
   const [stats, setStats] = useState({ interviewsCompleted: 4, readiness: 76, streak: 5, deepDives: 45, transcripts: 12 });
+  const carouselRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -88,6 +89,110 @@ export default function LandingPage() {
     setTheme(theme === 'dark' ? 'light' : 'dark');
   };
 
+  const scrollCarousel = (direction: 'left' | 'right') => {
+    if (carouselRef.current) {
+      const scrollAmount = 400;
+      carouselRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth',
+      });
+    }
+  };
+
+  const CAROUSEL_CARDS = [
+    {
+      id: 1,
+      title: 'Bug hunting',
+      meta: 'Practice · 15 min',
+      gradient: 'linear-gradient(160deg,#FF6B4A,#E0432A)',
+      href: '/bug-hunting',
+      icon: (
+        <svg viewBox="0 0 84 84" fill="none">
+          <circle cx="42" cy="42" r="40" fill="#fff"/>
+          <ellipse cx="42" cy="46" rx="14" ry="10" fill="#FF6B4A"/>
+          <circle cx="35" cy="42" r="3" fill="#26282F"/>
+          <circle cx="49" cy="42" r="3" fill="#26282F"/>
+          <path d="M28 34 Q22 26 16 30" stroke="#FF6B4A" strokeWidth="3" strokeLinecap="round" fill="none"/>
+          <path d="M56 34 Q62 26 68 30" stroke="#FF6B4A" strokeWidth="3" strokeLinecap="round" fill="none"/>
+        </svg>
+      )
+    },
+    {
+      id: 2,
+      title: 'Review a PR',
+      meta: 'Practice · 30 min',
+      gradient: 'linear-gradient(160deg,#3E6BFF,#213FCC)',
+      href: '/pr-review',
+      icon: (
+        <svg viewBox="0 0 84 84" fill="none">
+          <circle cx="42" cy="42" r="40" fill="#fff"/>
+          <rect x="26" y="24" width="32" height="36" rx="4" fill="#3E6BFF"/>
+          <path d="M32 44l6 6 12-14" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+        </svg>
+      )
+    },
+    {
+      id: 3,
+      title: 'Read a transcript',
+      meta: 'Library · Full session',
+      gradient: 'linear-gradient(160deg,#262832,#121319)',
+      href: '/learn/transcripts',
+      icon: (
+        <svg viewBox="0 0 84 84" fill="none">
+          <circle cx="42" cy="42" r="40" fill="#fff"/>
+          <path d="M26 30h32v6H26z" fill="#262832"/>
+          <path d="M26 42h24v5H26z" fill="#262832" opacity="0.7"/>
+          <path d="M26 52h28v5H26z" fill="#262832" opacity="0.45"/>
+        </svg>
+      )
+    },
+    {
+      id: 4,
+      title: 'Learn whiteboarding',
+      meta: 'Learn · Guided',
+      gradient: 'linear-gradient(160deg,#00E0AB,#00A87E)',
+      href: '/learn/whiteboard',
+      icon: (
+        <svg viewBox="0 0 84 84" fill="none">
+          <circle cx="42" cy="42" r="40" fill="#fff"/>
+          <rect x="24" y="28" width="36" height="26" rx="3" fill="#00A87E"/>
+          <path d="M30 40h10M30 46h16" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"/>
+          <rect x="24" y="58" width="36" height="4" rx="2" fill="#00A87E" opacity="0.4"/>
+        </svg>
+      )
+    },
+    {
+      id: 5,
+      title: 'Live interview with AI',
+      meta: 'Live · 45 min',
+      gradient: 'linear-gradient(160deg,#FFB930,#E8940A)',
+      href: '/interview-setup',
+      icon: (
+        <svg viewBox="0 0 84 84" fill="none">
+          <circle cx="42" cy="42" r="40" fill="#fff"/>
+          <rect x="35" y="24" width="14" height="24" rx="7" fill="#E8940A"/>
+          <path d="M28 40a14 14 0 0028 0" stroke="#E8940A" strokeWidth="3" strokeLinecap="round" fill="none"/>
+          <line x1="42" y1="54" x2="42" y2="60" stroke="#E8940A" strokeWidth="3" strokeLinecap="round"/>
+        </svg>
+      )
+    },
+    {
+      id: 6,
+      title: 'Deep dives',
+      meta: 'Learn · Topic-based',
+      gradient: 'linear-gradient(160deg,#7A6BFF,#4C3FD6)',
+      href: '/deep-dive',
+      icon: (
+        <svg viewBox="0 0 84 84" fill="none">
+          <circle cx="42" cy="42" r="40" fill="#fff"/>
+          <circle cx="42" cy="42" r="6" fill="#4C3FD6"/>
+          <circle cx="42" cy="42" r="13" stroke="#4C3FD6" strokeWidth="2.5" fill="none" opacity="0.55"/>
+          <circle cx="42" cy="42" r="20" stroke="#4C3FD6" strokeWidth="2.5" fill="none" opacity="0.3"/>
+        </svg>
+      )
+    },
+  ];
+
   return (
     <div className={styles.wrap}>
       <nav className={styles.nav}>
@@ -133,56 +238,46 @@ export default function LandingPage() {
 
       <section className={styles.hero}>
         <div className={styles.heroCopy}>
-          <div className={styles.eyebrow}>{getGreeting()}</div>
-          <h1>Ready to practice?</h1>
+          <div className={styles.eyebrow}>Learn system design through real Staff Engineer conversations</div>
+          <h1>Not textbooks. Real conversations.</h1>
           <p>
-            Continue where you left off or start something new.
+            Master system design through realistic engineering discussions—not static questions and solutions. Experience how Staff Engineers actually think and solve problems.
           </p>
           <div className={styles.heroActions}>
             <Link href="/interview-setup" className={styles.btnPrimary}>
               Start an interview
             </Link>
-            <Link href="/deep-dive" className={styles.btnGhost}>
-              Browse deep dives
+            <Link href="/learn" className={styles.btnGhost}>
+              Explore content
             </Link>
           </div>
         </div>
         <div className={styles.mascotWrap}>
-          <div className={styles.quickActions}>
-            <div className={styles.actionCard}>
-              <div className={styles.actionIcon}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M3 11l9-8 9 8M5 10v10h14V10" />
-                </svg>
-              </div>
-              <div className={styles.actionContent}>
-                <div className={styles.actionTitle}>Continue Learning</div>
-                <div className={styles.actionSubtitle}>System Design Basics</div>
-              </div>
-            </div>
-            <div className={styles.actionCard}>
-              <div className={styles.actionIcon}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="10" />
-                  <polyline points="12 6 12 12 16 14" />
-                </svg>
-              </div>
-              <div className={styles.actionContent}>
-                <div className={styles.actionTitle}>Daily Challenge</div>
-                <div className={styles.actionSubtitle}>Load Balancing</div>
-              </div>
-            </div>
-            <div className={styles.actionCard}>
-              <div className={styles.actionIcon}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M4 19.5A2.5 2.5 0 016.5 17H20M4 4.5A2.5 2.5 0 016.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15z" />
-                </svg>
-              </div>
-              <div className={styles.actionContent}>
-                <div className={styles.actionTitle}>Recent Transcript</div>
-                <div className={styles.actionSubtitle}>Distributed Systems</div>
-              </div>
-            </div>
+          <div className={styles.featureGrid}>
+            <Link href="/interview-setup" className={`${styles.featureTile} ${styles.accentBlue}`}>
+              <span className={styles.tileIcon}>🎤</span>
+              <span className={styles.tileLabel}>AI Interview</span>
+            </Link>
+            <Link href="/bug-hunting" className={`${styles.featureTile} ${styles.accentRed}`}>
+              <span className={styles.tileIcon}>🐞</span>
+              <span className={styles.tileLabel}>Bug Hunt</span>
+            </Link>
+            <Link href="/deep-dive" className={`${styles.featureTile} ${styles.accentGreen}`}>
+              <span className={styles.tileIcon}>📖</span>
+              <span className={styles.tileLabel}>Deep Dive</span>
+            </Link>
+            <Link href="/learn/whiteboard" className={`${styles.featureTile} ${styles.accentCyan}`}>
+              <span className={styles.tileIcon}>🧠</span>
+              <span className={styles.tileLabel}>Whiteboard</span>
+            </Link>
+            <Link href="/pr-review" className={`${styles.featureTile} ${styles.accentOrange}`}>
+              <span className={styles.tileIcon}>🔍</span>
+              <span className={styles.tileLabel}>PR Review</span>
+            </Link>
+            <Link href="/learn/transcripts" className={`${styles.featureTile} ${styles.accentPurple}`}>
+              <span className={styles.tileIcon}>💬</span>
+              <span className={styles.tileLabel}>Conversations</span>
+            </Link>
           </div>
         </div>
       </section>
@@ -203,24 +298,104 @@ export default function LandingPage() {
       </div>
 
       <section className={styles.section}>
-        <div className={styles.secLabel}>A taste of what&apos;s inside</div>
-        <div className={styles.modeRow}>
-          <Link href="/interview-setup" className={`${styles.modeCard} ${styles.m1}`}>
-            <h4>Live interview</h4>
-            <div className={styles.m}>45 min</div>
-          </Link>
-          <Link href="/bug-hunting" className={`${styles.modeCard} ${styles.m2}`}>
-            <h4>Review a PR</h4>
-            <div className={styles.m}>30 min</div>
-          </Link>
-          <Link href="/learn/whiteboard" className={`${styles.modeCard} ${styles.m3}`}>
-            <h4>Whiteboarding</h4>
-            <div className={styles.m}>Guided</div>
-          </Link>
-          <Link href="/deep-dive" className={`${styles.modeCard} ${styles.m4}`}>
-            <h4>Deep dives</h4>
-            <div className={styles.m}>Topic-based</div>
-          </Link>
+        <div className={styles.secLabel}>Explore Interview Lab</div>
+        
+        {/* Carousel */}
+        <div className={styles.carouselWrap}>
+          <div
+            ref={carouselRef}
+            className={styles.carouselRail}
+          >
+            {CAROUSEL_CARDS.map((card) => (
+              <Link
+                key={card.id}
+                href={card.href}
+                className={styles.carouselCard}
+                style={{ background: card.gradient }}
+              >
+                <div className={styles.carouselIcon}>
+                  {card.icon}
+                </div>
+                <h3 className={styles.carouselTitle}>{card.title}</h3>
+                <div className={styles.carouselMeta}>
+                  <span className={styles.carouselDot} />
+                  {card.meta}
+                </div>
+              </Link>
+            ))}
+          </div>
+          
+          {/* Carousel Navigation */}
+          <div className={styles.carouselNav}>
+            <button
+              onClick={() => scrollCarousel('left')}
+              className={styles.carouselBtn}
+            >
+              ← Prev
+            </button>
+            <button
+              onClick={() => scrollCarousel('right')}
+              className={`${styles.carouselBtn} ${styles.carouselBtnPrimary}`}
+            >
+              →
+            </button>
+          </div>
+        </div>
+
+        <div className={styles.section}>
+          <div className={styles.secLabel}>Recently Added</div>
+          <div className={styles.contentRow}>
+            <Link href="/pr-review" className={styles.contentCard}>
+              <div className={styles.contentBadge}>PR Review</div>
+              <h4>Optimize Notification Service</h4>
+              <p>Review performance improvements</p>
+            </Link>
+            <Link href="/bug-hunting" className={styles.contentCard}>
+              <div className={styles.contentBadge}>Bug Hunt</div>
+              <h4>Memory Leak in Kafka Consumer</h4>
+              <p>Debug production incident</p>
+            </Link>
+            <Link href="/deep-dive" className={styles.contentCard}>
+              <div className={styles.contentBadge}>Deep Dive</div>
+              <h4>How Redis Replication Works</h4>
+              <p>Deep dive into caching</p>
+            </Link>
+            <Link href="/learn/transcripts" className={styles.contentCard}>
+              <div className={styles.contentBadge}>Conversation</div>
+              <h4>Staff Engineer explains CAP theorem</h4>
+              <p>Real engineering discussion</p>
+            </Link>
+          </div>
+        </div>
+
+        <div className={styles.section}>
+          <div className={styles.todayLabel}>
+            Today's Learning
+            <span className={styles.todayTotal}>50 min</span>
+          </div>
+          <div className={styles.todayLearning}>
+            <Link href="/bug-hunting" className={styles.todayItem}>
+              <div className={styles.todayCheck}>✓</div>
+              <div className={styles.todayTime}>15 min</div>
+              <div className={styles.todayContent}>
+                <div className={styles.todayTitle}>Bug Hunt</div>
+              </div>
+            </Link>
+            <Link href="/interview-setup" className={styles.todayItem}>
+              <div className={styles.todayCheck}>✓</div>
+              <div className={styles.todayTime}>25 min</div>
+              <div className={styles.todayContent}>
+                <div className={styles.todayTitle}>System Design</div>
+              </div>
+            </Link>
+            <Link href="/pr-review" className={styles.todayItem}>
+              <div className={styles.todayCheck}>✓</div>
+              <div className={styles.todayTime}>10 min</div>
+              <div className={styles.todayContent}>
+                <div className={styles.todayTitle}>PR Review</div>
+              </div>
+            </Link>
+          </div>
         </div>
 
         <div className={styles.proof}>

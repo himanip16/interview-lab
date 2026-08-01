@@ -11,7 +11,6 @@ import { RelatedTechnologyCard } from "@/features/deep-dive/components/RelatedTe
 import { Tag } from "@/features/deep-dive/components/Tag";
 import { ThemeToggle } from "@/features/deep-dive/components/ThemeToggle";
 import { IllustrationBlock } from "@/features/deep-dive/components/IllustrationBlock";
-import { ResourceRow } from "@/features/deep-dive/components/ResourceRow";
 import { Table } from "@/features/deep-dive/components/Table";
 import { Subsection } from "@/features/deep-dive/components/Subsection";
 
@@ -291,23 +290,6 @@ export default async function DeepDiveArticlePage({ params }: PageProps) {
           <div className="lede">{renderParagraphs(article.lede)}</div>
 
           {article.sections.map((section) => renderSection(section, article.glossary))}
-
-          {article.resources && article.resources.length > 0 && (
-            <div className="resources">
-              {article.resources.map((resource, index) => (
-                <ResourceRow
-      key={index}
-      icon={iconMap[resource.type as IconKey] ?? null}
-      title={resource.title}
-      subtitle={resource.description}
-      href={resource.type === "article" && resource.slug
-        ? `/deep-dive/${resource.slug}`
-        : resource.url}
-      chips={resource.relationship ? [{ label: resource.relationship }] : []}
-/>
-              ))}
-            </div>
-          )}
 
           {relatedArticlesWithHeroes.length > 0 && (
             <div className="related">
