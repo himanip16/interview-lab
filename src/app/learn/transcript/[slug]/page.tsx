@@ -17,7 +17,10 @@ export default function TranscriptDetailPage() {
       try {
         const response = await fetch("/api/transcripts");
         const data = await response.json();
+        console.log("Fetched transcripts:", data.length);
+        console.log("Looking for slug:", slug);
         const found = data.find((t: any) => t.slug === slug);
+        console.log("Found transcript:", found ? found.title : "not found");
         setTranscript(found || null);
       } catch (error) {
         console.error("Error fetching transcript:", error);

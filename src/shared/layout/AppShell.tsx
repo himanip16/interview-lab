@@ -262,7 +262,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
 
         {/* Footer */}
-        <div className="p-3.5 border-t border-[var(--border)]">
+        <div className="p-3.5 border-t border-[var(--border)] bg-[var(--surface-page)]">
           {/* Streak Card */}
           <div
             className={cn(
@@ -329,10 +329,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </Link>
 
         {/* Desktop layout */}
-        <div className="hidden lg:flex items-center flex-1 gap-6">
+        <div className="hidden lg:flex items-center flex-1">
+          <div className="w-full max-w-[1200px] mx-auto flex items-center gap-6 px-4">
           {/* Breadcrumb - contextual navigation */}
           <div className="flex-shrink-0 flex items-center gap-2">
-            {pathname !== "/" && (
+            {pathname !== "/" && pathname !== "/deep-dive" && (
               <Link
                 href="/"
                 className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
@@ -350,7 +351,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </div>
 
           {/* Search - naturally integrated */}
-          <div className="flex-1 max-w-md">
+          <div className="flex-1 max-w-xs">
             <div className="flex items-center gap-2.5 bg-[var(--surface-page)] border border-[var(--border)] rounded-md px-3 py-2 text-[13px] text-[var(--text-secondary)] focus-within:border-[var(--category-learn-deep)] focus-within:ring-1 focus-within:ring-[var(--category-learn-deep)] transition-all">
               <svg className="w-[13px] h-[13px] opacity-50 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="11" cy="11" r="7" />
@@ -431,6 +432,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 Log in
               </Link>
             )}
+            </div>
           </div>
         </div>
 
@@ -526,7 +528,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       {/* Main Content */}
       <main
         className={cn(
-          "pt-20 pb-16 lg:pb-0 lg:pl-[var(--sidebar-w)] min-h-screen px-4 sm:px-6",
+          "pt-12 pb-16 lg:pb-0 lg:pl-[var(--sidebar-w)] min-h-screen px-4 sm:px-6",
           mounted && "transition-[padding-left] duration-200 ease-out"
         )}
       >

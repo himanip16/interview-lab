@@ -49,19 +49,6 @@ export function DeepDiveIndexPage() {
   return (
     <div style={{ background: 'var(--landing-bg)', minHeight: '100vh' }}>
       <div className={styles.wrap}>
-        <nav className={styles.navBar}>
-          <div className={styles.navlinks}>
-            <Link href="/learn">About Learn</Link>
-            <b>Deep Dives</b>
-            <Link href="/library">Library</Link>
-          </div>
-          <button className={styles.ham}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-              <path d="M4 7h16M4 12h16M4 17h16" />
-            </svg>
-          </button>
-        </nav>
-
         <div className={styles.header}>
           <div className={styles.eyebrow}>DEEP DIVES</div>
           <h1>What do you want to go deep on?</h1>

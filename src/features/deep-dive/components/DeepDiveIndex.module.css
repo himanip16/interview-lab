@@ -1,48 +1,13 @@
 /* src/features/deep-dive/components/DeepDiveIndex.module.css */
 
 .wrap {
-  max-width: 1000px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 0 24px 80px;
-}
-
-.navBar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 30px 0;
-}
-
-.navlinks {
-  display: flex;
-  gap: 30px;
-  font-size: 13.5px;
-  color: var(--landing-text-soft);
-  font-weight: 500;
-}
-
-.navlinks b {
-  color: var(--landing-text);
-  font-weight: 600;
-  border-bottom: 2px solid var(--landing-text);
-  padding-bottom: 2px;
-}
-
-.ham {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 1px solid var(--border);
-  background: none;
-  color: var(--landing-text);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
+  padding: 24px 24px 80px;
 }
 
 .header {
-  padding: 20px 0 30px;
+  padding: 0 0 30px;
 }
 
 .eyebrow {
@@ -74,6 +39,7 @@
   gap: 8px;
   margin: 26px 0 30px;
   flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .fpill {
@@ -87,7 +53,7 @@
   background: transparent;
 }
 
-.fpill.active {
+.fpillActive {
   background: var(--text-primary);
   color: #fff;
   border-color: var(--text-primary);

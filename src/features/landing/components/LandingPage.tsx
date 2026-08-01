@@ -29,6 +29,24 @@ export default function LandingPage() {
   useEffect(() => {
     setMounted(true);
     fetchData();
+
+    // Reveal animations on scroll
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add(styles.in);
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    document.querySelectorAll(`.${styles.reveal}`).forEach((el) => {
+      observer.observe(el);
+    });
+
+    return () => observer.disconnect();
   }, []);
 
   const fetchData = async () => {
@@ -238,45 +256,20 @@ export default function LandingPage() {
 
       <section className={styles.hero}>
         <div className={styles.heroCopy}>
-          <div className={styles.eyebrow}>Learn system design through real Staff Engineer conversations</div>
-          <h1>Not textbooks. Real conversations.</h1>
+          <div className={styles.eyebrow}>
+            <span className={styles.spark}>✦</span>
+            Learn from real Staff Engineer conversations
+          </div>
+          <h1>Interview prep that sounds like a <span className={styles.grad}>Staff Engineer</span>, not a textbook.</h1>
           <p>
-            Master system design through realistic engineering discussions—not static questions and solutions. Experience how Staff Engineers actually think and solve problems.
+            Deep dives, unedited transcripts, and adaptive AI mock interviews — built from how engineers actually explain trade-offs and solve problems.
           </p>
           <div className={styles.heroActions}>
             <Link href="/interview-setup" className={styles.btnPrimary}>
-              Start an interview
+              Start practicing free →
             </Link>
             <Link href="/learn" className={styles.btnGhost}>
-              Explore content
-            </Link>
-          </div>
-        </div>
-        <div className={styles.mascotWrap}>
-          <div className={styles.featureGrid}>
-            <Link href="/interview-setup" className={`${styles.featureTile} ${styles.accentBlue}`}>
-              <span className={styles.tileIcon}>🎤</span>
-              <span className={styles.tileLabel}>AI Interview</span>
-            </Link>
-            <Link href="/bug-hunting" className={`${styles.featureTile} ${styles.accentRed}`}>
-              <span className={styles.tileIcon}>🐞</span>
-              <span className={styles.tileLabel}>Bug Hunt</span>
-            </Link>
-            <Link href="/deep-dive" className={`${styles.featureTile} ${styles.accentGreen}`}>
-              <span className={styles.tileIcon}>📖</span>
-              <span className={styles.tileLabel}>Deep Dive</span>
-            </Link>
-            <Link href="/learn/whiteboard" className={`${styles.featureTile} ${styles.accentCyan}`}>
-              <span className={styles.tileIcon}>🧠</span>
-              <span className={styles.tileLabel}>Whiteboard</span>
-            </Link>
-            <Link href="/pr-review" className={`${styles.featureTile} ${styles.accentOrange}`}>
-              <span className={styles.tileIcon}>🔍</span>
-              <span className={styles.tileLabel}>PR Review</span>
-            </Link>
-            <Link href="/learn/transcripts" className={`${styles.featureTile} ${styles.accentPurple}`}>
-              <span className={styles.tileIcon}>💬</span>
-              <span className={styles.tileLabel}>Conversations</span>
+              Explore deep dives
             </Link>
           </div>
         </div>
@@ -297,8 +290,12 @@ export default function LandingPage() {
         </div>
       </div>
 
-      <section className={styles.section}>
-        <div className={styles.secLabel}>Explore Interview Lab</div>
+      <section className={`${styles.section} ${styles.reveal}`}>
+        <div className={styles.sectionHead}>
+          <div className={styles.sectionEyebrow}>Explore interview lab</div>
+          <h2>Five ways to practice like it's real.</h2>
+          <p>Bug hunting, PR reviews, deep dives, transcripts, and live AI interviews — everything you need to sound like a Staff Engineer.</p>
+        </div>
         
         {/* Carousel */}
         <div className={styles.carouselWrap}>
@@ -341,37 +338,43 @@ export default function LandingPage() {
             </button>
           </div>
         </div>
+      </section>
 
-        <div className={styles.section}>
-          <div className={styles.secLabel}>Recently Added</div>
+      <section className={`${styles.section} ${styles.reveal}`}>
+          <div className={styles.sectionHead}>
+            <div className={styles.sectionEyebrow}>Recently added</div>
+            <h2>Pulled straight from the library.</h2>
+            <p>New transcripts, bug hunts, and deep dives — added as fast as staff engineers can explain things.</p>
+          </div>
           <div className={styles.contentRow}>
             <Link href="/pr-review" className={styles.contentCard}>
-              <div className={styles.contentBadge}>PR Review</div>
+              <div className={`${styles.contentBadge} ${styles.pr}`}>PR Review</div>
               <h4>Optimize Notification Service</h4>
               <p>Review performance improvements</p>
             </Link>
             <Link href="/bug-hunting" className={styles.contentCard}>
-              <div className={styles.contentBadge}>Bug Hunt</div>
+              <div className={`${styles.contentBadge} ${styles.bug}`}>Bug Hunt</div>
               <h4>Memory Leak in Kafka Consumer</h4>
               <p>Debug production incident</p>
             </Link>
             <Link href="/deep-dive" className={styles.contentCard}>
-              <div className={styles.contentBadge}>Deep Dive</div>
+              <div className={`${styles.contentBadge} ${styles.deep}`}>Deep Dive</div>
               <h4>How Redis Replication Works</h4>
               <p>Deep dive into caching</p>
             </Link>
             <Link href="/learn/transcripts" className={styles.contentCard}>
-              <div className={styles.contentBadge}>Conversation</div>
+              <div className={`${styles.contentBadge} ${styles.conv}`}>Conversation</div>
               <h4>Staff Engineer explains CAP theorem</h4>
               <p>Real engineering discussion</p>
             </Link>
           </div>
-        </div>
+        </section>
 
-        <div className={styles.section}>
-          <div className={styles.todayLabel}>
-            Today's Learning
-            <span className={styles.todayTotal}>50 min</span>
+      <section className={`${styles.section} ${styles.reveal}`}>
+          <div className={styles.sectionHead}>
+            <div className={styles.sectionEyebrow}>Today's learning</div>
+            <h2>Keep your streak alive.</h2>
+            <p>50 minutes of practice completed today. Keep going to maintain your consistency.</p>
           </div>
           <div className={styles.todayLearning}>
             <Link href="/bug-hunting" className={styles.todayItem}>
@@ -396,13 +399,16 @@ export default function LandingPage() {
               </div>
             </Link>
           </div>
-        </div>
+        </section>
 
-        <div className={styles.proof}>
-          <div className={styles.secLabel} style={{ marginBottom: '12px' }}>
-            Not just a number
+      <section className={`${styles.section} ${styles.reveal}`}>
+          <div className={styles.sectionHead}>
+            <div className={styles.sectionEyebrow}>Real feedback</div>
+            <h2>Not just a score.</h2>
+            <p>See exactly what you said well and where you can improve — with context from real engineering discussions.</p>
           </div>
-          <div className={styles.proofLine}>
+          <div className={styles.proof}>
+            <div className={styles.proofLine}>
             &quot;I&apos;d first{' '}
             <span className={`${styles.ev} ${styles.strength}`}>
               separate payment state from event delivery
@@ -422,10 +428,14 @@ export default function LandingPage() {
             <div className={styles.sl}>Overall score</div>
           </div>
         </div>
+      </section>
 
-        <div className={styles.secLabel} style={{ marginTop: '36px' }}>
-          Problem library
-        </div>
+      <section className={`${styles.section} ${styles.reveal}`}>
+          <div className={styles.sectionHead}>
+            <div className={styles.sectionEyebrow}>Problem library</div>
+            <h2>Start where you are.</h2>
+            <p>System design problems ranging from fundamental to advanced — pick your challenge level.</p>
+          </div>
         {loading ? (
           <div className={styles.row}>
             <div className={styles.rowMain}>
