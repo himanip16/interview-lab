@@ -29,6 +29,7 @@ export const TRANSCRIPT_CATEGORIES = [
 export type TranscriptCategory = typeof TRANSCRIPT_CATEGORIES[number];
 
 export type TranscriptSummary = {
+  id: number;
   slug: string;
 
   title: string;

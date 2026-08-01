@@ -30,7 +30,6 @@ export default function ListPanel({
       style={{
         flex: 1,
         minWidth: 0,
-        borderRight: "1px solid rgba(21,22,28,0.08)",
         fontFamily: "'Inter', sans-serif",
       }}
     >
@@ -54,14 +53,12 @@ export default function ListPanel({
           </div>
         ) : (
           items.map((transcript, index) => {
-            const catKey =
-              transcript.category as keyof typeof categories;
-
-            const catColor =
-              categories[catKey]?.color || "#15161C";
-
             const isSelected =
               selected === transcript.slug;
+            const catKey =
+              transcript.category as keyof typeof categories;
+            const catColor =
+              categories[catKey]?.color || "#15161C";
 
             return (
               <div
@@ -70,86 +67,77 @@ export default function ListPanel({
                 className="cursor-pointer"
                 style={{
                   display: "flex",
-                  gap: "11px",
                   padding: "12px",
                   borderRadius: "14px",
                   marginBottom: "4px",
                   transition:
-                    "background 0.2s ease, transform 0.2s ease",
+                    "background 0.2s ease, transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease",
                   background: isSelected
-                    ? "rgba(21,22,28,0.06)"
+                    ? `${catColor}15`
                     : "transparent",
+                  border: isSelected ? `1px solid ${catColor}40` : "1px solid transparent",
                 }}
                 onMouseEnter={(e) => {
                   if (!isSelected) {
-                    e.currentTarget.style.background =
-                      "rgba(21,22,28,0.06)";
+                    e.currentTarget.style.background = `${catColor}10`;
+                    e.currentTarget.style.borderColor = `${catColor}40`;
+                    e.currentTarget.style.boxShadow = `0 2px 8px ${catColor}15`;
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (!isSelected) {
                     e.currentTarget.style.background =
                       "transparent";
+                    e.currentTarget.style.borderColor = "transparent";
+                    e.currentTarget.style.boxShadow = "none";
                   }
                 }}
               >
-                <span
-                  style={{
-                    width: "8px",
-                    height: "8px",
-                    borderRadius: "50%",
-                    background: catColor,
-                    marginTop: "5px",
-                    flexShrink: 0,
-                  }}
-                />
-
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div
-                    style={{
-                      fontSize: "11.55px",
-                      color: "#5A5B66",
-                      fontWeight: 500,
-                    }}
-                  >
-                    {transcript.company || "Unknown"} •{" "}
-                    {transcript.difficulty} •{" "}
-                    {transcript.duration}m
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '12px',
+                  flex: 1, 
+                  minWidth: 0 
+                }}>
+                  <div style={{
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    color: '#5A5B66',
+                    minWidth: '40px',
+                    textAlign: 'right',
+                    fontFamily: "'JetBrains Mono', monospace",
+                    letterSpacing: '-0.02em'
+                  }}>
+                    {transcript.id}
                   </div>
-
-                  <div
-                    style={{
-                      fontSize: "14.3px",
-                      fontWeight: 600,
-                      marginTop: "3px",
-                      lineHeight: 1.35,
-                      color: "#15161C",
-                      // was unbounded — wrapped forever, which is what
-                      // produced the tall vertical text stack in your
-                      // screenshot. Clamped to 2 lines with ellipsis.
-                      display: "-webkit-box",
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: "vertical",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                    }}
-                  >
-                    {transcript.title}
-                  </div>
-
-                  <div
-                    style={{
-                      fontSize: "12.65px",
-                      color: "#5A5B66",
-                      marginTop: "3px",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {transcript.summaryData?.description ||
-                      transcript.summary ||
-                      ""}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: 600,
+                        lineHeight: 1.4,
+                        color: "#15161C",
+                        display: "-webkit-box",
+                        WebkitLineClamp: 1,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      {transcript.title}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "12px",
+                        fontWeight: 500,
+                        lineHeight: 1.4,
+                        color: "#5A5B66",
+                        marginTop: "2px",
+                      }}
+                    >
+                      {transcript.difficulty} • {transcript.duration}m
+                    </div>
                   </div>
                 </div>
 
@@ -171,9 +159,8 @@ export default function ListPanel({
       </div>
 
       <div
-        className="flex items-center justify-center gap-[10px] p-3 border-t"
+        className="flex items-center justify-center gap-[10px] p-3"
         style={{
-          borderColor: "rgba(21,22,28,0.08)",
           flexShrink: 0,
         }}
       >

@@ -457,6 +457,7 @@ const transcript: TranscriptData = {
 
 const amazonNumberOfIslands: TranscriptEntry = {
   summary: {
+    id: 2,
     slug: "amazon-number-of-islands",
     title: "Island Counting with Diagonal Connectivity",
     category: "dsa",

@@ -501,7 +501,8 @@ const transcript: TranscriptData = {
 };
 
 const wordSearchIITrieBacktracking: TranscriptEntry = {
-  summary: {
+  summary: {    id: 32,
+
     slug: "word-search-ii-trie-backtracking",
     title: "Word Search II: Trie-Backed Simultaneous Search",
     category: "dsa",

@@ -443,7 +443,8 @@ const transcript: TranscriptData = {
 };
 
 const uberOncallAlertNoiseHighestStandards: TranscriptEntry = {
-  summary: {
+  summary: {    id: 7,
+
     slug: "uber-oncall-alert-noise-insist-on-highest-standards",
     title: "On-Call Alert Noise Reduction — Insist on the Highest Standards",
     category: "behavioral",

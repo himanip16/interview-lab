@@ -443,7 +443,8 @@ const transcript: TranscriptData = {
 };
 
 const inMemoryFileSystem: TranscriptEntry = {
-  summary: {
+  summary: {    id: 40,
+
     slug: "amazon-in-memory-file-system",
     title: "Design an In-Memory File System",
     category: "lld",

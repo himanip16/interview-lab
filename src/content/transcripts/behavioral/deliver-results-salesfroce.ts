@@ -487,7 +487,8 @@ const transcript: TranscriptData = {
 };
 
 const amazonComplianceWorkflowDeliverResults: TranscriptEntry = {
-  summary: {
+  summary: {    id: 4,
+
     slug: "amazon-compliance-workflow-deliver-results",
     title: "Compliance Workflow Automation — Deliver Results",
     category: "behavioral",

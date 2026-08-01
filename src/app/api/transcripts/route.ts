@@ -9,7 +9,7 @@ export async function GET() {
     const source = getAllTranscripts();
 
     const transcripts = source.map((item) => ({
-  id: item.summary.slug,
+  id: item.summary.id,
   slug: item.summary.slug,
   title: item.summary.title,
   category: item.summary.category,
@@ -29,6 +29,7 @@ export async function GET() {
   updatedAt: new Date(),
 
   summaryData: {
+    id: item.summary.id,
     title: item.summary.title,
     category: item.summary.category,
     difficulty: item.summary.difficulty,

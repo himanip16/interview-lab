@@ -141,8 +141,7 @@ export default function TranscriptBrowser() {
         }}
       >
       {/* Topbar */}
-      <div className="flex items-center justify-between px-[22px] py-4 border-b" style={{ 
-        borderColor: 'rgba(21,22,28,0.08)',
+      <div className="flex items-center justify-between px-[22px] py-4" style={{ 
         flexShrink: 0 
       }}>
         <h1 className="font-bold" style={{ 
@@ -152,21 +151,42 @@ export default function TranscriptBrowser() {
         }}>
           Transcripts
         </h1>
-        <div className="flex items-center gap-[7px] px-[13px] py-[7px] rounded-full" style={{
-          background: '#FFFFFF',
-          border: '1px solid rgba(21,22,28,0.08)',
-          fontSize: '12px',
-          color: '#5A5B66'
-        }}>
-          <SearchIcon width={12} height={12} />
-          <input
-            type="text"
-            placeholder="Search…"
-            value={query}
-            onChange={(e) => { setQuery(e.target.value); setPage(1); }}
-            className="border-none outline-none bg-transparent w-[100px]"
-            style={{ fontFamily: "'Inter', sans-serif", fontSize: '12px', color: '#15161C' }}
-          />
+        <div className="flex items-center gap-[12px]">
+          <div className="flex items-center gap-[7px] px-[13px] py-[7px] rounded-full" style={{
+            background: '#FFFFFF',
+            border: '1px solid rgba(21,22,28,0.08)',
+            fontSize: '12px',
+            color: '#5A5B66'
+          }}>
+            <SearchIcon width={12} height={12} />
+            <input
+              type="text"
+              placeholder="Search…"
+              value={query}
+              onChange={(e) => { setQuery(e.target.value); setPage(1); }}
+              className="border-none outline-none bg-transparent w-[100px]"
+              style={{ fontFamily: "'Inter', sans-serif", fontSize: '12px', color: '#15161C' }}
+            />
+          </div>
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value as 'recent' | 'company' | 'duration' | 'difficulty')}
+            style={{
+              fontSize: '12px',
+              fontWeight: 600,
+              padding: '7px 12px',
+              borderRadius: '999px',
+              border: '1px solid rgba(21,22,28,0.08)',
+              background: '#FFFFFF',
+              color: '#15161C',
+              cursor: 'pointer'
+            }}
+          >
+            <option value="recent">Recent</option>
+            <option value="company">Company</option>
+            <option value="duration">Duration</option>
+            <option value="difficulty">Difficulty</option>
+          </select>
         </div>
       </div>
 
@@ -185,10 +205,7 @@ export default function TranscriptBrowser() {
           categories={CATS}
           counts={categories}
           selected={category}
-          sort={sort}
-          featured={featured}
           onCategoryChange={handleCategoryChange}
-          onSortChange={setSort}
         />
 
         {/* List Panel */}

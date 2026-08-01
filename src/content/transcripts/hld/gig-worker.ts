@@ -426,7 +426,8 @@ const transcript: TranscriptData = {
 };
 
 const gigWorkerIdentityVerificationPlatform: TranscriptEntry = {
-  summary: {
+  summary: {    id: 36,
+
     slug: "gig-worker-identity-verification-platform",
     title: "Gig Worker Identity Verification Platform — High-Level Design",
     category: "hld",

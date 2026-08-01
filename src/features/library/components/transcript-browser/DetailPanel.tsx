@@ -92,99 +92,101 @@ export default function DetailPanel({ transcript, categories, diffColor }: Props
 
   return (
     <div className="desktop-detail overflow-y-auto" style={{
-      flex: '0 0 320px',
-      padding: '24px 22px',
+      flex: '0 0 380px',
+      padding: '32px 28px',
       fontFamily: "'Inter', sans-serif"
     }}>
       <div style={{
         animation: 'fadeIn 0.35s ease'
       }}>
         <div style={{
-          display: 'flex',
-          gap: '6px',
-          flexWrap: 'wrap',
-          marginBottom: '12px'
+          fontSize: '11px',
+          fontWeight: 700,
+          marginBottom: '16px',
+          color: diffColorValue,
+          letterSpacing: '0.04em',
+          textTransform: 'uppercase'
         }}>
-          <span style={{
-            fontSize: '11px',
-            fontWeight: 700,
-            padding: '4px 10px',
-            borderRadius: '999px',
-            textTransform: 'uppercase',
-            background: `${diffColorValue}22`,
-            color: diffColorValue
-          }}>
-            {transcript.difficulty}
-          </span>
-          <span style={{
-            fontSize: '11px',
-            fontWeight: 700,
-            padding: '4px 10px',
-            borderRadius: '999px',
-            textTransform: 'uppercase',
-            background: `${catInfo?.color}22`,
-            color: catInfo?.color
-          }}>
-            {catInfo?.label}
-          </span>
+          {transcript.difficulty}
         </div>
 
         <div style={{
-          fontSize: '20.9px',
+          fontSize: '24px',
           fontWeight: 700,
-          lineHeight: 1.25,
+          lineHeight: 1.2,
           color: '#15161C',
           fontFamily: "'Poppins', sans-serif",
-          letterSpacing: '-0.02em'
+          letterSpacing: '-0.02em',
+          marginBottom: '8px'
         }}>
           {transcript.title}
         </div>
 
         <div style={{
-          fontSize: '11.55px',
+          fontSize: '13px',
           color: '#5A5B66',
           fontWeight: 500,
-          marginTop: '8px'
+          marginBottom: '24px'
         }}>
-          {transcript.company || 'Unknown'} • {transcript.duration} min read
+          {transcript.duration} min read
         </div>
 
         <div style={{
-          fontSize: '13.75px',
+          fontSize: '14px',
           color: '#5A5B66',
           lineHeight: 1.7,
-          marginTop: '14px'
+          marginBottom: '32px'
         }}>
           {transcript.summaryData?.description || transcript.summary || ''}
         </div>
 
-        <div style={{
-          display: 'flex',
-          gap: '6px',
-          flexWrap: 'wrap',
-          marginTop: '16px'
-        }}>
-          {transcript.summaryData?.tags?.map((tag) => (
-            <span
-              key={tag}
-              style={{
-                fontSize: '11px',
-                fontWeight: 600,
-                padding: '4px 10px',
-                borderRadius: '999px',
-                background: 'rgba(21,22,28,0.06)',
-                color: '#5A5B66'
-              }}
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
+        {transcript.summaryData?.tags && transcript.summaryData.tags.length > 0 && (
+          <div style={{
+            marginBottom: '32px'
+          }}>
+            <div style={{
+              fontSize: '11px',
+              fontWeight: 700,
+              letterSpacing: '0.06em',
+              color: '#5A5B66',
+              textTransform: 'uppercase',
+              marginBottom: '12px'
+            }}>
+              Topics
+            </div>
+            <div style={{
+              display: 'flex',
+              gap: '8px',
+              flexWrap: 'wrap'
+            }}>
+              {transcript.summaryData.tags.slice(0, 4).map((tag) => (
+                <span
+                  key={tag}
+                  style={{
+                    fontSize: '12px',
+                    fontWeight: 500,
+                    color: '#15161C'
+                  }}
+                >
+                  {tag}
+                </span>
+              ))}
+              {transcript.summaryData.tags.length > 4 && (
+                <span style={{
+                  fontSize: '12px',
+                  color: '#5A5B66'
+                }}>
+                  +{transcript.summaryData.tags.length - 4} more
+                </span>
+              )}
+            </div>
+          </div>
+        )}
 
         <div style={{
           display: 'flex',
-          gap: '8px',
-          marginTop: '22px'
+          gap: '10px',
+          marginTop: '8px'
         }}>
           <button
             onClick={handleStartReading}

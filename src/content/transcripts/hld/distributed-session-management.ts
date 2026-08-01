@@ -573,7 +573,8 @@ const transcript: TranscriptData = {
 };
 
 const amazonDistributedSessionManagement: TranscriptEntry = {
-  summary: {
+  summary: {    id: 35,
+
     slug: "amazon-distributed-session-management",
     title: "Distributed Session Management System",
     category: "hld",

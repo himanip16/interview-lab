@@ -434,7 +434,8 @@ const transcript: TranscriptData = {
 };
 
 const amazonTokenBucketRateLimiter: TranscriptEntry = {
-  summary: {
+  summary: {    id: 42,
+
     slug: "amazon-token-bucket-rate-limiter",
     title: "Rate Limiter with Token Bucket",
     category: "dsa",

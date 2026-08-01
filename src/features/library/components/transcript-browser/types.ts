@@ -1,7 +1,7 @@
 // src/features/library/components/transcript-browser/types.ts
 
 export type TranscriptEntry = {
-  id: string;
+  id: number;
   slug: string;
   title: string;
   category: string;
@@ -15,6 +15,7 @@ export type TranscriptEntry = {
   createdAt: Date;
   updatedAt: Date;
   summaryData?: {
+    id: number;
     title: string;
     category: string;
     difficulty: string;

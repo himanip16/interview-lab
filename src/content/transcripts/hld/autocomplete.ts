@@ -704,7 +704,8 @@ const transcript: TranscriptData = {
 };
 
 const autocompleteSearch: TranscriptEntry = {
-  summary: {
+  summary: {    id: 33,
+
     slug: "autocomplete-search-recommendations",
     title: "Design Autocomplete & Search Recommendations",
     category: "hld",

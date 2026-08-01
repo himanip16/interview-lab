@@ -716,7 +716,8 @@ const transcript: TranscriptData = {
 };
 
 const inMemoryDatabase: TranscriptEntry = {
-  summary: {
+  summary: {    id: 44,
+
     slug: "in-memory-database",
     title: "Design an In-Memory Database",
     category: "machine-coding",

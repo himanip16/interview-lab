@@ -531,7 +531,8 @@ const transcript: TranscriptData = {
 };
 
 const amazonFindAllAnagrams: TranscriptEntry = {
-  summary: {
+  summary: {    id: 13,
+
     slug: "amazon-find-all-anagrams",
     title: "Find All Anagram Indices",
     category: "dsa",

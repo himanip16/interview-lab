@@ -346,7 +346,8 @@ const transcript: TranscriptData = {
   ],
 };
 const biasForActionCertificateExpiration: TranscriptEntry = {
-  summary: {
+  summary: {    id: 2,
+
     slug: "bias-for-action-certificate-expiration",
     title:
       "Bias for Action + Ownership — Certificate Expiration Incident Response at Uber",

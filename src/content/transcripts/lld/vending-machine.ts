@@ -566,7 +566,8 @@ const transcript: TranscriptData = {
 };
 
 const vendingMachineLeasing: TranscriptEntry = {
-  summary: {
+  summary: {    id: 43,
+
     slug: "vending-machine-leasing",
     title: "Design a Vending Machine Leasing System",
     category: "lld",

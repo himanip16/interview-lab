@@ -22,29 +22,20 @@ type Props = {
   categories: typeof CATS;
   counts: Record<string, number>;
   selected: Category;
-  sort: "recent" | "company" | "duration" | "difficulty";
-  featured: TranscriptEntry | null;
   onCategoryChange: (cat: Category) => void;
-  onSortChange: (
-    sort: "recent" | "company" | "duration" | "difficulty"
-  ) => void;
 };
 
 export default function Sidebar({
   categories,
   counts,
   selected,
-  sort,
-  featured,
   onCategoryChange,
-  onSortChange,
 }: Props) {
   return (
     <div
       className="desktop-sidebar relative overflow-y-auto"
       style={{
         flex: "0 0 200px",
-        borderRight: "1px solid rgba(21,22,28,0.08)",
         padding: "18px 14px",
         fontFamily: "'Inter', sans-serif",
       }}
@@ -155,98 +146,6 @@ export default function Sidebar({
           </span>
         </button>
       ))}
-
-      <div
-        style={{
-          fontSize: "11px",
-          fontWeight: 700,
-          letterSpacing: "0.06em",
-          color: "#5A5B66",
-          textTransform: "uppercase",
-          margin: "14px 0 8px",
-        }}
-      >
-        Sort by
-      </div>
-
-      <select
-        value={sort}
-        onChange={(e) =>
-          onSortChange(
-            e.target.value as
-              | "recent"
-              | "company"
-              | "duration"
-              | "difficulty"
-          )
-        }
-        style={{
-          width: "100%",
-          fontSize: "13.2px",
-          fontWeight: 600,
-          padding: "8px 10px",
-          borderRadius: "10px",
-          border: "1px solid rgba(21,22,28,0.08)",
-          background: "#FFFFFF",
-          color: "#15161C",
-          marginTop: "4px",
-          cursor: "pointer",
-        }}
-      >
-        <option value="recent">Most recent</option>
-        <option value="company">Company (A–Z)</option>
-        <option value="duration">Duration</option>
-        <option value="difficulty">Difficulty</option>
-      </select>
-
-      {featured && (
-        <div
-          style={{
-            marginTop: "22px",
-            padding: "14px",
-            borderRadius: "16px",
-            background:
-              "linear-gradient(160deg, #FFFFFF, rgba(21,22,28,0.06))",
-            border: "1px solid rgba(21,22,28,0.08)",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              fontSize: "10.45px",
-              fontWeight: 700,
-              color: "#00A87E",
-              textTransform: "uppercase",
-              letterSpacing: "0.05em",
-            }}
-          >
-            <span
-              style={{
-                width: "5px",
-                height: "5px",
-                borderRadius: "50%",
-                background: "#00D9A3",
-                animation: "pulse 1.8s ease-in-out infinite",
-              }}
-            />
-            Recommended
-          </div>
-
-          <h4
-            style={{
-              fontSize: "13.2px",
-              fontWeight: 600,
-              marginTop: "7px",
-              lineHeight: 1.4,
-              color: "#15161C",
-            }}
-          >
-            {featured.summaryData?.title ?? featured.title}
-          </h4>
-        </div>
-      )}
     </div>
   );
 }

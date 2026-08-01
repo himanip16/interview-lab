@@ -513,7 +513,8 @@ const transcript: TranscriptData = {
 };
 
 const busRoutesWeighted: TranscriptEntry = {
-  summary: {
+  summary: {    id: 15,
+
     slug: "bus-routes-weighted-dijkstra",
     title: "Bus Routes, Then a Cost-Weighted Follow-Up Solved With Dijkstra",
     category: "dsa",

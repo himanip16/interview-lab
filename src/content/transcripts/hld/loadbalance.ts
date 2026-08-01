@@ -349,7 +349,8 @@ const transcript: TranscriptData = {
 };
 
 const loadBalancerHld: TranscriptEntry = {
-  summary: {
+  summary: {    id: 37,
+
     slug: "load-balancer-hld",
     title: "Load Balancer — High-Level Design",
     category: "hld",

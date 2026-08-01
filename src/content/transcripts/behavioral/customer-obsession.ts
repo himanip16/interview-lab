@@ -776,6 +776,7 @@ const transcript: TranscriptData = {
 
 const amazonCustomerObsessionIris: TranscriptEntry = {
   summary: {
+    id: 4,
     slug: "amazon-customer-obsession-iris-reporting",
     title: "Customer Obsession: Closing the Self-Service Reporting Gap",
     category: "behavioral",

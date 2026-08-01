@@ -671,7 +671,8 @@ const transcript: TranscriptData = {
 };
 
 const stripeCarPooling: TranscriptEntry = {
-  summary: {
+  summary: {    id: 16,
+
     slug: "stripe-car-pooling",
     title: "Car Pooling Capacity Validation",
     category: "dsa",

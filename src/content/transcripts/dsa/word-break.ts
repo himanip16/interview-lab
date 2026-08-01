@@ -1103,7 +1103,8 @@ const transcript: TranscriptData = {
 };
 
 const wordBreak: TranscriptEntry = {
-  summary: {
+  summary: {    id: 30,
+
     slug: "word-break-i-ii",
     title: "Segment a String Into Dictionary Words (Word Break I & II)",
     category: "dsa",

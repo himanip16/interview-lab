@@ -1,6 +1,6 @@
 // scripts/generate-transcripts.ts
 
-import { readdirSync, writeFileSync } from "fs";
+import { readdirSync, writeFileSync, readFileSync } from "fs";
 import { join } from "path";
 
 const ROOT = join(process.cwd(), "src/content/transcripts");
@@ -45,6 +45,30 @@ for (const category of categories) {
       slug,
       variable: toIdentifier(slug),
     });
+  }
+}
+
+// Add IDs to transcript files
+let idCounter = 1;
+for (const entry of entries) {
+  const filePath = join(ROOT, entry.category, `${entry.slug}.ts`);
+  const content = readFileSync(filePath, 'utf-8');
+  
+  // Check if id already exists in summary
+  const summaryMatch = content.match(/const \w+: TranscriptEntry = \{[\s\S]*?summary: \{([\s\S]*?)\},[\s\S]*?transcript/);
+  if (summaryMatch) {
+    const summaryContent = summaryMatch[1];
+    if (!summaryContent.includes('id:')) {
+      // Add id as the first field in summary
+      const newSummaryContent = `    id: ${idCounter++},
+${summaryContent}`;
+      const newContent = content.replace(
+        /const \w+: TranscriptEntry = \{[\s\S]*?summary: \{([\s\S]*?)\},[\s\S]*?transcript/,
+        (match) => match.replace(summaryContent, newSummaryContent)
+      );
+      writeFileSync(filePath, newContent);
+      console.log(`Added id ${idCounter - 1} to ${entry.slug}`);
+    }
   }
 }
 
