@@ -689,7 +689,7 @@ const webhookDeliveryPlatform: TranscriptEntry = {
     category: "machine-coding",
     difficulty: Difficulty.MEDIUM,
     duration: 45,
-    company: "OpenAI",
+    company: ["OpenAI"],
     tags: [
       "Machine Coding",
       "Webhooks",

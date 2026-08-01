@@ -9,7 +9,7 @@ const transcript: TranscriptData = {
   metadata: {
     title: "Distributed Session Management System",
     difficulty: Difficulty.HARD,
-    company: "Amazon",
+    company: ["Amazon"],
     duration: 48,
     template: "High Level Design",
     category: "HLD",
@@ -580,7 +580,7 @@ const amazonDistributedSessionManagement: TranscriptEntry = {
     category: "hld",
     difficulty: Difficulty.HARD,
     duration: 48,
-    company: "Amazon",
+    company: ["Amazon"],
     tags: [
       "Distributed Systems",
       "Redis",

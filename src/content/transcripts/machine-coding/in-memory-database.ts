@@ -723,7 +723,7 @@ const inMemoryDatabase: TranscriptEntry = {
     category: "machine-coding",
     difficulty: Difficulty.HARD,
     duration: 60,
-    company: "General",
+    
     tags: [
       "Machine Coding",
       "Database Internals",

@@ -9,7 +9,7 @@ const transcript: TranscriptData = {
   metadata: {
     title: "Find All Anagram Indices",
     difficulty: Difficulty.MEDIUM,
-    company: "Amazon",
+    company: ["Amazon"],
     duration: 40,
     template: "DSA",
     category: "DSA",
@@ -538,7 +538,7 @@ const amazonFindAllAnagrams: TranscriptEntry = {
     category: "dsa",
     difficulty: Difficulty.MEDIUM,
     duration: 40,
-    company: "Amazon",
+    company: ["Amazon"],
     tags: [
       "Sliding Window",
       "Hashing",

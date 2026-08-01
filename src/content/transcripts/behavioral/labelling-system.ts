@@ -537,7 +537,7 @@ const amazonLabellingSystemScale: TranscriptEntry = {
     category: "behavioral",
     difficulty: Difficulty.HARD,
     duration: 42,
-    company: "Amazon",
+    company: ["Amazon"],
     tags: [
       "Ownership",
       "Bias for Action",

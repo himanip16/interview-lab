@@ -724,7 +724,7 @@ const whatsappReadReceipts: TranscriptEntry = {
     category: "lld",
     difficulty: Difficulty.HARD,
     duration: 45,
-    company: "WhatsApp",
+    company: ["WhatsApp"],
     tags: [
       "Low Level Design",
       "Concurrency",

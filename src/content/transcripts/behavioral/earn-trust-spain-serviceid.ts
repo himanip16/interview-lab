@@ -525,7 +525,7 @@ const amazonEarnTrustSpainServiceId: TranscriptEntry = {
     category: "behavioral",
     difficulty: Difficulty.MEDIUM,
     duration: 37,
-    company: "Amazon",
+    company: ["Amazon"],
     tags: [
       "Earn Trust",
       "Ownership",

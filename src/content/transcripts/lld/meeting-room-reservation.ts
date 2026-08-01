@@ -976,7 +976,7 @@ const amazonMeetingRoomReservation: TranscriptEntry = {
     category: "lld",
     difficulty: Difficulty.MEDIUM,
     duration: 50,
-    company: "Amazon",
+    company: ["Amazon"],
     tags: [
       "Object-Oriented Design",
       "Composition over Inheritance",

@@ -9,7 +9,7 @@ const transcript: TranscriptData = {
   metadata: {
     title: "Thrift to gRPC Migration — Disagree and Commit",
     difficulty: Difficulty.HARD,
-    company: "Amazon",
+    company: ["Amazon"],
     duration: 40,
     template: "BEHAVIORAL",
     category: "BEHAVIORAL",
@@ -472,7 +472,7 @@ const amazonThriftGrpcMigrationBehavioral: TranscriptEntry = {
     category: "behavioral",
     difficulty: Difficulty.HARD,
     duration: 40,
-    company: "Amazon",
+    company: ["Amazon"],
     tags: [
       "Behavioral",
       "Leadership Principles",

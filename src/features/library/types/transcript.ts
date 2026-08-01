@@ -69,7 +69,7 @@ export type TranscriptMetadata = {
   duration: number;
   template: string;
   category: string;
-  company?: string;
+  company?: string[];
   topics?: string[];
   concepts?: Record<string, Concept>;
   architectureSteps?: ArchitectureNode[][];

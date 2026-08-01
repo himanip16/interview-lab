@@ -338,7 +338,7 @@ const matrixWinning: TranscriptEntry = {
     category: "machine-coding",
     difficulty: Difficulty.MEDIUM,
     duration: 45,
-    company: "Airbnb",
+    company: ["Airbnb"],
     tags: [
       "Machine Coding",
       "Webhooks",

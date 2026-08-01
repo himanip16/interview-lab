@@ -573,7 +573,7 @@ const vendingMachineLeasing: TranscriptEntry = {
     category: "lld",
     difficulty: Difficulty.HARD,
     duration: 45,
-    company: "Amazon",
+    company: ["Amazon"],
     tags: [
       "Low Level Design",
       "State Pattern",

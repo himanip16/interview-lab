@@ -9,7 +9,7 @@ const transcript: TranscriptData = {
   metadata: {
     title: "Rate Limiter with Token Bucket",
     difficulty: Difficulty.MEDIUM,
-    company: "Amazon",
+    company: ["Amazon"],
     duration: 43,
     template: "Low Level Design",
     category: "LLD",
@@ -441,7 +441,7 @@ const amazonTokenBucketRateLimiter: TranscriptEntry = {
     category: "dsa",
     difficulty: Difficulty.MEDIUM,
     duration: 43,
-    company: "Amazon",
+    company: ["Amazon"],
     tags: [
       "Token Bucket",
       "Rate Limiting",

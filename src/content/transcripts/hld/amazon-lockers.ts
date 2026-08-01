@@ -873,7 +873,7 @@ const amazonLockers: TranscriptEntry = {
     category: "hld",
     difficulty: Difficulty.HARD,
     duration: 50,
-    company: "Amazon",
+    company: ["Amazon"],
     tags: [
       "Distributed Systems",
       "Concurrency",

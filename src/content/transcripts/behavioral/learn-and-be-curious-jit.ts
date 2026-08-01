@@ -663,7 +663,7 @@ const amazonLearnCuriousOwnershipJit: TranscriptEntry = {
     category: "behavioral",
     difficulty: Difficulty.MEDIUM,
     duration: 38,
-    company: "Amazon",
+    company: ["Amazon"],
     tags: [
       "Learn and Be Curious",
       "Ownership",

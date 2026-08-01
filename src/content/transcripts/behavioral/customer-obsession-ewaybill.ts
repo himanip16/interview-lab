@@ -488,7 +488,7 @@ const amazonCustomerObsessionEWayBill: TranscriptEntry = {
     category: "behavioral",
     difficulty: Difficulty.MEDIUM,
     duration: 36,
-    company: "Amazon",
+    company: ["Amazon"],
     tags: [
       "Customer Obsession",
       "Ownership",

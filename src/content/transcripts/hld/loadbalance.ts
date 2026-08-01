@@ -18,7 +18,7 @@ const transcript: TranscriptData = {
     duration: 25,
     template: "System Design",
     category: "System Design",
-    company: "Amazon",
+    company: ["Amazon"],
   },
 
   messages: [

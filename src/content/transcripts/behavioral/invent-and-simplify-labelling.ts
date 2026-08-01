@@ -9,7 +9,7 @@ const transcript: TranscriptData = {
   metadata: {
     title: "Campaign Labelling System — Invent and Simplify",
     difficulty: Difficulty.HARD,
-    company: "Amazon",
+    company: ["Amazon"],
     duration: 44,
     template: "BEHAVIORAL",
     category: "BEHAVIORAL",
@@ -472,7 +472,7 @@ const deliverooCampaignLabellingInventAndSimplify: TranscriptEntry = {
     category: "behavioral",
     difficulty: Difficulty.HARD,
     duration: 44,
-    company: "Amazon",
+    company: ["Amazon"],
     tags: [
       "Behavioral",
       "Leadership Principles",

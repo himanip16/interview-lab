@@ -9,7 +9,7 @@ const transcript: TranscriptData = {
   metadata: {
     title: "Island Counting with Diagonal Connectivity",
     difficulty: Difficulty.MEDIUM,
-    company: "Amazon",
+    company: ["Amazon"],
     duration: 44,
     template: "DSA",
     category: "DSA",

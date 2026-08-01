@@ -12,7 +12,7 @@ const transcript: TranscriptData = {
     duration: 45,
     template: "Low Level Design",
     category: "LLD",
-    company: "Amazon",
+    company: ["Amazon"],
   },
 
   messages: [
@@ -450,7 +450,7 @@ const inMemoryFileSystem: TranscriptEntry = {
     category: "lld",
     difficulty: Difficulty.HARD,
     duration: 45,
-    company: "Amazon",
+    company: ["Amazon"],
     tags: [
       "System Design",
       "LLD",

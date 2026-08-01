@@ -9,7 +9,7 @@ const transcript: TranscriptData = {
   metadata: {
     title: "Sort a 500MB File with a 2MB Heap",
     difficulty: Difficulty.HARD,
-    company: "Amazon",
+    company: ["Amazon"],
     duration: 44,
     template: "DSA",
     category: "DSA",
@@ -529,7 +529,7 @@ const amazonExternalSortLimitedMemory: TranscriptEntry = {
     category: "dsa",
     difficulty: Difficulty.HARD,
     duration: 44,
-    company: "Amazon",
+    company: ["Amazon"],
     tags: [
       "External Sort",
       "K-Way Merge",

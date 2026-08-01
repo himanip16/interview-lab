@@ -9,7 +9,7 @@ const transcript: TranscriptData = {
   metadata: {
     title: "Car Pooling Capacity Validation",
     difficulty: Difficulty.MEDIUM,
-    company: "Stripe",
+    company: ["Stripe"],
     duration: 42,
     template: "DSA",
     category: "DSA",
@@ -678,7 +678,7 @@ const stripeCarPooling: TranscriptEntry = {
     category: "dsa",
     difficulty: Difficulty.MEDIUM,
     duration: 42,
-    company: "Stripe",
+    company: ["Stripe"],
     tags: [
       "Difference Array",
       "TreeMap",

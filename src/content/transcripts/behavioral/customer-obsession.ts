@@ -782,7 +782,7 @@ const amazonCustomerObsessionIris: TranscriptEntry = {
     category: "behavioral",
     difficulty: Difficulty.MEDIUM,
     duration: 30,
-    company: "Amazon",
+    company: ["Amazon"],
     tags: [
       "Customer Obsession",
       "Ownership",

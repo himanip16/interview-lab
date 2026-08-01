@@ -9,7 +9,7 @@ const transcript: TranscriptData = {
   metadata: {
     title: "eMoney Safeguarding Delay — Ownership",
     difficulty: Difficulty.HARD,
-    company: "Amazon",
+    company: ["Amazon"],
     duration: 42,
     template: "BEHAVIORAL",
     category: "BEHAVIORAL",
@@ -442,7 +442,7 @@ const uberEmoneySafeguardingOwnership: TranscriptEntry = {
     category: "behavioral",
     difficulty: Difficulty.HARD,
     duration: 42,
-    company: "Amazon",
+    company: ["Amazon"],
     tags: [
       "Behavioral",
       "Leadership Principles",

@@ -9,7 +9,7 @@ const transcript: TranscriptData = {
   metadata: {
     title: "K-th Lexicographical Happy String",
     difficulty: Difficulty.MEDIUM,
-    company: "Amazon",
+    company: ["Amazon"],
     duration: 34,
     template: "DSA",
     category: "DSA",
@@ -475,7 +475,7 @@ const amazonKthLexicographicalHappyString: TranscriptEntry = {
     category: "dsa",
     difficulty: Difficulty.MEDIUM,
     duration: 34,
-    company: "Amazon",
+    company: ["Amazon"],
     tags: [
       "Combinatorics",
       "Backtracking",

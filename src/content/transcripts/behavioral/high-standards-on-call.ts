@@ -9,7 +9,7 @@ const transcript: TranscriptData = {
   metadata: {
     title: "On-Call Alert Noise Reduction — Insist on the Highest Standards",
     difficulty: Difficulty.HARD,
-    company: "Amazon",
+    company: ["Amazon"],
     duration: 40,
     template: "BEHAVIORAL",
     category: "BEHAVIORAL",
@@ -450,7 +450,7 @@ const uberOncallAlertNoiseHighestStandards: TranscriptEntry = {
     category: "behavioral",
     difficulty: Difficulty.HARD,
     duration: 40,
-    company: "Amazon",
+    company: ["Amazon"],
     tags: [
       "Behavioral",
       "Leadership Principles",

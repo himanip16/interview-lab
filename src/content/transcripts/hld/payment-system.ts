@@ -758,7 +758,7 @@ const paymentSystem: TranscriptEntry = {
     category: "hld",
     difficulty: Difficulty.HARD,
     duration: 45,
-    company: "Stripe",
+    company: ["Stripe"],
     tags: [
       "Kafka",
       "Distributed Systems",

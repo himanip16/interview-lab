@@ -9,7 +9,7 @@ const transcript: TranscriptData = {
   metadata: {
     title: "Compliance Workflow Automation — Deliver Results",
     difficulty: Difficulty.HARD,
-    company: "Amazon",
+    company: ["Amazon"],
     duration: 42,
     template: "BEHAVIORAL",
     category: "BEHAVIORAL",
@@ -494,7 +494,7 @@ const amazonComplianceWorkflowDeliverResults: TranscriptEntry = {
     category: "behavioral",
     difficulty: Difficulty.HARD,
     duration: 42,
-    company: "Amazon",
+    company: ["Amazon"],
     tags: [
       "Behavioral",
       "Leadership Principles",
