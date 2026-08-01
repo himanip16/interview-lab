@@ -5,6 +5,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
+import { Card, FilterPill, Tag } from '@/shared/components';
 import styles from '@/features/deep-dive/components/DeepDiveIndex.module.css';
 import { deepDiveRegistry } from '@/content/deep-dive';
 import { contentComponents } from '@/content/deep-dive/component-registry';
@@ -68,35 +69,27 @@ export function DeepDiveIndexPage() {
         </div>
 
         <div className={styles.filters}>
-          <button
-            className={`${styles.fpill} ${filter === 'all' ? styles.active : ''}`}
-            onClick={() => setFilter('all')}
-          >
+          <FilterPill active={filter === 'all'} onClick={() => setFilter('all')}>
             All
-          </button>
-          <button
-            className={`${styles.fpill} ${filter === 'db' ? styles.active : ''}`}
-            onClick={() => setFilter('db')}
-          >
+          </FilterPill>
+          <FilterPill active={filter === 'db'} onClick={() => setFilter('db')}>
             Databases
-          </button>
-          <button
-            className={`${styles.fpill} ${filter === 'msg' ? styles.active : ''}`}
-            onClick={() => setFilter('msg')}
-          >
+          </FilterPill>
+          <FilterPill active={filter === 'msg'} onClick={() => setFilter('msg')}>
             Messaging
-          </button>
-          <button
-            className={`${styles.fpill} ${filter === 'concept' ? styles.active : ''}`}
-            onClick={() => setFilter('concept')}
-          >
+          </FilterPill>
+          <FilterPill active={filter === 'concept'} onClick={() => setFilter('concept')}>
             Core concepts
-          </button>
+          </FilterPill>
         </div>
 
         <div className={styles.grid}>
           {filteredTopics.map((topic) => (
-            <Link key={topic.slug} href={`/deep-dive/${topic.slug}`} className={styles.card}>
+            <Card
+              key={topic.slug}
+              href={`/deep-dive/${topic.slug}`}
+              className={styles.card}
+            >
               <svg className={styles.mark} viewBox="0 0 56 56" fill="none">
                 {topic.mark}
               </svg>
@@ -105,12 +98,12 @@ export function DeepDiveIndexPage() {
               <div className={styles.cardFoot}>
                 <div className={styles.tags}>
                   {topic.tags.map((tag) => (
-                    <span key={tag} className={styles.tag}>{tag}</span>
+                    <Tag key={tag} size="sm">{tag}</Tag>
                   ))}
                 </div>
                 <div className={styles.read}>{topic.readTime}</div>
               </div>
-            </Link>
+            </Card>
           ))}
         </div>
       </div>
