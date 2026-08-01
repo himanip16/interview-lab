@@ -1,0 +1,15 @@
+.table-wrapper {
+  margin: var(--space-5) 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ctable {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  min-width: 500px;
+}

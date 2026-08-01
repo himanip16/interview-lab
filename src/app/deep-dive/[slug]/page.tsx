@@ -17,9 +17,10 @@ import { Subsection } from "@/features/deep-dive/components/Subsection";
 import { getDeepDiveBySlug, getPreviousAndNext } from "@/content/deep-dive";
 import { contentComponents } from "@/content/deep-dive/component-registry";
 
-import "@/features/deep-dive/styles/deep-dive.css";
+import "@/styles/tokens.css";
 
 import { BookOpen, MessageSquare, Code2, ChevronLeft } from "lucide-react";
+import styles from './page.module.css';
 
 // renamed to avoid colliding with the `CodeBlock` content-block type
 import CodeBlockRenderer from "@/shared/code/CodeBlock";
@@ -214,7 +215,7 @@ function renderBlock(block: ContentBlock, key: number) {
 function renderSection(section: Section, glossary: DeepDiveArticle["glossary"]) {
   return (
     <section key={section.id}>
-      <div className="h2row">
+      <div className={styles.h2row}>
         <SectionHeading number={section.number}>{section.title}</SectionHeading>
       </div>
 
@@ -268,9 +269,9 @@ export default async function DeepDiveArticlePage({ params }: PageProps) {
   });
 
   return (
-    <div className="wrap">
+    <div className={styles.wrap}>
           {article.heroDiagram?.renderEngine === "component" && (
-            <div className="mark-sm" style={{ width: 56, height: 56, marginBottom: 16 }}>
+            <div className={styles.markSm} style={{ width: 56, height: 56, marginBottom: 16 }}>
               {(() => {
                 const Hero = contentComponents[article.heroDiagram.componentName];
                 return Hero ? <Hero /> : null;
@@ -278,23 +279,23 @@ export default async function DeepDiveArticlePage({ params }: PageProps) {
             </div>
           )}
 
-          {metadata.eyebrow && <div className="eyebrow">{metadata.eyebrow}</div>}
-          <h1 className="title">{metadata.name}</h1>
+          {metadata.eyebrow && <div className={styles.eyebrow}>{metadata.eyebrow}</div>}
+          <h1 className={styles.title}>{metadata.name}</h1>
 
-          <div className="tags">
+          <div className={styles.tags}>
             {metadata.tags.map((tag) => (
               <Tag key={tag}>{tag}</Tag>
             ))}
           </div>
 
-          <div className="lede">{renderParagraphs(article.lede)}</div>
+          <div className={styles.lede}>{renderParagraphs(article.lede)}</div>
 
           {article.sections.map((section) => renderSection(section, article.glossary))}
 
           {relatedArticlesWithHeroes.length > 0 && (
-            <div className="related">
-              <div className="lbl">Continue the thread</div>
-              <div className="rel-row">
+            <div className={styles.related}>
+              <div className={styles.lbl}>Continue the thread</div>
+              <div className={styles.relRow}>
                 {relatedArticlesWithHeroes.map((related) =>
                   related.slug ? (
                     <Link key={related.slug} href={`/deep-dive/${related.slug}`}>

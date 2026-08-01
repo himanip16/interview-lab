@@ -1,0 +1,19 @@
+.h2 {
+  font-size: var(--text-xl);
+  font-weight: var(--font-semibold);
+}
+
+.h2 .num {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--text);
+  color: var(--bg);
+  font-size: 10.5px;
+  font-family: 'Inter', sans-serif;
+  font-weight: var(--font-bold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}

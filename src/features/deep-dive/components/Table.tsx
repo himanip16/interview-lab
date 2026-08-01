@@ -2,6 +2,8 @@
 
 'use client';
 
+import styles from './Table.module.css';
+
 interface BadgeConfig {
   text: string;
   color: string;
@@ -28,8 +30,8 @@ interface TableProps {
 
 export function Table({ headers, rows, badgeColumn = 0, whenColumn, className = '' }: TableProps) {
   return (
-    <div className={`table-wrapper ${className}`}>
-      <table className="ctable">
+    <div className={`${styles.tableWrapper} ${className}`}>
+      <table className={styles.ctable}>
         <thead>
           <tr>
             {headers.map((header, index) => (

@@ -1,6 +1,7 @@
 // src/features/deep-dive/components/RelatedTechnologyCard.tsx
 
 import type { ReactNode } from 'react';
+import styles from './RelatedTechnologyCard.module.css';
 
 type RelationshipType = 'buildsOn' | 'prerequisite' | 'contrast' | 'similar' | 'advanced';
 
@@ -21,19 +22,19 @@ const relationshipLabels: Record<RelationshipType, string> = {
 
 export function RelatedTechnologyCard({ name, description, heroIllustration, relationship }: RelatedTechnologyCardProps) {
   return (
-    <div className="rel-card">
+    <div className={styles.relCard}>
       {relationship && (
-        <div className={`rel-badge rel-badge-${relationship}`}>
+        <div className={`${styles.relBadge} ${styles[`relBadge${relationship.charAt(0).toUpperCase() + relationship.slice(1)}`]}`}>
           {relationshipLabels[relationship]}
         </div>
       )}
       {heroIllustration && (
-        <div className="rel-card-illustration">
+        <div className={styles.relCardIllustration}>
           {heroIllustration}
         </div>
       )}
-      <div className="rn">{name}</div>
-      <div className="rd">{description}</div>
+      <div className={styles.rn}>{name}</div>
+      <div className={styles.rd}>{description}</div>
     </div>
   );
 }

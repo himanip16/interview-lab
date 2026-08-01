@@ -2,6 +2,7 @@
 
 import type { ParagraphBlock, CalloutType } from '@/features/deep-dive/types';
 import { ContentRenderer, InlineContentRenderer } from '@/features/deep-dive/components/ContentRenderer';
+import styles from './Callout.module.css';
 
 interface CalloutProps {
   variant: CalloutType;
@@ -36,9 +37,9 @@ export function Callout({ variant, label, title, content, className = '' }: Call
   const labelText = label ?? variantLabel[variant];
 
   return (
-    <div className={`callout callout--${variant} ${className}`}>
+    <div className={`${styles.callout} ${className}`}>
       <div
-        className="lbl"
+        className={styles.lbl}
         style={{
           background: `${color}15`,
           color,
@@ -46,7 +47,7 @@ export function Callout({ variant, label, title, content, className = '' }: Call
       >
         {labelText}
       </div>
-      {title && <h4 className="callout-title">{title}</h4>}
+      {title && <h4 className={styles.title}>{title}</h4>}
       <ContentRenderer content={content} />
     </div>
   );

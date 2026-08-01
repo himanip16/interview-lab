@@ -1,0 +1,78 @@
+.wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-5) var(--space-8);
+}
+
+@media (max-width: 420px) {
+  .wrap {
+    padding: var(--space-2) var(--space-1) var(--space-8);
+  }
+}
+
+.mark-sm {
+  width: 52px;
+  height: 52px;
+  margin-bottom: var(--space-4);
+}
+
+.mark-sm svg {
+  width: 100%;
+  height: 100%;
+}
+
+.eyebrow {
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+  letter-spacing: 0.1em;
+  color: var(--mint-deep);
+}
+
+.title {
+  font-size: 36px;
+  font-weight: var(--font-extrabold);
+}
+
+@media (max-width: 420px) {
+  .title {
+    font-size: 24px;
+  }
+}
+
+.tags {
+  display: flex;
+  gap: var(--space-2);
+  margin: var(--space-3) 0 var(--space-6);
+  flex-wrap: wrap;
+}
+
+.lede {
+  font-size: var(--text-lg);
+  line-height: 1.7;
+  color: var(--text);
+  margin-bottom: var(--space-2);
+}
+
+.h2row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.related {
+  margin-top: var(--space-11);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--border);
+}
+
+.related .lbl {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-soft);
+  margin-bottom: var(--space-3);
+}
+
+.rel-row {
+  display: flex;
+  gap: var(--space-4);
+}

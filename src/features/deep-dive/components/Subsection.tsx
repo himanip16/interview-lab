@@ -4,6 +4,7 @@
 
 import type { ParagraphBlock } from '@/features/deep-dive/types';
 import { ContentRenderer } from '@/features/deep-dive/components/ContentRenderer';
+import styles from './Subsection.module.css';
 
 interface SubsectionProps {
   dotColor?: string;
@@ -14,9 +15,9 @@ interface SubsectionProps {
 
 export function Subsection({ dotColor = 'var(--mint-deep)', title, content, className = '' }: SubsectionProps) {
   return (
-    <div className={`subhead ${className}`}>
-      <div className="subhead-header">
-        <div className="dot" style={{ background: dotColor }} />
+    <div className={`${styles.subhead} ${className}`}>
+      <div className={styles.subheadHeader}>
+        <div className={styles.dot} style={{ background: dotColor }} />
         <h3>{title}</h3>
       </div>
       <ContentRenderer content={content} />
