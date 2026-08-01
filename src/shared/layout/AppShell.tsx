@@ -103,9 +103,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [userXP, setUserXP] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchExpanded, setSearchExpanded] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLDivElement>(null);
 
   useClickOutside(menuRef, () => setMenuOpen(false), menuOpen);
+  useClickOutside(searchRef, () => setSearchExpanded(false), searchExpanded);
 
   // Restore the collapsed preference (desktop sidebar only).
   useEffect(() => {
@@ -130,6 +133,22 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     setTheme(initialTheme);
     document.documentElement.setAttribute("data-theme", initialTheme);
   }, []);
+
+  // Keyboard shortcuts for search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setSearchExpanded(true);
+      }
+      if (e.key === 'Escape' && searchExpanded) {
+        setSearchExpanded(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [searchExpanded]);
 
   const toggleTheme = () => {
     const newTheme = theme === "dark" ? "light" : "dark";
@@ -168,6 +187,16 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const getCurrentNavItem = () => {
     const allItems = getAllNavItems();
     return allItems.find((item) => isActive(item.path));
+  };
+
+  const getBreadcrumbPath = () => {
+    const currentItem = getCurrentNavItem();
+    if (!currentItem) return [];
+    
+    const section = navSections.find(s => s.items.some(item => item.path === currentItem.path));
+    if (!section) return [currentItem.name];
+    
+    return [section.title, currentItem.name];
   };
 
   const email = session?.user?.email;
@@ -333,51 +362,76 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <div className="w-full max-w-[1200px] mx-auto flex items-center gap-6 px-4">
           {/* Breadcrumb - contextual navigation */}
           <div className="flex-shrink-0 flex items-center gap-2">
-            {pathname !== "/" && pathname !== "/deep-dive" && (
-              <Link
-                href="/"
-                className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M19 12H5M12 19l-7-7 7-7" />
-                </svg>
-              </Link>
-            )}
-            <div className="text-[13.5px] font-semibold text-[var(--text-secondary)]">
-              <span className="text-[var(--text-primary)]">
-                {getCurrentNavItem()?.name || "Home"}
-              </span>
-            </div>
+            {(() => {
+              const breadcrumbPath = getBreadcrumbPath();
+              return breadcrumbPath.length > 0 ? (
+                <div className="flex items-center gap-2 text-[13px]">
+                  {breadcrumbPath.map((item, index) => (
+                    <React.Fragment key={index}>
+                      {index > 0 && (
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[var(--text-secondary)]">
+                          <path d="M9 6l6 6-6 6" />
+                        </svg>
+                      )}
+                      <span className={index === breadcrumbPath.length - 1 ? "text-[var(--text-primary)] font-semibold" : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer transition-colors"}>
+                        {item}
+                      </span>
+                    </React.Fragment>
+                  ))}
+                </div>
+              ) : null;
+            })()}
           </div>
 
-          {/* Search - naturally integrated */}
-          <div className="flex-1 max-w-xs">
-            <div className="flex items-center gap-2.5 bg-[var(--surface-page)] border border-[var(--border)] rounded-md px-3 py-2 text-[13px] text-[var(--text-secondary)] focus-within:border-[var(--category-learn-deep)] focus-within:ring-1 focus-within:ring-[var(--category-learn-deep)] transition-all">
-              <svg className="w-[13px] h-[13px] opacity-50 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          {/* Session Status - reclaimed space from search */}
+          <div className="flex-shrink-0 flex items-center gap-2 px-3 py-1.5 bg-[var(--surface-page)] border border-[var(--border)] rounded-md">
+            <svg className="w-4 h-4 text-[var(--category-live)]" viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="12" cy="12" r="10" opacity="0.2"/>
+              <circle cx="12" cy="12" r="6" opacity="0.4"/>
+              <circle cx="12" cy="12" r="2"/>
+            </svg>
+            <span className="text-[12px] font-medium text-[var(--text-secondary)]">36 min remaining</span>
+          </div>
+
+          {/* Search - icon-only trigger, expands on click/⌘K */}
+          <div className="flex-shrink-0" ref={searchRef}>
+            <button
+              onClick={() => setSearchExpanded(true)}
+              className="w-8 h-8 rounded-full border border-[var(--border)] bg-[var(--surface-panel)] text-[var(--text-secondary)] flex items-center justify-center hover:border-[var(--category-learn-deep)] hover:text-[var(--text-primary)] transition-all duration-200 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--category-learn-deep)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-panel)]"
+              title="Search (⌘K)"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="11" cy="11" r="7" />
                 <path d="M21 21l-4.3-4.3" />
               </svg>
-              <input
-                type="text"
-                placeholder="Search..."
-                className="flex-1 bg-transparent outline-none placeholder:text-[var(--text-secondary)]"
-              />
-              <kbd className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium text-[var(--text-secondary)] bg-[var(--surface-panel)] border border-[var(--border)] rounded">
-                ⌘K
-              </kbd>
-            </div>
+            </button>
+            
+            {searchExpanded && (
+              <div className="absolute top-14 right-4 z-50 w-80">
+                <div className="flex items-center gap-2.5 bg-[var(--surface-panel)] border border-[var(--border)] rounded-md px-3 py-2 text-[13px] text-[var(--text-secondary)] focus-within:border-[var(--category-learn-deep)] focus-within:ring-1 focus-within:ring-[var(--category-learn-deep)] transition-all shadow-lg">
+                  <svg className="w-[13px] h-[13px] opacity-50 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="11" cy="11" r="7" />
+                    <path d="M21 21l-4.3-4.3" />
+                  </svg>
+                  <input
+                    type="text"
+                    placeholder="Search..."
+                    className="flex-1 bg-transparent outline-none placeholder:text-[var(--text-secondary)]"
+                    autoFocus
+                  />
+                  <kbd className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium text-[var(--text-secondary)] bg-[var(--surface-page)] border border-[var(--border)] rounded">
+                    ESC
+                  </kbd>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Right Actions */}
-          <div className="flex items-center gap-3 flex-shrink-0">
-            {/* XP Badge */}
-            <div className="flex items-center gap-1.5 text-[12px] font-semibold text-[var(--category-live)] bg-[var(--category-live-bg)] px-3 py-1.5 rounded-full">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2l3 7h7l-5.5 4.5L18.5 21 12 16.5 5.5 21 7.5 13.5 2 9h7z" />
-              </svg>
-              {userXP} XP
-            </div>
+          {/* Divider between settings and identity */}
+          <div className="w-px h-6 bg-[var(--border)] flex-shrink-0" />
 
+          {/* Right Actions - Identity & Progress */}
+          <div className="flex items-center gap-3 flex-shrink-0">
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
@@ -395,34 +449,46 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               )}
             </button>
 
-            {/* User Menu */}
+            {/* User Menu with XP Badge grouped as identity & progress */}
             {status === "loading" ? (
               <div className="h-8 w-8 rounded-full bg-[var(--surface-page)] animate-pulse" />
             ) : email ? (
-              <div className="relative" ref={menuRef}>
-                <button
-                  onClick={() => setMenuOpen((v) => !v)}
-                  className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--text-primary)] text-sm font-semibold text-white transition-all duration-200 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--category-learn-deep)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-panel)]"
-                  aria-haspopup="menu"
-                  aria-expanded={menuOpen}
-                >
-                  {initial}
-                </button>
-
-                {menuOpen && (
-                  <div className="absolute right-0 top-10 z-50 min-w-[180px] rounded-xl border border-[var(--border)] bg-[var(--surface-panel)] p-2 shadow-lg">
-                    <div className="mb-2 border-b border-[var(--border)] px-3 py-2 text-sm text-[var(--text-secondary)] truncate">
-                      {email}
-                    </div>
-
-                    <button
-                      onClick={() => signOut({ redirectTo: "/" })}
-                      className="w-full rounded-md px-3 py-2 text-left text-sm hover:bg-[var(--surface-page)]"
-                    >
-                      Sign out
-                    </button>
+              <div className="flex items-center gap-3">
+                {/* XP Badge - grouped with avatar */}
+                {userXP > 0 && (
+                  <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[var(--category-live)] bg-[var(--category-live-bg)] px-2.5 py-1 rounded-full">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2l3 7h7l-5.5 4.5L18.5 21 12 16.5 5.5 21 7.5 13.5 2 9h7z" />
+                    </svg>
+                    {userXP} XP
                   </div>
                 )}
+                
+                <div className="relative" ref={menuRef}>
+                  <button
+                    onClick={() => setMenuOpen((v) => !v)}
+                    className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--text-primary)] text-sm font-semibold text-white transition-all duration-200 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--category-learn-deep)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-panel)]"
+                    aria-haspopup="menu"
+                    aria-expanded={menuOpen}
+                  >
+                    {initial}
+                  </button>
+
+                  {menuOpen && (
+                    <div className="absolute right-0 top-10 z-50 min-w-[180px] rounded-xl border border-[var(--border)] bg-[var(--surface-panel)] p-2 shadow-lg">
+                      <div className="mb-2 border-b border-[var(--border)] px-3 py-2 text-sm text-[var(--text-secondary)] truncate">
+                        {email}
+                      </div>
+
+                      <button
+                        onClick={() => signOut({ redirectTo: "/" })}
+                        className="w-full rounded-md px-3 py-2 text-left text-sm hover:bg-[var(--surface-page)]"
+                      >
+                        Sign out
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             ) : (
               <Link
@@ -432,8 +498,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 Log in
               </Link>
             )}
-            </div>
           </div>
+        </div>
         </div>
 
         {/* Mobile right actions */}

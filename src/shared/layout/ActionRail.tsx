@@ -10,7 +10,7 @@ interface ActionRailProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 export const ActionRail = React.forwardRef<HTMLDivElement, ActionRailProps>(
-  ({ orientation = 'horizontal', gap = 26, className, children, ...props }, ref) => {
+  ({ orientation = 'horizontal', gap = 24, className, children, style, ...rest }, ref) => {
     return (
       <div
         ref={ref}
@@ -19,8 +19,11 @@ export const ActionRail = React.forwardRef<HTMLDivElement, ActionRailProps>(
           orientation === 'horizontal' ? 'flex-row' : 'flex-col',
           className
         )}
-        style={{ gap: `${gap}px` }}
-        {...props}
+        style={{
+          ...style,
+          gap,
+        }}
+        {...rest}
       >
         {children}
       </div>

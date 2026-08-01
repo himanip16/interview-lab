@@ -18,10 +18,10 @@ export const MESSAGE_STYLES = {
     },
   },
   aiReply: {
-    background: "rgba(106,90,224,0.06)",
-    borderColor: "rgba(106,90,224,0.15)",
+    background: "rgba(62,107,255,0.06)",
+    borderColor: "rgba(62,107,255,0.15)",
     color: "#5A5B66",
-    accentColor: "#6A5AE0",
+    accentColor: "#3E6BFF",
   },
   note: {
     background: "#FFF8E1",
@@ -44,7 +44,7 @@ export const MESSAGE_STYLES = {
     borderColor: "rgba(232,148,10,0.3)",
   },
   avatar: {
-    candidate: "#6A5AE0",
+    candidate: "#3E6BFF",
     interviewer: "#15161C",
   },
 } as const;

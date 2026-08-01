@@ -66,23 +66,23 @@ export function MessageActions({
           <button
             onClick={() => onAskAI(messageId, "why")}
             className="rounded-full px-2.5 py-1 text-[10.5px] font-semibold cursor-pointer border-none"
-            style={{ color: "#6A5AE0", background: "rgba(106,90,224,0.08)" }}
+            style={{ color: "#3E6BFF", background: "rgba(62,107,255,0.08)" }}
           >
-            💬 Ask why?
+            Ask why?
           </button>
           <button
             onClick={() => onAskAI(messageId, "explain")}
             className="rounded-full px-2.5 py-1 text-[10.5px] font-semibold cursor-pointer border-none"
-            style={{ color: "#6A5AE0", background: "rgba(106,90,224,0.08)" }}
+            style={{ color: "#3E6BFF", background: "rgba(62,107,255,0.08)" }}
           >
-            💬 I don't understand
+            I don't understand
           </button>
           <button
             onClick={() => onAskAI(messageId, "challenge")}
             className="rounded-full px-2.5 py-1 text-[10.5px] font-semibold cursor-pointer border-none"
-            style={{ color: "#6A5AE0", background: "rgba(106,90,224,0.08)" }}
+            style={{ color: "#3E6BFF", background: "rgba(62,107,255,0.08)" }}
           >
-            💬 Challenge this
+            Challenge this
           </button>
         </div>
       )}

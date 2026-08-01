@@ -3,6 +3,7 @@
 "use client";
 
 import { useState } from "react";
+import { Copy, Check } from "lucide-react";
 import type { ContentBlock } from "@/features/library/types/transcript";
 
 const HIGHLIGHT_STYLES: Record<string, { bg: string; border: string; label: string; labelColor: string; underline: string }> = {
@@ -13,6 +14,13 @@ const HIGHLIGHT_STYLES: Record<string, { bg: string; border: string; label: stri
 
 export function ContentBlockRenderer({ block }: { block: ContentBlock }) {
   const [revealed, setRevealed] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   switch (block.type) {
     case "text":
@@ -94,7 +102,15 @@ export function ContentBlockRenderer({ block }: { block: ContentBlock }) {
 
     case "code":
       return (
-        <div className="overflow-x-auto rounded-lg" style={{ background: "#15161C" }}>
+        <div className="relative overflow-x-auto rounded-lg" style={{ background: "#15161C" }}>
+          <button
+            onClick={() => handleCopy(block.value)}
+            className="absolute top-2 right-2 p-1.5 rounded-md hover:bg-white/10 transition-colors"
+            style={{ color: "#9A9BA6" }}
+            aria-label="Copy code"
+          >
+            {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+          </button>
           <pre className="p-3 text-[12px] leading-relaxed sm:p-4 sm:text-[13px]">
             <code style={{ color: "#F3F2EE", fontFamily: "'JetBrains Mono', monospace" }}>
               {block.value}

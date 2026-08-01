@@ -64,7 +64,7 @@ export default function DialogueBubble({
   function renderBlock(contentBlock: ContentBlock, key: number): React.ReactNode {
     if (contentBlock.type === "code") {
       return (
-        <div key={key} className="overflow-hidden rounded-lg bg-slate-900">
+        <div key={key} className="overflow-hidden rounded-lg bg-slate-900 shadow-md">
           {contentBlock.language && (
             <div className="border-b border-slate-700 px-4 py-1.5 font-mono text-[10px] uppercase tracking-wider text-slate-400">
               {contentBlock.language}
@@ -79,7 +79,7 @@ export default function DialogueBubble({
 
     if (contentBlock.type === "whiteboard" || contentBlock.type === "animation") {
       return (
-        <div key={key} className="rounded-lg border border-gray-200 bg-white p-3">
+        <div key={key} className="rounded-lg border border-gray-300 bg-white p-3 shadow-sm">
           <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(contentBlock.value) }} />
           {contentBlock.caption && (
             <div className="mt-2 text-sm text-muted-foreground">
@@ -134,32 +134,30 @@ export default function DialogueBubble({
   }
 
   return (
-    <div className={`mb-10 ${isInterviewer ? "max-w-xl" : "max-w-2xl ml-auto"}`}>
-      <div className={`mb-3 flex items-baseline ${isInterviewer ? "justify-start" : "justify-end"}`}>
+    <div className={`mb-6 ${isInterviewer ? "max-w-xl" : "max-w-2xl ml-auto"}`}>
+      <div className={`flex items-baseline gap-2 mb-2 ${isInterviewer ? "justify-start" : "justify-end"}`}>
         <span
-          className={`text-xs uppercase tracking-wider ${
+          className={`text-xs uppercase tracking-wider font-medium ${
             isInterviewer
-              ? "font-normal text-gray-400"
-              : "font-semibold text-gray-600"
+              ? "text-gray-500"
+              : "text-gray-700"
           }`}
         >
-          {role === "interviewer" ? "Interviewer" : "Candidate"}
+          {role === "interviewer" ? "Interviewer" : "You"}
         </span>
         {elapsedSeconds !== undefined && (
           <span
-            className={`font-mono text-[10px] text-muted-foreground ${
-              isInterviewer ? "ml-3" : "mr-3"
-            }`}
+            className={`font-mono text-[10px] text-gray-400`}
           >
             {formatTimestamp(elapsedSeconds)}
           </span>
         )}
       </div>
       <div
-        className={`overflow-hidden space-y-3 rounded-2xl p-6 leading-relaxed ${
+        className={`overflow-hidden space-y-3 rounded-xl p-5 leading-relaxed ${
           isInterviewer
-            ? "bg-transparent border border-gray-100"
-            : "bg-white shadow-sm border border-gray-200"
+            ? "bg-gray-50 border border-gray-200"
+            : "bg-emerald-50 shadow-md border border-emerald-200"
         }`}
       >
         {renderContentBlocks(content)}

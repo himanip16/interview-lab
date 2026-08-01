@@ -7,9 +7,8 @@ import { useRouter } from "next/navigation";
 import { MessageBlock } from "./MessageBlock";
 import { ContinueBanner } from "./ContinueBanner";
 import { SectionMarker } from "./SectionMarker";
-import { LeftSidebar } from "./LeftSidebar";
 import { RightSidebar } from "./RightSidebar";
-import type { ContentBlock, TranscriptData, TranscriptSection, UserProgress } from "@/features/library/types/transcript";
+import type { ContentBlock, TranscriptData, TranscriptSection, UserProgress, TranscriptMessage } from "@/features/library/types/transcript";
 
 type Props = {
   title: string;
@@ -43,6 +42,7 @@ export function TranscriptReader({ title, company, difficulty, duration, transcr
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [aiReplies, setAiReplies] = useState<Record<string, string>>({});
   const [exploredConcepts, setExploredConcepts] = useState<string[]>([]);
+  const [showScrollHint, setShowScrollHint] = useState(true);
 
   const highlights = useMemo(() => collectHighlights(transcript), [transcript]);
   const strengths = highlights.filter((h) => h.status === "strong");
@@ -145,6 +145,18 @@ export function TranscriptReader({ title, company, difficulty, duration, transcr
     return () => sectionObserver.disconnect();
   }, [sections]);
 
+  // Scroll hint - hide when user scrolls down
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 50) {
+        setShowScrollHint(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const handleJumpToSection = useCallback((sectionId: string) => {
     const el = sectionRefs.current[sectionId];
     if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -225,6 +237,16 @@ export function TranscriptReader({ title, company, difficulty, duration, transcr
   const concepts = transcript.metadata.concepts || {};
   const architectureSteps = transcript.metadata.architectureSteps || [];
 
+  // Calculate actual elapsed time for default section
+  const getSectionTime = (messages: TranscriptMessage[]) => {
+    if (messages.length === 0) return "0:00";
+    const lastMessage = messages[messages.length - 1];
+    const elapsedSeconds = lastMessage.elapsedSeconds ?? 0;
+    const minutes = Math.floor(elapsedSeconds / 60);
+    const seconds = elapsedSeconds % 60;
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+  };
+
   return (
     <div style={{ background: "var(--surface-page)", fontFamily: "'Inter', sans-serif", color: "var(--text-primary)" }}>
       {/* Continue Banner */}
@@ -235,8 +257,12 @@ export function TranscriptReader({ title, company, difficulty, duration, transcr
 
       {/* Header */}
       <div className="mx-auto max-w-[1300px] px-6 py-6 pb-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
-        <div className="text-[12px] font-bold uppercase tracking-wider" style={{ color: "var(--category-learn-deep)" }}>
-          {transcript.metadata.category} {transcript.metadata.template}
+        <div className="flex items-center gap-2 text-[12px] font-bold uppercase tracking-wider">
+          <span style={{ color: "#5A5B66" }}>Learn</span>
+          <span style={{ color: "#5A5B66" }}>›</span>
+          <span style={{ color: "#5A5B66" }}>{transcript.metadata.category}</span>
+          <span style={{ color: "#5A5B66" }}>›</span>
+          <span style={{ color: "var(--category-concept-deep)" }}>{transcript.metadata.template}</span>
         </div>
         <h1 
           className="mt-2 text-[28px] font-extrabold leading-tight tracking-tight" 
@@ -281,24 +307,10 @@ export function TranscriptReader({ title, company, difficulty, duration, transcr
         )}
       </div>
 
-      {/* Three-column layout */}
+      {/* Two-column layout */}
       <div className="mx-auto flex gap-5 px-6 py-5.5 pb-20 max-w-[1400px] items-start">
-        {/* Left Sidebar */}
-        <LeftSidebar
-          sections={sections.length > 0 ? sections : [{ id: "default", title: "Transcript", time: "0:00", messages: transcript.messages }]}
-          currentSectionIndex={currentSectionIndex}
-          progress={progress}
-          bookmarks={[...bookmarks]}
-          allMessages={allMessages}
-          exploredConcepts={exploredConcepts}
-          concepts={concepts}
-          onJumpToSection={handleJumpToSection}
-          onJumpToMessage={handleJumpToMessage}
-          onJumpToConcept={handleJumpToConcept}
-        />
-
         {/* Center Transcript */}
-        <div className="flex-1 min-w-0 max-w-[900px] lg:max-w-[900px] xl:max-w-[900px] 2xl:max-w-[1000px] w-full">
+        <div className="flex-1 min-w-0 max-w-[900px] lg:max-w-[900px] xl:max-w-[900px] 2xl:max-w-[1000px] w-full relative">
           {sections.length > 0 ? (
             sections.map((section, sectionIndex) => (
               <div key={section.id}>
@@ -384,15 +396,34 @@ export function TranscriptReader({ title, company, difficulty, duration, transcr
               </div>
             </div>
           )}
+
+          {/* Scroll hint indicator */}
+          {showScrollHint && (
+            <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50 animate-bounce">
+              <div className="flex items-center gap-2 px-4 py-2 rounded-full shadow-lg" style={{ background: "rgba(21,22,28,0.9)", color: "#fff" }}>
+                <span className="text-xs font-medium">Scroll for more</span>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                </svg>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Right Sidebar - only render if there's content */}
-        {architectureSteps.length > 0 && architectureSteps[architectureSteps.length - 1].length > 0 && (
-          <RightSidebar
-            architectureSteps={architectureSteps}
-            currentSectionIndex={currentSectionIndex}
-          />
-        )}
+        <RightSidebar
+          architectureSteps={architectureSteps}
+          currentSectionIndex={currentSectionIndex}
+          sections={sections.length > 0 ? sections : [{ id: "default", title: "Transcript", time: getSectionTime(transcript.messages), messages: transcript.messages }]}
+          progress={progress}
+          bookmarks={[...bookmarks]}
+          allMessages={allMessages}
+          exploredConcepts={exploredConcepts}
+          concepts={concepts}
+          onJumpToSection={handleJumpToSection}
+          onJumpToMessage={handleJumpToMessage}
+          onJumpToConcept={handleJumpToConcept}
+        />
       </div>
     </div>
   );

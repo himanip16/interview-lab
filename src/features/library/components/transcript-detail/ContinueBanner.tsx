@@ -33,10 +33,10 @@ export function ContinueBanner({ sectionTitle, onJump }: Props) {
 
   return (
     <div
-      className="flex items-center justify-between gap-3.5 px-5.5 py-3"
+      className="flex items-center justify-between gap-3.5 px-5 py-2"
       style={{ background: "#15161C", color: "#fff" }}
     >
-      <div className="text-[13px]">
+      <div className="text-[12px]">
         Continue from where you left off — <b style={{ color: "#00D9A3" }}>{sectionTitle}</b>, {pct}% complete
       </div>
       <button
@@ -44,7 +44,7 @@ export function ContinueBanner({ sectionTitle, onJump }: Props) {
           onJump();
           setShow(false);
         }}
-        className="shrink-0 rounded-full border-none px-4 py-2 text-[12.5px] font-semibold cursor-pointer"
+        className="shrink-0 rounded-full border-none px-3 py-1.5 text-[11.5px] font-semibold cursor-pointer"
         style={{ background: "#00A87E", color: "#fff" }}
       >
         Jump back in

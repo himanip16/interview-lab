@@ -95,47 +95,83 @@ export default function TranscriptDetail({
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
-          <Card className="p-6">
+          <Card className="p-26 pl-40 max-w-[900px] mx-auto">
             <TranscriptHeader
               metadata={transcript.metadata}
             />
 
             <TranscriptLegend />
 
-            <div className="max-h-[700px] space-y-4 overflow-y-auto pr-2">
-              {transcript.messages.map(
-                (message, index) => (
-                  <div
-                    key={message.id ?? index}
-                  >
-                    <DialogueBubble
-                      role={message.role}
-                      content={message.content}
-                      elapsedSeconds={
-                        message.elapsedSeconds
-                      }
-                      onHighlightClick={
-                        handleHighlightClick
-                      }
-                      activeHighlightId={
-                        activeHighlightId
-                      }
-                    />
+            {/* Sticky progress indicator */}
+            <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-gray-200 px-4 py-2 mb-4 rounded-lg">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-medium text-gray-600">
+                  Interview Progress
+                </span>
+                <span className="font-mono text-gray-500">
+                  {transcript.messages.length > 0 ? 'Question 1 of ' + transcript.messages.length : '0 questions'}
+                </span>
+              </div>
+              <div className="mt-2 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-emerald-500 transition-all duration-300"
+                  style={{ width: '0%' }}
+                />
+              </div>
+            </div>
 
-                    {activeHighlight &&
-                      activeHighlightId && (
-                        <HighlightExplanation
-                          highlight={
-                            activeHighlight
+            <div className="max-h-[700px] space-y-4 overflow-y-auto pr-2">
+              <div className="flex gap-4">
+                {/* Vertical conversation rail */}
+                <div className="hidden sm:flex flex-col items-center py-2">
+                  <div className="w-px h-full bg-gray-200 relative">
+                    {transcript.messages.map((message, index) => (
+                      <div
+                        key={message.id ?? index}
+                        className="absolute left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-gray-300"
+                        style={{ top: `${(index / (transcript.messages.length - 1 || 1)) * 100}%` }}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Messages */}
+                <div className="flex-1 space-y-4">
+                  {transcript.messages.map(
+                    (message, index) => (
+                      <div
+                        key={message.id ?? index}
+                      >
+                        <DialogueBubble
+                          role={message.role}
+                          content={message.content}
+                          elapsedSeconds={
+                            message.elapsedSeconds
                           }
-                          onClose={
-                            handleCloseExplanation
+                          onHighlightClick={
+                            handleHighlightClick
+                          }
+                          activeHighlightId={
+                            activeHighlightId
                           }
                         />
-                      )}
-                  </div>
-                )
-              )}
+
+                        {activeHighlight &&
+                          activeHighlightId && (
+                            <HighlightExplanation
+                              highlight={
+                                activeHighlight
+                              }
+                              onClose={
+                                handleCloseExplanation
+                              }
+                            />
+                          )}
+                      </div>
+                    )
+                  )}
+                </div>
+              </div>
 
               {transcript.messages.length ===
                 0 && (
