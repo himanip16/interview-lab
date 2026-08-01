@@ -44,6 +44,7 @@ import wordSearch2 from "@/content/transcripts/dsa/word-search2";
 import amazonLockers from "@/content/transcripts/hld/amazon-lockers";
 import autocomplete from "@/content/transcripts/hld/autocomplete";
 import configSync from "@/content/transcripts/hld/config-sync";
+import distributedOrderProcessing from "@/content/transcripts/hld/distributed-order-processing";
 import distributedSessionManagement from "@/content/transcripts/hld/distributed-session-management";
 import gigWorker from "@/content/transcripts/hld/gig-worker";
 import loadbalance from "@/content/transcripts/hld/loadbalance";
@@ -99,6 +100,7 @@ export const TRANSCRIPTS: readonly TranscriptEntry[] = [
   amazonLockers,
   autocomplete,
   configSync,
+  distributedOrderProcessing,
   distributedSessionManagement,
   gigWorker,
   loadbalance,

@@ -70,6 +70,7 @@ model User {
   todoItems               TodoItem[]
   userXP                  UserXP?
   subscription            Subscription?
+  userStepProgress        UserStepProgress[]
 }
 
 // ---------------------------------------------------------------------------
@@ -1039,6 +1040,83 @@ model XPActivity {
 
   @@index([userId])
   @@index([activityType])
+}
+
+// ---------------------------------------------------------------------------
+// Skill Tree System - Progression Map for Learning Paths
+// ---------------------------------------------------------------------------
+
+model StudyPath {
+  id          String      @id @default(cuid())
+  slug        String      @unique // "dsa", "lld", "hld"
+  title       String
+  description String?
+  isActive    Boolean     @default(true)
+  levels      StudyLevel[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([slug])
+  @@index([isActive])
+}
+
+model StudyLevel {
+  id           String      @id @default(cuid())
+  pathId       String
+  path         StudyPath   @relation(fields: [pathId], references: [id], onDelete: Cascade)
+  level        Int         // 1 for Noob, 2 for Mid, 3 for Pro
+  title        String      // "Foundation", "Intermediate", "Advanced"
+  description  String?
+  minXpNeeded  Int         @default(0)
+  steps        StudyStep[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@unique([pathId, level])
+  @@index([pathId])
+}
+
+model StudyStep {
+  id           String              @id @default(cuid())
+  levelId      String
+  level        StudyLevel          @relation(fields: [levelId], references: [id], onDelete: Cascade)
+  order        Int
+  
+  // Link to actual content
+  contentType  ContentType
+  contentSlug  String              // e.g., "hashing" or "amazon-lockers"
+  
+  title        String
+  description  String?
+  isBossGate   Boolean             @default(false)
+  
+  userProgress UserStepProgress[]
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  @@unique([levelId, order])
+  @@index([levelId])
+  @@index([contentType])
+}
+
+model UserStepProgress {
+  id          String   @id @default(cuid())
+  userId      String
+  stepId      String
+  completed   Boolean  @default(false)
+  lastReadAt  DateTime @updatedAt
+  createdAt   DateTime @default(now())
+
+  @@id([userId, stepId])
+  @@index([userId])
+  @@index([stepId])
+}
+
+enum ContentType {
+  DEEP_DIVE
+  TRANSCRIPT
+  BUG_HUNT
+  WHITEBOARD
 }
 
 // ---------------------------------------------------------------------------

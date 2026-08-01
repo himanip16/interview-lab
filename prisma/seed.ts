@@ -731,6 +731,417 @@ export async function seedLearningScenarios() {
   );
 }
 
+// ---------------------------------------------------------------------------
+// Skill Tree System — Progression Map for Learning Paths
+// ---------------------------------------------------------------------------
+
+type SkillTreeSeed = {
+  slug: string;
+  title: string;
+  description?: string;
+  levels: {
+    level: number;
+    title: string;
+    description: string;
+    minXpNeeded: number;
+    steps: {
+      order: number;
+      contentType: "DEEP_DIVE" | "TRANSCRIPT" | "BUG_HUNT" | "WHITEBOARD";
+      contentSlug: string;
+      title: string;
+      description?: string;
+      isBossGate?: boolean;
+    }[];
+  }[];
+};
+
+const skillTreeData: SkillTreeSeed[] = [
+  {
+    slug: "dsa",
+    title: "Data Structures & Algorithms",
+    description: "Master algorithmic thinking and problem-solving patterns",
+    levels: [
+      {
+        level: 1,
+        title: "Foundation",
+        description: "Build your core algorithmic thinking",
+        minXpNeeded: 0,
+        steps: [
+          {
+            order: 1,
+            contentType: "DEEP_DIVE",
+            contentSlug: "arrays-hashing",
+            title: "Arrays & Hashing",
+            description: "Learn array manipulation and hash table patterns",
+          },
+          {
+            order: 2,
+            contentType: "TRANSCRIPT",
+            contentSlug: "two-pointers",
+            title: "Two Pointers",
+            description: "Master the two-pointer technique",
+          },
+          {
+            order: 3,
+            contentType: "DEEP_DIVE",
+            contentSlug: "sliding-window",
+            title: "Sliding Window",
+            description: "Dynamic window patterns for substrings and subarrays",
+          },
+          {
+            order: 4,
+            contentType: "BUG_HUNT",
+            contentSlug: "array-manipulation-bug-hunt",
+            title: "Array Manipulation Bug Hunt",
+            description: "Debug array-based algorithm implementations",
+            isBossGate: true,
+          },
+        ],
+      },
+      {
+        level: 2,
+        title: "Intermediate",
+        description: "Master complex patterns and data structures",
+        minXpNeeded: 200,
+        steps: [
+          {
+            order: 1,
+            contentType: "DEEP_DIVE",
+            contentSlug: "binary-search",
+            title: "Binary Search",
+            description: "Search algorithms and variations",
+          },
+          {
+            order: 2,
+            contentType: "TRANSCRIPT",
+            contentSlug: "linked-lists",
+            title: "Linked Lists",
+            description: "Pointer manipulation and list operations",
+          },
+          {
+            order: 3,
+            contentType: "DEEP_DIVE",
+            contentSlug: "trees-graphs",
+            title: "Trees & Graphs",
+            description: "Hierarchical and network data structures",
+          },
+          {
+            order: 4,
+            contentType: "BUG_HUNT",
+            contentSlug: "graph-traversal-bug-hunt",
+            title: "Graph Traversal Bug Hunt",
+            description: "Debug BFS/DFS implementations",
+            isBossGate: true,
+          },
+        ],
+      },
+      {
+        level: 3,
+        title: "Advanced",
+        description: "Tackle system-level algorithmic challenges",
+        minXpNeeded: 500,
+        steps: [
+          {
+            order: 1,
+            contentType: "DEEP_DIVE",
+            contentSlug: "dynamic-programming",
+            title: "Dynamic Programming",
+            description: "Optimization through memoization and tabulation",
+          },
+          {
+            order: 2,
+            contentType: "TRANSCRIPT",
+            contentSlug: "advanced-graphs",
+            title: "Advanced Graphs",
+            description: "Shortest paths, minimum spanning trees",
+          },
+          {
+            order: 3,
+            contentType: "DEEP_DIVE",
+            contentSlug: "string-algorithms",
+            title: "String Algorithms",
+            description: "Pattern matching and string processing",
+          },
+          {
+            order: 4,
+            contentType: "BUG_HUNT",
+            contentSlug: "optimization-bug-hunt",
+            title: "Optimization Bug Hunt",
+            description: "Debug performance bottlenecks",
+            isBossGate: true,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    slug: "lld",
+    title: "Low-Level Design",
+    description: "Master object-oriented design and API design",
+    levels: [
+      {
+        level: 1,
+        title: "Foundation",
+        description: "Learn object-oriented design principles",
+        minXpNeeded: 0,
+        steps: [
+          {
+            order: 1,
+            contentType: "DEEP_DIVE",
+            contentSlug: "solid-principles",
+            title: "SOLID Principles",
+            description: "Five principles of object-oriented design",
+          },
+          {
+            order: 2,
+            contentType: "TRANSCRIPT",
+            contentSlug: "design-patterns-basics",
+            title: "Design Patterns Basics",
+            description: "Introduction to creational and structural patterns",
+          },
+          {
+            order: 3,
+            contentType: "BUG_HUNT",
+            contentSlug: "class-design-bug-hunt",
+            title: "Class Design Bug Hunt",
+            description: "Debug class hierarchy and encapsulation issues",
+            isBossGate: true,
+          },
+        ],
+      },
+      {
+        level: 2,
+        title: "Intermediate",
+        description: "Design complex systems and APIs",
+        minXpNeeded: 200,
+        steps: [
+          {
+            order: 1,
+            contentType: "DEEP_DIVE",
+            contentSlug: "api-design",
+            title: "API Design",
+            description: "RESTful API design principles",
+          },
+          {
+            order: 2,
+            contentType: "TRANSCRIPT",
+            contentSlug: "database-modeling",
+            title: "Database Modeling",
+            description: "Entity relationships and normalization",
+          },
+          {
+            order: 3,
+            contentType: "BUG_HUNT",
+            contentSlug: "api-integration-bug-hunt",
+            title: "API Integration Bug Hunt",
+            description: "Debug API integration and error handling",
+            isBossGate: true,
+          },
+        ],
+      },
+      {
+        level: 3,
+        title: "Advanced",
+        description: "Architect scalable distributed systems",
+        minXpNeeded: 500,
+        steps: [
+          {
+            order: 1,
+            contentType: "DEEP_DIVE",
+            contentSlug: "microservices",
+            title: "Microservices",
+            description: "Service boundaries and communication patterns",
+          },
+          {
+            order: 2,
+            contentType: "TRANSCRIPT",
+            contentSlug: "event-driven-architecture",
+            title: "Event-Driven Architecture",
+            description: "Async messaging and event sourcing",
+          },
+          {
+            order: 3,
+            contentType: "BUG_HUNT",
+            contentSlug: "distributed-systems-bug-hunt",
+            title: "Distributed Systems Bug Hunt",
+            description: "Debug distributed system failures",
+            isBossGate: true,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    slug: "hld",
+    title: "High-Level Design",
+    description: "Master system design and architecture",
+    levels: [
+      {
+        level: 1,
+        title: "Foundation",
+        description: "Understand system design fundamentals",
+        minXpNeeded: 0,
+        steps: [
+          {
+            order: 1,
+            contentType: "DEEP_DIVE",
+            contentSlug: "load-balancing",
+            title: "Load Balancing",
+            description: "Distribution strategies and algorithms",
+          },
+          {
+            order: 2,
+            contentType: "TRANSCRIPT",
+            contentSlug: "caching-strategies",
+            title: "Caching Strategies",
+            description: "Cache invalidation and hierarchy design",
+          },
+          {
+            order: 3,
+            contentType: "BUG_HUNT",
+            contentSlug: "scalability-bug-hunt",
+            title: "Scalability Bug Hunt",
+            description: "Debug scaling bottlenecks",
+            isBossGate: true,
+          },
+        ],
+      },
+      {
+        level: 2,
+        title: "Intermediate",
+        description: "Design real-world production systems",
+        minXpNeeded: 200,
+        steps: [
+          {
+            order: 1,
+            contentType: "DEEP_DIVE",
+            contentSlug: "database-sharding",
+            title: "Database Sharding",
+            description: "Horizontal scaling strategies",
+          },
+          {
+            order: 2,
+            contentType: "TRANSCRIPT",
+            contentSlug: "message-queues",
+            title: "Message Queues",
+            description: "Async processing and queue design",
+          },
+          {
+            order: 3,
+            contentType: "BUG_HUNT",
+            contentSlug: "consistency-bug-hunt",
+            title: "Consistency Bug Hunt",
+            description: "Debug data consistency issues",
+            isBossGate: true,
+          },
+        ],
+      },
+      {
+        level: 3,
+        title: "Advanced",
+        description: "Architect hyper-scale distributed systems",
+        minXpNeeded: 500,
+        steps: [
+          {
+            order: 1,
+            contentType: "DEEP_DIVE",
+            contentSlug: "consensus-algorithms",
+            title: "Consensus Algorithms",
+            description: "Paxos, Raft, and distributed coordination",
+          },
+          {
+            order: 2,
+            contentType: "TRANSCRIPT",
+            contentSlug: "cap-theorem",
+            title: "CAP Theorem Deep Dive",
+            description: "Tradeoffs in distributed systems",
+          },
+          {
+            order: 3,
+            contentType: "BUG_HUNT",
+            contentSlug: "fault-tolerance-bug-hunt",
+            title: "Fault Tolerance Bug Hunt",
+            description: "Debug fault tolerance mechanisms",
+            isBossGate: true,
+          },
+        ],
+      },
+    ],
+  },
+];
+
+async function seedSkillTree() {
+  for (const pathData of skillTreeData) {
+    const path = await prisma.studyPath.upsert({
+      where: { slug: pathData.slug },
+      update: {
+        title: pathData.title,
+        description: pathData.description,
+        isActive: true,
+      },
+      create: {
+        slug: pathData.slug,
+        title: pathData.title,
+        description: pathData.description,
+      },
+    });
+
+    for (const levelData of pathData.levels) {
+      const level = await prisma.studyLevel.upsert({
+        where: {
+          pathId_level: {
+            pathId: path.id,
+            level: levelData.level,
+          },
+        },
+        update: {
+          title: levelData.title,
+          description: levelData.description,
+          minXpNeeded: levelData.minXpNeeded,
+        },
+        create: {
+          pathId: path.id,
+          level: levelData.level,
+          title: levelData.title,
+          description: levelData.description,
+          minXpNeeded: levelData.minXpNeeded,
+        },
+      });
+
+      for (const stepData of levelData.steps) {
+        await prisma.studyStep.upsert({
+          where: {
+            levelId_order: {
+              levelId: level.id,
+              order: stepData.order,
+            },
+          },
+          update: {
+            contentType: stepData.contentType,
+            contentSlug: stepData.contentSlug,
+            title: stepData.title,
+            description: stepData.description,
+            isBossGate: stepData.isBossGate ?? false,
+          },
+          create: {
+            levelId: level.id,
+            order: stepData.order,
+            contentType: stepData.contentType,
+            contentSlug: stepData.contentSlug,
+            title: stepData.title,
+            description: stepData.description,
+            isBossGate: stepData.isBossGate ?? false,
+          },
+        });
+      }
+    }
+
+    console.log(
+      `Seeded skill tree path "${pathData.slug}" (${pathData.levels.length} levels, ${pathData.levels.reduce((acc, l) => acc + l.steps.length, 0)} steps).`
+    );
+  }
+}
+
 async function main() {
   for (const problem of problems) {
     await prisma.problem.upsert({
@@ -764,6 +1175,7 @@ async function main() {
   const conceptIdBySlug = await seedConcepts();
   await seedProblemConcepts(conceptIdBySlug);
   await seedLearningScenarios();
+  await seedSkillTree();
 }
 
 main()

@@ -103,18 +103,18 @@ export default function TranscriptDetail({
             <TranscriptLegend />
 
             {/* Sticky progress indicator */}
-            <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-gray-200 px-4 py-2 mb-4 rounded-lg">
+            <div className="sticky top-0 z-10 bg-[var(--surface-panel)]/95 backdrop-blur-sm border-b border-[var(--border)] px-4 py-2 mb-4 rounded-lg">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-medium text-gray-600">
+                <span className="font-medium text-[var(--text-secondary)]">
                   Interview Progress
                 </span>
-                <span className="font-mono text-gray-500">
+                <span className="font-mono text-[var(--text-tertiary)]">
                   {transcript.messages.length > 0 ? 'Question 1 of ' + transcript.messages.length : '0 questions'}
                 </span>
               </div>
-              <div className="mt-2 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+              <div className="mt-2 h-1.5 bg-[var(--border)] rounded-full overflow-hidden">
                 <div 
-                  className="h-full bg-emerald-500 transition-all duration-300"
+                  className="h-full bg-[var(--category-learn)] transition-all duration-300"
                   style={{ width: '0%' }}
                 />
               </div>
@@ -124,11 +124,11 @@ export default function TranscriptDetail({
               <div className="flex gap-4">
                 {/* Vertical conversation rail */}
                 <div className="hidden sm:flex flex-col items-center py-2">
-                  <div className="w-px h-full bg-gray-200 relative">
+                  <div className="w-px h-full bg-[var(--border)] relative">
                     {transcript.messages.map((message, index) => (
                       <div
                         key={message.id ?? index}
-                        className="absolute left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-gray-300"
+                        className="absolute left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-[var(--text-tertiary)]"
                         style={{ top: `${(index / (transcript.messages.length - 1 || 1)) * 100}%` }}
                       />
                     ))}
