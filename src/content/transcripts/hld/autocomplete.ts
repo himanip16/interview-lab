@@ -704,8 +704,7 @@ const transcript: TranscriptData = {
 };
 
 const autocompleteSearch: TranscriptEntry = {
-  summary: {
-    id: 36,
+  summary: {    id: 36,
 
     slug: "autocomplete-search-recommendations",
     title: "Design Autocomplete & Search Recommendations",

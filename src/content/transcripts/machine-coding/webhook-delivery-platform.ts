@@ -682,8 +682,7 @@ const transcript: TranscriptData = {
 };
 
 const webhookDeliveryPlatform: TranscriptEntry = {
-  summary: {
-    id: 50,
+  summary: {    id: 50,
 
     slug: "webhook-delivery-platform",
     title: "Design a Reliable Webhook Delivery Platform",

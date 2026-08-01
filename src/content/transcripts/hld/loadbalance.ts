@@ -60,7 +60,7 @@ const transcript: TranscriptData = {
     },
     {
       id: "3",
-      role: "context",
+      role: "takeaway",
       elapsedSeconds: 40,
       content: [
         {
@@ -104,7 +104,7 @@ const transcript: TranscriptData = {
     },
     {
       id: "6",
-      role: "context",
+      role: "takeaway",
       elapsedSeconds: 90,
       content: [
         {
@@ -139,7 +139,7 @@ const transcript: TranscriptData = {
     },
     {
       id: "9",
-      role: "context",
+      role: "takeaway",
       elapsedSeconds: 140,
       content: [
         {
@@ -151,7 +151,7 @@ const transcript: TranscriptData = {
     },
     {
       id: "10",
-      role: "context",
+      role: "takeaway",
       elapsedSeconds: 155,
       content: [
         {
@@ -195,7 +195,7 @@ const transcript: TranscriptData = {
     },
     {
       id: "13",
-      role: "context",
+      role: "takeaway",
       elapsedSeconds: 215,
       content: [
         {
@@ -237,7 +237,7 @@ const transcript: TranscriptData = {
     },
     {
       id: "16",
-      role: "context",
+      role: "takeaway",
       elapsedSeconds: 280,
       content: [
         {
@@ -280,7 +280,7 @@ const transcript: TranscriptData = {
     },
     {
       id: "19",
-      role: "context",
+      role: "takeaway",
       elapsedSeconds: 335,
       content: [
         {
@@ -323,7 +323,7 @@ const transcript: TranscriptData = {
     },
     {
       id: "22",
-      role: "context",
+      role: "takeaway",
       elapsedSeconds: 385,
       content: [
         {
@@ -349,8 +349,7 @@ const transcript: TranscriptData = {
 };
 
 const loadBalancerHld: TranscriptEntry = {
-  summary: {
-    id: 40,
+  summary: {    id: 40,
 
     slug: "load-balancer-hld",
     title: "Load Balancer — High-Level Design",

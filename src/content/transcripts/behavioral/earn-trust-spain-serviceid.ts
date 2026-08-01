@@ -518,8 +518,7 @@ const transcript: TranscriptData = {
 };
 
 const amazonEarnTrustSpainServiceId: TranscriptEntry = {
-  summary: {
-    id: 7,
+  summary: {    id: 7,
 
     slug: "amazon-earn-trust-spain-serviceid-compliance",
     title: "Earn Trust: Spain Compliance Reporting — Challenging Your Own Design",

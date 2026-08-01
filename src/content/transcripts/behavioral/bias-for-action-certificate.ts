@@ -346,8 +346,7 @@ const transcript: TranscriptData = {
   ],
 };
 const biasForActionCertificateExpiration: TranscriptEntry = {
-  summary: {
-    id: 2,
+  summary: {    id: 2,
 
     slug: "bias-for-action-certificate-expiration",
     title:

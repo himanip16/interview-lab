@@ -465,8 +465,7 @@ const transcript: TranscriptData = {
 };
 
 const amazonThriftGrpcMigrationBehavioral: TranscriptEntry = {
-  summary: {
-    id: 6,
+  summary: {    id: 6,
 
     slug: "amazon-thrift-grpc-migration-behavioral",
     title: "Thrift to gRPC Migration — Disagree and Commit",

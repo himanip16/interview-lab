@@ -468,8 +468,7 @@ const transcript: TranscriptData = {
 };
 
 const amazonKthLexicographicalHappyString: TranscriptEntry = {
-  summary: {
-    id: 22,
+  summary: {    id: 22,
 
     slug: "amazon-kth-lexicographical-happy-string",
     title: "K-th Lexicographical Happy String",

@@ -522,8 +522,7 @@ const transcript: TranscriptData = {
 };
 
 const amazonExternalSortLimitedMemory: TranscriptEntry = {
-  summary: {
-    id: 21,
+  summary: {    id: 21,
 
     slug: "amazon-external-sort-500mb-2mb-heap",
     title: "Sort a 500MB File with a 2MB Heap",

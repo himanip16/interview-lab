@@ -656,8 +656,7 @@ const transcript: TranscriptData = {
 };
 
 const amazonLearnCuriousOwnershipJit: TranscriptEntry = {
-  summary: {
-    id: 11,
+  summary: {    id: 11,
 
     slug: "amazon-learn-curious-ownership-jit-incident",
     title: "Learn & Be Curious + Ownership: Order Release JIT Incident Investigation",

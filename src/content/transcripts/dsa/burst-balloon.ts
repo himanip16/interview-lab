@@ -514,8 +514,7 @@ const transcript: TranscriptData = {
 };
 
 const burstBalloonsIntervalDP: TranscriptEntry = {
-  summary: {
-    id: 15,
+  summary: {    id: 15,
 
     slug: "burst-balloons-interval-dp",
     title: "Burst Balloons: Reversing Order to Enable Interval DP",

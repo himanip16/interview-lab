@@ -435,8 +435,7 @@ const transcript: TranscriptData = {
 };
 
 const uberEmoneySafeguardingOwnership: TranscriptEntry = {
-  summary: {
-    id: 12,
+  summary: {    id: 12,
 
     slug: "uber-emoney-safeguarding-ownership",
     title: "eMoney Safeguarding Delay — Ownership",

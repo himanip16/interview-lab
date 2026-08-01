@@ -722,8 +722,7 @@ const transcript: TranscriptData = {
 };
 
 const pattern132Stack: TranscriptEntry = {
-  summary: {
-    id: 28,
+  summary: {    id: 28,
 
     slug: "132-pattern-stack",
     title: "132 Pattern: Monotonic Stack to Avoid O(n²) Pitfall",

@@ -481,8 +481,7 @@ const transcript: TranscriptData = {
 };
 
 const amazonCustomerObsessionEWayBill: TranscriptEntry = {
-  summary: {
-    id: 4,
+  summary: {    id: 4,
 
     slug: "amazon-customer-obsession-eway-bill-visibility",
     title: "Customer Obsession: e-Way Bill Visibility vs. Feature Adoption",
