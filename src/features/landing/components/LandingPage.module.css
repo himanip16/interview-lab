@@ -208,6 +208,60 @@
   min-width: 0;
 }
 
+.quickActions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 320px;
+}
+
+.actionCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--landing-surface);
+  border: 1px solid var(--landing-border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.actionCard:hover {
+  border-color: var(--mint-deep);
+  transform: translateX(4px);
+}
+
+.actionIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(0, 217, 163, 0.1);
+  color: var(--mint-deep);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.actionContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.actionTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--landing-text);
+  margin-bottom: 2px;
+}
+
+.actionSubtitle {
+  font-size: 11px;
+  color: var(--landing-text-soft);
+}
+
 .mascot {
   width: min(280px, 62vw);
   height: auto;
@@ -303,19 +357,19 @@
 }
 
 .m1 {
-  background: linear-gradient(160deg, #FFB930, #E8940A);
+  background: linear-gradient(160deg, #00D9A3, #00A87E);
 }
 
 .m2 {
-  background: linear-gradient(160deg, #3E6BFF, #213FCC);
+  background: linear-gradient(160deg, #2D3748, #1A202C);
 }
 
 .m3 {
-  background: linear-gradient(160deg, #00E0AB, #00A87E);
+  background: linear-gradient(160deg, #00D9A3, #00A87E);
 }
 
 .m4 {
-  background: linear-gradient(160deg, #7A6BFF, #4C3FD6);
+  background: linear-gradient(160deg, #4A5568, #2D3748);
 }
 
 /* ---------- PROOF ---------- */
@@ -472,6 +526,10 @@
 
   .mascotWrap {
     order: -1;
+  }
+
+  .quickActions {
+    max-width: 100%;
   }
 
   .statbar {

@@ -8,6 +8,7 @@ import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { useClickOutside } from "@/shared/hooks/useClickOutside";
 import { cn } from "@/shared/utils/utils";
+import { SplitBackground } from "@/components/SplitBackground";
 
 interface NavItem {
   name: string;
@@ -15,64 +16,83 @@ interface NavItem {
   icon: React.ReactNode;
 }
 
-// Primary navigation — deliberately short, shown in the sidebar (desktop)
-// and as the bottom tab bar (mobile).
-const navItems: NavItem[] = [
+interface NavSection {
+  title: string;
+  items: NavItem[];
+}
+
+// Task-based navigation structure
+const navSections: NavSection[] = [
   {
-    name: "Home",
-    path: "/",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M3 11l9-8 9 8M5 10v10h14V10" />
-      </svg>
-    ),
+    title: "Learn",
+    items: [
+      {
+        name: "Deep Dives",
+        path: "/deep-dive",
+        icon: (
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="3.2" />
+            <circle cx="12" cy="12" r="7.5" opacity="0.55" />
+            <circle cx="12" cy="12" r="10.5" opacity="0.3" />
+          </svg>
+        ),
+      },
+      {
+        name: "Transcripts",
+        path: "/learn/transcripts",
+        icon: (
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M4 19.5A2.5 2.5 0 016.5 17H20M4 4.5A2.5 2.5 0 016.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15z" />
+            <path d="M8 7h8M8 11h8" />
+          </svg>
+        ),
+      },
+    ],
   },
   {
-    name: "Deep dive",
-    path: "/deep-dive",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <circle cx="12" cy="12" r="3.2" />
-        <circle cx="12" cy="12" r="7.5" opacity="0.55" />
-        <circle cx="12" cy="12" r="10.5" opacity="0.3" />
-      </svg>
-    ),
+    title: "Practice",
+    items: [
+      {
+        name: "Interviews",
+        path: "/interview-setup",
+        icon: (
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M3 11l9-8 9 8M5 10v10h14V10" />
+          </svg>
+        ),
+      },
+      {
+        name: "Whiteboard",
+        path: "/learn/whiteboard",
+        icon: (
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="3" y="4" width="18" height="13" rx="2" />
+            <path d="M8 21h8M9 8h6M9 12h4" />
+          </svg>
+        ),
+      },
+    ],
   },
   {
-    name: "Transcripts",
-    path: "/learn/transcripts",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M4 19.5A2.5 2.5 0 016.5 17H20M4 4.5A2.5 2.5 0 016.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15z" />
-        <path d="M8 7h8M8 11h8" />
-      </svg>
-    ),
-  },
-  {
-    name: "Whiteboard",
-    path: "/learn/whiteboard",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <rect x="3" y="4" width="18" height="13" rx="2" />
-        <path d="M8 21h8M9 8h6M9 12h4" />
-      </svg>
-    ),
-  },
-  {
-    name: "Dashboard",
-    path: "/dashboard",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <rect x="3" y="3" width="7" height="9" rx="1.5" />
-        <rect x="14" y="3" width="7" height="5" rx="1.5" />
-        <rect x="14" y="12" width="7" height="9" rx="1.5" />
-        <rect x="3" y="16" width="7" height="5" rx="1.5" />
-      </svg>
-    ),
+    title: "Progress",
+    items: [
+      {
+        name: "Dashboard",
+        path: "/dashboard",
+        icon: (
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="3" y="3" width="7" height="9" rx="1.5" />
+            <rect x="14" y="3" width="7" height="5" rx="1.5" />
+            <rect x="14" y="12" width="7" height="9" rx="1.5" />
+            <rect x="3" y="16" width="7" height="5" rx="1.5" />
+          </svg>
+        ),
+      },
+    ],
   },
 ];
 
-const SIDEBAR_EXPANDED = 236;
+const SIDEBAR_EXPANDED = 200;
 const SIDEBAR_COLLAPSED = 76;
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
@@ -136,9 +156,18 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     fetchXP();
   }, [session?.user?.id]);
 
+  const getAllNavItems = () => {
+    return navSections.flatMap(section => section.items);
+  };
+
   const isActive = (path: string) => {
     if (path === "/") return pathname === "/";
     return pathname.startsWith(path);
+  };
+
+  const getCurrentNavItem = () => {
+    const allItems = getAllNavItems();
+    return allItems.find((item) => isActive(item.path));
   };
 
   const email = session?.user?.email;
@@ -147,9 +176,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div
-      className="min-h-screen bg-[var(--surface-page)]"
+      className="min-h-screen"
       style={{ "--sidebar-w": `${sidebarWidth}px` } as React.CSSProperties}
     >
+      <SplitBackground />
       {/* Sidebar — desktop only. On mobile, navigation lives in the bottom bar. */}
       <aside
         className={cn(
@@ -187,42 +217,44 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </button>
         </div>
 
-        {/* Navigation — min-h-0 + overflow-y-auto lets this scroll internally
-            instead of pushing the footer (streak/user cards) past the bottom
-            of the fixed-height sidebar on short viewports. Flex items default
-            to min-height:auto, which refuses to shrink below content size —
-            that's what was causing the footer to get clipped/overlapped. */}
-        <nav className="flex-1 min-h-0 overflow-y-auto px-3 py-2 flex flex-col gap-0.5">
-          {navItems.map((item) => (
-            <Link
-              key={item.path}
-              href={item.path}
-              title={collapsed ? item.name : undefined}
-              className={cn(
-                "flex items-center gap-3 py-2.5 rounded-xl text-[13.5px] font-medium relative transition-colors",
-                collapsed ? "justify-center px-0" : "px-3",
-                isActive(item.path)
-                  ? "bg-[var(--category-learn-bg)] text-[var(--text-primary)] font-semibold"
-                  : "text-[var(--text-secondary)] hover:bg-[var(--surface-page)] hover:text-[var(--text-primary)]"
-              )}
-            >
-              <span
-                className={cn(
-                  "w-[18px] h-[18px] flex-shrink-0",
-                  isActive(item.path)
-                    ? "text-[var(--category-learn-deep)]"
-                    : "text-[var(--text-secondary)]"
-                )}
-              >
-                {item.icon}
-              </span>
+        {/* Navigation */}
+        <nav className="flex-1 min-h-0 overflow-y-auto px-3 py-2 flex flex-col gap-3">
+          {navSections.map((section) => (
+            <div key={section.title}>
               {!collapsed && (
-                <span className="whitespace-nowrap overflow-hidden">{item.name}</span>
+                <div className="text-[10.5px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider px-3 mb-1.5">
+                  {section.title}
+                </div>
               )}
-              {isActive(item.path) && !collapsed && (
-                <span className="absolute left-[-12px] top-2 bottom-2 w-[3px] rounded-[3px] bg-[var(--category-learn-deep)]" />
-              )}
-            </Link>
+              {section.items.map((item) => (
+                <Link
+                  key={item.path}
+                  href={item.path}
+                  title={collapsed ? item.name : undefined}
+                  className={cn(
+                    "flex items-center gap-3 py-2 text-[13.5px] font-medium relative transition-colors",
+                    collapsed ? "justify-center px-0" : "px-3",
+                    isActive(item.path)
+                      ? "text-[var(--text-primary)] font-semibold"
+                      : "text-[var(--text-secondary)] hover:bg-[var(--surface-page)] hover:text-[var(--text-primary)]"
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "w-[18px] h-[18px] flex-shrink-0",
+                      isActive(item.path)
+                        ? "text-[var(--category-learn-deep)]"
+                        : "text-[var(--text-secondary)]"
+                    )}
+                  >
+                    {item.icon}
+                  </span>
+                  {!collapsed && (
+                    <span className="whitespace-nowrap overflow-hidden">{item.name}</span>
+                  )}
+                </Link>
+              ))}
+            </div>
           ))}
         </nav>
 
@@ -231,7 +263,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           {/* Streak Card */}
           <div
             className={cn(
-              "flex items-center gap-2.5 rounded-[14px] bg-[var(--surface-page)] mb-2.5 p-2.5",
+              "flex items-center gap-2.5 bg-[var(--surface-page)] mb-2.5 p-2.5",
               collapsed && "justify-center"
             )}
             title={collapsed ? "5 day streak" : undefined}
@@ -255,7 +287,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           {email && (
             <div
               className={cn(
-                "flex items-center gap-2.5 rounded-[14px] cursor-pointer hover:bg-[var(--surface-page)] transition-colors p-1.5",
+                "flex items-center gap-2.5 cursor-pointer hover:bg-[var(--surface-page)] transition-colors p-1.5",
                 collapsed && "justify-center"
               )}
               title={collapsed ? email : undefined}
@@ -281,7 +313,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       {/* Topbar */}
       <header
         className={cn(
-          "fixed top-0 right-0 left-0 lg:left-[var(--sidebar-w)] h-16 bg-[var(--surface-panel)] border-b border-[var(--border)] flex items-center justify-between px-4 sm:px-6 z-30",
+          "fixed top-0 right-0 left-0 lg:left-[var(--sidebar-w)] h-18 bg-[var(--surface-panel)] border-b border-[var(--border)] flex items-center px-4 sm:px-6 z-30",
           mounted && "transition-[left] duration-200 ease-out"
         )}
       >
@@ -293,32 +325,110 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           interview<span className="text-[var(--category-learn-deep)]">.lab</span>
         </Link>
 
-        {/* Breadcrumb (desktop) */}
-        <div className="hidden lg:block text-[13.5px] font-semibold text-[var(--text-secondary)]">
-          <span className="text-[var(--text-primary)]">
-            {navItems.find((item) => isActive(item.path))?.name || "Home"}
-          </span>
+        {/* Desktop layout */}
+        <div className="hidden lg:flex items-center flex-1 gap-6">
+          {/* Breadcrumb - contextual navigation */}
+          <div className="flex-shrink-0 flex items-center gap-2">
+            {pathname !== "/" && (
+              <Link
+                href="/"
+                className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M19 12H5M12 19l-7-7 7-7" />
+                </svg>
+              </Link>
+            )}
+            <div className="text-[13.5px] font-semibold text-[var(--text-secondary)]">
+              <span className="text-[var(--text-primary)]">
+                {getCurrentNavItem()?.name || "Home"}
+              </span>
+            </div>
+          </div>
+
+          {/* Search - prominent */}
+          <div className="flex-1 flex justify-center">
+            <div className="flex items-center gap-3 bg-[var(--surface-page)] border border-[var(--border)] rounded-lg px-4 py-2.5 text-[13px] text-[var(--text-secondary)] w-full max-w-lg focus-within:border-[var(--category-learn-deep)] focus-within:ring-1 focus-within:ring-[var(--category-learn-deep)] transition-all">
+              <svg className="w-[14px] h-[14px] opacity-60 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="11" cy="11" r="7" />
+                <path d="M21 21l-4.3-4.3" />
+              </svg>
+              <span className="flex-1">Search interviews, concepts, deep dives...</span>
+              <kbd className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 text-[11px] font-medium text-[var(--text-secondary)] bg-[var(--surface-panel)] border border-[var(--border)] rounded">
+                ⌘K
+              </kbd>
+            </div>
+          </div>
+
+          {/* Right Actions */}
+          <div className="flex items-center gap-3 flex-shrink-0">
+            {/* XP Badge */}
+            <div className="flex items-center gap-1.5 text-[12px] font-semibold text-[var(--category-live)] bg-[var(--category-live-bg)] px-3 py-1.5 rounded-full">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2l3 7h7l-5.5 4.5L18.5 21 12 16.5 5.5 21 7.5 13.5 2 9h7z" />
+              </svg>
+              {userXP} XP
+            </div>
+
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              className="w-9 h-9 rounded-full border border-[var(--border)] bg-[var(--surface-panel)] text-[var(--text-secondary)] flex items-center justify-center hover:border-[var(--category-learn-deep)] transition-colors flex-shrink-0"
+            >
+              {theme === "dark" ? (
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="5" />
+                  <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+                </svg>
+              ) : (
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+              )}
+            </button>
+
+            {/* User Menu */}
+            {status === "loading" ? (
+              <div className="h-8 w-8 rounded-full bg-[var(--surface-page)] animate-pulse" />
+            ) : email ? (
+              <div className="relative" ref={menuRef}>
+                <button
+                  onClick={() => setMenuOpen((v) => !v)}
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--text-primary)] text-sm font-semibold text-white"
+                  aria-haspopup="menu"
+                  aria-expanded={menuOpen}
+                >
+                  {initial}
+                </button>
+
+                {menuOpen && (
+                  <div className="absolute right-0 top-10 z-50 min-w-[180px] rounded-xl border border-[var(--border)] bg-[var(--surface-panel)] p-2 shadow-lg">
+                    <div className="mb-2 border-b border-[var(--border)] px-3 py-2 text-sm text-[var(--text-secondary)] truncate">
+                      {email}
+                    </div>
+
+                    <button
+                      onClick={() => signOut({ redirectTo: "/" })}
+                      className="w-full rounded-md px-3 py-2 text-left text-sm hover:bg-[var(--surface-page)]"
+                    >
+                      Sign out
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                className="font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-sm"
+              >
+                Log in
+              </Link>
+            )}
+          </div>
         </div>
 
-        {/* Right Actions */}
-        <div className="flex items-center gap-2 sm:gap-3.5">
-          {/* Search */}
-          <div className="hidden md:flex items-center gap-2 bg-[var(--surface-page)] border border-[var(--border)] rounded-full px-3.5 py-2 text-[12.5px] text-[var(--text-secondary)] w-[190px] focus-within:border-[var(--category-learn-deep)] transition-colors">
-            <svg className="w-[13px] h-[13px] opacity-50 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="11" cy="11" r="7" />
-              <path d="M21 21l-4.3-4.3" />
-            </svg>
-            <span>Search…</span>
-          </div>
-
-          {/* XP Badge */}
-          <div className="hidden md:flex items-center gap-1.5 text-[12px] font-semibold text-[var(--category-live)] bg-[var(--category-live-bg)] px-3 py-1.5 rounded-full">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2l3 7h7l-5.5 4.5L18.5 21 12 16.5 5.5 21 7.5 13.5 2 9h7z" />
-            </svg>
-            {userXP} XP
-          </div>
-
+        {/* Mobile right actions */}
+        <div className="flex lg:hidden items-center gap-2 sm:gap-3.5 ml-auto">
           {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
@@ -381,7 +491,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         className="lg:hidden fixed bottom-0 left-0 right-0 bg-[var(--surface-panel)] border-t border-[var(--border)] z-40 flex items-stretch justify-around"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
-        {navItems.map((item) => (
+        {getAllNavItems().map((item) => (
           <Link
             key={item.path}
             href={item.path}
@@ -403,7 +513,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       {/* Main Content */}
       <main
         className={cn(
-          "pt-16 pb-16 lg:pb-0 lg:pl-[var(--sidebar-w)] min-h-screen",
+          "pt-10 pb-16 lg:pb-0 lg:pl-[var(--sidebar-w)] min-h-screen px-4 sm:px-6",
           mounted && "transition-[padding-left] duration-200 ease-out"
         )}
       >

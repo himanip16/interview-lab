@@ -42,9 +42,12 @@ model User {
   passwordHash    String?
   isGuest         Boolean  @default(false)
   guestIdentifier String?  @unique // Stable identifier for guest users to prevent race conditions
-  name            String?  // User's display name (from Google OAuth)
-  image           String?  // User's profile picture URL (from Google OAuth)
+  name            String?  // User's display name (from OAuth)
+  image           String?  // User's profile picture URL (from OAuth)
   googleId        String?  @unique // Google OAuth user ID
+  githubId        String?  @unique // GitHub OAuth user ID
+  microsoftId     String?  @unique // Microsoft OAuth user ID
+  appleId         String?  @unique // Apple OAuth user ID
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

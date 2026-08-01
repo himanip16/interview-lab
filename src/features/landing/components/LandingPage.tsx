@@ -21,7 +21,7 @@ export default function LandingPage() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [problems, setProblems] = useState<Problem[]>([]);
-  const [stats, setStats] = useState({ modes: 7, problems: 0, dimensions: 6 });
+  const [stats, setStats] = useState({ interviewsCompleted: 4, readiness: 76, streak: 5, deepDives: 45, transcripts: 12 });
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -32,12 +32,10 @@ export default function LandingPage() {
 
   const fetchData = async () => {
     try {
-      // Fetch problems
       const problemsRes = await fetch('/api/problems?limit=2');
       const problemsData = await problemsRes.json();
       if (problemsData.problems) {
         setProblems(problemsData.problems);
-        setStats(prev => ({ ...prev, problems: problemsData.total || 50 }));
       }
     } catch (error) {
       console.error('Failed to fetch data:', error);
@@ -73,6 +71,13 @@ export default function LandingPage() {
     } catch (err) {
       console.error('Network error starting interview:', err);
     }
+  };
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
   };
 
   if (!mounted) {
@@ -128,60 +133,72 @@ export default function LandingPage() {
 
       <section className={styles.hero}>
         <div className={styles.heroCopy}>
-          <div className={styles.eyebrow}>Practice like top tech companies</div>
-          <h1>Interviews that actually prepare you.</h1>
+          <div className={styles.eyebrow}>{getGreeting()}</div>
+          <h1>Ready to practice?</h1>
           <p>
-            An AI interviewer that adapts to what you say, evidence-backed feedback
-            instead of a vague score.
+            Continue where you left off or start something new.
           </p>
           <div className={styles.heroActions}>
             <Link href="/interview-setup" className={styles.btnPrimary}>
               Start an interview
             </Link>
-            <Link href="/learn" className={styles.btnGhost}>
-              See how it works
+            <Link href="/deep-dive" className={styles.btnGhost}>
+              Browse deep dives
             </Link>
           </div>
         </div>
         <div className={styles.mascotWrap}>
-          <svg className={styles.mascot} viewBox="0 0 200 260" fill="none">
-            <circle cx="100" cy="60" r="38" fill="#F4E4D4" />
-            <path d="M62 56a38 38 0 0176 0v6H62z" fill="var(--text)" />
-            <circle cx="86" cy="62" r="4" fill="var(--text)" />
-            <circle cx="114" cy="62" r="4" fill="var(--text)" />
-            <path
-              d="M88 76q12 8 24 0"
-              stroke="var(--text)"
-              strokeWidth="3"
-              strokeLinecap="round"
-              fill="none"
-            />
-            <path d="M60 108q40-22 80 0v70q-40 16-80 0z" fill="#00D9A3" />
-            <rect x="80" y="130" width="40" height="30" rx="4" fill="var(--surface)" />
-            <path
-              d="M86 142h28M86 150h20"
-              stroke="#00A87E"
-              strokeWidth="3"
-              strokeLinecap="round"
-            />
-            <rect x="70" y="212" width="24" height="34" rx="10" fill="var(--text)" />
-            <rect x="106" y="212" width="24" height="34" rx="10" fill="var(--text)" />
-          </svg>
+          <div className={styles.quickActions}>
+            <div className={styles.actionCard}>
+              <div className={styles.actionIcon}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M3 11l9-8 9 8M5 10v10h14V10" />
+                </svg>
+              </div>
+              <div className={styles.actionContent}>
+                <div className={styles.actionTitle}>Continue Learning</div>
+                <div className={styles.actionSubtitle}>System Design Basics</div>
+              </div>
+            </div>
+            <div className={styles.actionCard}>
+              <div className={styles.actionIcon}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+              </div>
+              <div className={styles.actionContent}>
+                <div className={styles.actionTitle}>Daily Challenge</div>
+                <div className={styles.actionSubtitle}>Load Balancing</div>
+              </div>
+            </div>
+            <div className={styles.actionCard}>
+              <div className={styles.actionIcon}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M4 19.5A2.5 2.5 0 016.5 17H20M4 4.5A2.5 2.5 0 016.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15z" />
+                </svg>
+              </div>
+              <div className={styles.actionContent}>
+                <div className={styles.actionTitle}>Recent Transcript</div>
+                <div className={styles.actionSubtitle}>Distributed Systems</div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
       <div className={styles.statbar}>
         <div className={styles.stat}>
-          <div className={styles.n}>{stats.modes}</div>
-          <div className={styles.k}>Practice modes</div>
+          <div className={styles.n}>{stats.interviewsCompleted}</div>
+          <div className={styles.k}>Interviews completed</div>
         </div>
         <div className={styles.stat}>
-          <div className={styles.n}>{loading ? '...' : stats.problems + '+'}</div>
-          <div className={styles.k}>Problems</div>
+          <div className={styles.n}>{stats.readiness}%</div>
+          <div className={styles.k}>Readiness score</div>
         </div>
         <div className={styles.stat}>
-          <div className={styles.n}>{stats.dimensions}</div>
-          <div className={styles.k}>Dimensions scored</div>
+          <div className={styles.n}>{stats.streak}</div>
+          <div className={styles.k}>Day streak</div>
         </div>
       </div>
 

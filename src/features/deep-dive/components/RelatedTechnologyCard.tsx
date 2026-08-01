@@ -12,11 +12,11 @@ interface RelatedTechnologyCardProps {
 }
 
 const relationshipLabels: Record<RelationshipType, string> = {
-  buildsOn: 'Builds On',
+  buildsOn: 'Builds on',
   prerequisite: 'Prerequisite',
-  contrast: 'Contrast',
-  similar: 'Similar',
-  advanced: 'Advanced',
+  contrast: 'Compare with',
+  similar: 'Related',
+  advanced: 'Related',
 };
 
 export function RelatedTechnologyCard({ name, description, heroIllustration, relationship }: RelatedTechnologyCardProps) {

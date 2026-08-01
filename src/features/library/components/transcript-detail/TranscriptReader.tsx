@@ -226,7 +226,7 @@ export function TranscriptReader({ title, company, difficulty, duration, transcr
   const architectureSteps = transcript.metadata.architectureSteps || [];
 
   return (
-    <div style={{ background: "#FAF9F6", fontFamily: "'Inter', sans-serif", color: "#15161C" }}>
+    <div style={{ background: "var(--surface-page)", fontFamily: "'Inter', sans-serif", color: "var(--text-primary)" }}>
       {/* Continue Banner */}
       <ContinueBanner 
         sectionTitle={sections[currentSectionIndex]?.title || title} 
@@ -234,8 +234,8 @@ export function TranscriptReader({ title, company, difficulty, duration, transcr
       />
 
       {/* Header */}
-      <div className="mx-auto max-w-[1300px] px-6 py-6 pb-4.5" style={{ borderBottom: "1px solid rgba(21,22,28,0.07)" }}>
-        <div className="text-[12px] font-bold uppercase tracking-wider" style={{ color: "#6A5AE0" }}>
+      <div className="mx-auto max-w-[1300px] px-6 py-6 pb-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
+        <div className="text-[12px] font-bold uppercase tracking-wider" style={{ color: "var(--category-learn-deep)" }}>
           {transcript.metadata.category} {transcript.metadata.template}
         </div>
         <h1 
@@ -248,29 +248,29 @@ export function TranscriptReader({ title, company, difficulty, duration, transcr
           <span 
             className="rounded-full px-3 py-1 text-[11.5px] font-semibold"
             style={{ 
-              background: difficulty === "Hard" ? "rgba(255,90,60,0.12)" : "var(--bubble)",
-              color: difficulty === "Hard" ? "#FF5A3C" : "#5A5B66"
+              background: difficulty === "Hard" ? "rgba(255,90,60,0.12)" : "var(--surface-page)",
+              color: difficulty === "Hard" ? "#FF5A3C" : "var(--text-secondary)"
             }}
           >
             {difficulty}
           </span>
-          <span className="rounded-full px-3 py-1 text-[11.5px] font-semibold" style={{ background: "var(--bubble)", color: "#5A5B66" }}>
+          <span className="rounded-full px-3 py-1 text-[11.5px] font-semibold" style={{ background: "var(--surface-page)", color: "var(--text-secondary)" }}>
             {duration} min
           </span>
-          {company && <span className="rounded-full px-3 py-1 text-[11.5px] font-semibold" style={{ background: "var(--bubble)", color: "#5A5B66" }}>
+          {company && <span className="rounded-full px-3 py-1 text-[11.5px] font-semibold" style={{ background: "var(--surface-page)", color: "var(--text-secondary)" }}>
             {company}
           </span>}
         </div>
         {transcript.metadata.topics && transcript.metadata.topics.length > 0 && (
           <div className="mt-3.5 flex flex-wrap items-center gap-2">
-            <span className="text-[11px] font-semibold" style={{ color: "#5A5B66" }}>Topics</span>
+            <span className="text-[11px] font-semibold" style={{ color: "var(--text-secondary)" }}>Topics</span>
             {transcript.metadata.topics.map((topic) => (
               <span
                 key={topic}
                 className="cursor-pointer rounded-full border px-3 py-1 text-[11.5px] font-semibold"
                 style={{
-                  borderColor: exploredConcepts.includes(topic) ? "rgba(0,168,126,0.3)" : "rgba(21,22,28,0.1)",
-                  color: exploredConcepts.includes(topic) ? "#00A87E" : "#5A5B66"
+                  borderColor: exploredConcepts.includes(topic) ? "rgba(0,168,126,0.3)" : "var(--border)",
+                  color: exploredConcepts.includes(topic) ? "#00A87E" : "var(--text-secondary)"
                 }}
                 onClick={() => handleJumpToConcept(topic)}
               >
@@ -358,25 +358,25 @@ export function TranscriptReader({ title, company, difficulty, duration, transcr
 
           {/* Session summary */}
           {(strengths.length > 0 || gaps.length > 0) && (
-            <div className="mt-9 rounded-[22px] p-5 sm:p-[26px]" style={{ background: "#15161C", color: "#fff" }}>
+            <div className="mt-9 rounded-[22px] p-5 sm:p-[26px]" style={{ background: "var(--surface-panel)", color: "var(--text-primary)" }}>
               <h3 className="mb-3.5 text-[15px] font-semibold sm:text-[16px]">How this session went</h3>
               <div className="flex flex-col gap-3 sm:flex-row">
                 {strengths.length > 0 && (
-                  <div className="flex-1 rounded-2xl p-3.5" style={{ background: "rgba(255,255,255,0.06)" }}>
+                  <div className="flex-1 rounded-2xl p-3.5" style={{ background: "var(--surface-page)" }}>
                     <div className="mb-1.5 text-[10px] font-bold uppercase tracking-wide" style={{ color: "#00D9A3" }}>
                       Strength
                     </div>
-                    <p className="text-[12px] leading-relaxed" style={{ color: "rgba(255,255,255,0.7)" }}>
+                    <p className="text-[12px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
                       {strengths[0].explanation}
                     </p>
                   </div>
                 )}
                 {gaps.length > 0 && (
-                  <div className="flex-1 rounded-2xl p-3.5" style={{ background: "rgba(255,255,255,0.06)" }}>
+                  <div className="flex-1 rounded-2xl p-3.5" style={{ background: "var(--surface-page)" }}>
                     <div className="mb-1.5 text-[10px] font-bold uppercase tracking-wide" style={{ color: "#FF8A6E" }}>
                       To work on
                     </div>
-                    <p className="text-[12px] leading-relaxed" style={{ color: "rgba(255,255,255,0.7)" }}>
+                    <p className="text-[12px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
                       {gaps[0].explanation}
                     </p>
                   </div>

@@ -783,75 +783,83 @@ section p b {
 
 .rel-row {
   display: flex;
-  gap: 12px;
+  gap: 16px;
 }
 
 .rel-card {
   flex: 1;
-  padding: 16px;
-  border-radius: 16px;
-  border: 1px solid var(--border);
+  padding: 20px;
+  border-radius: 18px;
+  border: 1px solid var(--border-soft);
   cursor: pointer;
-  transition: transform .25s cubic-bezier(.34, 1.56, .64, 1);
+  transition: transform .25s cubic-bezier(.34, 1.56, .64, 1), box-shadow .25s ease, border-color .25s ease;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   position: relative;
+  background: var(--surface);
 }
 
 .rel-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-6px);
+  box-shadow: 0 16px 32px rgba(21, 22, 28, 0.12);
+  border-color: var(--border);
 }
 
 /* Relationship badge */
 .rel-badge {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  padding: 4px 10px;
-  border-radius: 999px;
+  top: 16px;
+  right: 16px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  padding: 5px 12px;
+  border-radius: 8px;
   z-index: 2;
 }
 
 /* Relationship badge colors */
 .rel-badge-buildsOn {
-  background: rgba(59, 130, 246, 0.12);
+  background: rgba(59, 130, 246, 0.08);
   color: var(--rel-blue);
 }
 
 .rel-badge-prerequisite {
-  background: rgba(106, 90, 224, 0.12);
+  background: rgba(106, 90, 224, 0.08);
   color: var(--violet);
 }
 
 .rel-badge-contrast {
-  background: rgba(255, 90, 60, 0.12);
+  background: rgba(255, 90, 60, 0.08);
   color: var(--coral);
 }
 
 .rel-badge-similar {
-  background: rgba(0, 217, 163, 0.12);
+  background: rgba(0, 217, 163, 0.08);
   color: var(--mint-deep);
 }
 
 .rel-badge-advanced {
-  background: rgba(239, 68, 68, 0.12);
+  background: rgba(239, 68, 68, 0.08);
   color: var(--rel-red);
 }
 
 .rel-card-illustration {
   width: 100%;
-  height: 80px;
+  height: 120px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--border-soft);
-  border-radius: 12px;
+  border-radius: 14px;
   overflow: hidden;
+  transition: transform 0.25s ease;
+}
+
+.rel-card:hover .rel-card-illustration {
+  transform: scale(1.03);
 }
 
 .rel-card-illustration svg {
@@ -860,14 +868,22 @@ section p b {
 }
 
 .rel-card .rn {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
+  margin-top: 4px;
 }
 
 .rel-card .rd {
   font-size: 13px;
   color: var(--text-soft);
   margin-top: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.5;
+  min-height: 39px;
 }
 
 @media (max-width: 900px) {
