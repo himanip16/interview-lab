@@ -590,15 +590,14 @@ const transcript: TranscriptData = {
 };
 
 const maximumProtectedCityPopulation: TranscriptEntry = {
-  summary: {
-    id: 19,
+  summary: {    id: 26,
 
     slug: "maximum-protected-city-population",
     title: "Maximum Protected City Population — Cascading Shifts, Then a Global Shift Budget",
     category: "dsa",
     difficulty: Difficulty.HARD,
     duration: 46,
-    company: "Generic",
+    
     tags: [
       "Dynamic Programming",
       "Greedy Counterexample",

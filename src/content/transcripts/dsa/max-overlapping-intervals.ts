@@ -502,7 +502,7 @@ const maximumOverlappingIntervals: TranscriptEntry = {
     category: "dsa",
     difficulty: Difficulty.HARD,
     duration: 38,
-    company: "Generic",
+    
     tags: [
       "Sweep Line",
       "Sorting",

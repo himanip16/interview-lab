@@ -456,14 +456,14 @@ const transcript: TranscriptData = {
 };
 
 const amazonNumberOfIslands: TranscriptEntry = {
-  summary: {    id: 28,
+  summary: {    id: 29,
 
     slug: "amazon-number-of-islands",
     title: "Island Counting with Diagonal Connectivity",
     category: "dsa",
     difficulty: Difficulty.MEDIUM,
     duration: 44,
-    company: "Amazon",
+    company: ["Amazon"],
     tags: [
       "DFS/BFS",
       "Grid Traversal",

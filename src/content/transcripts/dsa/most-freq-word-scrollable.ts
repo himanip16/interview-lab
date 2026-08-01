@@ -362,7 +362,7 @@ const transcript: TranscriptData = {
 };
 
 const mostFrequentWordScrollableViewport: TranscriptEntry = {
-  summary: {    id: 26,
+  summary: {    id: 27,
 
     slug: "most-frequent-word-scrollable-viewport",
     title: "Most Frequent Word in a Scrollable Viewport",

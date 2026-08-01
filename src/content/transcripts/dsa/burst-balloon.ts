@@ -521,7 +521,7 @@ const burstBalloonsIntervalDP: TranscriptEntry = {
     category: "dsa",
     difficulty: Difficulty.HARD,
     duration: 46,
-    company: "Generic",
+    
     tags: [
       "Dynamic Programming",
       "Interval DP",

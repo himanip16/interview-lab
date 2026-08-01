@@ -434,14 +434,14 @@ const transcript: TranscriptData = {
 };
 
 const trappingRainWater: TranscriptEntry = {
-  summary: {    id: 33,
+  summary: {    id: 34,
 
     slug: "trapping-rain-water",
     title: "Trapping Rain Water",
     category: "dsa",
     difficulty: Difficulty.HARD,
     duration: 36,
-    company: "Generic",
+    
     tags: [
       "Arrays",
       "Two Pointers",

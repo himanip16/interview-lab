@@ -40,7 +40,7 @@ export type TranscriptSummary = {
   eval_dimensions?: string[];
   duration: number;
 
-  company?: string;
+  company?: string[];
 
   tags: string[];
 

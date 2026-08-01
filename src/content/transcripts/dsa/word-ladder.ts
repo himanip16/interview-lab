@@ -496,14 +496,14 @@ const transcript: TranscriptData = {
 };
 
 const wordLadderBFS: TranscriptEntry = {
-  summary: {    id: 35,
+  summary: {    id: 36,
 
     slug: "word-ladder-bfs",
     title: "Word Ladder: BFS Shortest Path With Efficient Neighbor Finding",
     category: "dsa",
     difficulty: Difficulty.HARD,
     duration: 40,
-    company: "Generic",
+    
     tags: [
       "BFS",
       "Shortest Path",

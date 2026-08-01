@@ -722,14 +722,14 @@ const transcript: TranscriptData = {
 };
 
 const pattern132Stack: TranscriptEntry = {
-  summary: {    id: 30,
+  summary: {    id: 31,
 
     slug: "132-pattern-stack",
     title: "132 Pattern: Monotonic Stack to Avoid O(n²) Pitfall",
     category: "dsa",
     difficulty: Difficulty.MEDIUM,
     duration: 38,
-    company: "Generic",
+   
     tags: [
       "Stack",
       "Monotonic Stack",

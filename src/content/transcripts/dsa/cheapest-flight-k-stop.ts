@@ -582,7 +582,7 @@ const cheapestFlightsKStops: TranscriptEntry = {
     category: "dsa",
     difficulty: Difficulty.MEDIUM,
     duration: 42,
-    company: "Generic",
+    
     tags: [
       "Shortest Path",
       "Bellman-Ford",

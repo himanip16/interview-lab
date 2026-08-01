@@ -29,6 +29,7 @@ import externalSortLimitedMemory from "@/content/transcripts/dsa/external-sort-l
 import kthLexiographicalHappyString from "@/content/transcripts/dsa/kth-lexiographical-happy-string";
 import longestRepeatingReplacement from "@/content/transcripts/dsa/longest-repeating-replacement";
 import maxOverlappingIntervals from "@/content/transcripts/dsa/max-overlapping-intervals";
+import maxProtectedSolution from "@/content/transcripts/dsa/max-protected-solution";
 import mostFreqWordScrollable from "@/content/transcripts/dsa/most-freq-word-scrollable";
 import nAryTreeLevel from "@/content/transcripts/dsa/n-ary-tree-level";
 import numOfIslands from "@/content/transcripts/dsa/num-of-islands";
@@ -83,6 +84,7 @@ export const TRANSCRIPTS: readonly TranscriptEntry[] = [
   kthLexiographicalHappyString,
   longestRepeatingReplacement,
   maxOverlappingIntervals,
+  maxProtectedSolution,
   mostFreqWordScrollable,
   nAryTreeLevel,
   numOfIslands,

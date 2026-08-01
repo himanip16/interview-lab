@@ -565,7 +565,7 @@ const crossCategoryProductPairs: TranscriptEntry = {
     category: "dsa",
     difficulty: Difficulty.MEDIUM,
     duration: 36,
-    company: "Generic",
+    
     tags: [
       "Union-Find",
       "Disjoint Set",

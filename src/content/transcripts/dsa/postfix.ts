@@ -590,7 +590,7 @@ const transcript: TranscriptData = {
 };
 
 const postfixExpressionEvaluation: TranscriptEntry = {
-  summary: {    id: 31,
+  summary: {    id: 32,
 
     slug: "postfix-expression-evaluation-exceptions",
     title: "Postfix Expression Evaluation with Exception Handling",

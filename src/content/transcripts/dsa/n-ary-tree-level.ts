@@ -385,14 +385,13 @@ const transcript: TranscriptData = {
 };
 
 const naryTreeLevelCount: TranscriptEntry = {
-  summary: {    id: 27,
+  summary: {    id: 28,
 
     slug: "nary-tree-level-nodes-dynamic-count",
     title: "N-ary Tree: Nodes at a Level, Then Making Level Counts O(1) Under Insert/Remove",
     category: "dsa",
     difficulty: Difficulty.HARD,
     duration: 38,
-    company: "Generic",
     tags: [
       "Trees",
       "N-ary Tree",

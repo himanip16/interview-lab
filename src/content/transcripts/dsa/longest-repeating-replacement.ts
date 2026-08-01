@@ -540,7 +540,7 @@ const longestRepeatingCharacterReplacement: TranscriptEntry = {
     category: "dsa",
     difficulty: Difficulty.MEDIUM,
     duration: 40,
-    company: "Generic",
+    
     tags: [
       "Sliding Window",
       "Two Pointers",

@@ -104,7 +104,6 @@ export function LeftSidebar({
               );
             })}
           </div>
-        </div>
       </div>
       {/* Bookmarks Card */}
       <div

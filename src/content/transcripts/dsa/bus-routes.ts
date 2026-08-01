@@ -663,7 +663,7 @@ const busRoutesWeighted: TranscriptEntry = {
     category: "dsa",
     difficulty: Difficulty.HARD,
     duration: 40,
-    company: "Generic",
+    
     tags: [
       "Graphs",
       "BFS",

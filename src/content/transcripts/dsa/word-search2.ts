@@ -501,14 +501,14 @@ const transcript: TranscriptData = {
 };
 
 const wordSearchIITrieBacktracking: TranscriptEntry = {
-  summary: {    id: 36,
+  summary: {    id: 37,
 
     slug: "word-search-ii-trie-backtracking",
     title: "Word Search II: Trie-Backed Simultaneous Search",
     category: "dsa",
     difficulty: Difficulty.HARD,
     duration: 45,
-    company: "Generic",
+    
     tags: [
       "Trie",
       "Backtracking",

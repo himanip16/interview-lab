@@ -767,7 +767,7 @@ const areRightALotLabellingDeduplication: TranscriptEntry = {
     category: "behavioral",
     difficulty: Difficulty.HARD,
     duration: 46,
-    company: "Deliveroo",
+    company: ["Deliveroo"],
     tags: [
       "Leadership Principles",
       "Are Right, A Lot",
