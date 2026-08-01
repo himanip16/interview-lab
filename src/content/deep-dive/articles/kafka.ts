@@ -408,26 +408,34 @@ function consumeFromOffset(consumer, targetOffset) {
   resources: [
     {
       type: 'article',
-      title: 'Cassandra Storage Engine',
-      description: 'An append-only NoSQL engine utilizing structured log writes for database record persistence.',
+      title: 'SSTable Architecture',
+      description: 'The immutable disk format sharing underlying log-structured sequential write mechanics.',
+      url: '/deep-dive/sstable',
+      slug: 'sstable',
+      relationship: 'buildsOn'
+    },
+    {
+      type: 'article',
+      title: 'Redis Architecture',
+      description: 'Compare Kafka persistent event streaming with Redis in-memory pub/sub messaging.',
+      url: '/deep-dive/redis',
+      slug: 'redis',
+      relationship: 'contrast'
+    },
+    {
+      type: 'article',
+      title: 'Cassandra Architecture',
+      description: 'Explore how Cassandra uses similar log-structured storage patterns for distributed databases.',
       url: '/deep-dive/cassandra',
       slug: 'cassandra',
       relationship: 'similar'
     },
     {
       type: 'article',
-      title: 'Redis In-Memory Architecture',
-      description: 'Fast, transient in-memory pub/sub engine built for sub-millisecond volatility.',
-      url: '/deep-dive/redis',
-      slug: 'redis',
-      relationship: 'similar'
-    },
-    {
-      type: 'article',
-      title: 'SSTable Format',
-      description: 'The immutable disk format sharing underlying log-structured sequential write mechanics.',
-      url: '/deep-dive/sstable',
-      slug: 'sstable',
+      title: 'Memtable Architecture',
+      description: 'Understand the in-memory write buffers that power log-structured storage engines.',
+      url: '/deep-dive/memtable',
+      slug: 'memtable',
       relationship: 'buildsOn'
     }
   ]

@@ -503,6 +503,30 @@ return NOT_FOUND; // Tombstone wins reconciliation`
       url: '/deep-dive/postgres',
       slug: 'postgres',
       relationship: 'related'
+    },
+    {
+      type: 'article',
+      title: 'MVCC Architecture',
+      description: 'Understand how MVCC uses version chains similar to SSTable version management.',
+      url: '/deep-dive/mvcc',
+      slug: 'mvcc',
+      relationship: 'similar'
+    },
+    {
+      type: 'article',
+      title: 'Redis Architecture',
+      description: 'Compare Redis RDB/AOF persistence with SSTable-based storage engines.',
+      url: '/deep-dive/redis',
+      slug: 'redis',
+      relationship: 'contrast'
+    },
+    {
+      type: 'article',
+      title: 'Bloom Filters',
+      description: 'Learn how Bloom filters optimize SSTable read performance by avoiding unnecessary disk seeks.',
+      url: '/deep-dive/hashing',
+      slug: 'hashing',
+      relationship: 'buildsOn'
     }
   ]
 };

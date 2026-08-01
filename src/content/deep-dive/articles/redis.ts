@@ -370,29 +370,45 @@ ZREVRANGE leaderboard 0 1 WITHSCORES`
   glossary,
 
   resources: [
-    {
-      type: 'article',
-      title: 'Cassandra Architecture',
-      description: 'Explore distributed disk-based partitioning and append-only log storage.',
-      url: '/deep-dive/cassandra',
-      slug: 'cassandra',
-      relationship: 'similar'
-    },
-    {
-      type: 'article',
-      title: 'Kafka Architecture',
-      description: 'Compare Redis in-memory Pub/Sub with persistent event-streaming logs in Kafka.',
-      url: '/deep-dive/kafka',
-      slug: 'kafka',
-      relationship: 'similar'
-    },
-    {
-      type: 'article',
-      title: 'PostgreSQL Architecture',
-      description: 'Review relational disk storage and WAL persistence mechanics.',
-      url: '/deep-dive/postgres',
-      slug: 'postgres',
-      relationship: 'related'
-    }
+  {
+    type: 'article',
+    title: 'PostgreSQL Architecture',
+    description: 'Compare Redis in-memory caching with PostgreSQL disk-based persistence and WAL.',
+    url: '/deep-dive/postgres',
+    slug: 'postgres',
+    relationship: 'contrast'
+  },
+  {
+    type: 'article',
+    title: 'Kafka Architecture',
+    description: 'Compare Redis in-memory Pub/Sub with persistent event-streaming logs in Kafka.',
+    url: '/deep-dive/kafka',
+    slug: 'kafka',
+    relationship: 'similar'
+  },
+  {
+    type: 'article',
+    title: 'Cassandra Architecture',
+    description: 'Explore distributed disk-based partitioning and append-only log storage.',
+    url: '/deep-dive/cassandra',
+    slug: 'cassandra',
+    relationship: 'contrast'
+  },
+  {
+    type: 'article',
+    title: 'SSTable Architecture',
+    description: 'Compare Redis RDB snapshots with LSM-tree SSTable-based storage engines.',
+    url: '/deep-dive/sstable',
+    slug: 'sstable',
+    relationship: 'contrast'
+  },
+  {
+    type: 'article',
+    title: 'MVCC Architecture',
+    description: 'Understand how Redis transactions differ from MVCC-based database isolation.',
+    url: '/deep-dive/mvcc',
+    slug: 'mvcc',
+    relationship: 'contrast'
+  }
   ]
 };

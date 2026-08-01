@@ -336,21 +336,43 @@ COMMIT;                                                       -- Durability: now
   resources: [
     {
       type: "article",
-      title: "MVCC (Multi-Version Concurrency Control)",
-      description:
-        "The main mechanism relational databases use to deliver isolation without read-write blocking.",
+      title: "MVCC Architecture",
+      description: "The main mechanism relational databases use to deliver isolation without read-write blocking.",
       url: "/deep-dive/mvcc",
       slug: "mvcc",
       relationship: "buildsOn",
     },
     {
       type: "article",
-      title: "Cassandra",
-      description:
-        "Deliberately gives up strict ACID guarantees for write throughput and high availability.",
+      title: "PostgreSQL Architecture",
+      description: "How PostgreSQL implements full ACID compliance with MVCC and write-ahead logging.",
+      url: "/deep-dive/postgres",
+      slug: "postgres",
+      relationship: "buildsOn",
+    },
+    {
+      type: "article",
+      title: "Cassandra Architecture",
+      description: "Deliberately gives up strict ACID guarantees for write throughput and high availability.",
       url: "/deep-dive/cassandra",
       slug: "cassandra",
       relationship: "contrast",
     },
+    {
+      type: "article",
+      title: "Redis Architecture",
+      description: "Compare Redis single-threaded atomic operations with full ACID transaction guarantees.",
+      url: "/deep-dive/redis",
+      slug: "redis",
+      relationship: "contrast",
+    },
+    {
+      type: "article",
+      title: "DynamoDB Architecture",
+      description: "Explore DynamoDB's conditional writes and eventual consistency trade-offs vs ACID.",
+      url: "/deep-dive/dynamodb",
+      slug: "dynamodb",
+      relationship: "contrast",
+    }
   ],
 };

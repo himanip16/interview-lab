@@ -4,6 +4,7 @@
 
 import Link from 'next/link';
 import { ParagraphBlock, InlineContent, InlineLink } from '@/features/deep-dive/types';
+import { ConceptLink } from './ConceptLink';
 
 function resolveHref(href: NonNullable<InlineLink['ref']>): string {
   switch (href.kind) {
@@ -19,8 +20,21 @@ function resolveHref(href: NonNullable<InlineLink['ref']>): string {
 function ContentSpan({ block, keyPrefix }: { block: InlineContent; keyPrefix: string }) {
   if (block.type === 'link') {
     const isExternal = block.ref.kind === 'external';
+    const isDeepDive = block.ref.kind === 'deep-dive';
     const href = resolveHref(block.ref);
 
+    // Use ConceptLink for deep-dive links with hover popovers
+    if (isDeepDive) {
+      return (
+        <ConceptLink
+          key={keyPrefix}
+          slug={block.ref.target}
+          text={block.text}
+        />
+      );
+    }
+
+    // Keep existing behavior for external and transcript links
     const linkBody = (
       <>
         {block.text}

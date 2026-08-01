@@ -742,6 +742,46 @@ Result: Constraint violated. Zero doctors on-call.`
       url: '/deep-dive/postgres',
       slug: 'postgres',
       relationship: 'related'
+    },
+    {
+      type: 'article',
+      title: 'ACID Properties',
+      description: 'Understand how MVCC provides isolation guarantees within the broader ACID transaction framework.',
+      url: '/deep-dive/acid',
+      slug: 'acid',
+      relationship: 'prerequisite'
+    },
+    {
+      type: 'article',
+      title: 'Redis Architecture',
+      description: 'Compare in-memory single-threaded Redis with disk-based MVCC databases for different use cases.',
+      url: '/deep-dive/redis',
+      slug: 'redis',
+      relationship: 'contrast'
+    },
+    {
+      type: 'article',
+      title: 'Memtable Architecture',
+      description: 'Learn how in-memory write buffers collect mutations before flushing to SSTables in MVCC-based systems.',
+      url: '/deep-dive/memtable',
+      slug: 'memtable',
+      relationship: 'buildsOn'
+    },
+    {
+      type: 'article',
+      title: 'MongoDB Architecture',
+      description: 'Explore MongoDB\'s document model and compare its concurrency control with traditional MVCC.',
+      url: '/deep-dive/mongodb',
+      slug: 'mongodb',
+      relationship: 'similar'
+    },
+    {
+      type: 'article',
+      title: 'DynamoDB Architecture',
+      description: 'Compare DynamoDB\'s single-table design and optimistic concurrency with MVCC approaches.',
+      url: '/deep-dive/dynamodb',
+      slug: 'dynamodb',
+      relationship: 'similar'
     }
   ]
 };

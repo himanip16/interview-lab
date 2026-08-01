@@ -252,6 +252,22 @@ export default async function DeepDiveArticlePage({ params }: PageProps) {
   const relatedArticles: RelatedResource[] =
     article.resources?.filter((r) => r.type === "article") ?? [];
 
+  // Fetch hero diagrams for linked articles
+  const relatedArticlesWithHeroes = relatedArticles.map((related) => {
+    if (!related.slug) return { ...related, heroIllustration: null };
+    
+    const linkedArticle = getDeepDiveBySlug(related.slug);
+    if (!linkedArticle?.heroDiagram || linkedArticle.heroDiagram.renderEngine !== "component") {
+      return { ...related, heroIllustration: null };
+    }
+    
+    const HeroComponent = contentComponents[linkedArticle.heroDiagram.componentName];
+    return {
+      ...related,
+      heroIllustration: HeroComponent ? <HeroComponent /> : null
+    };
+  });
+
   return (
     <div className="wrap">
           {article.heroDiagram?.renderEngine === "component" && (
@@ -293,16 +309,18 @@ export default async function DeepDiveArticlePage({ params }: PageProps) {
             </div>
           )}
 
-          {relatedArticles.length > 0 && (
+          {relatedArticlesWithHeroes.length > 0 && (
             <div className="related">
               <div className="lbl">Continue the thread</div>
               <div className="rel-row">
-                {relatedArticles.map((related) =>
+                {relatedArticlesWithHeroes.map((related) =>
                   related.slug ? (
                     <Link key={related.slug} href={`/deep-dive/${related.slug}`}>
                       <RelatedTechnologyCard
                         name={related.title}
                         description={related.description ?? ""}
+                        heroIllustration={related.heroIllustration}
+                        relationship={related.relationship as any}
                       />
                     </Link>
                   ) : null

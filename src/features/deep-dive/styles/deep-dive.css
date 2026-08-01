@@ -15,6 +15,20 @@
   --code-bg: #15161C;
   --code-text: #E8E6E1;
 
+  /* Relationship badge colors */
+  --rel-blue: #3B82F6;
+  --rel-red: #EF4444;
+
+  /* Category colors for concept links */
+  --cat-db: #00D9A3;
+  --cat-msg: #FF5A3C;
+  --cat-concept: #6A5AE0;
+  --cat-tools: #E8940A;
+  --cat-algorithms: #8B5CF6;
+  --cat-behavioral: #EC4899;
+  --cat-data-structures: #06B6D4;
+  --cat-streaming: #F97316;
+
   /* Aliased so the landing-page block (.stage, .top, .content, .bottom) resolves
      correctly — those rules reference --ink/--ink-soft, which were never
      declared before. */
@@ -297,14 +311,14 @@ h1, h2, h3 {
 }
 
 .wrap {
-  max-width: 680px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 26px 30px 60px;
+  padding: 16px 20px 30px;
 }
 
 @media (max-width: 420px) {
   .wrap {
-    padding: 18px 16px 50px;
+    padding: 8px 6px 30px;
   }
 }
 
@@ -349,13 +363,13 @@ h1, h2, h3 {
 }
 
 h1.title {
-  font-size: 28px;
+  font-size: 36px;
   font-weight: 800;
 }
 
 @media (max-width: 420px) {
   h1.title {
-    font-size: 22px;
+    font-size: 24px;
   }
 }
 
@@ -368,16 +382,16 @@ h1.title {
 }
 
 .wrap .tag {
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 600;
-  padding: 4px 11px;
+  padding: 5px 12px;
   border-radius: 999px;
   background: var(--border-soft);
   color: var(--text-soft);
 }
 
 .lede {
-  font-size: 15px;
+  font-size: 17px;
   line-height: 1.7;
   color: var(--text);
   margin-bottom: 8px;
@@ -394,7 +408,7 @@ section {
 }
 
 h2 {
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 600;
 }
 
@@ -414,7 +428,7 @@ h2 .num {
 }
 
 section p {
-  font-size: 13.5px;
+  font-size: 15px;
   line-height: 1.75;
   color: var(--text-soft);
   margin-top: 11px;
@@ -426,66 +440,255 @@ section p b {
 }
 
 /* Hoverable concept/pattern links inside paragraph content. Renders as a
-   dotted-underline span; hovering reveals a small preview card pointing at
-   the linked deep-dive or transcript. Pair with a <span class="content-link">
-   wrapping an absolutely-positioned <span class="content-link-preview">. */
+   colored underline based on category; hovering reveals a rich popover. */
 .content-link {
   position: relative;
-  color: var(--mint-deep);
-  font-weight: 600;
+  color: var(--text);
+  font-weight: 500;
   text-decoration: none;
-  border-bottom: 1px dashed var(--mint-deep);
+  border-bottom: 2px solid;
   cursor: pointer;
+  transition: color 0.15s ease;
 }
 
-.content-link:hover,
-.content-link:focus-visible {
-  border-bottom-style: solid;
-  color: var(--mint);
+/* Category-based underline colors */
+.content-link[data-category="db"] {
+  border-bottom-color: var(--cat-db);
 }
 
-.content-link-preview {
+.content-link[data-category="msg"] {
+  border-bottom-color: var(--cat-msg);
+}
+
+.content-link[data-category="concept"] {
+  border-bottom-color: var(--cat-concept);
+}
+
+.content-link[data-category="tools"] {
+  border-bottom-color: var(--cat-tools);
+}
+
+.content-link[data-category="algorithms"] {
+  border-bottom-color: var(--cat-algorithms);
+}
+
+.content-link[data-category="behavioral"] {
+  border-bottom-color: var(--cat-behavioral);
+}
+
+.content-link[data-category="data-structures"] {
+  border-bottom-color: var(--cat-data-structures);
+}
+
+.content-link[data-category="streaming"] {
+  border-bottom-color: var(--cat-streaming);
+}
+
+.content-link:hover {
+  color: var(--text);
+}
+
+/* Concept Popover */
+.concept-popover {
   position: absolute;
   left: 0;
-  bottom: calc(100% + 8px);
-  z-index: 20;
-  width: 220px;
-  padding: 10px 12px;
-  border-radius: 10px;
+  bottom: calc(100% + 12px);
+  z-index: 30;
+  width: 280px;
+  padding: 16px;
+  border-radius: 14px;
   background: var(--surface);
   border: 1px solid var(--border);
-  box-shadow: 0 10px 24px rgba(21, 22, 28, 0.14);
-  font-size: 11.5px;
-  font-weight: 500;
+  box-shadow: 0 12px 32px rgba(21, 22, 28, 0.16);
+  font-size: 12px;
   line-height: 1.5;
   color: var(--text-soft);
   opacity: 0;
   visibility: hidden;
-  transform: translateY(4px);
-  transition: opacity .18s ease, transform .18s ease, visibility .18s;
+  transform: translateY(6px);
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
   pointer-events: none;
 }
 
-.content-link:hover .content-link-preview,
-.content-link:focus-visible .content-link-preview {
+.content-link:hover .concept-popover,
+.content-link:focus-visible .concept-popover {
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
 }
 
-.content-link-preview .cta {
-  display: block;
-  margin-top: 5px;
+/* Popover Header */
+.concept-popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.concept-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.concept-category {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Category badge colors */
+.concept-category-db {
+  background: rgba(0, 217, 163, 0.12);
+  color: var(--cat-db);
+}
+
+.concept-category-msg {
+  background: rgba(255, 90, 60, 0.12);
+  color: var(--cat-msg);
+}
+
+.concept-category-concept {
+  background: rgba(106, 90, 224, 0.12);
+  color: var(--cat-concept);
+}
+
+.concept-category-tools {
+  background: rgba(232, 148, 10, 0.12);
+  color: var(--cat-tools);
+}
+
+.concept-category-algorithms {
+  background: rgba(139, 92, 246, 0.12);
+  color: var(--cat-algorithms);
+}
+
+.concept-category-behavioral {
+  background: rgba(236, 72, 153, 0.12);
+  color: var(--cat-behavioral);
+}
+
+.concept-category-data-structures {
+  background: rgba(6, 182, 212, 0.12);
+  color: var(--cat-data-structures);
+}
+
+.concept-category-streaming {
+  background: rgba(249, 115, 22, 0.12);
+  color: var(--cat-streaming);
+}
+
+/* Explanation */
+.concept-explanation {
+  margin-bottom: 12px;
+  color: var(--text);
+}
+
+/* Why it matters */
+.concept-why-matters {
+  margin-bottom: 12px;
+  padding: 10px;
+  border-radius: 8px;
+  background: var(--border-soft);
+}
+
+.concept-why-label {
   font-size: 10px;
   font-weight: 700;
-  letter-spacing: .03em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.concept-why-list {
+  margin: 0;
+  padding-left: 14px;
+}
+
+.concept-why-list li {
+  margin-bottom: 4px;
+  color: var(--text-soft);
+}
+
+/* Read status */
+.concept-read-status {
+  margin-bottom: 10px;
+  font-size: 11px;
+  font-weight: 600;
   color: var(--mint-deep);
+}
+
+/* CTA */
+.concept-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  border-radius: 8px;
+  background: var(--border-soft);
+  margin-bottom: 10px;
+}
+
+.concept-reading-time {
+  font-size: 11px;
+  color: var(--text-soft);
+}
+
+.concept-read-link {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--mint-deep);
+  cursor: pointer;
+}
+
+/* Related concepts */
+.concept-related {
+  padding-top: 10px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.concept-related-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+  margin-bottom: 6px;
+}
+
+.concept-related-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.concept-related-item {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--border-soft);
+  color: var(--text-soft);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.concept-related-item:hover {
+  background: var(--border);
+  color: var(--text);
 }
 
 @media (max-width: 420px) {
   /* No hover on touch — fall back to a plain tap-through link */
-  .content-link-preview {
+  .concept-popover {
     display: none;
   }
 }
@@ -499,7 +702,7 @@ section p b {
 }
 
 .callout .lbl {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: .06em;
   color: var(--mint-deep);
@@ -509,7 +712,7 @@ section p b {
 
 .callout p {
   color: var(--text);
-  font-size: 12.5px;
+  font-size: 14px;
   margin-top: 0;
 }
 
@@ -534,7 +737,7 @@ section p b {
 }
 
 .tog .k {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .04em;
@@ -550,7 +753,7 @@ section p b {
 }
 
 .tog li {
-  font-size: 12.5px;
+  font-size: 14px;
   color: var(--text-soft);
   line-height: 1.6;
   list-style: none;
@@ -572,7 +775,7 @@ section p b {
 }
 
 .related .lbl {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text-soft);
   margin-bottom: 12px;
@@ -590,21 +793,81 @@ section p b {
   border: 1px solid var(--border);
   cursor: pointer;
   transition: transform .25s cubic-bezier(.34, 1.56, .64, 1);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
 }
 
 .rel-card:hover {
   transform: translateY(-4px);
 }
 
+/* Relationship badge */
+.rel-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 999px;
+  z-index: 2;
+}
+
+/* Relationship badge colors */
+.rel-badge-buildsOn {
+  background: rgba(59, 130, 246, 0.12);
+  color: var(--rel-blue);
+}
+
+.rel-badge-prerequisite {
+  background: rgba(106, 90, 224, 0.12);
+  color: var(--violet);
+}
+
+.rel-badge-contrast {
+  background: rgba(255, 90, 60, 0.12);
+  color: var(--coral);
+}
+
+.rel-badge-similar {
+  background: rgba(0, 217, 163, 0.12);
+  color: var(--mint-deep);
+}
+
+.rel-badge-advanced {
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--rel-red);
+}
+
+.rel-card-illustration {
+  width: 100%;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--border-soft);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.rel-card-illustration svg {
+  width: 100%;
+  height: 100%;
+}
+
 .rel-card .rn {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
 }
 
 .rel-card .rd {
-  font-size: 11.5px;
+  font-size: 13px;
   color: var(--text-soft);
-  margin-top: 3px;
+  margin-top: 0;
 }
 
 @media (max-width: 900px) {
@@ -712,14 +975,14 @@ section p b {
 }
 
 .illust-cap {
-  font-size: 10.5px;
+  font-size: 12px;
   color: var(--text-soft);
   margin-top: 8px;
 }
 
 .illust-text {
   flex: 1;
-  font-size: 13px;
+  font-size: 15px;
   color: var(--text-soft);
   line-height: 1.7;
 }
@@ -757,7 +1020,7 @@ section p b {
 }
 
 .rbtn {
-  font-size: 11.5px;
+  font-size: 13px;
   font-weight: 600;
   padding: 8px 14px;
   border-radius: 999px;
@@ -841,7 +1104,7 @@ section p b {
 }
 
 .code-block pre {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--code-text);
   line-height: 1.7;
   margin: 0;

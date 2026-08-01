@@ -406,6 +406,14 @@ WHERE payload @> '{"event_type": "checkout", "status": "completed"}';`
     },
     {
       type: 'article',
+      title: 'ACID Properties',
+      description: 'Understand how PostgreSQL implements atomicity, consistency, isolation, and durability.',
+      url: '/deep-dive/acid',
+      slug: 'acid',
+      relationship: 'prerequisite'
+    },
+    {
+      type: 'article',
       title: 'MongoDB Architecture',
       description: 'Compare Postgres JSONB capabilities head-to-head with MongoDB document collections.',
       url: '/deep-dive/mongodb',
@@ -418,7 +426,23 @@ WHERE payload @> '{"event_type": "checkout", "status": "completed"}';`
       description: 'Evaluate distributed write-heavy partitioning models vs single-primary relational databases.',
       url: '/deep-dive/cassandra',
       slug: 'cassandra',
-      relationship: 'similar'
+      relationship: 'contrast'
+    },
+    {
+      type: 'article',
+      title: 'Redis Architecture',
+      description: 'Compare PostgreSQL disk-based persistence with Redis in-memory caching strategies.',
+      url: '/deep-dive/redis',
+      slug: 'redis',
+      relationship: 'contrast'
+    },
+    {
+      type: 'article',
+      title: 'SSTable Architecture',
+      description: 'Contrast PostgreSQL B-Tree storage with LSM-tree append-only SSTable structures.',
+      url: '/deep-dive/sstable',
+      slug: 'sstable',
+      relationship: 'contrast'
     }
   ]
 };
