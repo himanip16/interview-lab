@@ -282,7 +282,7 @@ export function TranscriptReader({ title, company, difficulty, duration, transcr
       </div>
 
       {/* Three-column layout */}
-      <div className="mx-auto flex gap-5 px-6 py-5.5 pb-20 max-w-[1300px] items-start">
+      <div className="mx-auto flex gap-5 px-6 py-5.5 pb-20 max-w-[1400px] items-start">
         {/* Left Sidebar */}
         <LeftSidebar
           sections={sections.length > 0 ? sections : [{ id: "default", title: "Transcript", time: "0:00", messages: transcript.messages }]}
@@ -298,7 +298,7 @@ export function TranscriptReader({ title, company, difficulty, duration, transcr
         />
 
         {/* Center Transcript */}
-        <div className="flex-1 min-w-0 max-w-[640px] lg:max-w-[640px] xl:max-w-[640px] w-full">
+        <div className="flex-1 min-w-0 max-w-[900px] lg:max-w-[900px] xl:max-w-[900px] 2xl:max-w-[1000px] w-full">
           {sections.length > 0 ? (
             sections.map((section, sectionIndex) => (
               <div key={section.id}>
@@ -386,11 +386,13 @@ export function TranscriptReader({ title, company, difficulty, duration, transcr
           )}
         </div>
 
-        {/* Right Sidebar */}
-        <RightSidebar
-          architectureSteps={architectureSteps}
-          currentSectionIndex={currentSectionIndex}
-        />
+        {/* Right Sidebar - only render if there's content */}
+        {architectureSteps.length > 0 && architectureSteps[architectureSteps.length - 1].length > 0 && (
+          <RightSidebar
+            architectureSteps={architectureSteps}
+            currentSectionIndex={currentSectionIndex}
+          />
+        )}
       </div>
     </div>
   );

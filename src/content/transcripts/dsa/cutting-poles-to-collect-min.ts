@@ -760,7 +760,7 @@ const transcript: TranscriptData = {
 };
 
 const amazonCuttingPoles: TranscriptEntry = {
-  summary: {    id: 20,
+  summary: {    id: 21,
 
     slug: "amazon-cutting-poles",
     title: "Cutting Poles to Collect Minimum Wood",

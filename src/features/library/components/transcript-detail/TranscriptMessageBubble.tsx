@@ -21,7 +21,7 @@ const ROLE_CONFIG: Record<
   candidate: {
     label: "Candidate",
     align: "right",
-    bubbleBg: "#F1EFEA",
+    bubbleBg: "rgba(0, 168, 126, 0.08)",
     labelColor: "#00A87E",
   },
   takeaway: {
@@ -82,6 +82,7 @@ export function TranscriptMessageBubble({
         style={{
           background: config.bubbleBg,
           borderColor: "rgba(21,22,28,0.07)",
+          maxWidth: "70ch",
         }}
       >
         {blocks.map((block, index) => (

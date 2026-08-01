@@ -73,7 +73,8 @@ const transcript: TranscriptData = {
       content: [
         {
           type: "text",
-          value: "One of the routes has 100,000 stops on it. Before you code anything — how many edges does that route alone contribute to your stop graph?",
+          value:
+            "One of the routes has 100,000 stops on it. Before you code anything — how many edges does that route alone contribute to your stop graph?",
         },
       ],
     },
@@ -97,7 +98,8 @@ const transcript: TranscriptData = {
         },
         {
           type: "text",
-          value: ", so... 100,000 choose 2, that's roughly five billion, and that's just one route out of however many. This graph never gets built, it doesn't fit in memory before I even start traversing it.",
+          value:
+            ", so... 100,000 choose 2, that's roughly five billion, and that's just one route out of however many. This graph never gets built, it doesn't fit in memory before I even start traversing it.",
         },
       ],
     },
@@ -127,14 +129,15 @@ const transcript: TranscriptData = {
           id: "highlight-routes-as-nodes",
           type: "highlight",
           status: "strong",
-          value: "route — make each route a node, connect two routes if they share a stop, and BFS over that",
+          value:
+            "route — make each route a node, connect two routes if they share a stop, and BFS over that",
           explanation:
             "Reframes the graph so the entities being traversed are buses, not stops. Once routes are the nodes, BFS depth becomes exactly the number of buses taken, which is the quantity the problem asks for.",
         },
         {
           type: "text",
           value:
-            ", starting from every route that touches source. Depth in that BFS is buses taken, since each hop onto a new route is boarding one more bus, and I never build an edge between individual stops at all — just, for each stop, which routes pass through it.",
+            ", starting from every route that touches source. Depth in that BFS is buses taken, since each hop onto a new route is boarding one more bus.",
         },
       ],
     },
@@ -142,11 +145,12 @@ const transcript: TranscriptData = {
     {
       id: "9",
       role: "interviewer",
-      elapsedSeconds: 140,
+      elapsedSeconds: 136,
       content: [
         {
           type: "text",
-          value: "Write it.",
+          value:
+            "Before you write a loop — what's the one lookup structure that whole idea depends on?",
         },
       ],
     },
@@ -154,13 +158,82 @@ const transcript: TranscriptData = {
     {
       id: "10",
       role: "candidate",
-      elapsedSeconds: 175,
+      elapsedSeconds: 148,
       content: [
         {
           type: "text",
           value:
-            "stop_to_routes maps each stop to the route indices passing through it. BFS on stops, but from a stop I expand into every route through it, and every stop on that route becomes reachable one bus later.",
+            "For each stop, which routes pass through it. Without that I'd have to scan every route every time I land on a stop, which defeats the point.",
         },
+      ],
+    },
+
+    {
+      id: "11",
+      role: "interviewer",
+      elapsedSeconds: 158,
+      content: [
+        { type: "text", value: "Okay. Show me just that part." },
+      ],
+    },
+
+    {
+      id: "12",
+      role: "candidate",
+      elapsedSeconds: 168,
+      content: [
+        {
+          type: "text",
+          value: "Build it once, up front:",
+        },
+        {
+          type: "code",
+          id: "code-stop-to-routes",
+          language: "python",
+          value:
+            "stop_to_routes = defaultdict(list)\nfor i, route in enumerate(routes):\n    for stop in route:\n        stop_to_routes[stop].append(i)",
+        },
+      ],
+    },
+
+    {
+      id: "13",
+      role: "interviewer",
+      elapsedSeconds: 180,
+      content: [
+        {
+          type: "text",
+          value:
+            "Hold on, before you get to the BFS loop — talk me through one hop conceptually. I'm standing at some stop, what happens?",
+        },
+      ],
+    },
+
+    {
+      id: "14",
+      role: "candidate",
+      elapsedSeconds: 198,
+      content: [
+        {
+          type: "text",
+          value:
+            "I look up every route through that stop. For each of those routes, every other stop on it becomes reachable one bus later than I am right now — it doesn't matter where on the route it is, boarding gets me the whole route for free.",
+        },
+      ],
+    },
+
+    {
+      id: "15",
+      role: "interviewer",
+      elapsedSeconds: 212,
+      content: [{ type: "text", value: "Right. Now show that as code." }],
+    },
+
+    {
+      id: "16",
+      role: "candidate",
+      elapsedSeconds: 222,
+      content: [
         {
           type: "code",
           id: "code-bfs-expand",
@@ -172,21 +245,22 @@ const transcript: TranscriptData = {
     },
 
     {
-      id: "11",
+      id: "17",
       role: "interviewer",
-      elapsedSeconds: 195,
+      elapsedSeconds: 235,
       content: [
         {
           type: "text",
-          value: "Fifty routes all pass through the same interchange stop, and your BFS reaches that stop from three different directions before it's explored much else. Walk me through what happens to those fifty routes.",
+          value:
+            "Fifty routes all pass through the same interchange stop, and your BFS reaches that stop from three different directions before it's explored much else. Walk me through what happens to those fifty routes.",
         },
       ],
     },
 
     {
-      id: "12",
+      id: "18",
       role: "candidate",
-      elapsedSeconds: 218,
+      elapsedSeconds: 280,
       content: [
         {
           type: "text",
@@ -203,7 +277,27 @@ const transcript: TranscriptData = {
         {
           type: "text",
           value:
-            "... up to three times each, even though expanding a route once already tells me everything reachable through it. I'm only tracking visited stops, not visited routes. I need to mark a route done the first time it's expanded and skip it after that.",
+            "... up to three times each, even though expanding a route once already tells me everything reachable through it. I'm only tracking visited stops, not visited routes.",
+        },
+      ],
+    },
+
+    {
+      id: "19",
+      role: "interviewer",
+      elapsedSeconds: 298,
+      content: [{ type: "text", value: "So fix it." }],
+    },
+
+    {
+      id: "20",
+      role: "candidate",
+      elapsedSeconds: 308,
+      content: [
+        {
+          type: "text",
+          value:
+            "Mark a route done the first time it's expanded, skip it after that:",
         },
         {
           type: "code",
@@ -216,26 +310,25 @@ const transcript: TranscriptData = {
     },
 
     {
-      id: "13",
+      id: "21",
       role: "interviewer",
-      elapsedSeconds: 240,
+      elapsedSeconds: 322,
       content: [
         {
           type: "text",
-          value: "Put the whole thing together.",
+          value: "Good. Stitch the pieces together quickly so I can see the whole function.",
         },
       ],
     },
 
     {
-      id: "14",
+      id: "22",
       role: "candidate",
-      elapsedSeconds: 285,
+      elapsedSeconds: 345,
       content: [
         {
           type: "text",
-          value:
-            "Build the stop-to-routes map once, then BFS with both a visited-stops set and a visited-routes set.",
+          value: "It's just the three pieces we already built, in order:",
         },
         {
           type: "code",
@@ -248,34 +341,29 @@ const transcript: TranscriptData = {
     },
 
     {
-      id: "15",
+      id: "23",
       role: "interviewer",
-      elapsedSeconds: 312,
-      content: [
-        {
-          type: "text",
-          value: "Complexity?",
-        },
-      ],
+      elapsedSeconds: 365,
+      content: [{ type: "text", value: "Complexity?" }],
     },
 
     {
-      id: "16",
+      id: "24",
       role: "candidate",
-      elapsedSeconds: 335,
+      elapsedSeconds: 385,
       content: [
         {
           type: "text",
           value:
-            "Building stop_to_routes is O(sum of route lengths). Each route gets expanded at most once because of visited_routes, and expanding a route costs time proportional to its own length — so the BFS itself is bounded by that same sum, and every stop is enqueued at most once. Overall it's O(total stops across all routes), time and space both. No quadratic anywhere.",
+            "Building stop_to_routes is O(sum of route lengths). Each route gets expanded at most once because of visited_routes, and expanding a route costs time proportional to its own length, so the BFS itself is bounded by that same sum. Overall O(total stops across all routes), time and space both. No quadratic anywhere.",
         },
       ],
     },
 
     {
-      id: "17",
+      id: "25",
       role: "interviewer",
-      elapsedSeconds: 360,
+      elapsedSeconds: 405,
       content: [
         {
           type: "text",
@@ -286,33 +374,29 @@ const transcript: TranscriptData = {
     },
 
     {
-      id: "18",
+      id: "26",
       role: "candidate",
-      elapsedSeconds: 385,
+      elapsedSeconds: 425,
       content: [
         {
           type: "text",
-          value: "BFS only worked because every hop cost exactly one bus. Now a cheap route and an expensive one both count as one hop, but they aren't equal anymore.",
+          value:
+            "BFS only worked because every hop cost exactly one bus. Now a cheap route and an expensive one both count as one hop, but they aren't equal anymore.",
         },
       ],
     },
 
     {
-      id: "19",
+      id: "27",
       role: "interviewer",
-      elapsedSeconds: 396,
-      content: [
-        {
-          type: "text",
-          value: "So what changes?",
-        },
-      ],
+      elapsedSeconds: 436,
+      content: [{ type: "text", value: "So what changes?" }],
     },
 
     {
-      id: "20",
+      id: "28",
       role: "candidate",
-      elapsedSeconds: 415,
+      elapsedSeconds: 448,
       content: [
         {
           type: "text",
@@ -323,25 +407,26 @@ const transcript: TranscriptData = {
     },
 
     {
-      id: "21",
+      id: "29",
       role: "interviewer",
-      elapsedSeconds: 428,
+      elapsedSeconds: 460,
       content: [
         {
           type: "text",
-          value: "Adapt your BFS into it.",
+          value:
+            "Don't rewrite the whole function. Just tell me what actually has to change, then show me the diff piece by piece.",
         },
       ],
     },
 
     {
-      id: "22",
+      id: "30",
       role: "candidate",
-      elapsedSeconds: 460,
+      elapsedSeconds: 472,
       content: [
         {
           type: "text",
-          value: "Swap the queue for a min-heap on accumulated cost.",
+          value: "First thing — the queue isn't a FIFO anymore, it's ordered by accumulated cost:",
         },
         {
           id: "highlight-visited-at-push",
@@ -354,21 +439,21 @@ const transcript: TranscriptData = {
         {
           type: "code",
           id: "code-dijkstra-buggy",
-          language: "python",
+          language: "diff",
           value:
-            "if next_stop not in visited_stops:\n    visited_stops.add(next_stop)\n    heapq.heappush(pq, (total_cost + cost[route_idx], next_stop))",
+            "- queue = deque([(source, 0)])\n+ pq = [(0, source)]\n\n- if next_stop not in visited_stops:\n-     visited_stops.add(next_stop)\n-     queue.append((next_stop, buses + 1))\n+ if next_stop not in visited_stops:\n+     visited_stops.add(next_stop)\n+     heapq.heappush(pq, (total_cost + cost[route_idx], next_stop))",
         },
         {
           type: "text",
-          value: ", everything else keeps the same shape as before.",
+          value: "— everything else stays the same shape as before.",
         },
       ],
     },
 
     {
-      id: "23",
+      id: "31",
       role: "interviewer",
-      elapsedSeconds: 485,
+      elapsedSeconds: 495,
       content: [
         {
           type: "text",
@@ -379,9 +464,9 @@ const transcript: TranscriptData = {
     },
 
     {
-      id: "24",
+      id: "32",
       role: "candidate",
-      elapsedSeconds: 510,
+      elapsedSeconds: 518,
       content: [
         {
           type: "text",
@@ -392,52 +477,108 @@ const transcript: TranscriptData = {
     },
 
     {
-      id: "25",
+      id: "33",
       role: "interviewer",
-      elapsedSeconds: 528,
+      elapsedSeconds: 536,
+      content: [
+        { type: "text", value: "So fix the invariant, not just the symptom." },
+      ],
+    },
+
+    {
+      id: "34",
+      role: "candidate",
+      elapsedSeconds: 550,
       content: [
         {
           type: "text",
-          value: "So fix the invariant, not just the symptom.",
+          value:
+            "A stop's distance should only be finalized when it's popped, not when it's first pushed. Swap the visited set for a real dist map:",
+        },
+        {
+          type: "code",
+          id: "code-dist-map",
+          language: "diff",
+          value:
+            "- visited_stops = {source}\n+ dist = defaultdict(lambda: float(\"inf\"))\n+ dist[source] = 0",
         },
       ],
     },
 
     {
-      id: "26",
+      id: "35",
+      role: "interviewer",
+      elapsedSeconds: 565,
+      content: [{ type: "text", value: "And when you pop?" }],
+    },
+
+    {
+      id: "36",
       role: "candidate",
-      elapsedSeconds: 555,
+      elapsedSeconds: 575,
       content: [
         {
           type: "text",
-          value: "A stop's distance should only be finalized when it's popped, not when it's first pushed. Keep a real dist map, push whenever a strictly cheaper cost turns up, and ",
+          value:
+            "Throw away anything that's already stale — a cheaper path already beat it to the heap:",
+        },
+        {
+          type: "code",
+          id: "code-stale-check",
+          language: "python",
+          value: "d, stop = heapq.heappop(pq)\nif d > dist[stop]:\n    continue",
+        },
+      ],
+    },
+
+    {
+      id: "37",
+      role: "interviewer",
+      elapsedSeconds: 588,
+      content: [{ type: "text", value: "And the actual relaxation step?" }],
+    },
+
+    {
+      id: "38",
+      role: "candidate",
+      elapsedSeconds: 598,
+      content: [
+        {
+          type: "text",
+          value: "",
         },
         {
           id: "highlight-dist-array-fix",
           type: "highlight",
           status: "strong",
-          value: "only trust a popped entry if it still matches the current best distance for that stop, otherwise it's stale and gets skipped",
+          value:
+            "only trust a popped entry if it still matches the current best distance for that stop, otherwise it's stale and gets skipped",
           explanation:
             "Restores the real Dijkstra invariant — a node's shortest distance finalizes at pop time, and stale, superseded heap entries are simply discarded rather than trusted, so a later cheaper discovery is never blocked by an earlier worse one.",
         },
         {
           type: "text",
-          value: ".",
+          value: " — same idea, applied on the push side:",
         },
         {
           type: "code",
-          id: "code-dijkstra-fixed",
+          id: "code-relaxation",
           language: "python",
           value:
-            "import heapq\nfrom collections import defaultdict\n\ndef min_cost_to_destination(routes, cost, source, target):\n    if source == target:\n        return 0\n\n    stop_to_routes = defaultdict(list)\n    for i, route in enumerate(routes):\n        for stop in route:\n            stop_to_routes[stop].append(i)\n\n    dist = defaultdict(lambda: float(\"inf\"))\n    dist[source] = 0\n    visited_routes = set()\n    pq = [(0, source)]\n\n    while pq:\n        d, stop = heapq.heappop(pq)\n        if d > dist[stop]:\n            continue  # stale entry — a cheaper path already won here\n        if stop == target:\n            return d\n\n        for route_idx in stop_to_routes[stop]:\n            if route_idx in visited_routes:\n                continue\n            visited_routes.add(route_idx)\n            for next_stop in routes[route_idx]:\n                nd = d + cost[route_idx]\n                if nd < dist[next_stop]:\n                    dist[next_stop] = nd\n                    heapq.heappush(pq, (nd, next_stop))\n\n    return -1",
+            "nd = d + cost[route_idx]\nif nd < dist[next_stop]:\n    dist[next_stop] = nd\n    heapq.heappush(pq, (nd, next_stop))",
+        },
+        {
+          type: "text",
+          value:
+            "That's the whole diff from the BFS version — heap instead of deque, dist instead of visited_stops, stale check on pop, strictly-less check on push.",
         },
       ],
     },
 
     {
-      id: "27",
+      id: "39",
       role: "interviewer",
-      elapsedSeconds: 590,
+      elapsedSeconds: 620,
       content: [
         {
           type: "text",
@@ -448,9 +589,9 @@ const transcript: TranscriptData = {
     },
 
     {
-      id: "28",
+      id: "40",
       role: "candidate",
-      elapsedSeconds: 615,
+      elapsedSeconds: 645,
       content: [
         {
           type: "text",
@@ -461,21 +602,22 @@ const transcript: TranscriptData = {
     },
 
     {
-      id: "29",
+      id: "41",
       role: "interviewer",
-      elapsedSeconds: 630,
+      elapsedSeconds: 660,
       content: [
         {
           type: "text",
-          value: "Cheapest first time. Does that make every later expansion of the same route redundant, or just less useful?",
+          value:
+            "Cheapest first time. Does that make every later expansion of the same route redundant, or just less useful?",
         },
       ],
     },
 
     {
-      id: "30",
+      id: "42",
       role: "candidate",
-      elapsedSeconds: 655,
+      elapsedSeconds: 685,
       content: [
         {
           type: "text",
@@ -485,27 +627,28 @@ const transcript: TranscriptData = {
           id: "highlight-visited-routes-still-valid",
           type: "highlight",
           status: "strong",
-          value: "boarding cost is a flat charge per route, the same no matter which stop on it you board from, so the cheapest finalized stop on that route always gives every neighbor its best possible offer",
+          value:
+            "boarding cost is a flat charge per route, the same no matter which stop on it you board from, so the cheapest finalized stop on that route always gives every neighbor its best possible offer",
           explanation:
             "Correctly re-derives, rather than assumes, why the visited_routes optimization survives the move to weighted Dijkstra: because the route's cost is independent of the boarding stop, the earliest (cheapest) finalized touchpoint dominates every later one.",
         },
         {
           type: "text",
           value:
-            ". Expanding the same route again later, from some stop with a larger finalized distance, only offers next_stop candidates a cost of bigger-distance-plus-same-route-cost, which can't beat what the first expansion already gave them. So marking a route visited after one expansion still holds here, just for a different reason than in the plain BFS version — there it was 'one bus per route, done'; here it's 'the cheapest boarding point for this route is already used, every other one is provably worse or equal.'",
+            ". Expanding the same route again later, from some stop with a larger finalized distance, only offers next_stop candidates a cost of bigger-distance-plus-same-route-cost, which can't beat what the first expansion already gave them. So the visited_routes check doesn't need to change at all — same three lines as the BFS version, just a different reason why it's correct. There it was 'one bus per route, done.' Here it's 'the cheapest boarding point for this route is already used, every other one is provably worse or equal.'",
         },
       ],
     },
 
     {
-      id: "31",
+      id: "43",
       role: "takeaway",
-      elapsedSeconds: 690,
+      elapsedSeconds: 720,
       content: [
         {
           type: "text",
           value:
-            "Takeaway: Bus Routes tempts a stop-to-stop graph where every pair of co-route stops gets a direct edge, which explodes quadratically on any long route — the fix is modeling buses, not stops, as the graph's nodes, with BFS depth equal to buses taken. A visited_routes set is essential even there, since a shared stop can otherwise cause the same route to be re-expanded from every direction it's reached. The cost-weighted follow-up breaks the assumption that BFS depth equals the answer and needs Dijkstra instead, and porting the BFS code over surfaced the classic bug of marking a node visited at push time rather than pop time, which silently locks in a worse cost whenever a cheaper path to the same stop turns up later. The visited_routes trick from the unweighted version does carry over to Dijkstra, but only because boarding cost is flat per route regardless of which stop triggers it — a fact worth deriving explicitly rather than assuming just because the code still runs.",
+            "Takeaway: Bus Routes tempts a stop-to-stop graph where every pair of co-route stops gets a direct edge, which explodes quadratically on any long route — the fix is modeling buses, not stops, as the graph's nodes, with BFS depth equal to buses taken. A visited_routes set is essential even there, since a shared stop can otherwise cause the same route to be re-expanded from every direction it's reached. The cost-weighted follow-up breaks the assumption that BFS depth equals the answer and needs Dijkstra instead — the actual diff from the BFS solution is small: heap instead of deque, a real dist map instead of a visited set, a stale-entry check on pop, and a strictly-less check on push. Porting the BFS code over surfaced the classic bug of marking a node visited at push time rather than pop time, which silently locks in a worse cost whenever a cheaper path to the same stop turns up later. The visited_routes trick from the unweighted version needs no code change at all under Dijkstra, but only because boarding cost is flat per route regardless of which stop triggers it — a fact worth deriving explicitly rather than assuming just because the code still runs.",
         },
       ],
     },
@@ -531,7 +674,7 @@ const busRoutesWeighted: TranscriptEntry = {
       "Hash Map",
     ],
     description:
-      "Coding interview on LeetCode's Bus Routes: rejecting a quadratic stop-to-stop clique graph in favor of modeling routes as BFS nodes, catching a missing visited_routes set that caused redundant re-expansion, then extending into an original cost-weighted follow-up requiring Dijkstra — including the classic visited-at-push-time bug and a from-first-principles justification for why the visited_routes optimization still holds once edges carry real weights.",
+      "Coding interview on LeetCode's Bus Routes: rejecting a quadratic stop-to-stop clique graph in favor of modeling routes as BFS nodes, catching a missing visited_routes set that caused redundant re-expansion, then extending into an original cost-weighted follow-up requiring Dijkstra — including the classic visited-at-push-time bug and a from-first-principles justification for why the visited_routes optimization still holds once edges carry real weights. Code is revealed incrementally as small, focused snippets and diffs rather than full rewrites, mirroring how the discussion actually unfolds.",
   },
 
   transcript,

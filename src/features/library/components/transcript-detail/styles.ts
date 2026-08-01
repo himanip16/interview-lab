@@ -8,7 +8,7 @@ export const MESSAGE_STYLES = {
   },
   bubble: {
     candidate: {
-      background: "#F1EFEA",
+      background: "rgba(106,90,224,0.08)",
       color: "#15161C",
     },
     interviewer: {

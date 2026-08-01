@@ -427,7 +427,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             ) : (
               <Link
                 href="/login"
-                className="font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-sm"
+                className="font-semibold text-sm bg-[var(--category-learn-deep)] text-white px-4 py-2 rounded-full hover:opacity-90 transition-opacity"
               >
                 Log in
               </Link>
@@ -487,7 +487,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           ) : (
             <Link
               href="/login"
-              className="font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-sm"
+              className="font-semibold text-sm bg-[var(--category-learn-deep)] text-white px-4 py-2 rounded-full hover:opacity-90 transition-opacity"
             >
               Log in
             </Link>

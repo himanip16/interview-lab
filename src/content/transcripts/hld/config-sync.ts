@@ -753,7 +753,7 @@ const transcript: TranscriptData = {
 };
 
 const configSyncPlatform: TranscriptEntry = {
-  summary: {    id: 37,
+  summary: {    id: 39,
 
     slug: "config-sync-platform",
     title: "Design a Multi-Device Configuration Sync Platform",

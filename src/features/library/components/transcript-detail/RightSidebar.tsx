@@ -13,8 +13,13 @@ export function RightSidebar({ architectureSteps, currentSectionIndex }: Props) 
   const maxNodes = architectureSteps[architectureSteps.length - 1] || [];
   const visibleCount = (architectureSteps[Math.min(currentSectionIndex, architectureSteps.length - 1)] || []).length;
 
+  // Don't render if there's no content to show
+  if (!maxNodes || maxNodes.length === 0) {
+    return null;
+  }
+
   return (
-    <div className="sticky top-5 hidden w-[260px] shrink-0 xl:block lg:block">
+    <div className="sticky top-5 hidden w-[200px] shrink-0 xl:block lg:block">
       <div
         className="rounded-[18px] border p-4.5"
         style={{ background: "#fff", borderColor: "rgba(21,22,28,0.07)" }}

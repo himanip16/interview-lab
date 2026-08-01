@@ -431,7 +431,7 @@ const transcript: TranscriptData = {
 };
 
 const elevatorSystemLld: TranscriptEntry = {
-  summary: {    id: 42,
+  summary: {    id: 44,
 
     slug: "elevator-system-lld",
     title: "Elevator System — Low-Level Design",
