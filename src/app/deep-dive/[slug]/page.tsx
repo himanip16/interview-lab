@@ -18,6 +18,7 @@ import { getDeepDiveBySlug, getPreviousAndNext } from "@/content/deep-dive";
 import { contentComponents } from "@/content/deep-dive/component-registry";
 
 import "@/styles/tokens.css";
+import "@/features/deep-dive/styles/deep-dive.css";
 
 import { BookOpen, MessageSquare, Code2, ChevronLeft } from "lucide-react";
 import styles from './page.module.css';

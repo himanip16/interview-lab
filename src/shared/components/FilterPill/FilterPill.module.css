@@ -1,3 +1,26 @@
+.filterPill {
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--landing-text-soft);
+  cursor: pointer;
+  background: transparent;
+  transition: all var(--duration-fast) var(--ease-default);
+}
+
+.filterPill:hover {
+  color: var(--text);
+  border-color: var(--text);
+}
+
+.filterPill.active {
+  background: var(--text-primary);
+  color: #fff;
+  border-color: var(--text-primary);
+}
+
 .pill {
   font-size: var(--text-sm);
   font-weight: var(--font-semibold);

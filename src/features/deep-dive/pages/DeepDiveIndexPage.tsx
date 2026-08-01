@@ -5,10 +5,10 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
-import { Card, FilterPill, Tag } from '@/shared/components';
 import styles from '@/features/deep-dive/components/DeepDiveIndex.module.css';
-import { deepDiveRegistry } from '@/content/deep-dive';
 import { contentComponents } from '@/content/deep-dive/component-registry';
+import { deepDiveRegistry } from '@/content/deep-dive';
+import "@/features/deep-dive/styles/deep-dive.css";
 import type { DeepDiveCategory } from '@/features/deep-dive/types';
 
 interface Topic {
@@ -69,23 +69,23 @@ export function DeepDiveIndexPage() {
         </div>
 
         <div className={styles.filters}>
-          <FilterPill active={filter === 'all'} onClick={() => setFilter('all')}>
+          <button className={`${styles.fpill} ${filter === 'all' ? styles.fpillActive : ''}`} onClick={() => setFilter('all')}>
             All
-          </FilterPill>
-          <FilterPill active={filter === 'db'} onClick={() => setFilter('db')}>
+          </button>
+          <button className={`${styles.fpill} ${filter === 'db' ? styles.fpillActive : ''}`} onClick={() => setFilter('db')}>
             Databases
-          </FilterPill>
-          <FilterPill active={filter === 'msg'} onClick={() => setFilter('msg')}>
+          </button>
+          <button className={`${styles.fpill} ${filter === 'msg' ? styles.fpillActive : ''}`} onClick={() => setFilter('msg')}>
             Messaging
-          </FilterPill>
-          <FilterPill active={filter === 'concept'} onClick={() => setFilter('concept')}>
+          </button>
+          <button className={`${styles.fpill} ${filter === 'concept' ? styles.fpillActive : ''}`} onClick={() => setFilter('concept')}>
             Core concepts
-          </FilterPill>
+          </button>
         </div>
 
         <div className={styles.grid}>
           {filteredTopics.map((topic) => (
-            <Card
+            <Link
               key={topic.slug}
               href={`/deep-dive/${topic.slug}`}
               className={styles.card}
@@ -98,12 +98,12 @@ export function DeepDiveIndexPage() {
               <div className={styles.cardFoot}>
                 <div className={styles.tags}>
                   {topic.tags.map((tag) => (
-                    <Tag key={tag} size="sm">{tag}</Tag>
+                    <span key={tag} className={styles.tag}>{tag}</span>
                   ))}
                 </div>
                 <div className={styles.read}>{topic.readTime}</div>
               </div>
-            </Card>
+            </Link>
           ))}
         </div>
       </div>
