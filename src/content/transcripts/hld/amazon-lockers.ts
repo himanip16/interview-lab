@@ -867,7 +867,8 @@ const transcript: TranscriptData = {
 
 const amazonLockers: TranscriptEntry = {
   summary: {
-    id: 1,
+    id: 35,
+
     slug: "amazon-lockers",
     title: "Design Amazon Lockers & Capacity Management",
     category: "hld",

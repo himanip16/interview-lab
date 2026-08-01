@@ -430,7 +430,8 @@ const transcript: TranscriptData = {
 };
 
 const resourceCaching: TranscriptEntry = {
-  summary: {    id: 28,
+  summary: {
+    id: 30,
 
     slug: "mobile-resource-caching-lru",
     title: "Optimize Repeated Resource Fetching on a Mobile Client",

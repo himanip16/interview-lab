@@ -533,7 +533,8 @@ const transcript: TranscriptData = {
 };
 
 const longestRepeatingCharacterReplacement: TranscriptEntry = {
-  summary: {    id: 22,
+  summary: {
+    id: 23,
 
     slug: "longest-repeating-replacement-sliding-window",
     title: "Longest Repeating Character Replacement: Sliding Window Invariant",

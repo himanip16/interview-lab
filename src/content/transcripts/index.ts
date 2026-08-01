@@ -76,10 +76,10 @@ export function getCategoryLabel(
   return labels[category];
 }
 
-export function validateTranscripts(): void {
+export function validateTranscripts(transcripts: readonly TranscriptEntry[]): void {
   const slugs = new Set<string>();
 
-  for (const transcript of TRANSCRIPTS) {
+  for (const transcript of transcripts) {
     if (slugs.has(transcript.summary.slug)) {
       throw new Error(
         `Duplicate slug: ${transcript.summary.slug}`
@@ -104,6 +104,13 @@ export function validateTranscripts(): void {
       throw new Error(
         `${transcript.summary.slug}: invalid duration`
       );
+    }
+
+    if (transcript.summary.description.length > 300) {
+      console.warn(
+        `${transcript.summary.slug}: description exceeds 300 characters (${transcript.summary.description.length}), truncating`
+      );
+      (transcript as any).summary.description = transcript.summary.description.slice(0, 297) + '...';
     }
   }
 }

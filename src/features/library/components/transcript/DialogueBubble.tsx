@@ -156,7 +156,7 @@ export default function DialogueBubble({
         )}
       </div>
       <div
-        className={`space-y-3 rounded-2xl p-6 leading-relaxed ${
+        className={`overflow-hidden space-y-3 rounded-2xl p-6 leading-relaxed ${
           isInterviewer
             ? "bg-transparent border border-gray-100"
             : "bg-white shadow-sm border border-gray-200"

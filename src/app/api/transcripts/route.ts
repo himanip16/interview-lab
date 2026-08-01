@@ -1,12 +1,15 @@
 // src/app/api/transcripts/route.ts
 
-import { getAllTranscripts } from "@/content/transcripts/index";
+import { getAllTranscripts, validateTranscripts } from "@/content/transcripts/index";
 import { NextResponse } from "next/server";
 
 
 export async function GET() {
   try {
     const source = getAllTranscripts();
+    
+    // Validate transcripts (includes description truncation)
+    validateTranscripts(source);
 
     const transcripts = source.map((item) => ({
   id: item.summary.id,

@@ -465,7 +465,8 @@ const transcript: TranscriptData = {
 };
 
 const deliverooCampaignLabellingInventAndSimplify: TranscriptEntry = {
-  summary: {    id: 8,
+  summary: {
+    id: 9,
 
     slug: "deliveroo-campaign-labelling-invent-and-simplify",
     title: "Campaign Labelling System — Invent and Simplify",

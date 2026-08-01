@@ -530,7 +530,8 @@ const transcript: TranscriptData = {
 };
 
 const amazonLabellingSystemScale: TranscriptEntry = {
-  summary: {    id: 9,
+  summary: {
+    id: 10,
 
     slug: "amazon-labelling-system-scale-deduplication",
     title: "Ownership + Bias for Action: Item-Partner Labelling System at Scale",

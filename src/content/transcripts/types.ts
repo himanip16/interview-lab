@@ -52,3 +52,42 @@ export type TranscriptEntry = {
 
   transcript: TranscriptData;
 };
+
+export function validateTranscripts(transcripts: TranscriptEntry[]): void {
+  const slugs = new Set<string>();
+
+  for (const transcript of transcripts) {
+    if (slugs.has(transcript.summary.slug)) {
+      throw new Error(
+        `Duplicate slug: ${transcript.summary.slug}`
+      );
+    }
+
+    slugs.add(transcript.summary.slug);
+
+    if (!transcript.summary.title.trim()) {
+      throw new Error(
+        `${transcript.summary.slug}: missing title`
+      );
+    }
+
+    if (transcript.summary.tags.length === 0) {
+      throw new Error(
+        `${transcript.summary.slug}: missing tags`
+      );
+    }
+
+    if (transcript.summary.duration <= 0) {
+      throw new Error(
+        `${transcript.summary.slug}: invalid duration`
+      );
+    }
+
+    if (transcript.summary.description.length > 300) {
+      console.warn(
+        `${transcript.summary.slug}: description exceeds 300 characters (${transcript.summary.description.length}), truncating`
+      );
+      transcript.summary.description = transcript.summary.description.slice(0, 297) + '...';
+    }
+  }
+};

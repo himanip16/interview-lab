@@ -404,7 +404,8 @@ const transcript: TranscriptData = {
 };
 
 const kubernetesDeploymentFundamentals: TranscriptEntry = {
-  summary: {    id: 12,
+  summary: {
+    id: 13,
 
     slug: "kubernetes-deployment-fundamentals",
     title: "Deployment Fundamentals: Kubernetes Basics",

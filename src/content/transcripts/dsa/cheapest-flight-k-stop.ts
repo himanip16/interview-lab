@@ -575,7 +575,8 @@ const transcript: TranscriptData = {
 };
 
 const cheapestFlightsKStops: TranscriptEntry = {
-  summary: {    id: 17,
+  summary: {
+    id: 18,
 
     slug: "cheapest-flights-k-stops",
     title: "Cheapest Flights Within K Stops: State Design and Constraint Handling",

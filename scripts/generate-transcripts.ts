@@ -52,16 +52,18 @@ for (const category of categories) {
 let idCounter = 1;
 for (const entry of entries) {
   const filePath = join(ROOT, entry.category, `${entry.slug}.ts`);
-  const content = readFileSync(filePath, 'utf-8');
+  let content = readFileSync(filePath, 'utf-8');
   
-  // Check if id already exists in summary
+  // Remove any incorrectly placed IDs (on same line as summary: {)
+  content = content.replace(/summary: \{\s*id: \d+,\s*/g, 'summary: {\n    ');
+  
+  // Check if id already exists in summary (correctly placed)
   const summaryMatch = content.match(/const \w+: TranscriptEntry = \{[\s\S]*?summary: \{([\s\S]*?)\},[\s\S]*?transcript/);
   if (summaryMatch) {
     const summaryContent = summaryMatch[1];
     if (!summaryContent.includes('id:')) {
       // Add id as the first field in summary
-      const newSummaryContent = `    id: ${idCounter++},
-${summaryContent}`;
+      const newSummaryContent = `    id: ${idCounter++},\n${summaryContent}`;
       const newContent = content.replace(
         /const \w+: TranscriptEntry = \{[\s\S]*?summary: \{([\s\S]*?)\},[\s\S]*?transcript/,
         (match) => match.replace(summaryContent, newSummaryContent)

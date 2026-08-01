@@ -496,7 +496,8 @@ const transcript: TranscriptData = {
 };
 
 const wordLadderBFS: TranscriptEntry = {
-  summary: {    id: 31,
+  summary: {
+    id: 33,
 
     slug: "word-ladder-bfs",
     title: "Word Ladder: BFS Shortest Path With Efficient Neighbor Finding",

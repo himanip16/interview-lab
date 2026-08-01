@@ -361,7 +361,8 @@ const transcript: TranscriptData = {
 };
 
 const numberOfIslandsDynamicConnectivity: TranscriptEntry = {
-  summary: {    id: 25,
+  summary: {
+    id: 27,
 
     slug: "number-of-islands-dynamic-connectivity",
     title: "Number of Islands — Dynamic Connectivity Variation",

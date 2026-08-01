@@ -250,7 +250,7 @@ export function MessageBlock({
 
           {/* Bubble */}
           <div
-            className="rounded-[16px] px-4 py-3 text-[13.5px] leading-relaxed"
+            className="overflow-hidden rounded-[16px] px-4 py-3 text-[13.5px] leading-relaxed"
             style={{
               background: isCandidate ? MESSAGE_STYLES.bubble.candidate.background : MESSAGE_STYLES.bubble.interviewer.background,
               border: isCandidate ? "none" : MESSAGE_STYLES.bubble.interviewer.border,

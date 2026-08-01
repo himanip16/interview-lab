@@ -373,7 +373,8 @@ const transcript: TranscriptData = {
 };
 
 const coinChangeIIBoundedQuantity: TranscriptEntry = {
-  summary: {    id: 18,
+  summary: {
+    id: 19,
 
     slug: "coin-change-ii-bounded-quantity",
     title: "Coin Change II — Bounded Quantity Variation",

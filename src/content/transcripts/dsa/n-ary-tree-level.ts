@@ -385,7 +385,8 @@ const transcript: TranscriptData = {
 };
 
 const naryTreeLevelCount: TranscriptEntry = {
-  summary: {    id: 24,
+  summary: {
+    id: 25,
 
     slug: "nary-tree-level-nodes-dynamic-count",
     title: "N-ary Tree: Nodes at a Level, Then Making Level Counts O(1) Under Insert/Remove",

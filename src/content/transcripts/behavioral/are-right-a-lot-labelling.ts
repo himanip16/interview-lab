@@ -345,8 +345,8 @@ const transcript: TranscriptData = {
 };
 
 const areRightALotLabellingDeduplication: TranscriptEntry = {
-  summary: {    id: 1,
-
+  summary: {
+    id: 1,
     slug: "are-right-a-lot-labelling-deduplication",
     title:
       "Are Right, A Lot — Deduplication vs. Scaling Decision at Deliveroo",
