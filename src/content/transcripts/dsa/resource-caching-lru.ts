@@ -437,7 +437,7 @@ const resourceCaching: TranscriptEntry = {
     category: "dsa",
     difficulty: Difficulty.MEDIUM,
     duration: 35,
-    
+   
     tags: [
       "Caching",
       "LRU",

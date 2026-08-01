@@ -597,7 +597,7 @@ const maximumProtectedCityPopulation: TranscriptEntry = {
     category: "dsa",
     difficulty: Difficulty.HARD,
     duration: 46,
-    
+    company: ["Amazon"],
     tags: [
       "Dynamic Programming",
       "Greedy Counterexample",
