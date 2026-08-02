@@ -44,11 +44,11 @@ import wordSearch2 from "@/content/transcripts/dsa/word-search2";
 import amazonLockers from "@/content/transcripts/hld/amazon-lockers";
 import autocomplete from "@/content/transcripts/hld/autocomplete";
 import configSync from "@/content/transcripts/hld/config-sync";
-import distributedOrderProcessing from "@/content/transcripts/hld/distributed-order-processing";
 import distributedSessionManagement from "@/content/transcripts/hld/distributed-session-management";
 import gigWorker from "@/content/transcripts/hld/gig-worker";
 import loadbalance from "@/content/transcripts/hld/loadbalance";
 import paymentSystem from "@/content/transcripts/hld/payment-system";
+import urlShortener from "@/content/transcripts/hld/url-shortener";
 import elevator from "@/content/transcripts/lld/elevator";
 import inMemoryFilesystem from "@/content/transcripts/lld/in-memory-filesystem";
 import meetingRoomReservation from "@/content/transcripts/lld/meeting-room-reservation";
@@ -100,11 +100,11 @@ export const TRANSCRIPTS: readonly TranscriptEntry[] = [
   amazonLockers,
   autocomplete,
   configSync,
-  distributedOrderProcessing,
   distributedSessionManagement,
   gigWorker,
   loadbalance,
   paymentSystem,
+  urlShortener,
   elevator,
   inMemoryFilesystem,
   meetingRoomReservation,
