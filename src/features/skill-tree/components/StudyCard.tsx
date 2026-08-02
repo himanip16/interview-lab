@@ -2,30 +2,46 @@
 
 import React from 'react';
 import { cn } from '@/shared/utils/utils';
-import { BookOpen, MessageSquare } from 'lucide-react';
+import { BookOpen, MessageSquare, Bug } from 'lucide-react';
 
 interface StudyItem {
   id: string;
   title: string;
-  type: 'deep-dive' | 'transcript';
+  description?: string;
+  contentType: 'DEEP_DIVE' | 'TRANSCRIPT' | 'BUG_HUNT' | 'WHITEBOARD';
+  contentSlug: string;
+  order: number;
+  isBossGate: boolean;
   status: 'locked' | 'available' | 'in-progress' | 'completed';
+  isLocked: boolean;
 }
 
 interface StudyCardProps {
   item: StudyItem;
   isLocked?: boolean;
+  onClick?: () => void;
 }
 
 const typeConfig = {
-  'deep-dive': {
+  'DEEP_DIVE': {
     icon: BookOpen,
     label: 'Deep Dive',
     color: 'var(--category-concept)',
   },
-  transcript: {
+  'TRANSCRIPT': {
     icon: MessageSquare,
     label: 'Transcript',
     color: 'var(--category-info)',
+  },
+  'BUG_HUNT': {
+    icon: Bug,
+    label: 'Bug Hunt',
+    color: 'var(--category-practice)',
+  },
+  'WHITEBOARD': {
+    icon: BookOpen,
+    label: 'Whiteboard',
+    color: 'var(--category-live)',
   },
 };
 
@@ -62,8 +78,8 @@ const statusConfig = {
  * - Status-based styling
  * - Hover interactions
  */
-export const StudyCard: React.FC<StudyCardProps> = ({ item, isLocked = false }) => {
-  const typeInfo = typeConfig[item.type];
+export const StudyCard: React.FC<StudyCardProps> = ({ item, isLocked = false, onClick }) => {
+  const typeInfo = typeConfig[item.contentType as keyof typeof typeConfig];
   const statusInfo = statusConfig[isLocked ? 'locked' : item.status];
   const Icon = typeInfo.icon;
 
@@ -73,12 +89,14 @@ export const StudyCard: React.FC<StudyCardProps> = ({ item, isLocked = false }) 
         'flex items-center gap-4 p-4 rounded-[var(--radius-card)]',
         'border transition-all duration-200',
         'hover:translate-y-[-2px] hover:shadow-[var(--shadow-hover)]',
-        isLocked && 'pointer-events-none'
+        isLocked && 'pointer-events-none',
+        !isLocked && onClick && 'cursor-pointer'
       )}
       style={{
         backgroundColor: statusInfo.bgColor,
         borderColor: statusInfo.borderColor,
       }}
+      onClick={!isLocked ? onClick : undefined}
     >
       {/* Icon Slot */}
       <div

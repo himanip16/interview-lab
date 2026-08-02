@@ -1100,12 +1100,14 @@ model StudyStep {
 }
 
 model UserStepProgress {
-  id          String   @id @default(cuid())
   userId      String
   stepId      String
   completed   Boolean  @default(false)
   lastReadAt  DateTime @updatedAt
   createdAt   DateTime @default(now())
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  step        StudyStep @relation(fields: [stepId], references: [id], onDelete: Cascade)
 
   @@id([userId, stepId])
   @@index([userId])

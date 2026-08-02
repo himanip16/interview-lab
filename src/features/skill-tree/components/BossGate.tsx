@@ -9,6 +9,7 @@ interface BossGateProps {
   title: string;
   status: 'locked' | 'available' | 'in-progress' | 'completed';
   isLocked?: boolean;
+  onClick?: () => void;
 }
 
 const statusConfig = {
@@ -49,6 +50,7 @@ export const BossGate: React.FC<BossGateProps> = ({
   title,
   status,
   isLocked = false,
+  onClick,
 }) => {
   const config = statusConfig[isLocked ? 'locked' : status];
 
@@ -58,12 +60,14 @@ export const BossGate: React.FC<BossGateProps> = ({
         'relative p-6 rounded-[var(--radius-panel)] border-2',
         'transition-all duration-300',
         'hover:shadow-[var(--shadow-floating)]',
-        isLocked && 'pointer-events-none'
+        isLocked && 'pointer-events-none',
+        !isLocked && onClick && 'cursor-pointer'
       )}
       style={{
         backgroundColor: config.bgColor,
         borderColor: config.borderColor,
       }}
+      onClick={!isLocked ? onClick : undefined}
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-4">

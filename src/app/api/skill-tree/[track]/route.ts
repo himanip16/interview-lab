@@ -14,10 +14,10 @@ import { prisma } from 'shared/prisma/client';
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { track: string } }
+  { params }: { params: Promise<{ track: string }> }
 ) {
   try {
-    const { track } = params;
+    const { track } = await params;
     const userId = request.headers.get('x-user-id');
 
     if (!userId) {
@@ -162,10 +162,10 @@ export async function GET(
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { track: string } }
+  { params }: { params: Promise<{ track: string }> }
 ) {
   try {
-    const { track } = params;
+    const { track } = await params;
     const userId = request.headers.get('x-user-id');
 
     if (!userId) {
