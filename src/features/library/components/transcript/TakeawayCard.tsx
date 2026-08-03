@@ -16,12 +16,11 @@ export default function TakeawayCard({ content }: Props) {
           .join("");
 
   return (
-    <div className="my-8 rounded-2xl border border-emerald-200 bg-emerald-50 p-6">
-      <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-emerald-700">
-        Key Takeaway
+    <div className="max-w-full mt-1.5 px-5 py-4.5 rounded-[16px] bg-gradient-to-br from-white to-[#FAF9F6] border-l-[3px] border-[#00A87E]">
+      <div className="text-[10.5px] font-bold tracking-[0.06em] text-[#00A87E] uppercase mb-1.5">
+        Takeaway
       </div>
-
-      <p className="leading-relaxed text-gray-800">{text}</p>
+      <p className="text-[13px] text-[#15161C] leading-relaxed">{text}</p>
     </div>
   );
 }

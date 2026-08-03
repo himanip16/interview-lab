@@ -969,7 +969,7 @@ class Meeting {
 };
 
 const amazonMeetingRoomReservation: TranscriptEntry = {
-  summary: {    id: 48,
+  summary: {    id: 49,
 
     slug: "amazon-meeting-room-reservation-lld",
     title: "Design a Meeting & Room Reservation System",

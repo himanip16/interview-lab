@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Load Balancer — High-Level Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FAF9F6; --ink:#15161C; --ink-soft:#5A5B66; --mint:#00D9A3; --mint-deep:#00A87E;
+    --coral:#FF5A3C; --violet:#6A5AE0; --amber:#E8940A;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; }
+  h1,h2,h3{ font-family:'Poppins',sans-serif; letter-spacing:-0.02em; }
+
+  .shell{ max-width:1180px; margin:0 auto; }
+
+  /* ================= NAVBAR ================= */
+  .navbar{ display:flex; align-items:center; justify-content:space-between; padding:16px 30px; gap:20px; }
+  .nav-left{ display:flex; align-items:center; gap:10px; flex-shrink:0; }
+  .back-link{ display:flex; align-items:center; gap:6px; font-size:13.5px; font-weight:600; color:var(--ink-soft); cursor:pointer; }
+  .search3{ flex:1; max-width:340px; display:flex; align-items:center; gap:9px; background:#fff; border:1px solid rgba(21,22,28,0.08); border-radius:999px; padding:9px 10px 9px 16px; color:var(--ink-soft); }
+  .search3 svg{ opacity:.55; flex-shrink:0; }
+  .search3 span{ font-size:13px; flex:1; }
+  .kbd{ font-size:10px; font-weight:600; color:var(--ink-soft); background:var(--paper); border:1px solid rgba(21,22,28,0.1); border-radius:6px; padding:2px 6px; }
+  .nav-right{ display:flex; align-items:center; gap:10px; flex-shrink:0; }
+  .xp-pill{ display:flex; align-items:center; gap:6px; font-size:12px; font-weight:700; color:var(--amber); background:rgba(232,148,10,0.1); padding:6px 12px; border-radius:999px; }
+  .icon-btn{ width:34px; height:34px; border-radius:50%; border:1px solid rgba(21,22,28,0.1); background:#fff; color:var(--ink-soft); display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  .avatar{ width:34px; height:34px; border-radius:50%; background:var(--ink); color:#fff; display:flex; align-items:center; justify-content:center; font-size:12.5px; font-weight:700; font-family:'Poppins',sans-serif; }
+
+  /* ================= CONTINUE BANNER ================= */
+  .continue{ margin:4px 30px 0; display:flex; align-items:center; justify-content:space-between; gap:16px; background:#fff; border:1px solid rgba(21,22,28,0.07); border-radius:16px; padding:13px 20px; }
+  .continue-text{ font-size:13px; color:var(--ink-soft); }
+  .continue-text b{ color:var(--ink); font-weight:600; }
+  .jump-btn{ display:flex; align-items:center; gap:7px; background:var(--mint-deep); color:#fff; border:none; padding:9px 16px; border-radius:999px; font-size:12.5px; font-weight:600; cursor:pointer; white-space:nowrap; }
+
+  /* ================= HEADER ================= */
+  .page-head{ padding:26px 30px 22px; }
+  .eyebrow2{ font-size:11.5px; font-weight:700; letter-spacing:.1em; color:var(--mint-deep); text-transform:uppercase; }
+  .page-head h1{ font-size:30px; font-weight:600; margin-top:8px; }
+  .meta-pills{ display:flex; gap:8px; margin-top:14px; }
+  .meta-pill{ font-size:11.5px; font-weight:600; padding:5px 12px; border-radius:999px; }
+  .meta-pill.diff{ background:rgba(232,148,10,0.1); color:var(--amber); }
+  .meta-pill.time{ background:var(--paper); color:var(--ink-soft); border:1px solid rgba(21,22,28,0.08); }
+
+  /* ================= LAYOUT ================= */
+  .layout{ display:flex; gap:20px; padding:0 30px 60px; align-items:flex-start; }
+  .rail{ flex:0 0 250px; display:flex; flex-direction:column; gap:14px; position:sticky; top:20px; }
+  .rail-card{ background:#fff; border:1px solid rgba(21,22,28,0.07); border-radius:18px; padding:18px; }
+  .rail-title{ display:flex; align-items:center; gap:8px; font-size:11px; font-weight:700; letter-spacing:.05em; color:var(--ink-soft); text-transform:uppercase; margin-bottom:12px; }
+  .prog-track{ height:6px; border-radius:3px; background:var(--paper); overflow:hidden; margin-bottom:8px; }
+  .prog-fill{ height:100%; background:var(--mint-deep); border-radius:3px; width:13%; }
+  .prog-label{ font-size:12px; color:var(--ink-soft); margin-bottom:12px; }
+  .chip-row{ display:flex; align-items:center; gap:9px; background:var(--paper); border-radius:12px; padding:9px 12px; }
+  .chip-dot{ width:8px; height:8px; border-radius:50%; background:var(--violet); flex-shrink:0; }
+  .chip-row span{ font-size:12px; font-weight:600; flex:1; }
+  .chip-row .t{ font-size:11px; color:var(--ink-soft); font-family:'JetBrains Mono',monospace; }
+  .empty2{ font-size:12px; color:var(--ink-soft); font-style:italic; }
+  .concept-chips{ display:flex; flex-wrap:wrap; gap:6px; }
+  .concept-chip{ font-size:11px; font-weight:600; padding:5px 10px; border-radius:999px; background:rgba(106,90,224,0.08); color:var(--violet); }
+
+  /* ================= CONVERSATION ================= */
+  .convo2{ flex:1; min-width:0; display:flex; flex-direction:column; gap:22px; }
+  .turn{ display:flex; flex-direction:column; gap:8px; max-width:82%; }
+  .turn.iv{ align-self:flex-start; }
+  .turn.you{ align-self:flex-end; align-items:flex-end; }
+  .turn-avatar{ display:flex; align-items:center; gap:8px; }
+  .turn.you .turn-avatar{ flex-direction:row-reverse; }
+  .av{ width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:#fff; font-family:'Poppins',sans-serif; flex-shrink:0; }
+  .av.iv{ background:var(--ink); } .av.you{ background:var(--violet); }
+  .turn-label{ font-size:11px; font-weight:600; color:var(--ink-soft); }
+  .turn-bubble{ padding:16px 18px; border-radius:18px; font-size:13.5px; line-height:1.7; position:relative; }
+  .turn.iv .turn-bubble{ background:#fff; border:1px solid rgba(21,22,28,0.07); border-top-left-radius:6px; }
+  .turn.you .turn-bubble{ background:rgba(106,90,224,0.07); border:1px solid rgba(106,90,224,0.15); border-top-right-radius:6px; }
+
+  .hl-note{ background:rgba(232,148,10,0.22); border-bottom:1.5px solid var(--amber); border-radius:2px; padding:0 1px; cursor:pointer; }
+
+  .popover{ position:relative; max-width:82%; align-self:flex-end; margin-top:-6px; }
+  .popover-card{ background:#fff; border:1px solid rgba(232,148,10,0.35); border-radius:14px; padding:11px 14px; display:flex; align-items:flex-start; gap:9px; box-shadow:0 10px 24px rgba(21,22,28,0.08); }
+  .popover-card svg{ flex-shrink:0; margin-top:1px; color:var(--amber); }
+  .popover-text{ font-size:12px; color:var(--ink); flex:1; line-height:1.5; }
+  .popover-close{ background:none; border:none; color:var(--ink-soft); cursor:pointer; flex-shrink:0; }
+
+  .code2{ padding:16px 18px; border-radius:14px; background:var(--ink); color:#B8F5E3; font-family:'JetBrains Mono',monospace; font-size:11.5px; line-height:1.75; overflow-x:auto; max-width:82%; align-self:flex-start; }
+  .code2 .kw{ color:#9C8CFF; }
+
+  .takeaway2{ max-width:100%; margin-top:6px; padding:18px 20px; border-radius:16px; background:linear-gradient(160deg,#fff,var(--paper)); border-left:3px solid var(--mint-deep); }
+  .takeaway2 .lbl3{ font-size:10.5px; font-weight:700; letter-spacing:.06em; color:var(--mint-deep); text-transform:uppercase; margin-bottom:6px; }
+  .takeaway2 p{ font-size:13px; color:var(--ink); line-height:1.6; }
+
+  /* ================= MOBILE TAB BAR ================= */
+  .tabbar{ display:none; position:fixed; bottom:0; left:0; right:0; background:#fff; border-top:1px solid rgba(21,22,28,0.08); padding:10px 6px; align-items:center; justify-content:space-around; }
+  .tab-item{ display:flex; flex-direction:column; align-items:center; gap:4px; color:var(--ink-soft); font-size:9.5px; font-weight:600; }
+  .tab-item.active{ color:var(--mint-deep); }
+
+  @media (max-width:860px){
+    .rail{ display:none; }
+    .tabbar{ display:flex; }
+    body{ padding-bottom:70px; }
+    .navbar{ flex-wrap:wrap; }
+    .search3{ order:3; max-width:100%; margin-top:8px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <div class="navbar">
+    <div class="nav-left"><div class="back-link"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 6l-6 6 6 6"/></svg>Home</div></div>
+    <div class="search3">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <span>Search...</span><span class="kbd">&#8984;K</span>
+    </div>
+    <div class="nav-right">
+      <div class="xp-pill"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.6L21 9.3l-5 4.6L17.5 21 12 17.6 6.5 21 8 13.9 3 9.3l6.1-.7z"/></svg>1,350 XP</div>
+      <button class="icon-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1111.2 3 7 7 0 0021 12.8z"/></svg></button>
+      <div class="avatar">H</div>
+    </div>
+  </div>
+
+  <div class="continue">
+    <div class="continue-text">Continue from where you left off &mdash; <b>Load Balancer — High-Level Design</b>, 8% complete</div>
+    <button class="jump-btn">Jump back in
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </button>
+  </div>
+
+  <div class="page-head">
+    <div class="eyebrow2">System design</div>
+    <h1>Load Balancer — High-Level Design</h1>
+    <div class="meta-pills">
+      <div class="meta-pill diff">Medium</div>
+      <div class="meta-pill time">25 min</div>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div class="rail">
+      <div class="rail-card">
+        <div class="rail-title"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Session</div>
+        <div class="prog-track"><div class="prog-fill"></div></div>
+        <div class="prog-label">13% complete</div>
+        <div class="chip-row"><div class="chip-dot"></div><span>Transcript</span><span class="t">0:00</span></div>
+      </div>
+
+      <div class="rail-card">
+        <div class="rail-title"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 3h12v18l-6-4-6 4z"/></svg>My bookmarks</div>
+        <div class="empty2">Nothing bookmarked yet.</div>
+      </div>
+
+      <div class="rail-card">
+        <div class="rail-title"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8" opacity=".5"/></svg>Concepts explored</div>
+        <div class="concept-chips">
+          <span class="concept-chip">Load balancing</span>
+          <span class="concept-chip">Horizontal scaling</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="convo2">
+      <div class="turn iv">
+        <div class="turn-avatar"><div class="av iv">IV</div><div class="turn-label">Interviewer</div></div>
+        <div class="turn-bubble">Picture a single web server handling every visitor to a site. It's fine at first. Then traffic grows, and one day that one server can't keep up &mdash; pages time out, or worse, the server crashes and the whole site goes down. The obvious fix is to run several copies of the server. But now someone has to decide, for every incoming request, which copy handles it. That decision-maker is the load balancer &mdash; and it turns out to be a surprisingly deep problem on its own.</div>
+      </div>
+
+      <div class="turn iv">
+        <div class="turn-avatar"><div class="av iv">IV</div><div class="turn-label">Interviewer</div></div>
+        <div class="turn-bubble">Design a load balancer. Before anything else &mdash; what's the traffic pattern and scale you're designing for?</div>
+      </div>
+
+      <div class="turn you">
+        <div class="turn-avatar"><div class="turn-label">You</div><div class="av you">YOU</div></div>
+        <div class="turn-bubble">I'd ask: how many backend servers, expected requests per second, and does traffic need to stick to the same backend &mdash; like <span class="hl-note">session affinity</span> &mdash; or is every request independent?</div>
+      </div>
+
+      <div class="popover">
+        <div class="popover-card">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M8 12h8M8 8h8M8 16h5M4 4h16v14l-4 4v-4H4z"/></svg>
+          <div class="popover-text">You asked: what is SQL subset? What is a fixed schema, and is schema changing?</div>
+          <button class="popover-close"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+        </div>
+      </div>
+
+      <div class="turn iv">
+        <div class="turn-avatar"><div class="av iv">IV</div><div class="turn-label">Interviewer</div></div>
+        <div class="turn-bubble">Good. Stitch the pieces we already built together, in order:</div>
+      </div>
+
+      <div class="code2"><span class="kw">from</span> collections <span class="kw">import</span> defaultdict, deque<br><br><span class="kw">def</span> min_buses(routes, source, target):<br>&nbsp;&nbsp;stop_to_routes = defaultdict(list)<br>&nbsp;&nbsp;<span class="kw">for</span> i, route <span class="kw">in</span> enumerate(routes):<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">for</span> stop <span class="kw">in</span> route:<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;stop_to_routes[stop].append(i)</div>
+
+      <div class="takeaway2">
+        <div class="lbl3">Takeaway</div>
+        <p>A load balancer isn't just "pick a server" &mdash; the moment you ask about session affinity, you've admitted the servers aren't interchangeable, and that constraint shapes everything downstream.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="tabbar">
+  <div class="tab-item active"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="7" opacity=".5"/><circle cx="12" cy="12" r="10" opacity=".3"/></svg>Deep Dives</div>
+  <div class="tab-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h10M4 18h13"/></svg>Transcripts</div>
+  <div class="tab-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="6" width="16" height="12" rx="2"/><path d="M8 10h5M8 13h8"/></svg>Interviews</div>
+  <div class="tab-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="13" rx="2"/><path d="M8 21h8"/></svg>Whiteboard</div>
+  <div class="tab-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Dashboard</div>
+</div>
+
+</body>
+</html>

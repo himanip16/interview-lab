@@ -717,7 +717,7 @@ const transcript: TranscriptData = {
 };
 
 const whatsappReadReceipts: TranscriptEntry = {
-  summary: {    id: 49,
+  summary: {    id: 50,
 
     slug: "whatsapp-read-receipts",
     title: "Design WhatsApp Read Receipts (Tick Status)",

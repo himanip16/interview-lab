@@ -10,16 +10,10 @@ type Props = {
 };
 
 export default function Highlight({ highlight, onClick, isActive = false }: Props) {
-  const isStrong = highlight.status === "strong";
-  
   return (
     <span
       onClick={() => onClick(highlight.id)}
-      className={`cursor-pointer transition-all inline ${
-        isStrong
-          ? "bg-emerald-100 border-b-2 border-emerald-500 hover:bg-emerald-200/80"
-          : "bg-rose-100 border-b-2 border-rose-500 hover:bg-rose-200/80"
-      } ${isActive ? "ring-2 ring-offset-2 ring-blue-500" : ""}`}
+      className="cursor-pointer inline bg-[rgba(232,148,10,0.22)] border-b-[1.5px] border-[#E8940A] rounded-[2px] px-[1px]"
     >
       {highlight.value}
     </span>

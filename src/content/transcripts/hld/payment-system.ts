@@ -751,7 +751,7 @@ const transcript: TranscriptData = {
 };
 
 const paymentSystem: TranscriptEntry = {
-  summary: {    id: 44,
+  summary: {    id: 45,
 
     slug: "payment-system",
     title: "Design a Payment System",

@@ -437,7 +437,7 @@ const transcript: TranscriptData = {
 };
 
 const urlShortenerHld: TranscriptEntry = {
-  summary: {    id: 45,
+  summary: {    id: 46,
 
     slug: "url-shortener-hld",
     title: "URL Shortener — High-Level Design",

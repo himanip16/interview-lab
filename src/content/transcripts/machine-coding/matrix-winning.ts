@@ -331,7 +331,7 @@ const transcript: TranscriptData = {
 
 
 const matrixWinning: TranscriptEntry = {
-  summary: {    id: 53,
+  summary: {    id: 54,
 
     slug: "matrix-winning-condition-checker",
     title: "Design a Matrix Winning Condition Checker",

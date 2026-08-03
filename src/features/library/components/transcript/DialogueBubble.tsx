@@ -22,7 +22,7 @@ export default function DialogueBubble({
   const isInterviewer = role === "interviewer";
   const isTakeaway = role === "takeaway";
 
-  const textClass = `text-gray-800 ${isInterviewer ? "font-normal" : "font-medium"}`;
+  const textClass = `${isInterviewer ? "font-normal" : "font-medium"}`;
 
   // Sanitize HTML to remove script tags and their content
   // This prevents React hydration warnings and security risks
@@ -41,7 +41,7 @@ export default function DialogueBubble({
   // Inline blocks: safe to live inside a <p>, rendered as <span>/<Highlight>.
   function renderInline(contentBlock: ContentBlock, key: number): React.ReactNode {
     if (contentBlock.type === "text") {
-      return <span key={key}>{contentBlock.value}</span>;
+      return <span key={key} style={{ color: 'var(--ink)' }}>{contentBlock.value}</span>;
     }
 
     if (contentBlock.type === "highlight") {
@@ -64,25 +64,18 @@ export default function DialogueBubble({
   function renderBlock(contentBlock: ContentBlock, key: number): React.ReactNode {
     if (contentBlock.type === "code") {
       return (
-        <div key={key} className="overflow-hidden rounded-lg bg-slate-900 shadow-md">
-          {contentBlock.language && (
-            <div className="border-b border-slate-700 px-4 py-1.5 font-mono text-[10px] uppercase tracking-wider text-slate-400">
-              {contentBlock.language}
-            </div>
-          )}
-          <pre className="overflow-x-auto p-4">
-            <code className="text-sm text-slate-100">{contentBlock.value}</code>
-          </pre>
+        <div key={key} className="px-[18px] py-[16px] rounded-[14px] font-['JetBrains Mono'] text-[11.5px] leading-[1.75] overflow-x-auto max-w-[82%] self-start" style={{ backgroundColor: 'var(--ink)', color: '#B8F5E3' }}>
+          <code>{contentBlock.value}</code>
         </div>
       );
     }
 
     if (contentBlock.type === "whiteboard" || contentBlock.type === "animation") {
       return (
-        <div key={key} className="rounded-lg border border-gray-300 bg-white p-3 shadow-sm">
+        <div key={key} className="rounded-lg border p-3 shadow-sm" style={{ borderColor: 'rgba(21,22,28,0.07)', backgroundColor: '#fff' }}>
           <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(contentBlock.value) }} />
           {contentBlock.caption && (
-            <div className="mt-2 text-sm text-muted-foreground">
+            <div className="mt-2 text-sm" style={{ color: 'var(--ink-soft)' }}>
               {contentBlock.caption}
             </div>
           )}
@@ -97,7 +90,7 @@ export default function DialogueBubble({
 
   function renderContentBlocks(blocks: ContentBlock[] | string): React.ReactNode {
     if (typeof blocks === "string") {
-      return <p className={textClass}>{blocks}</p>;
+      return <p className={textClass} style={{ color: 'var(--ink)' }}>{blocks}</p>;
     }
 
     // Consecutive text/highlight blocks are grouped into one <p>.
@@ -108,7 +101,7 @@ export default function DialogueBubble({
     function flushInline(key: string) {
       if (inlineBuffer.length === 0) return;
       nodes.push(
-        <p key={key} className={textClass}>
+        <p key={key} className={textClass} style={{ color: 'var(--ink)' }}>
           {inlineBuffer.map((b, i) => renderInline(b, i))}
         </p>
       );
@@ -134,31 +127,25 @@ export default function DialogueBubble({
   }
 
   return (
-    <div className={`mb-6 ${isInterviewer ? "max-w-xl" : "max-w-2xl ml-auto"}`}>
-      <div className={`flex items-baseline gap-2 mb-2 ${isInterviewer ? "justify-start" : "justify-end"}`}>
-        <span
-          className={`text-xs uppercase tracking-wider font-medium ${
-            isInterviewer
-              ? "text-gray-500"
-              : "text-gray-700"
-          }`}
-        >
+    <div className={`flex flex-col gap-[8px] max-w-[82%] ${isInterviewer ? "self-start" : "self-end items-end"}`}>
+      <div className={`flex items-center gap-[8px] ${isInterviewer ? "" : "flex-row-reverse"}`}>
+        <div className={`w-[26px] h-[26px] rounded-full flex items-center justify-center text-[10px] font-bold text-white font-['Poppins'] flex-shrink-0`} style={{ backgroundColor: isInterviewer ? 'var(--ink)' : 'var(--violet)' }}>
+          {isInterviewer ? "IV" : "YOU"}
+        </div>
+        <span className="text-[11px] font-semibold" style={{ color: 'var(--ink-soft)' }}>
           {role === "interviewer" ? "Interviewer" : "You"}
         </span>
-        {elapsedSeconds !== undefined && (
-          <span
-            className={`font-mono text-[10px] text-gray-400`}
-          >
-            {formatTimestamp(elapsedSeconds)}
-          </span>
-        )}
       </div>
       <div
-        className={`overflow-hidden space-y-3 rounded-xl p-5 leading-relaxed ${
-          isInterviewer
-            ? "bg-gray-50 border border-gray-200"
-            : "bg-emerald-50 shadow-md border border-emerald-200"
+        className={`px-[18px] py-[16px] rounded-[18px] text-[13.5px] relative ${
+          isInterviewer ? "rounded-tl-[6px]" : "rounded-tr-[6px]"
         }`}
+        style={{
+          backgroundColor: isInterviewer ? '#fff' : 'rgba(106,90,224,0.07)',
+          border: isInterviewer ? '1px solid rgba(21,22,28,0.07)' : '1px solid rgba(106,90,224,0.15)',
+          color: 'var(--ink)',
+          lineHeight: '1.7'
+        }}
       >
         {renderContentBlocks(content)}
       </div>

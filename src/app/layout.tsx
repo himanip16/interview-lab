@@ -7,6 +7,7 @@ import "./globals.css";
 
 import AppShell from "@/shared/layout/AppShell";
 import { MainProvider } from "@/shared/providers/MainProvider";
+import { ThemeProvider } from "@/features/theme/ThemeProvider";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -39,11 +40,13 @@ export default function RootLayout({
       className={`${poppins.variable} ${inter.variable} h-full antialiased`}
     >
       <body className="h-full" suppressHydrationWarning>
-        <MainProvider>
-          <AppShell>
-            {children}
-          </AppShell>
-        </MainProvider>
+        <ThemeProvider>
+          <MainProvider>
+            <AppShell>
+              {children}
+            </AppShell>
+          </MainProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
